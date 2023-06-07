@@ -1,10 +1,12 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:network/network/http/http.dart';
 import 'package:network/network/http/http_headers.dart';
 import 'package:network/network/util/AttributeKeys.dart';
 import 'package:network/network/util/HostFilter.dart';
+import 'package:network/network/util/logger.dart';
 
 import 'channel.dart';
 import 'http/codec.dart';
@@ -19,8 +21,18 @@ HostAndPort getHostAndPort(HttpRequest request) {
   return HostAndPort.of(requestUri);
 }
 
+abstract class EventListener {
+  void onRequest(Channel channel, HttpRequest request);
+
+  void onResponse(Channel channel, HttpResponse response);
+}
+
 ///
 class HttpChannelHandler extends ChannelHandler<HttpRequest> {
+  EventListener? listener;
+
+  HttpChannelHandler({this.listener});
+
   @override
   void channelActive(Channel channel) {
     // log.i("accept ${channel.remoteAddress.address}");
@@ -45,7 +57,6 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
-
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
       if (channel.getAttribute(AttributeKeys.HOST_KEY) == null) {
@@ -55,7 +66,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
             AttributeKeys.URI_KEY, '${channel.getAttribute(AttributeKeys.HOST_KEY)}${httpRequest.uri}');
       }
       log.i("[${channel.id}] ${remoteChannel.getAttribute(AttributeKeys.URI_KEY)}");
-
+      listener?.onRequest(channel, httpRequest);
       //实现抓包代理转发
       await remoteChannel.write(httpRequest);
     }
@@ -81,21 +92,8 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       await clientChannel.write(HttpResponse(httpRequest.protocolVersion, HttpStatus.ok));
     }
 
-    //黑名单
-    if (HostFilter.filter(hostAndPort.host)) {
-      relay(clientChannel, proxyChannel);
-      return proxyChannel;
-    }
-
     clientChannel.putAttribute(clientId, proxyChannel);
     return proxyChannel;
-  }
-
-  /// 转发请求
-  void relay(Channel clientChannel, Channel remoteChannel) {
-    var rawCodec = RawCodec();
-    clientChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(remoteChannel));
-    remoteChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(clientChannel));
   }
 }
 
@@ -112,7 +110,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   void channelRead(Channel channel, HttpResponse msg) {
     String contentType = msg.headers.contentType;
     if (excludeContent.every((element) => !contentType.contains(element))) {
-      log.i("[${clientChannel.id}] Response ${utf8.decode(msg.body ?? [])}");
+      // log.i("[${clientChannel.id}] Response ${String.fromCharCodes(msg.body ?? [])}");
     }
     //发送给客户端
     clientChannel.write(msg);

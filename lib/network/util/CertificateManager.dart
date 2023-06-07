@@ -6,7 +6,6 @@ import 'package:basic_utils/basic_utils.dart';
 Future<void> main() async {
   var securityContext = await CertificateManager.getCertificateContext('www.baidu.com');
   print(securityContext);
-  // print(CertificateManager.caCert.tbsCertificateSeqAsString);
   print(CertificateManager._caCert.tbsCertificate?.subject);
   print(CertificateManager._caCert.tbsCertificateSeqAsString);
   print(CertificateManager._caCert);
@@ -14,7 +13,7 @@ Future<void> main() async {
 
 class CertificateManager {
   /// 证书缓存
-  static final Map<String, SecurityContext> _certificateMap = {};
+  static final Map<String, String> _certificateMap = {};
 
   /// 服务端密钥
   static final AsymmetricKeyPair _serverKeyPair = CryptoUtils.generateRSAKeyPair();
@@ -28,22 +27,27 @@ class CertificateManager {
   /// 是否初始化
   static bool _initialized = false;
 
+  static String? get(String host) {
+    return _certificateMap[host];
+  }
+
   /// 获取域名自签名证书
   static Future<SecurityContext> getCertificateContext(String host) async {
-    if (_certificateMap.containsKey(host)) {
-      return _certificateMap[host]!;
-    }
-    if (!_initialized) {
-      await _initCAConfig();
+    var cer = _certificateMap[host];
+
+    if (cer == null) {
+      if (!_initialized) {
+        await _initCAConfig();
+      }
+      cer = generate(_serverKeyPair.publicKey as RSAPublicKey, _caPriKey, host);
+      _certificateMap[host] = cer;
     }
 
-    var cer = generate(_serverKeyPair.publicKey as RSAPublicKey, _caPriKey, host);
     var rsaPrivateKey = _serverKeyPair.privateKey as RSAPrivateKey;
-    var securityContext = SecurityContext.defaultContext
+
+    return SecurityContext.defaultContext
       ..useCertificateChainBytes(cer.codeUnits)
       ..usePrivateKeyBytes(CryptoUtils.encodeRSAPrivateKeyToPemPkcs1(rsaPrivateKey).codeUnits);
-    _certificateMap[host] = securityContext;
-    return securityContext;
   }
 
   /// 生成证书

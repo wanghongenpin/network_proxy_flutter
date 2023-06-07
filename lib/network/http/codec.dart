@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:network/utils/num.dart';
 
 import '../channel.dart';
-import '../compress.dart';
+import '../../utils/compress.dart';
 import 'http.dart';
 import 'http_headers.dart';
 

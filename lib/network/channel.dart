@@ -2,22 +2,25 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:basic_utils/basic_utils.dart';
 import 'package:logger/logger.dart';
 import 'package:network/network/util/AttributeKeys.dart';
 import 'package:network/network/util/CertificateManager.dart';
+import 'package:network/network/util/HostFilter.dart';
 
+import 'handler.dart';
 
 ///处理I/O事件或截获I/O操作
 abstract class ChannelHandler<T> {
   var log = Logger(
       printer: PrettyPrinter(
-    methodCount: 0,
-    errorMethodCount: 8,
-    lineLength: 120,
-    colors: true,
-    printEmojis: false,
-    excludeBox: {Level.info: true, Level.debug: true},
-  ));
+        methodCount: 0,
+        errorMethodCount: 8,
+        lineLength: 120,
+        colors: true,
+        printEmojis: false,
+        excludeBox: {Level.info: true, Level.debug: true},
+      ));
 
   void channelActive(Channel channel) {}
 
@@ -28,8 +31,14 @@ abstract class ChannelHandler<T> {
   }
 
   void exceptionCaught(Channel channel, Object cause, {StackTrace? trace}) {
-    var attribute = channel.getAttribute(AttributeKeys.HOST_KEY);
-    log.e("error $attribute $channel", cause, trace);
+    HostAndPort? attribute = channel.getAttribute(AttributeKeys.HOST_KEY);
+    X509CertificateData? x509certificateFromPem;
+    if (attribute != null && CertificateManager.get(attribute.host) != null) {
+      String cer = CertificateManager.get(attribute.host)!;
+      x509certificateFromPem = X509Utils.x509CertificateFromPem(cer);
+    }
+
+    log.e("error $attribute $channel ${x509certificateFromPem?.tbsCertificate?.subject}", cause, trace);
   }
 }
 
@@ -46,7 +55,9 @@ class Channel {
   final int remotePort;
 
   Channel(this._socket)
-      : _id = DateTime.now().millisecondsSinceEpoch + Random().nextInt(9999),
+      : _id = DateTime
+      .now()
+      .millisecondsSinceEpoch + Random().nextInt(999999),
         remoteAddress = _socket.remoteAddress,
         remotePort = _socket.remotePort;
 
@@ -86,7 +97,7 @@ class Channel {
 
   @override
   String toString() {
-    return 'Channel($_id ${remoteAddress.host}:$remotePort)';
+    return 'Channel($id ${remoteAddress.host}:$remotePort)';
   }
 }
 
@@ -162,9 +173,25 @@ class HostAndPort {
     return HostAndPort(scheme, hostAndPort[0], 80);
   }
 
+  String get url {
+    return '$scheme$host${(port == 80 || port == 443) ? "" : ":$port"}';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HostAndPort &&
+          runtimeType == other.runtimeType &&
+          scheme == other.scheme &&
+          host == other.host &&
+          port == other.port;
+
+  @override
+  int get hashCode => scheme.hashCode ^ host.hashCode ^ port.hashCode;
+
   @override
   String toString() {
-    return '$scheme$host:$port';
+    return url;
   }
 }
 
@@ -180,7 +207,7 @@ abstract interface class Encoder<T> {
 
 /// 编解码器
 abstract class Codec<T> implements Decoder<T>, Encoder<T> {
-  static const int defaultMaxInitialLineLength = 1024;
+  static const int defaultMaxInitialLineLength = 8192;
 }
 
 class RawCodec extends Codec<Object> {
@@ -222,6 +249,7 @@ class Network {
 
   _onEvent(Uint8List data, Channel channel) async {
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.HOST_KEY);
+    //ssl握手
     if (hostAndPort != null && hostAndPort.isSsl()) {
       try {
         var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
@@ -233,8 +261,21 @@ class Network {
       }
       return;
     }
+    //黑名单
+    if (hostAndPort != null && HostFilter.filter(hostAndPort.host)) {
+      if (HostFilter.filter(hostAndPort.host)) {
+        relay(channel, channel.getAttribute(channel.id));
+      }
+    }
 
     channel.pipeline.channelRead(channel, data);
+  }
+
+  /// 转发请求
+  void relay(Channel clientChannel, Channel remoteChannel) {
+    var rawCodec = RawCodec();
+    clientChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(remoteChannel));
+    remoteChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(clientChannel));
   }
 }
 
@@ -244,11 +285,12 @@ class Server extends Network {
   Server(this.port);
 
   Future<void> bind() async {
-    ServerSocket.bind(InternetAddress.loopbackIPv4, port).then((serverSocket) => {
-          serverSocket.listen((socket) {
-            listen(socket);
-          })
-        });
+    ServerSocket.bind(InternetAddress.loopbackIPv4, port).then((serverSocket) =>
+    {
+      serverSocket.listen((socket) {
+        listen(socket);
+      })
+    });
   }
 }
 

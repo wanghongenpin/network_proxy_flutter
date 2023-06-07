@@ -24,8 +24,7 @@ class HttpRequest extends HttpMessage {
   final String uri;
   late HttpMethod method;
 
-  HttpRequest(this.method, this.uri, String protocolVersion)
-      : super(protocolVersion);
+  HttpRequest(this.method, this.uri, String protocolVersion) : super(protocolVersion);
 
   @override
   String toString() {
@@ -62,8 +61,12 @@ enum HttpMethod {
   const HttpMethod(this.name);
 
   static HttpMethod valueOf(String name) {
-    return HttpMethod.values
-        .firstWhere((element) => element.name == name.toUpperCase());
+    try {
+      return HttpMethod.values.firstWhere((element) => element.name == name.toUpperCase());
+    } catch (error) {
+      print("$name :$error");
+      rethrow;
+    }
   }
 }
 
@@ -85,19 +88,16 @@ class HttpStatus {
   static final HttpStatus notFound = newStatus(404, "Not Found");
 
   /// 500 Internal Server Error
-  static final HttpStatus internalServerError =
-      newStatus(500, "Internal Server Error");
+  static final HttpStatus internalServerError = newStatus(500, "Internal Server Error");
 
   /// 502 Bad Gateway
   static final HttpStatus badGateway = newStatus(502, "Bad Gateway");
 
   /// 503 Service Unavailable
-  static final HttpStatus serviceUnavailable =
-      newStatus(503, "Service Unavailable");
+  static final HttpStatus serviceUnavailable = newStatus(503, "Service Unavailable");
 
   /// 504 Gateway Timeout
-  static final HttpStatus gatewayTimeout =
-      newStatus(504, "Gateway Timeout");
+  static final HttpStatus gatewayTimeout = newStatus(504, "Gateway Timeout");
 
   static HttpStatus newStatus(int statusCode, String reasonPhrase) {
     return HttpStatus(statusCode, reasonPhrase);
