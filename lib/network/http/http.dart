@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'http_headers.dart';
 
 ///定义HTTP消息的接口，为HttpRequest和HttpResponse提供公共属性。
@@ -12,10 +15,17 @@ abstract class HttpMessage {
   HttpMessage(this.protocolVersion);
 
   String get bodyAsString {
-    if (body == null) {
+    if (body == null || body?.isEmpty == true) {
       return "";
     }
-    return String.fromCharCodes(body!);
+    try {
+      if (headers.isGzip) {
+        return utf8.decode(gzip.decode(body!));
+      }
+      return utf8.decode(body!);
+    } catch (e) {
+      return String.fromCharCodes(body!);
+    }
   }
 }
 
@@ -131,6 +141,10 @@ class HttpStatus {
   final String reasonPhrase;
 
   HttpStatus(this.code, this.reasonPhrase);
+
+  bool isSuccessful() {
+    return code >= 200 && code < 300;
+  }
 
   @override
   String toString() {

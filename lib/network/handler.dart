@@ -84,7 +84,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     var hostAndPort = getHostAndPort(httpRequest);
     clientChannel.putAttribute(AttributeKeys.HOST_KEY, hostAndPort);
 
-    var proxyHandler = HttpResponseProxyHandler(clientChannel);
+    var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener);
     var proxyChannel = await HttpClients.connect(hostAndPort, proxyHandler);
 
     //https代理新建连接请求
@@ -104,14 +104,17 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   /// 排除的后缀 不打印日志
   final Set<String> excludeContent = HashSet.from(["javascript", "text/css", "application/font-woff", "image"]);
 
-  HttpResponseProxyHandler(this.clientChannel);
+  EventListener? listener;
+
+  HttpResponseProxyHandler(this.clientChannel, {this.listener});
 
   @override
   void channelRead(Channel channel, HttpResponse msg) {
     String contentType = msg.headers.contentType;
     if (excludeContent.every((element) => !contentType.contains(element))) {
-      // log.i("[${clientChannel.id}] Response ${String.fromCharCodes(msg.body ?? [])}");
+      // log.i("[${clientChannel.id}] Response ${ String.fromCharCodes(msg.body ?? [])}");
     }
+    listener?.onResponse(clientChannel, msg);
     //发送给客户端
     clientChannel.write(msg);
   }

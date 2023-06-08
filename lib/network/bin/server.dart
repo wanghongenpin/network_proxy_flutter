@@ -4,6 +4,7 @@ import 'dart:io';
 import '../channel.dart';
 import '../handler.dart';
 import '../http/codec.dart';
+import '../util/logger.dart';
 
 Future<void> main() async {
   start();
@@ -15,6 +16,7 @@ Future<void> start({EventListener? listener}) async {
     ..initChannel((channel) {
       channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(), HttpChannelHandler(listener: listener));
     });
+  log.i("listen on $port");
   await server.bind().then((value) => {setSystemProxy(port)});
 }
 
@@ -27,8 +29,8 @@ void setSystemProxy(int port) {
     //     .then((ProcessResult results) {
     //   print(results.stdout);
     // });
-    // Process.run('networksetup', ['-setwebproxy', 'Wi-Fi', '127.0.0.1', port.toString()]).then((ProcessResult results) {
-    //   print(results.stdout);
-    // });
+    Process.run('networksetup', ['-setwebproxy', 'Wi-Fi', '127.0.0.1', port.toString()]).then((ProcessResult results) {
+      print(results.stdout);
+    });
   }
 }

@@ -2,6 +2,7 @@ import 'dart:core';
 import 'dart:io';
 
 import 'package:basic_utils/basic_utils.dart';
+import 'package:flutter/services.dart';
 
 Future<void> main() async {
   var securityContext = await CertificateManager.getCertificateContext('www.baidu.com');
@@ -64,7 +65,7 @@ class CertificateManager {
     var csr = X509Utils.generateRsaCsrPem(x509Subject, caPriKey, serverPubKey as RSAPublicKey, san: [host]);
 
     Map<String, String> issuer = Map.from(_caCert.tbsCertificate!.subject);
-    var csrPem = X509Utils.generateSelfSignedCertificate(caPriKey, csr, 3650, sans: [host], issuer: issuer);
+    var csrPem = X509Utils.generateSelfSignedCertificate(caPriKey, csr, 365, sans: [host], issuer: issuer);
     return csrPem;
   }
 
@@ -73,13 +74,13 @@ class CertificateManager {
       return;
     }
     //从项目目录加入ca根证书
-    var caPem = await File('assets/certs/ca.crt').readAsString();
+    var caPem = await rootBundle.loadString('assets/certs/ca.crt');
     _caCert = X509Utils.x509CertificateFromPem(caPem);
     //根据CA证书subject来动态生成目标服务器证书的issuer和subject
 
     //从项目目录加入ca私钥
-    var privateBytes = await File('assets/certs/ca_private.der').readAsBytes();
-    _caPriKey = CryptoUtils.rsaPrivateKeyFromDERBytes(privateBytes);
+    var privateBytes = await rootBundle.load('assets/certs/ca_private.der');
+    _caPriKey = CryptoUtils.rsaPrivateKeyFromDERBytes(privateBytes.buffer.asUint8List());
 
     _initialized = true;
   }
