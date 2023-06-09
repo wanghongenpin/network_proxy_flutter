@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
 import 'package:logger/logger.dart';
+import 'package:network/network/http/http.dart';
 import 'package:network/network/util/AttributeKeys.dart';
 import 'package:network/network/util/CertificateManager.dart';
 import 'package:network/network/util/HostFilter.dart';
@@ -27,11 +28,11 @@ abstract class ChannelHandler<T> {
   void channelRead(Channel channel, T msg) {}
 
   void channelInactive(Channel channel) {
-    log.i("close $channel");
+    // log.i("close $channel");
   }
 
   void exceptionCaught(Channel channel, Object cause, {StackTrace? trace}) {
-    HostAndPort? attribute = channel.getAttribute(AttributeKeys.HOST_KEY);
+    HostAndPort? attribute = channel.getAttribute(AttributeKeys.host);
     X509CertificateData? x509certificateFromPem;
     if (attribute != null && CertificateManager.get(attribute.host) != null) {
       String cer = CertificateManager.get(attribute.host)!;
@@ -121,7 +122,12 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   void channelRead(Channel channel, Uint8List msg) {
     try {
       var data = _decoder.decode(msg);
-      if (data != null) _handler.channelRead(channel, data!);
+      if (data != null) {
+        if (data is HttpResponse) {
+          data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
+        }
+        _handler.channelRead(channel, data!);
+      }
     } catch (error, trace) {
       exceptionCaught(channel, error, trace: trace);
     }
@@ -248,7 +254,7 @@ class Network {
   }
 
   _onEvent(Uint8List data, Channel channel) async {
-    HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.HOST_KEY);
+    HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
     //ssl握手
     if (hostAndPort != null && hostAndPort.isSsl()) {
       try {

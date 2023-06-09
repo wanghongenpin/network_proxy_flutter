@@ -60,11 +60,6 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
       _state = message.headers.isChunked ? State.readVariableLengthContent : State.readFixedLengthContent;
     }
 
-    if (message is HttpRequest) {
-      if ([HttpMethod.get, HttpMethod.connect].contains((message as HttpRequest).method)) {
-        _state = State.done;
-      }
-    }
     //chunked编码
     if (_state == State.readChunkedContent) {
       _bodyBuffer.add(data.sublist(0, min(_chunkReadableSize, data.length)));
@@ -100,14 +95,16 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     //请求行
     initialLine(builder, message);
 
+    List<int>? body = message.body;
     if (message.headers.isGzip) {
-      message.body = gzipEncode(message.body!);
+      body = gzipEncode(body!);
     }
 
     //请求头
     message.headers.remove(HttpHeaders.TRANSFER_ENCODING);
-    int contentLength = _contentLength(message);
-    message.headers.contentLength = contentLength;
+    if (body != null && body.isNotEmpty) {
+      message.headers.contentLength = body.length;
+    }
     message.headers.forEach((key, value) {
       builder
         ..add(key.codeUnits)
@@ -121,12 +118,8 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     builder.addByte(HttpConstants.lf);
 
     //请求体
-    builder.add(message.body ?? Uint8List(0));
+    builder.add(body ?? Uint8List(0));
     return builder.toBytes();
-  }
-
-  int _contentLength(T message) {
-    return message.body?.length ?? 0;
   }
 
   //读取起始行
@@ -151,7 +144,7 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
           continue;
         }
         int length = hexToInt(String.fromCharCodes(parseLine));
-        //chunked编码结束
+        //chunked编码结束 最后以length = 0 结束
         if (length == 0) {
           _state = State.done;
           return;

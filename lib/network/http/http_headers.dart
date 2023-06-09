@@ -6,6 +6,7 @@ class HttpHeaders {
   static const CONTENT_TYPE = "Content-Type";
   static const String HOST = "Host";
   static const String TRANSFER_ENCODING = "Transfer-Encoding";
+  static const String Cookie = "Cookie";
 
   final LinkedHashMap<String, String> _headers = LinkedHashMap<String, String>();
 
@@ -51,6 +52,7 @@ class HttpHeaders {
   bool get isGzip => get(HttpHeaders.CONTENT_ENCODING) == "gzip";
 
   bool get isChunked => get(HttpHeaders.TRANSFER_ENCODING) == "chunked";
+  String get cookie => get(Cookie) ?? "";
 
   void forEach(void Function(String name, String value) f) {
     _originalHeaderNames.forEach(f);

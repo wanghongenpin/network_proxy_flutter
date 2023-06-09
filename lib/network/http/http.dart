@@ -1,38 +1,54 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'http_headers.dart';
 
 ///定义HTTP消息的接口，为HttpRequest和HttpResponse提供公共属性。
 abstract class HttpMessage {
+  ///内容类型
+  static final Map<String, ContentType> contentTypes = {
+    "javascript": ContentType.js,
+    "text/css": ContentType.css,
+    "font-woff": ContentType.font,
+    "text/html": ContentType.html,
+    "text/plain": ContentType.text,
+    "image": ContentType.image,
+    "application/json": ContentType.json
+  };
+
   final String protocolVersion;
 
   final HttpHeaders headers = HttpHeaders();
   int contentLength = -1;
 
   List<int>? body;
+  String? remoteAddress;
 
   HttpMessage(this.protocolVersion);
+
+  ContentType get contentType => contentTypes.entries
+      .firstWhere((element) => headers.contentType.contains(element.key),
+          orElse: () => const MapEntry("unknown", ContentType.http))
+      .value;
 
   String get bodyAsString {
     if (body == null || body?.isEmpty == true) {
       return "";
     }
     try {
-      if (headers.isGzip) {
-        return utf8.decode(gzip.decode(body!));
-      }
       return utf8.decode(body!);
     } catch (e) {
       return String.fromCharCodes(body!);
     }
   }
+
+  String get cookie => headers.cookie;
 }
 
 ///HTTP请求。
 class HttpRequest extends HttpMessage {
   final String uri;
   late HttpMethod method;
+  final DateTime requestTime = DateTime.now();
 
   HttpRequest(this.method, this.uri, String protocolVersion) : super(protocolVersion);
 
@@ -42,11 +58,22 @@ class HttpRequest extends HttpMessage {
   }
 }
 
+enum ContentType { json, js, html, text, css, font, image, http }
+
 ///HTTP响应。
 class HttpResponse extends HttpMessage {
   final HttpStatus status;
+  final DateTime responseTime = DateTime.now();
+  HttpRequest? request;
 
   HttpResponse(String protocolVersion, this.status) : super(protocolVersion);
+
+  String costTime() {
+    if (request == null) {
+      return '';
+    }
+    return '${responseTime.difference(request!.requestTime).inMilliseconds}ms';
+  }
 
   @override
   String toString() {

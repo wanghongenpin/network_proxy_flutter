@@ -1,7 +1,7 @@
 /// @author wanghongen
 /// 2023/5/23
 interface class AttributeKeys {
-  static String HOST_KEY = "HOST";
-  static String URI_KEY = "URI";
-  static String REQUEST_KEY = "REQUEST";
+  static const String host = "HOST";
+  static const String uri= "URI";
+  static const String request= "REQUEST";
 }
