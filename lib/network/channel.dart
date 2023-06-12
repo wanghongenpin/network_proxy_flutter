@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:basic_utils/basic_utils.dart';
 import 'package:logger/logger.dart';
 import 'package:network/network/http/http.dart';
 import 'package:network/network/util/AttributeKeys.dart';
@@ -33,13 +32,8 @@ abstract class ChannelHandler<T> {
 
   void exceptionCaught(Channel channel, Object cause, {StackTrace? trace}) {
     HostAndPort? attribute = channel.getAttribute(AttributeKeys.host);
-    X509CertificateData? x509certificateFromPem;
-    if (attribute != null && CertificateManager.get(attribute.host) != null) {
-      String cer = CertificateManager.get(attribute.host)!;
-      x509certificateFromPem = X509Utils.x509CertificateFromPem(cer);
-    }
-
-    log.e("error $attribute $channel ${x509certificateFromPem?.tbsCertificate?.subject}", cause, trace);
+    log.e("error $attribute $channel", cause, trace);
+    channel.close();
   }
 }
 
@@ -186,11 +180,11 @@ class HostAndPort {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is HostAndPort &&
-          runtimeType == other.runtimeType &&
-          scheme == other.scheme &&
-          host == other.host &&
-          port == other.port;
+          other is HostAndPort &&
+              runtimeType == other.runtimeType &&
+              scheme == other.scheme &&
+              host == other.host &&
+              port == other.port;
 
   @override
   int get hashCode => scheme.hashCode ^ host.hashCode ^ port.hashCode;
@@ -214,6 +208,7 @@ abstract interface class Encoder<T> {
 /// 编解码器
 abstract class Codec<T> implements Decoder<T>, Encoder<T> {
   static const int defaultMaxInitialLineLength = 8192;
+  static const int maxBodyLength = 1024000;
 }
 
 class RawCodec extends Codec<Object> {
@@ -243,13 +238,10 @@ class Network {
   Channel listen(Socket socket) {
     var channel = Channel(socket);
     _channelInitializer.call(channel);
-
     channel.pipeline.channelActive(channel);
-
     socket.listen((data) => _onEvent(data, channel),
         onError: (error, trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
         onDone: () => channel.pipeline.channelInactive(channel));
-
     return channel;
   }
 
@@ -308,6 +300,7 @@ class Client extends Network {
       return SecureSocket.connect(hostAndPort.host, hostAndPort.port, onBadCertificate: (certificate) => true)
           .then((socket) => listen(socket));
     }
-    return Socket.connect(hostAndPort.host, hostAndPort.port).then((socket) => listen(socket));
+    return Socket.connect(hostAndPort.host, hostAndPort.port, timeout: const Duration(seconds: 10))
+        .then((socket) => listen(socket));
   }
 }

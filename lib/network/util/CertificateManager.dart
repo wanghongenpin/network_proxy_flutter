@@ -1,15 +1,16 @@
 import 'dart:core';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:basic_utils/basic_utils.dart';
 import 'package:flutter/services.dart';
+import 'package:network/network/util/x509.dart';
 
 Future<void> main() async {
-  var securityContext = await CertificateManager.getCertificateContext('www.baidu.com');
-  print(securityContext);
-  print(CertificateManager._caCert.tbsCertificate?.subject);
-  print(CertificateManager._caCert.tbsCertificateSeqAsString);
-  print(CertificateManager._caCert);
+  await CertificateManager.getCertificateContext('www.jianshu.com');
+  String cer = CertificateManager.get('www.jianshu.com')!;
+  var x509certificateFromPem = X509Utils.x509CertificateFromPem(cer);
+  print(x509certificateFromPem.plain!);
 }
 
 class CertificateManager {
@@ -40,7 +41,7 @@ class CertificateManager {
       if (!_initialized) {
         await _initCAConfig();
       }
-      cer = generate(_serverKeyPair.publicKey as RSAPublicKey, _caPriKey, host);
+      cer = generate(_caCert, _serverKeyPair.publicKey as RSAPublicKey, _caPriKey, host);
       _certificateMap[host] = cer;
     }
 
@@ -52,7 +53,7 @@ class CertificateManager {
   }
 
   /// 生成证书
-  static String generate(PublicKey serverPubKey, RSAPrivateKey caPriKey, String host) {
+  static String generate(X509CertificateData caRoot, RSAPublicKey serverPubKey, RSAPrivateKey caPriKey, String host) {
     //根据CA证书subject来动态生成目标服务器证书的issuer和subject
     Map<String, String> x509Subject = {
       'C': 'CN',
@@ -62,10 +63,10 @@ class CertificateManager {
       'OU': 'Proxy',
     };
     x509Subject['CN'] = host;
-    var csr = X509Utils.generateRsaCsrPem(x509Subject, caPriKey, serverPubKey as RSAPublicKey, san: [host]);
 
     Map<String, String> issuer = Map.from(_caCert.tbsCertificate!.subject);
-    var csrPem = X509Utils.generateSelfSignedCertificate(caPriKey, csr, 365, sans: [host], issuer: issuer);
+    var csrPem = X509Generate.generateSelfSignedCertificate(caRoot, serverPubKey, caPriKey, 365,
+        sans: [host], serialNumber: Random().nextInt(1000000).toString(), issuer: issuer);
     return csrPem;
   }
 
@@ -75,11 +76,13 @@ class CertificateManager {
     }
     //从项目目录加入ca根证书
     var caPem = await rootBundle.loadString('assets/certs/ca.crt');
+    // var caPem = await File('assets/certs/ca.crt').readAsString();
     _caCert = X509Utils.x509CertificateFromPem(caPem);
     //根据CA证书subject来动态生成目标服务器证书的issuer和subject
 
     //从项目目录加入ca私钥
     var privateBytes = await rootBundle.load('assets/certs/ca_private.der');
+    // var privateBytes = await File('assets/certs/ca_private.der').readAsBytes();
     _caPriKey = CryptoUtils.rsaPrivateKeyFromDERBytes(privateBytes.buffer.asUint8List());
 
     _initialized = true;

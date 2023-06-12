@@ -77,7 +77,6 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
         _state = State.done;
       }
     }
-
     if (_state == State.done) {
       message.body = _convertBody();
       _state = State.readInitial;
@@ -141,7 +140,8 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
       while (_httpParse.index < data.length) {
         var parseLine = _httpParse.parseLine(data);
         if (parseLine.isEmpty) {
-          continue;
+          _httpParse.index = 0;
+          return;
         }
         int length = hexToInt(String.fromCharCodes(parseLine));
         //chunked编码结束 最后以length = 0 结束

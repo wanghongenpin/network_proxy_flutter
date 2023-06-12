@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:network/network/http/http.dart';
 import 'package:network/network/http/http_headers.dart';
 import 'package:network/network/util/AttributeKeys.dart';
@@ -36,6 +38,11 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   @override
   void channelRead(Channel channel, HttpRequest msg) {
     forward(channel, msg).catchError((error, trace) {
+      if (error is SocketException && (error.message.contains("Failed host lookup") || error.message.contains(" Operation timed out"))) {
+        log.e("连接失败 ${error.message}");
+        channel.close();
+        return;
+      }
       log.e("转发请求失败", error, trace);
     });
   }
