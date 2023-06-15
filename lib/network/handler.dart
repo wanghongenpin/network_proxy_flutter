@@ -31,14 +31,10 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   HttpChannelHandler({this.listener});
 
   @override
-  void channelActive(Channel channel) {
-    // log.i("accept ${channel.remoteAddress.address}");
-  }
-
-  @override
-  void channelRead(Channel channel, HttpRequest msg) {
+  void channelRead(Channel channel, HttpRequest msg) async {
     forward(channel, msg).catchError((error, trace) {
-      if (error is SocketException && (error.message.contains("Failed host lookup") || error.message.contains(" Operation timed out"))) {
+      if (error is SocketException &&
+          (error.message.contains("Failed host lookup") || error.message.contains(" Operation timed out"))) {
         log.e("连接失败 ${error.message}");
         channel.close();
         return;
@@ -51,9 +47,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   void channelInactive(Channel channel) {
     super.channelInactive(channel);
     Channel? remoteChannel = channel.getAttribute(channel.id);
-    if (remoteChannel != null) {
-      remoteChannel.close();
-    }
+    remoteChannel?.close();
   }
 
   /// 转发请求
@@ -89,13 +83,13 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener);
     var proxyChannel = await HttpClients.connect(hostAndPort, proxyHandler);
+    clientChannel.putAttribute(clientId, proxyChannel);
 
     //https代理新建连接请求
     if (httpRequest.method == HttpMethod.connect) {
       await clientChannel.write(HttpResponse(httpRequest.protocolVersion, HttpStatus.ok));
     }
 
-    clientChannel.putAttribute(clientId, proxyChannel);
     return proxyChannel;
   }
 }
@@ -111,7 +105,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   @override
   void channelRead(Channel channel, HttpResponse msg) {
     msg.request = clientChannel.getAttribute(AttributeKeys.request);
-    // log.i("[${clientChannel.id}] Response ${ String.fromCharCodes(msg.body ?? [])}");
+    // log.i("[${clientChannel.id}] Response ${msg.bodyAsString}");
     listener?.onResponse(clientChannel, msg);
     //发送给客户端
     clientChannel.write(msg);
@@ -119,7 +113,6 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
 
   @override
   void channelInactive(Channel channel) {
-    super.channelInactive(channel);
     clientChannel.close();
   }
 }

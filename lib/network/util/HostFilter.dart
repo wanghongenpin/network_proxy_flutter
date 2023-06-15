@@ -43,7 +43,10 @@ class HostFilter {
   }
 
   /// 是否过滤
-  static bool filter(String host) {
+  static bool filter(String? host) {
+    if (host == null) {
+      return false;
+    }
     //如果白名单不为空，不在白名单里都是黑名单
     if (_whitelist.isNotEmpty) {
       return _whitelist.any((element) => !element.hasMatch(host));

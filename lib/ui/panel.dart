@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -39,9 +40,6 @@ class _NetworkTabState extends State<NetworkTabController> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.request.isNull()) {
-      return const SizedBox();
-    }
 
     return DefaultTabController(
         length: widget.tabs.length,
@@ -52,7 +50,7 @@ class _NetworkTabState extends State<NetworkTabController> {
               general(),
               request(),
               response(),
-              const Center(child: Text('Cookies')),
+              cookies(),
             ],
           ),
         ));
@@ -60,56 +58,29 @@ class _NetworkTabState extends State<NetworkTabController> {
 
   Widget general() {
     var request = widget.request.get();
+    if (request == null) {
+      return const SizedBox();
+    }
     var response = widget.response.get();
+    var content = [
+      rowWidget("Request URL", request.uri),
+      const SizedBox(height: 20),
+      rowWidget("Request Method", request.method.name),
+      const SizedBox(height: 20),
+      rowWidget("Status Code", response?.status.code.toString()),
+      const SizedBox(height: 20),
+      rowWidget("Remote Address", response?.remoteAddress),
+      const SizedBox(height: 20),
+      rowWidget("Request Time", request.requestTime.toString()),
+      const SizedBox(height: 20),
+      rowWidget("Duration", response?.costTime()),
+      const SizedBox(height: 20),
+      rowWidget("Request Content-Type", request.headers.contentType),
+      const SizedBox(height: 20),
+      rowWidget("Response Content-Type", response?.headers.contentType),
+    ];
 
-    return ListView(children: [
-      ExpansionTile(
-          title: const Text("General", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          initiallyExpanded: true,
-          childrenPadding: const EdgeInsets.all(20),
-          children: [
-            Row(children: [
-              const Expanded(flex: 2, child: SelectableText("Request URL:")),
-              Expanded(flex: 4, child: SelectableText(request?.uri ?? ''))
-            ]),
-            const SizedBox(height: 20),
-            Row(children: [
-              const Expanded(flex: 2, child: SelectableText("Request Method:")),
-              Expanded(flex: 4, child: SelectableText(request?.method.name ?? ''))
-            ]),
-            const SizedBox(height: 20),
-            Row(children: [
-              const Expanded(flex: 2, child: SelectableText("Status Code:")),
-              Expanded(flex: 4, child: SelectableText(response?.status.code.toString() ?? ''))
-            ]),
-            const SizedBox(height: 20),
-            Row(children: [
-              const Expanded(flex: 2, child: SelectableText("Remote Address:")),
-              Expanded(flex: 4, child: SelectableText(response?.remoteAddress ?? ''))
-            ]),
-            const SizedBox(height: 20),
-            Row(children: [
-              const Expanded(flex: 2, child: SelectableText("Request Time:")),
-              Expanded(flex: 4, child: SelectableText(request?.requestTime.toString() ?? ''))
-            ]),
-            const SizedBox(height: 20),
-            Row(children: [
-              const Expanded(flex: 2, child: SelectableText("Cost Time:")),
-              Expanded(flex: 4, child: SelectableText(response?.costTime() ?? ''))
-            ]),
-            const SizedBox(height: 20),
-            Row(children: [
-              const Expanded(flex: 2, child: SelectableText("Request Content-Type:")),
-              Expanded(flex: 4, child: SelectableText(request?.headers.contentType ?? ''))
-            ]),
-            const SizedBox(height: 20),
-            Row(children: [
-              const Expanded(flex: 2, child: SelectableText("Response Content-Type:")),
-              Expanded(flex: 4, child: SelectableText(response?.headers.contentType ?? ''))
-            ]),
-            const SizedBox(height: 20)
-          ])
-    ]);
+    return ListView(children: [expansionTile("General", content)]);
   }
 
   Widget request() {
@@ -120,16 +91,15 @@ class _NetworkTabState extends State<NetworkTabController> {
     return message(widget.response.get(), "Response");
   }
 
-  Widget cookie() {
-    var requestCookie = widget.request.get()?.cookie.split(";").map((e) => e.split("=")).map((e) => Row(
-        children: [Expanded(flex: 2, child: SelectableText(e.elementAt(0))), Expanded(flex: 4, child: SelectableText(e.elementAt(1)))]));
-    var responseCookie = widget.response.get()?.cookie.split(";").map((element) => element.split("=")).map((e) => Row(
-        children: [Expanded(flex: 2, child: SelectableText(e[0])), Expanded(flex: 4, child: SelectableText(e[1]))]));
+  Widget cookies() {
+    var requestCookie = _cookieWidget(widget.request.get()?.cookie);
+
+    var responseCookie = _cookieWidget(widget.response.get()?.headers.get("Set-Cookie"));
     return ListView(children: [
-      expansionTile("RequestCookie", requestCookie?.toList() ?? []),
-      const Divider(),
+      expansionTile("Request Cookies", requestCookie?.toList() ?? []),
+      // const Divider(),
       const SizedBox(height: 20),
-      expansionTile("ResponseCookie", responseCookie?.toList() ?? []),
+      expansionTile("Response Cookies", responseCookie?.toList() ?? []),
     ]);
   }
 
@@ -137,7 +107,7 @@ class _NetworkTabState extends State<NetworkTabController> {
     var headers = <Widget>[];
     message?.headers.forEach((name, value) {
       headers.add(Row(children: [
-        Expanded(flex: 2, child: SelectableText('$name:')),
+        Expanded(flex: 2, child: SelectableText(name)),
         Expanded(flex: 4, child: SelectableText(value)),
         const SizedBox(height: 20),
       ]));
@@ -152,7 +122,6 @@ class _NetworkTabState extends State<NetworkTabController> {
           shape: const Border(),
           childrenPadding: const EdgeInsets.only(left: 20, bottom: 20),
           children: headers),
-      const Divider(),
       bodyWidgets ?? const SizedBox()
     ]);
   }
@@ -173,10 +142,35 @@ class _NetworkTabState extends State<NetworkTabController> {
         return expansionTile("$type Body",
             [Image.memory(Uint8List.fromList(message.body ?? []), fit: BoxFit.cover, width: 200, height: 200)]);
       } else {
-        return expansionTile("$type Body",
-            [SelectableText.rich(TextSpan(text: message.bodyAsString, style: const TextStyle(color: Colors.black)))]);
+        try {
+          if (message.contentType == ContentType.json) {
+            // 格式化JSON字符串
+            var jsonObject = json.decode(message.bodyAsString);
+            var prettyJsonString = const JsonEncoder.withIndent('  ').convert(jsonObject);
+            return expansionTile("$type Body", [SelectableText.rich(TextSpan(text: prettyJsonString))]);
+          }
+        } catch (e) {
+          // ignore: avoid_print
+          print(e);
+        }
+
+        return expansionTile("$type Body", [SelectableText.rich(TextSpan(text: message.bodyAsString))]);
       }
     }
     return null;
+  }
+
+  Iterable<Widget>? _cookieWidget(String? cookie) {
+    return cookie?.split(";")
+        .map((e) => Strings.splitFirst(e, "="))
+        .where((element) => element != null)
+        .map((e) => rowWidget(e!.key, e.value));
+  }
+
+  Widget rowWidget(final String name, String? value) {
+    return Row(children: [
+      Expanded(flex: 2, child: SelectableText(name)),
+      Expanded(flex: 4, child: SelectableText(value ?? ''))
+    ]);
   }
 }

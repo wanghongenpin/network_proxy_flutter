@@ -1,113 +1,63 @@
-import 'dart:collection';
+import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:network/network/bin/server.dart';
 import 'package:network/ui/left.dart';
 import 'package:network/ui/panel.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'network/channel.dart';
 import 'network/handler.dart';
 import 'network/http/http.dart';
-import 'network/util/AttributeKeys.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  //设置窗口大小
+  await windowManager.ensureInitialized();
+  WindowOptions windowOptions =
+      const WindowOptions(size: Size(1280, 720), center: true, titleBarStyle: TitleBarStyle.hidden);
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  static final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
+
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Doraemon',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const NetworkHomePage(title: 'Network Proxy'),
-    );
+    return ValueListenableBuilder<ThemeMode>(
+        valueListenable: themeNotifier,
+        builder: (_, ThemeMode currentMode, __) {
+          return MaterialApp(
+            title: 'ProxyPin',
+            theme: ThemeData.light(useMaterial3: true),
+            darkTheme: ThemeData(brightness: Brightness.dark, useMaterial3: false),
+            themeMode: currentMode,
+            home: const NetworkHomePage(),
+          );
+        });
   }
 }
 
 class NetworkHomePage extends StatefulWidget {
-  const NetworkHomePage({super.key, required this.title});
-
-  final String title;
+  const NetworkHomePage({super.key});
 
   @override
   State<NetworkHomePage> createState() => _NetworkHomePagePageState();
 }
 
-class DomainWidget extends StatefulWidget {
-  final NetworkTabController panel;
-
-  DomainWidget({required this.panel}) : super(key: GlobalKey<_DomainWidgetState>());
-
-  void add(Channel channel, HttpRequest request) {
-    var state = key as GlobalKey<_DomainWidgetState>;
-    state.currentState?.add(channel, request);
-  }
-
-  void addResponse(Channel channel, HttpResponse response) {
-    var state = key as GlobalKey<_DomainWidgetState>;
-    state.currentState?.addResponse(channel, response);
-  }
-
-  void clean() {
-    var state = key as GlobalKey<_DomainWidgetState>;
-    state.currentState?.clean();
-  }
-
-  @override
-  State<StatefulWidget> createState() {
-    return _DomainWidgetState();
-  }
-}
-
-class _DomainWidgetState extends State<DomainWidget> {
-  LinkedHashMap<HostAndPort, HeaderBody> containerMap = LinkedHashMap<HostAndPort, HeaderBody>();
-
-  @override
-  Widget build(BuildContext context) {
-    var list = containerMap.values;
-    return ListView.builder(itemBuilder: (BuildContext context, int index) => list.elementAt(index), itemCount: list.length );
-  }
-
-  ///添加请求
-  void add(Channel channel, HttpRequest request) {
-    HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
-    HeaderBody? headerBody = containerMap[hostAndPort];
-    var listURI = RowURI(request, widget.panel);
-    if (headerBody != null) {
-      headerBody.addBody(channel.id, listURI);
-      return;
-    }
-
-    headerBody = HeaderBody(hostAndPort.url);
-    headerBody.addBody(channel.id, listURI);
-    setState(() {
-      containerMap[hostAndPort] = headerBody!;
-    });
-  }
-
-  ///添加响应
-  void addResponse(Channel channel, HttpResponse response) {
-    HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
-    HeaderBody? headerBody = containerMap[hostAndPort];
-    headerBody?.getBody(channel.id)?.add(response);
-  }
-
-  void clean() {
-    setState(() {
-      containerMap.clear();
-    });
-  }
-}
-
 class _NetworkHomePagePageState extends State<NetworkHomePage> implements EventListener {
-  late DomainWidget domainWidget;
   final NetworkTabController panel = NetworkTabController();
+  late DomainWidget domainWidget;
+  late ProxyServer proxyServer;
 
   @override
   void onRequest(Channel channel, HttpRequest request) {
@@ -123,21 +73,106 @@ class _NetworkHomePagePageState extends State<NetworkHomePage> implements EventL
   void initState() {
     super.initState();
     domainWidget = DomainWidget(panel: panel);
-    start(listener: this);
+    proxyServer = ProxyServer(listener: this);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(onPressed: () => domainWidget.clean(), icon: const Icon(Icons.cleaning_services)),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text(widget.title),
+        appBar: Tab(
+          child: Toolbar(proxyServer, domainWidget),
         ),
         body: Row(children: [
           SizedBox(width: 420, child: domainWidget),
           const Spacer(),
-          Expanded(flex: 100,  child: domainWidget.panel),
+          Expanded(flex: 100, child: domainWidget.panel),
         ]));
+  }
+}
+
+class Toolbar extends StatefulWidget {
+  final ProxyServer proxyServer;
+  final DomainWidget domainWidget;
+
+  const Toolbar(this.proxyServer, this.domainWidget, {super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _ToolbarState();
+  }
+}
+
+class _ToolbarState extends State<Toolbar> with WindowListener {
+  bool started = true;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.proxyServer.start();
+    windowManager.addListener(this);
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onWindowClose() {
+    widget.proxyServer.stop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 80 : 30)),
+        IconButton(
+            icon: Icon(
+              started ? Icons.stop : Icons.play_arrow_sharp,
+              color: started ? Colors.red : Colors.green,
+              size: 25,
+            ),
+            onPressed: () async {
+              Future<ServerSocket?> result = started ? widget.proxyServer.stop() : widget.proxyServer.start();
+              result.then((value) => setState(() {
+                    started = !started;
+                  }));
+            }),
+        const Padding(padding: EdgeInsets.only(left: 30)),
+        IconButton(
+            icon: const Icon(Icons.cleaning_services_outlined),
+            onPressed: () {
+              widget.domainWidget.clean();
+            }),
+        const Padding(padding: EdgeInsets.only(left: 30)),
+        IconButton(
+            onPressed: () {
+              _downloadCert();
+            },
+            icon: const Icon(Icons.https)),
+        const Padding(padding: EdgeInsets.only(left: 30)),
+        IconButton(
+            onPressed: () {
+              MyApp.themeNotifier.value =
+                  MyApp.themeNotifier.value == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+            },
+            icon: const Icon(Icons.settings)),
+      ],
+    );
+  }
+
+  void _downloadCert() async {
+    final String? path = await getSavePath(suggestedName: "ca_root.crt");
+    if (path != null) {
+      const String fileMimeType = 'application/x-x509-ca-cert';
+      var body = await rootBundle.load('assets/certs/ca.crt');
+      final XFile xFile = XFile.fromData(
+        body.buffer.asUint8List(),
+        mimeType: fileMimeType,
+      );
+      await xFile.saveTo(path);
+    }
   }
 }

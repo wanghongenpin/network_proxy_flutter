@@ -8,6 +8,8 @@ import 'package:network/network/util/x509.dart';
 
 Future<void> main() async {
   await CertificateManager.getCertificateContext('www.jianshu.com');
+  CertificateManager.caCert.tbsCertificateSeqAsString;
+
   String cer = CertificateManager.get('www.jianshu.com')!;
   var x509certificateFromPem = X509Utils.x509CertificateFromPem(cer);
   print(x509certificateFromPem.plain!);
@@ -32,6 +34,7 @@ class CertificateManager {
   static String? get(String host) {
     return _certificateMap[host];
   }
+  static X509CertificateData get caCert => _caCert;
 
   /// 获取域名自签名证书
   static Future<SecurityContext> getCertificateContext(String host) async {

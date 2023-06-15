@@ -14,13 +14,13 @@ import 'handler.dart';
 abstract class ChannelHandler<T> {
   var log = Logger(
       printer: PrettyPrinter(
-        methodCount: 0,
-        errorMethodCount: 8,
-        lineLength: 120,
-        colors: true,
-        printEmojis: false,
-        excludeBox: {Level.info: true, Level.debug: true},
-      ));
+    methodCount: 0,
+    errorMethodCount: 8,
+    lineLength: 120,
+    colors: true,
+    printEmojis: false,
+    excludeBox: {Level.info: true, Level.debug: true},
+  ));
 
   void channelActive(Channel channel) {}
 
@@ -50,9 +50,7 @@ class Channel {
   final int remotePort;
 
   Channel(this._socket)
-      : _id = DateTime
-      .now()
-      .millisecondsSinceEpoch + Random().nextInt(999999),
+      : _id = DateTime.now().millisecondsSinceEpoch + Random().nextInt(999999),
         remoteAddress = _socket.remoteAddress,
         remotePort = _socket.remotePort;
 
@@ -180,11 +178,11 @@ class HostAndPort {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is HostAndPort &&
-              runtimeType == other.runtimeType &&
-              scheme == other.scheme &&
-              host == other.host &&
-              port == other.port;
+      other is HostAndPort &&
+          runtimeType == other.runtimeType &&
+          scheme == other.scheme &&
+          host == other.host &&
+          port == other.port;
 
   @override
   int get hashCode => scheme.hashCode ^ host.hashCode ^ port.hashCode;
@@ -247,10 +245,11 @@ class Network {
 
   _onEvent(Uint8List data, Channel channel) async {
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
+
     //ssl握手
-    if (hostAndPort != null && hostAndPort.isSsl()) {
+    if (hostAndPort?.isSsl() == true) {
       try {
-        var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
+        var certificate = await CertificateManager.getCertificateContext(hostAndPort!.host);
         SecureSocket secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
         channel.secureSocket = secureSocket;
         secureSocket.listen((event) => channel.pipeline.channelRead(channel, event));
@@ -279,16 +278,24 @@ class Network {
 
 class Server extends Network {
   final int port;
+  late ServerSocket serverSocket;
+  bool isRunning = false;
 
   Server(this.port);
 
-  Future<void> bind() async {
-    ServerSocket.bind(InternetAddress.loopbackIPv4, port).then((serverSocket) =>
-    {
-      serverSocket.listen((socket) {
-        listen(socket);
-      })
+  Future<ServerSocket> bind() async {
+    serverSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, port);
+    serverSocket.listen((socket) {
+      isRunning = true;
+      listen(socket);
     });
+    return serverSocket;
+  }
+
+  Future<ServerSocket> stop() async {
+    if (!isRunning) return serverSocket;
+    isRunning = false;
+    return serverSocket.close();
   }
 }
 
