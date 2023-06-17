@@ -4,9 +4,9 @@ import 'dart:typed_data';
 
 import 'package:logger/logger.dart';
 import 'package:network/network/http/http.dart';
-import 'package:network/network/util/AttributeKeys.dart';
-import 'package:network/network/util/CertificateManager.dart';
-import 'package:network/network/util/HostFilter.dart';
+import 'package:network/network/util/attribute_keys.dart';
+import 'package:network/network/util/crts.dart';
+import 'package:network/network/util/host_filter.dart';
 
 import 'handler.dart';
 

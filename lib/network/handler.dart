@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:network/network/http/http.dart';
 import 'package:network/network/http/http_headers.dart';
-import 'package:network/network/util/AttributeKeys.dart';
+import 'package:network/network/util/attribute_keys.dart';
 import 'package:network/network/util/logger.dart';
 
 import 'channel.dart';

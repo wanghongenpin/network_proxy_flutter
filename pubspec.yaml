@@ -16,6 +16,7 @@ dependencies:
   date_format: ^2.0.7
   file_selector: ^0.9.3
   window_manager: ^0.3.4
+  path_provider: ^2.0.15
 dev_dependencies:
   flutter_test:
     sdk: flutter
