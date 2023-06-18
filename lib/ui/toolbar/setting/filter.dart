@@ -27,6 +27,9 @@ class _DomainFilterState extends State<DomainFilter> {
 
   @override
   Widget build(BuildContext context) {
+    widget.hostList.addInitListen(() {
+      widget.hostEnableNotifier.value = !widget.hostEnableNotifier.value;
+    });
     domainList = DomainList(widget.hostList);
 
     return Column(
@@ -145,7 +148,7 @@ class _DomainListState extends State<DomainList> {
 
   @override
   Widget build(BuildContext context) {
-    widget.hostList.initListens.add(() {
+    widget.hostList.addInitListen(() {
       setState(() {});
     });
 

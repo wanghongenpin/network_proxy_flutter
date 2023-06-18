@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:network/network/bin/server.dart';
 import 'package:network/ui/toolbar/setting/theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../network/util/host_filter.dart';
 import 'filter.dart';
 
 class Setting extends StatefulWidget {
-  const Setting({super.key});
+  final ProxyServer proxyServer;
+  const Setting({super.key, required this.proxyServer});
 
   @override
   State<Setting> createState() => _SettingState();
@@ -24,25 +27,38 @@ class _SettingState extends State<Setting> {
         return [
           PopupMenuItem<String>(
               child: Row(children: [
-            const Padding(padding: EdgeInsets.only(left: 18)),
-            const Text("端口号：", style: TextStyle(fontSize: 15)),
+            const Padding(padding: EdgeInsets.only(left: 16)),
+            const Text("端口号：", style: TextStyle(fontSize: 13)),
             SizedBox(
                 width: 80,
                 child: TextFormField(
-                  initialValue: "8888",
+                  initialValue: widget.proxyServer.port.toString(),
                   textAlign: TextAlign.center,
                   inputFormatters: <TextInputFormatter>[
                     LengthLimitingTextInputFormatter(5),
                     FilteringTextInputFormatter.allow(RegExp("[0-9]"))
                   ],
-                  decoration: const InputDecoration(),
+                  decoration:  const InputDecoration( ),
                 ))
           ])),
           const PopupMenuItem(
             child: ThemeSetting(),
           ),
           PopupMenuItem<String>(
-            child: ListTile(title: const Text("域名过滤"), trailing: const Icon(Icons.arrow_right), onTap: () => _filter()),
+              child: ListTile(
+                  title: const Text("域名过滤"),
+                  dense: true,
+                  trailing: const Icon(Icons.arrow_right),
+                  onTap: () => _filter())
+          ),
+          PopupMenuItem<String>(
+              child: const ListTile(
+                  title: Text("Github"),
+                  dense: true,
+                  trailing: Icon(Icons.arrow_right)),
+            onTap: () {
+              launchUrl(Uri.parse("https://github.com/wanghongenpin/network-proxy-flutter"));
+            },
           )
         ];
       },

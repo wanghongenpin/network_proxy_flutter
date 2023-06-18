@@ -59,7 +59,7 @@ class Channel {
 
   Socket get socket => _socket;
 
-  set secureSocket(secureSocket) => _socket = secureSocket;
+  set secureSocket(SecureSocket secureSocket) => _socket = secureSocket;
 
   Future<void> write(Object obj) async {
     var data = pipeline._encoder.encode(obj);
@@ -103,6 +103,12 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
     _encoder = encoder;
     _decoder = decoder;
     _handler = handler;
+  }
+
+  void listen(Channel channel) {
+    channel.socket.listen((data) => channel.pipeline.channelRead(channel, data),
+        onError: (error, trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
+        onDone: () => channel.pipeline.channelInactive(channel));
   }
 
   @override
@@ -227,6 +233,7 @@ abstract interface class ChannelInitializer {
 
 class Network {
   late Function _channelInitializer;
+  bool enableSsl = false;
 
   Network initChannel(void Function(Channel channel) initializer) {
     _channelInitializer = initializer;
@@ -245,27 +252,38 @@ class Network {
 
   _onEvent(Uint8List data, Channel channel) async {
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
+    //黑名单 直接转发
+    if (HostFilter.filter(hostAndPort?.host) || (hostAndPort?.isSsl() == true && !enableSsl)) {
+      relay(channel, channel.getAttribute(channel.id));
+      channel.pipeline.channelRead(channel, data);
+      return;
+    }
 
     //ssl握手
     if (hostAndPort?.isSsl() == true) {
-      try {
-        var certificate = await CertificateManager.getCertificateContext(hostAndPort!.host);
-        SecureSocket secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
-        channel.secureSocket = secureSocket;
-        secureSocket.listen((event) => channel.pipeline.channelRead(channel, event));
-      } catch (error, trace) {
-        channel.pipeline._handler.exceptionCaught(channel, error, trace: trace);
-      }
+      ssl(channel, hostAndPort!, data);
       return;
-    }
-    //黑名单
-    if (hostAndPort != null && HostFilter.filter(hostAndPort.host)) {
-      if (HostFilter.filter(hostAndPort.host)) {
-        relay(channel, channel.getAttribute(channel.id));
-      }
     }
 
     channel.pipeline.channelRead(channel, data);
+  }
+
+  void ssl(Channel channel, HostAndPort hostAndPort, Uint8List data) async {
+    try {
+      //客户端ssl
+      Channel remoteChannel = channel.getAttribute(channel.id);
+      remoteChannel.secureSocket =
+          await SecureSocket.secure(remoteChannel.socket, onBadCertificate: (certificate) => true);
+      remoteChannel.pipeline.listen(remoteChannel);
+
+      //服务端ssl
+      var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
+      SecureSocket secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
+      channel.secureSocket = secureSocket;
+      channel.pipeline.listen(channel);
+    } catch (error, trace) {
+      channel.pipeline._handler.exceptionCaught(channel, error, trace: trace);
+    }
   }
 
   /// 转发请求
@@ -284,11 +302,11 @@ class Server extends Network {
   Server(this.port);
 
   Future<ServerSocket> bind() async {
-    serverSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, port);
+    serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, port);
     serverSocket.listen((socket) {
-      isRunning = true;
       listen(socket);
     });
+    isRunning = true;
     return serverSocket;
   }
 
@@ -300,13 +318,7 @@ class Server extends Network {
 }
 
 class Client extends Network {
-  var log = Logger();
-
   Future<Channel> connect(HostAndPort hostAndPort) async {
-    if (hostAndPort.isSsl()) {
-      return SecureSocket.connect(hostAndPort.host, hostAndPort.port, onBadCertificate: (certificate) => true)
-          .then((socket) => listen(socket));
-    }
     return Socket.connect(hostAndPort.host, hostAndPort.port, timeout: const Duration(seconds: 10))
         .then((socket) => listen(socket));
   }

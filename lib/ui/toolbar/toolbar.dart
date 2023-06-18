@@ -30,16 +30,15 @@ class _ToolbarState extends State<Toolbar> with WindowListener {
         SocketLaunch(proxyServer: widget.proxyServer),
         const Padding(padding: EdgeInsets.only(left: 30)),
         IconButton(
-            isSelected: true,
             tooltip: "清理",
             icon: const Icon(Icons.cleaning_services_outlined),
             onPressed: () {
               widget.domainWidget.clean();
             }),
         const Padding(padding: EdgeInsets.only(left: 30)),
-        const SslWidget(),
+        SslWidget(proxyServer: widget.proxyServer),
         const Padding(padding: EdgeInsets.only(left: 30)),
-        const Setting(),
+        Setting(proxyServer: widget.proxyServer),
       ],
     );
   }

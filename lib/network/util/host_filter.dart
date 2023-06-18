@@ -46,8 +46,14 @@ abstract class HostList {
   final List<RegExp> list = [];
   bool enabled = false;
 
-  List<Function> initListens = [];
+  List<Function> _initListens = [];
   bool _inited = false;
+
+  void addInitListen(void Function() action) {
+    if (!_inited) {
+      _initListens.add(action);
+    }
+  }
 
   Future<void> _initList() async {
     if (_inited) {
@@ -67,7 +73,7 @@ abstract class HostList {
       }
     });
     _inited = true;
-    for (var fun in initListens) {
+    for (var fun in _initListens) {
       fun();
     }
   }

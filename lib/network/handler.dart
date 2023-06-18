@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:network/network/http/http.dart';
 import 'package:network/network/http/http_headers.dart';
 import 'package:network/network/util/attribute_keys.dart';
@@ -34,7 +35,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   void channelRead(Channel channel, HttpRequest msg) async {
     forward(channel, msg).catchError((error, trace) {
       if (error is SocketException &&
-          (error.message.contains("Failed host lookup") || error.message.contains(" Operation timed out"))) {
+          (error.message.contains("Failed host lookup") || error.message.contains("Connection timed out"))) {
         log.e("连接失败 ${error.message}");
         channel.close();
         return;
@@ -54,19 +55,36 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
     channel.putAttribute(AttributeKeys.request, httpRequest);
 
+    if (httpRequest.uri == 'http://proxy.pin/ssl') {
+      _crtDownload(channel, httpRequest);
+      return;
+    }
+
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
+
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
-      if (channel.getAttribute(AttributeKeys.host) == null) {
-        remoteChannel.putAttribute(AttributeKeys.uri, httpRequest.uri);
-      } else {
+      if (httpRequest.uri.startsWith("/")) {
         remoteChannel.putAttribute(AttributeKeys.uri, '${channel.getAttribute(AttributeKeys.host)}${httpRequest.uri}');
+      } else {
+        remoteChannel.putAttribute(AttributeKeys.uri, httpRequest.uri);
       }
+
       // log.i("[${channel.id}] ${remoteChannel.getAttribute(AttributeKeys.uri)}");
       listener?.onRequest(channel, httpRequest);
       //实现抓包代理转发
       await remoteChannel.write(httpRequest);
     }
+  }
+
+  void _crtDownload(Channel channel, HttpRequest request) async{
+    const String fileMimeType = 'application/x-x509-ca-cert';
+    var body = await rootBundle.load('assets/certs/ca.crt');
+    var response = HttpResponse(request.protocolVersion, HttpStatus.ok);
+    response.headers.set(HttpHeaders.CONTENT_TYPE, fileMimeType);
+    response.headers.set("Content-Disposition", 'attachment; filename="ProxyPin CA.crt"');
+    response.body = body.buffer.asUint8List();
+    channel.write(response);
   }
 
   /// 获取远程连接
@@ -126,6 +144,10 @@ class RelayHandler extends ChannelHandler<Object> {
   void channelRead(Channel channel, Object msg) {
     //发送给客户端
     remoteChannel.write(msg);
+  }
+  @override
+  void channelInactive(Channel channel) {
+    remoteChannel.close();
   }
 }
 

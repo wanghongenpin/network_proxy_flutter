@@ -9,7 +9,7 @@
 .history
 .svn/
 migrate_working_dir/
-
+Podfile.lock
 # IntelliJ related
 *.iml
 *.ipr

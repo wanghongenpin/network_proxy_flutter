@@ -168,7 +168,7 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
   List<int> _convertBody() {
     List<int> bytes = _bodyBuffer.toBytes();
     if (message.headers.isGzip) {
-      bytes = gzipDecode(bytes);
+        bytes = gzipDecode(bytes);
     }
     _bodyBuffer.clear();
     return bytes;

@@ -3,7 +3,12 @@ import 'dart:io';
 ///GZIP 解压缩
 List<int> gzipDecode(List<int> byteBuffer) {
   GZipCodec gzipCodec = GZipCodec();
-  return gzipCodec.decode(byteBuffer);
+  try {
+    return gzipCodec.decode(byteBuffer);
+  } catch (e) {
+    print("gzipDecode error: $e");
+    return byteBuffer;
+  }
 }
 
 ///GZIP 解压缩

@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:network/network/bin/server.dart';
+import 'package:network/network/channel.dart';
 import 'package:window_manager/window_manager.dart';
 
 class SocketLaunch extends StatefulWidget {
@@ -55,7 +54,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener {
           size: 25,
         ),
         onPressed: () async {
-          Future<ServerSocket?> result = started ? widget.proxyServer.stop() : widget.proxyServer.start();
+          Future<Server?> result = started ? widget.proxyServer.stop() : widget.proxyServer.start();
           result.then((value) => setState(() {
                 started = !started;
               }));
