@@ -120,6 +120,8 @@ class _Switch extends StatefulWidget {
 }
 
 class _SwitchState extends State<_Switch> {
+  bool changed = false;
+
   @override
   Widget build(BuildContext context) {
     return SwitchListTile(
@@ -129,7 +131,16 @@ class _SwitchState extends State<_Switch> {
         value: widget.proxyServer.enableSsl,
         onChanged: (val) {
           widget.proxyServer.enableSsl = val;
+          changed = true;
           setState(() {});
         });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (changed) {
+      widget.proxyServer.flushConfig();
+    }
   }
 }

@@ -107,7 +107,8 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
 
   void listen(Channel channel) {
     channel.socket.listen((data) => channel.pipeline.channelRead(channel, data),
-        onError: (error, trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
+        onError: (error, trace) =>
+            channel.pipeline.exceptionCaught(channel, error, trace: trace),
         onDone: () => channel.pipeline.channelInactive(channel));
   }
 
@@ -122,7 +123,8 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       var data = _decoder.decode(msg);
       if (data != null) {
         if (data is HttpResponse) {
-          data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
+          data.remoteAddress =
+              '${channel.remoteAddress.host}:${channel.remotePort}';
         }
         _handler.channelRead(channel, data!);
       }
@@ -245,7 +247,8 @@ class Network {
     _channelInitializer.call(channel);
     channel.pipeline.channelActive(channel);
     socket.listen((data) => _onEvent(data, channel),
-        onError: (error, StackTrace trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
+        onError: (error, StackTrace trace) =>
+            channel.pipeline.exceptionCaught(channel, error, trace: trace),
         onDone: () => channel.pipeline.channelInactive(channel));
     return channel;
   }
@@ -253,7 +256,8 @@ class Network {
   _onEvent(Uint8List data, Channel channel) async {
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
     //黑名单 直接转发
-    if (HostFilter.filter(hostAndPort?.host) || (hostAndPort?.isSsl() == true && !enableSsl)) {
+    if (HostFilter.filter(hostAndPort?.host) ||
+        (hostAndPort?.isSsl() == true && !enableSsl)) {
       relay(channel, channel.getAttribute(channel.id));
       channel.pipeline.channelRead(channel, data);
       return;
@@ -272,13 +276,17 @@ class Network {
     try {
       //客户端ssl
       Channel remoteChannel = channel.getAttribute(channel.id);
-      remoteChannel.secureSocket =
-          await SecureSocket.secure(remoteChannel.socket, onBadCertificate: (certificate) => true);
+      remoteChannel.secureSocket = await SecureSocket.secure(
+          remoteChannel.socket,
+          onBadCertificate: (certificate) => true);
       remoteChannel.pipeline.listen(remoteChannel);
 
       //服务端ssl
-      var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
-      SecureSocket secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
+      var certificate =
+          await CertificateManager.getCertificateContext(hostAndPort.host);
+      SecureSocket secureSocket = await SecureSocket.secureServer(
+          channel.socket, certificate,
+          bufferedData: data);
       channel.secureSocket = secureSocket;
       channel.pipeline.listen(channel);
     } catch (error, trace) {
@@ -289,19 +297,18 @@ class Network {
   /// 转发请求
   void relay(Channel clientChannel, Channel remoteChannel) {
     var rawCodec = RawCodec();
-    clientChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(remoteChannel));
-    remoteChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(clientChannel));
+    clientChannel.pipeline
+        .handle(rawCodec, rawCodec, RelayHandler(remoteChannel));
+    remoteChannel.pipeline
+        .handle(rawCodec, rawCodec, RelayHandler(clientChannel));
   }
 }
 
 class Server extends Network {
-  final int port;
   late ServerSocket serverSocket;
   bool isRunning = false;
 
-  Server(this.port);
-
-  Future<ServerSocket> bind() async {
+  Future<ServerSocket> bind(int port) async {
     serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, port);
     serverSocket.listen((socket) {
       listen(socket);
@@ -319,7 +326,8 @@ class Server extends Network {
 
 class Client extends Network {
   Future<Channel> connect(HostAndPort hostAndPort) async {
-    return Socket.connect(hostAndPort.host, hostAndPort.port, timeout: const Duration(seconds: 10))
+    return Socket.connect(hostAndPort.host, hostAndPort.port,
+            timeout: const Duration(seconds: 10))
         .then((socket) => listen(socket));
   }
 }

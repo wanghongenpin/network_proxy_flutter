@@ -1,47 +1,66 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+
+import 'package:network/network/util/host_filter.dart';
 
 import '../channel.dart';
 import '../handler.dart';
 import '../http/codec.dart';
 import '../util/logger.dart';
+import '../util/system_proxy.dart';
 
 Future<void> main() async {
   ProxyServer().start();
 }
 
 class ProxyServer {
+  bool init = false;
   int port = 8888;
+  bool _enableSsl = false;
 
   EventListener? listener;
   Server? server;
 
   ProxyServer({this.listener});
 
-  ///是否启用ssl
-  bool get enableSsl => server?.enableSsl == true;
+  bool get enableSsl => _enableSsl;
+
+  File configFile() {
+    var userHome =
+        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    var separator = Platform.pathSeparator;
+    return File("${userHome!}$separator.proxyPin${separator}config.cnf");
+  }
 
   set enableSsl(bool enableSsl) {
+    _enableSsl = enableSsl;
     server?.enableSsl = enableSsl;
-    if (server?.isRunning == false) {
+    if (server == null || server?.isRunning == false) {
       return;
     }
 
     if (Platform.isMacOS) {
-      setSslProxyEnableMacOS(enableSsl);
+      SystemProxy.setSslProxyEnableMacOS(enableSsl, port);
     }
   }
 
   /// 启动代理服务
-  Future<Server> start() {
-    Server server = Server(port)
-      ..initChannel((channel) {
-        channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(), HttpChannelHandler(listener: listener));
-      });
+  Future<Server> start() async {
+    Server server = Server();
+    if (!init) {
+      init = true;
+      await _loadConfig();
+    }
+    server.enableSsl = _enableSsl;
+    server.initChannel((channel) {
+      channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(),
+          HttpChannelHandler(listener: listener));
+    });
 
-    return server.bind().then((serverSocket) {
+    return server.bind(port).then((serverSocket) {
       log.i("listen on $port");
-      _setSystemProxy(port);
+      SystemProxy.setSystemProxy(port);
       this.server = server;
       return server;
     });
@@ -49,100 +68,50 @@ class ProxyServer {
 
   /// 停止代理服务
   Future<Server?> stop() async {
-    log.i("stop on ${server?.port}");
+    log.i("stop on $port");
     if (Platform.isMacOS) {
-      await setProxyEnableMacOS(false);
+      await SystemProxy.setProxyEnableMacOS(false);
     } else if (Platform.isWindows) {
-      await _setProxyEnableWindows(false);
+      await SystemProxy.setProxyEnableWindows(false);
     }
     await server?.stop();
     return server;
   }
 
-  /// 设置系统代理
-  void _setSystemProxy(int port) async {
-    if (Platform.isMacOS) {
-      _setProxyServerMacOS("127.0.0.1:$port");
-    } else if (Platform.isWindows) {
-      _setProxyServerWindows("127.0.0.1:$port");
-      _setProxyEnableWindows(true);
+  void restart() {
+    stop().then((value) => start());
+  }
+
+  Future<void> _loadConfig() async {
+    var file = configFile();
+    var exits = await file.exists();
+    if (!exits) {
+      return;
     }
+    Map<String, dynamic> config = jsonDecode(await file.readAsString());
+    log.i('加载配置文件 [$file] $config');
+    enableSsl = config['enableSsl'] == true;
+    port = config['port'] ?? port;
+    HostFilter.whitelist.load(config['whitelist']);
+    HostFilter.blacklist.load(config['blacklist']);
   }
 
-  Future<bool> _setProxyServerMacOS(String proxyServer) async {
-    var match = RegExp(r"^(?:http://)?(?<host>.+):(?<port>\d+)$").firstMatch(proxyServer);
-    if (match == null) {
-      print('proxyServer parse error!');
-      return false;
-    }
-    var host = match.namedGroup('host');
-    var port = match.namedGroup('port');
-    var results = await Process.run('bash', [
-      '-c',
-      _concatCommands([
-        'networksetup -setwebproxy wi-fi $host $port',
-        enableSsl ? 'networksetup -setsecurewebproxy wi-fi $host $port' : '',
-        'networksetup -setproxybypassdomains wi-fi 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.1, localhost, *.local, timestamp.apple.com, sequoia.apple.com, seed-sequoia.siri.apple.com, *.google.com, *.googleapis.com',
-      ])
-    ]);
-    print('set proxyServer, exitCode: ${results.exitCode}, stdout: ${results.stdout}');
-    return results.exitCode == 0;
+  void flushConfig() async {
+    var file = configFile();
+    await file.create(recursive: true);
+    HostFilter.whitelist.toJson();
+    HostFilter.blacklist.toJson();
+    var json = jsonEncode(toJson());
+    log.i('刷新配置文件 $runtimeType ${toJson()}');
+    file.writeAsString(json);
   }
 
-  Future<bool> setProxyEnableMacOS(bool proxyEnable) async {
-    var proxyMode = proxyEnable ? 'on' : 'off';
-    var results = await Process.run('bash', [
-      '-c',
-      _concatCommands([
-        'networksetup -setwebproxystate wi-fi $proxyMode',
-        enableSsl ? 'networksetup -setsecurewebproxystate wi-fi $proxyMode' : '',
-      ])
-    ]);
-    return results.exitCode == 0;
+  Map<String, dynamic> toJson() {
+    return {
+      'port': port,
+      'enableSsl': enableSsl,
+      'whitelist': HostFilter.whitelist.toJson(),
+      'blacklist': HostFilter.blacklist.toJson(),
+    };
   }
-
-  Future<bool> setSslProxyEnableMacOS(bool proxyEnable) async {
-    var results = await Process.run('bash', [
-      '-c',
-      _concatCommands([
-        proxyEnable
-            ? 'networksetup -setsecurewebproxy wi-fi 127.0.0.1 ${server?.port}'
-            : 'networksetup -setsecurewebproxystate wi-fi off',
-      ])
-    ]);
-    return results.exitCode == 0;
-  }
-
-  Future<bool> _setProxyEnableWindows(bool proxyEnable) async {
-    var results = await Process.run('reg', [
-      'add',
-      'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-      '/v',
-      'ProxyEnable',
-      '/t',
-      'REG_DWORD',
-      '/f',
-      '/d',
-      proxyEnable ? '1' : '0',
-    ]);
-    return results.exitCode == 0;
-  }
-
-  Future<bool> _setProxyServerWindows(String proxyServer) async {
-    var results = await Process.run('reg', [
-      'add',
-      'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-      '/v',
-      'ProxyServer',
-      '/f',
-      '/d',
-      proxyServer,
-    ]);
-    print('set proxyServer, exitCode: ${results.exitCode}, stdout: ${results.stdout}');
-    return results.exitCode == 0;
-  }
-}
-
-_concatCommands(List<String> commands) {
-  return commands.where((element) => element.isNotEmpty).join(' && ');
 }

@@ -9,6 +9,7 @@ import 'filter.dart';
 
 class Setting extends StatefulWidget {
   final ProxyServer proxyServer;
+
   const Setting({super.key, required this.proxyServer});
 
   @override
@@ -26,21 +27,8 @@ class _SettingState extends State<Setting> {
       itemBuilder: (context) {
         return [
           PopupMenuItem<String>(
-              child: Row(children: [
-            const Padding(padding: EdgeInsets.only(left: 16)),
-            const Text("端口号：", style: TextStyle(fontSize: 13)),
-            SizedBox(
-                width: 80,
-                child: TextFormField(
-                  initialValue: widget.proxyServer.port.toString(),
-                  textAlign: TextAlign.center,
-                  inputFormatters: <TextInputFormatter>[
-                    LengthLimitingTextInputFormatter(5),
-                    FilteringTextInputFormatter.allow(RegExp("[0-9]"))
-                  ],
-                  decoration:  const InputDecoration( ),
-                ))
-          ])),
+              child: PortWidget(proxyServer: widget.proxyServer)
+          ),
           const PopupMenuItem(
             child: ThemeSetting(),
           ),
@@ -49,15 +37,15 @@ class _SettingState extends State<Setting> {
                   title: const Text("域名过滤"),
                   dense: true,
                   trailing: const Icon(Icons.arrow_right),
-                  onTap: () => _filter())
-          ),
+                  onTap: () => _filter())),
           PopupMenuItem<String>(
-              child: const ListTile(
-                  title: Text("Github"),
-                  dense: true,
-                  trailing: Icon(Icons.arrow_right)),
+            child: const ListTile(
+                title: Text("Github"),
+                dense: true,
+                trailing: Icon(Icons.arrow_right)),
             onTap: () {
-              launchUrl(Uri.parse("https://github.com/wanghongenpin/network-proxy-flutter"));
+              launchUrl(Uri.parse(
+                  "https://github.com/wanghongenpin/network-proxy-flutter"));
             },
           )
         ];
@@ -93,7 +81,8 @@ class _SettingState extends State<Setting> {
                       child: DomainFilter(
                           title: "白名单",
                           subtitle: "只代理白名单中的域名, 白名单启用黑名单将会失效",
-                          hostList: HostFilter.whites,
+                          hostList: HostFilter.whitelist,
+                          proxyServer: widget.proxyServer,
                           hostEnableNotifier: hostEnableNotifier)),
                   const SizedBox(width: 10),
                   Expanded(
@@ -102,11 +91,70 @@ class _SettingState extends State<Setting> {
                           title: "黑名单",
                           subtitle: "黑名单中的域名不会代理",
                           hostList: HostFilter.blacklist,
+                          proxyServer: widget.proxyServer,
                           hostEnableNotifier: hostEnableNotifier)),
                 ],
               ),
             ));
       },
     );
+  }
+}
+
+class PortWidget extends StatefulWidget {
+  final ProxyServer proxyServer;
+
+  const PortWidget({super.key, required this.proxyServer});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _PortState();
+  }
+}
+
+class _PortState extends State<PortWidget> {
+  final textController = TextEditingController();
+  final FocusNode portFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    textController.text = widget.proxyServer.port.toString();
+    portFocus.addListener(() async {
+      //失去焦点
+      if (!portFocus.hasFocus &&
+          textController.text != widget.proxyServer.port.toString()) {
+        widget.proxyServer.port = int.parse(textController.text);
+        widget.proxyServer.restart();
+        widget.proxyServer.flushConfig();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    portFocus.dispose();
+    textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+      const Padding(padding: EdgeInsets.only(left: 16)),
+      const Text("端口号：", style: TextStyle(fontSize: 13)),
+      SizedBox(
+          width: 80,
+          child: TextFormField(
+            focusNode: portFocus,
+            controller: textController,
+            textAlign: TextAlign.center,
+            inputFormatters: <TextInputFormatter>[
+              LengthLimitingTextInputFormatter(5),
+              FilteringTextInputFormatter.allow(RegExp("[0-9]"))
+            ],
+            decoration: const InputDecoration(),
+          ))
+    ]);
   }
 }

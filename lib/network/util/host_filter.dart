@@ -1,10 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:path_provider/path_provider.dart';
-
-import 'logger.dart';
 
 void main() {
   print(HostFilter.filter("stackoverflow.com"));
@@ -12,7 +5,7 @@ void main() {
 
 class HostFilter {
   /// 白名单
-  static final Whites whites = Whites();
+  static final Whites whitelist = Whites();
 
   /// 黑名单
   static final Blacks blacklist = Blacks();
@@ -24,8 +17,8 @@ class HostFilter {
     }
 
     //如果白名单不为空，不在白名单里都是黑名单
-    if (whites.enabled) {
-      return whites.list.every((element) => !element.hasMatch(host));
+    if (whitelist.enabled) {
+      return whitelist.list.every((element) => !element.hasMatch(host));
     }
     if (blacklist.enabled) {
       return blacklist.list.any((element) => element.hasMatch(host));
@@ -35,47 +28,19 @@ class HostFilter {
 }
 
 abstract class HostList {
-  Future<String> get _homePath async {
-    final directory = await getApplicationSupportDirectory();
-    return directory.path;
-  }
-
-  Future<File> get _configFile;
-
   /// 白名单
   final List<RegExp> list = [];
   bool enabled = false;
 
-  final List<Function> _initListens = [];
-  bool _inited = false;
-
-  void addInitListen(void Function() action) {
-    if (!_inited) {
-      _initListens.add(action);
-    }
-  }
-
-  Future<void> _initList() async {
-    if (_inited) {
+  void load(Map<String, dynamic>? map) {
+    if (map == null) {
       return;
     }
-    final file = await _configFile;
-    log.i('域名过滤初始化文件 $file');
-
-    await file.exists().then((exist) async {
-      if (exist) {
-        Map<String, dynamic> map = json.decode(await file.readAsString());
-        List? list = map['list'];
-        list?.forEach((element) {
-          this.list.add(RegExp(element));
-        });
-        enabled = map['enabled'] == true;
-      }
+    List? list = map['list'];
+    list?.forEach((element) {
+      this.list.add(RegExp(element));
     });
-    _inited = true;
-    for (var fun in _initListens) {
-      fun();
-    }
+    enabled = map['enabled'] == true;
   }
 
   void add(String reg) {
@@ -92,13 +57,6 @@ abstract class HostList {
     }
   }
 
-  void flush() async {
-    final file = await _configFile;
-    log.i('域名过滤刷新文件 $runtimeType ${toJson()}');
-    var json = jsonEncode(toJson());
-    file.writeAsString(json);
-  }
-
   Map<String, dynamic> toJson() {
     return {
       'list': list.map((e) => e.pattern).toList(),
@@ -107,27 +65,6 @@ abstract class HostList {
   }
 }
 
-class Whites extends HostList {
-  @override
-  Future<File> get _configFile async {
-    final path = await _homePath;
-    File file = File('$path/host_whites.txt');
-    return file;
-  }
+class Whites extends HostList {}
 
-  Whites() {
-    _initList();
-  }
-}
-
-class Blacks extends HostList {
-  @override
-  Future<File> get _configFile async {
-    final path = await _homePath;
-    return File('$path/host_blacks.txt');
-  }
-
-  Blacks() {
-    _initList();
-  }
-}
+class Blacks extends HostList {}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:network/network/bin/server.dart';
 
 import '../../../network/util/host_filter.dart';
 
@@ -6,6 +7,7 @@ class DomainFilter extends StatefulWidget {
   final String title;
   final String subtitle;
   final HostList hostList;
+  final ProxyServer proxyServer;
   final ValueNotifier<bool> hostEnableNotifier;
 
   const DomainFilter(
@@ -13,7 +15,7 @@ class DomainFilter extends StatefulWidget {
       required this.title,
       required this.subtitle,
       required this.hostList,
-      required this.hostEnableNotifier});
+      required this.hostEnableNotifier, required this.proxyServer});
 
   @override
   State<StatefulWidget> createState() {
@@ -27,9 +29,6 @@ class _DomainFilterState extends State<DomainFilter> {
 
   @override
   Widget build(BuildContext context) {
-    widget.hostList.addInitListen(() {
-      widget.hostEnableNotifier.value = !widget.hostEnableNotifier.value;
-    });
     domainList = DomainList(widget.hostList);
 
     return Column(
@@ -80,7 +79,7 @@ class _DomainFilterState extends State<DomainFilter> {
   void dispose() {
     super.dispose();
     if (changed) {
-      widget.hostList.flush();
+      widget.proxyServer.flushConfig();
     }
   }
 
@@ -148,10 +147,6 @@ class _DomainListState extends State<DomainList> {
 
   @override
   Widget build(BuildContext context) {
-    widget.hostList.addInitListen(() {
-      setState(() {});
-    });
-
     return Container(
         padding: const EdgeInsets.only(top: 10),
         height: 300,

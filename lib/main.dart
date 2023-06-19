@@ -17,7 +17,7 @@ void main() async {
   await windowManager.ensureInitialized();
   WindowOptions windowOptions = WindowOptions(
       minimumSize: const Size(930, 500),
-      size: const Size(1080, 700),
+      size: const Size(1080, 620),
       center: true,
       titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
