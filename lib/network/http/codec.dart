@@ -1,10 +1,10 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:network/utils/num.dart';
+import 'package:network/network/http/chunked_codec.dart';
 
-import '../channel.dart';
 import '../../utils/compress.dart';
+import '../channel.dart';
 import 'http.dart';
 import 'http_headers.dart';
 
@@ -25,9 +25,8 @@ class HttpConstants {
 enum State {
   readInitial,
   readHeader,
-  readVariableLengthContent,
   readFixedLengthContent,
-  readChunkedContent,
+  readChunked,
   done,
 }
 
@@ -36,19 +35,20 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
   final HttpParse _httpParse = HttpParse();
   State _state = State.readInitial;
 
-  ///chunked编码 剩余未读取的chunk大小
-  int _chunkReadableSize = 0;
-
   late T message;
 
-  final BytesBuilder _bodyBuffer = BytesBuilder();
+  ChunkedInput? chunkedInput;
+  final BytesBuilder buffer = BytesBuilder();
 
   T createMessage(List<String> reqLine);
 
   @override
   T? decode(Uint8List data) {
+    _httpParse.index = 0;
+
     //请求行
     if (_state == State.readInitial) {
+      init();
       var initialLine = _readInitialLine(data);
       message = createMessage(initialLine);
       _state = State.readHeader;
@@ -57,28 +57,33 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     //请求头
     if (_state == State.readHeader) {
       _readHeader(data, message);
-      _state = message.headers.isChunked ? State.readVariableLengthContent : State.readFixedLengthContent;
+      _state = message.headers.isChunked ? State.readChunked : State.readFixedLengthContent;
     }
 
-    //chunked编码
-    if (_state == State.readChunkedContent) {
-      _bodyBuffer.add(data.sublist(0, min(_chunkReadableSize, data.length)));
-      if (data.length < _chunkReadableSize) {
-        _chunkReadableSize = _chunkReadableSize - data.length;
-        return null;
+    //固定长度请求体
+    if (_state == State.readFixedLengthContent) {
+      if (message.contentLength > 0) {
+        buffer.add(data.sublist(_httpParse.index));
       }
-      _httpParse.index = _chunkReadableSize + 2;
-      _state = State.readVariableLengthContent; //读取下一个chunk
-    }
-    //请求体
-    if (_state == State.readFixedLengthContent || _state == State.readVariableLengthContent) {
-      _readBody(data, message);
-      if ((message.contentLength == -1 && !message.headers.isChunked) || _bodyBuffer.length == message.contentLength) {
+
+      if (message.contentLength == -1 || buffer.length >= message.contentLength) {
+        message.body = buffer.length == 0 ? null : buffer.toBytes();
+        buffer.clear();
         _state = State.done;
       }
     }
+
+    //chunked编码
+    if (_state == State.readChunked) {
+      ChunkedContent content = chunkedInput!.readChunked(data.sublist(_httpParse.index));
+      if (content.state == ChunkedState.done) {
+        message.body = content.content;
+        _state = State.done;
+      }
+    }
+
     if (_state == State.done) {
-      message.body = _convertBody();
+      message.body = _convertBody(message.body);
       _state = State.readInitial;
       return message;
     }
@@ -86,6 +91,11 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     return null;
   }
 
+  void init() {
+    _httpParse.reset();
+    buffer.clear();
+    chunkedInput = ChunkedInput();
+  }
   void initialLine(BytesBuilder buffer, T message);
 
   @override
@@ -123,7 +133,6 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
 
   //读取起始行
   List<String> _readInitialLine(Uint8List data) {
-    _httpParse.reset();
     int maxSize = min(data.length, Codec.defaultMaxInitialLineLength);
     return _httpParse.parseInitialLine(data, maxSize);
   }
@@ -134,43 +143,14 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     message.contentLength = message.headers.contentLength;
   }
 
-  //读取请求体
-  void _readBody(Uint8List data, T message) {
-    if (_state == State.readVariableLengthContent) {
-      while (_httpParse.index < data.length) {
-        var parseLine = _httpParse.parseLine(data);
-        if (parseLine.isEmpty) {
-          _httpParse.index = 0;
-          return;
-        }
-        int length = hexToInt(String.fromCharCodes(parseLine));
-        //chunked编码结束 最后以length = 0 结束
-        if (length == 0) {
-          _state = State.done;
-          return;
-        }
-        _bodyBuffer.add(data.sublist(_httpParse.index, min(_httpParse.index + length, data.length)));
-        if (_httpParse.index + length > data.length) {
-          _state = State.readChunkedContent;
-          _chunkReadableSize = length - (data.length - _httpParse.index);
-        }
-        _httpParse.index += length + 2; //跳过\r\n
-      }
-
-      _httpParse.index = 0;
-    } else if (message.contentLength > 0) {
-      _bodyBuffer.add(data.sublist(_httpParse.index));
-      _httpParse.index = 0;
-    }
-  }
-
   //转换body
-  List<int> _convertBody() {
-    List<int> bytes = _bodyBuffer.toBytes();
-    if (message.headers.isGzip) {
-        bytes = gzipDecode(bytes);
+  List<int>? _convertBody(List<int>? bytes) {
+    if (bytes == null) {
+      return null;
     }
-    _bodyBuffer.clear();
+    if (message.headers.isGzip) {
+      bytes = gzipDecode(bytes);
+    }
     return bytes;
   }
 }

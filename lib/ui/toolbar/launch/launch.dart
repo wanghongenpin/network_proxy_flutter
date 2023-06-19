@@ -33,15 +33,15 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener {
   @override
   void onWindowMinimize() {
     started = false;
-    setState(() {});
     widget.proxyServer.stop();
+    setState(() {});
   }
 
   @override
   void onWindowClose() {
     started = false;
-    setState(() {});
     widget.proxyServer.stop();
+    setState(() {});
   }
 
   @override

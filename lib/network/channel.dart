@@ -245,7 +245,7 @@ class Network {
     _channelInitializer.call(channel);
     channel.pipeline.channelActive(channel);
     socket.listen((data) => _onEvent(data, channel),
-        onError: (error, trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
+        onError: (error, StackTrace trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
         onDone: () => channel.pipeline.channelInactive(channel));
     return channel;
   }

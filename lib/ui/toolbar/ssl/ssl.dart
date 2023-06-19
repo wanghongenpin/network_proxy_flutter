@@ -72,28 +72,26 @@ class _SslState extends State<SslWidget> {
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return SimpleDialog(
-              contentPadding: const EdgeInsets.all(16),
-              title: const Text("手机https抓包配置", style: TextStyle(fontSize: 16)),
+          return const SimpleDialog(
+              contentPadding: EdgeInsets.all(16),
+              title: Text("手机https抓包配置", style: TextStyle(fontSize: 16)),
               alignment: Alignment.center,
               children: [
-                const Text("1. 根证书安装到本系统（已完成忽略）"),
-                const SizedBox(height: 10),
-                const Text.rich(TextSpan(text: "2.配置手机Wifi代理 ")),
-                const SizedBox(height: 10),
+                Text("1. 根证书安装到本系统（已完成忽略）"),
+                SizedBox(height: 10),
+                Text.rich(TextSpan(text: "2.配置手机Wifi代理 ")),
+                SizedBox(height: 10),
                 Row(
                   children: [
-                    const Text("3.打开手机系统自带浏览器访问:"),
-                    TextButton(
-                        onPressed: () {
-                          launchUrl(Uri.parse("http://proxy.pin/ssl"));
-                        },
-                        child:
-                            const Text("http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
+                    Text("3.打开手机系统自带浏览器访问：\t"),
+                    SelectableText.rich(
+                        TextSpan(text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
                   ],
                 ),
-                const SizedBox(height: 10),
-                const Text("4.打开手机设置下载安装证书(Profile)和信任证书(Certificate) \n\t  设置 > 通用 > 关于本机 > 证书信任设置"),
+                SizedBox(height: 10),
+                Text("4.打开手机设置下载安装证书(Profile)和信任证书(Certificate) \n\t  设置 > 通用 > 关于本机 > 证书信任设置"),
+                SizedBox(height: 20),
+                Text("  微信小程序ios需要开启本地网络权限", style: TextStyle(fontWeight: FontWeight.bold)),
               ]);
         });
   }

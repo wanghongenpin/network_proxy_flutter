@@ -13,7 +13,7 @@ int hexToInt(String hex) {
       // a..f
       val += (hexDigit - 87) * (1 << (4 * (len - 1 - i)));
     } else {
-      throw const FormatException("Invalid hexadecimal value");
+      throw FormatException("Invalid hexadecimal value $hex");
     }
   }
   return val;

@@ -7,7 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'logger.dart';
 
 void main() {
-  print(HostFilter.filter("www.apple.com"));
+  print(HostFilter.filter("stackoverflow.com"));
 }
 
 class HostFilter {
@@ -25,7 +25,7 @@ class HostFilter {
 
     //如果白名单不为空，不在白名单里都是黑名单
     if (whites.enabled) {
-      return whites.list.any((element) => !element.hasMatch(host));
+      return whites.list.every((element) => !element.hasMatch(host));
     }
     if (blacklist.enabled) {
       return blacklist.list.any((element) => element.hasMatch(host));
@@ -46,7 +46,7 @@ abstract class HostList {
   final List<RegExp> list = [];
   bool enabled = false;
 
-  List<Function> _initListens = [];
+  final List<Function> _initListens = [];
   bool _inited = false;
 
   void addInitListen(void Function() action) {

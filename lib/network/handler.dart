@@ -34,10 +34,10 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   @override
   void channelRead(Channel channel, HttpRequest msg) async {
     forward(channel, msg).catchError((error, trace) {
+      channel.close();
       if (error is SocketException &&
           (error.message.contains("Failed host lookup") || error.message.contains("Connection timed out"))) {
         log.e("连接失败 ${error.message}");
-        channel.close();
         return;
       }
       log.e("转发请求失败", error, trace);
@@ -46,7 +46,6 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   @override
   void channelInactive(Channel channel) {
-    super.channelInactive(channel);
     Channel? remoteChannel = channel.getAttribute(channel.id);
     remoteChannel?.close();
   }
@@ -77,7 +76,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     }
   }
 
-  void _crtDownload(Channel channel, HttpRequest request) async{
+  void _crtDownload(Channel channel, HttpRequest request) async {
     const String fileMimeType = 'application/x-x509-ca-cert';
     var body = await rootBundle.load('assets/certs/ca.crt');
     var response = HttpResponse(request.protocolVersion, HttpStatus.ok);
@@ -145,6 +144,7 @@ class RelayHandler extends ChannelHandler<Object> {
     //发送给客户端
     remoteChannel.write(msg);
   }
+
   @override
   void channelInactive(Channel channel) {
     remoteChannel.close();

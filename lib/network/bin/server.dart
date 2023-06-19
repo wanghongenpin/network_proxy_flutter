@@ -82,7 +82,7 @@ class ProxyServer {
       _concatCommands([
         'networksetup -setwebproxy wi-fi $host $port',
         enableSsl ? 'networksetup -setsecurewebproxy wi-fi $host $port' : '',
-        'networksetup -setproxybypassdomains wi-fi 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.1, localhost, *.local, timestamp.apple.com, sequoia.apple.com, seed-sequoia.siri.apple.com',
+        'networksetup -setproxybypassdomains wi-fi 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.1, localhost, *.local, timestamp.apple.com, sequoia.apple.com, seed-sequoia.siri.apple.com, *.google.com, *.googleapis.com',
       ])
     ]);
     print('set proxyServer, exitCode: ${results.exitCode}, stdout: ${results.stdout}');
