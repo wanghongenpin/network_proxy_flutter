@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:network/network/bin/server.dart';
+import 'package:network_proxy/network/bin/server.dart';
 
 import '../../../network/util/host_filter.dart';
 

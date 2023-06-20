@@ -1,4 +1,4 @@
-name: network
+name: network_proxy
 description: network proxy
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 

@@ -1,8 +1,8 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:network/network/http/http.dart';
-import 'package:network/ui/left/path.dart';
+import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/ui/left/path.dart';
 
 import '../../network/channel.dart';
 import '../../network/util/attribute_keys.dart';

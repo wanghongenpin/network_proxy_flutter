@@ -1,9 +1,10 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/utils/ip.dart';
 
-import '../../../network/bin/server.dart';
+
 
 class SslWidget extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -39,8 +40,8 @@ class _SslState extends State<SslWidget> {
                 title: const Text("安装根证书到手机"),
                 dense: true,
                 trailing: const Icon(Icons.arrow_right),
-                onTap: () {
-                  mobileCer();
+                onTap: () async {
+                  mobileCer(await localIp());
                 }),
           ),
           // const PopupMenuItem<String>(
@@ -68,30 +69,30 @@ class _SslState extends State<SslWidget> {
         });
   }
 
-  void mobileCer() async {
+  void mobileCer(String host) {
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return const SimpleDialog(
-              contentPadding: EdgeInsets.all(16),
-              title: Text("手机https抓包配置", style: TextStyle(fontSize: 16)),
+          return SimpleDialog(
+              contentPadding: const EdgeInsets.all(16),
+              title: const Text("手机https抓包配置", style: TextStyle(fontSize: 16)),
               alignment: Alignment.center,
               children: [
-                Text("1. 根证书安装到本系统（已完成忽略）"),
-                SizedBox(height: 10),
-                Text.rich(TextSpan(text: "2.配置手机Wifi代理 ")),
-                SizedBox(height: 10),
-                Row(
+                const Text("1. 根证书安装到本系统（已完成忽略）"),
+                const SizedBox(height: 10),
+                SelectableText.rich(TextSpan(text: "2.配置手机Wifi代理 Host：$host  Port：${widget.proxyServer.port}")),
+                const SizedBox(height: 10),
+                const Row(
                   children: [
                     Text("3.打开手机系统自带浏览器访问：\t"),
                     SelectableText.rich(
                         TextSpan(text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
                   ],
                 ),
-                SizedBox(height: 10),
-                Text("4.打开手机设置下载安装证书(Profile)和信任证书(Certificate) \n\t  设置 > 通用 > 关于本机 > 证书信任设置"),
-                SizedBox(height: 20),
-                Text("  微信小程序ios需要开启本地网络权限", style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                const Text("4.打开手机设置下载安装证书(Profile)和信任证书(Certificate) \n\t  设置 > 通用 > 关于本机 > 证书信任设置"),
+                const SizedBox(height: 20),
+                const Text("  微信小程序ios需要开启本地网络权限", style: TextStyle(fontWeight: FontWeight.bold)),
               ]);
         });
   }

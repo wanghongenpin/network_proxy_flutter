@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:network/main.dart';
+
+import '../../../main.dart';
 
 class ThemeSetting extends StatelessWidget {
   const ThemeSetting({Key? key}) : super(key: key);

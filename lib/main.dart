@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:network/network/bin/server.dart';
-import 'package:network/ui/left/domain.dart';
-import 'package:network/ui/panel.dart';
-import 'package:network/ui/toolbar/toolbar.dart';
+import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/left/domain.dart';
+import 'package:network_proxy/ui/panel.dart';
+import 'package:network_proxy/ui/toolbar/toolbar.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'network/channel.dart';

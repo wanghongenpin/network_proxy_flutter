@@ -1,10 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:network/network/http/http.dart';
-import 'package:network/network/http/http_headers.dart';
-import 'package:network/network/util/attribute_keys.dart';
-import 'package:network/network/util/logger.dart';
+import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http/http_headers.dart';
+import 'package:network_proxy/network/util/attribute_keys.dart';
+import 'package:network_proxy/network/util/logger.dart';
 
 import 'channel.dart';
 import 'http/codec.dart';

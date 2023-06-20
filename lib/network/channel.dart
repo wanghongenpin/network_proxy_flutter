@@ -3,10 +3,10 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:logger/logger.dart';
-import 'package:network/network/http/http.dart';
-import 'package:network/network/util/attribute_keys.dart';
-import 'package:network/network/util/crts.dart';
-import 'package:network/network/util/host_filter.dart';
+import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/attribute_keys.dart';
+import 'package:network_proxy/network/util/crts.dart';
+import 'package:network_proxy/network/util/host_filter.dart';
 
 import 'handler.dart';
 
@@ -14,7 +14,6 @@ import 'handler.dart';
 abstract class ChannelHandler<T> {
   var log = Logger(
       printer: PrettyPrinter(
-    methodCount: 0,
     errorMethodCount: 8,
     lineLength: 120,
     colors: true,
@@ -30,7 +29,7 @@ abstract class ChannelHandler<T> {
     // log.i("close $channel");
   }
 
-  void exceptionCaught(Channel channel, Object cause, {StackTrace? trace}) {
+  void exceptionCaught(Channel channel, dynamic cause, {StackTrace? trace}) {
     HostAndPort? attribute = channel.getAttribute(AttributeKeys.host);
     log.e("error $attribute $channel", cause, trace);
     channel.close();
@@ -107,8 +106,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
 
   void listen(Channel channel) {
     channel.socket.listen((data) => channel.pipeline.channelRead(channel, data),
-        onError: (error, trace) =>
-            channel.pipeline.exceptionCaught(channel, error, trace: trace),
+        onError: (error, trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
         onDone: () => channel.pipeline.channelInactive(channel));
   }
 
@@ -123,8 +121,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       var data = _decoder.decode(msg);
       if (data != null) {
         if (data is HttpResponse) {
-          data.remoteAddress =
-              '${channel.remoteAddress.host}:${channel.remotePort}';
+          data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
         }
         _handler.channelRead(channel, data!);
       }
@@ -134,7 +131,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   }
 
   @override
-  exceptionCaught(Channel channel, cause, {StackTrace? trace}) {
+  exceptionCaught(Channel channel, dynamic cause, {StackTrace? trace}) {
     _handler.exceptionCaught(channel, cause, trace: trace);
   }
 
@@ -247,8 +244,7 @@ class Network {
     _channelInitializer.call(channel);
     channel.pipeline.channelActive(channel);
     socket.listen((data) => _onEvent(data, channel),
-        onError: (error, StackTrace trace) =>
-            channel.pipeline.exceptionCaught(channel, error, trace: trace),
+        onError: (error, StackTrace trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
         onDone: () => channel.pipeline.channelInactive(channel));
     return channel;
   }
@@ -256,8 +252,7 @@ class Network {
   _onEvent(Uint8List data, Channel channel) async {
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
     //黑名单 直接转发
-    if (HostFilter.filter(hostAndPort?.host) ||
-        (hostAndPort?.isSsl() == true && !enableSsl)) {
+    if (HostFilter.filter(hostAndPort?.host) || (hostAndPort?.isSsl() == true && !enableSsl)) {
       relay(channel, channel.getAttribute(channel.id));
       channel.pipeline.channelRead(channel, data);
       return;
@@ -276,17 +271,13 @@ class Network {
     try {
       //客户端ssl
       Channel remoteChannel = channel.getAttribute(channel.id);
-      remoteChannel.secureSocket = await SecureSocket.secure(
-          remoteChannel.socket,
-          onBadCertificate: (certificate) => true);
+      remoteChannel.secureSocket =
+          await SecureSocket.secure(remoteChannel.socket, onBadCertificate: (certificate) => true);
       remoteChannel.pipeline.listen(remoteChannel);
 
       //服务端ssl
-      var certificate =
-          await CertificateManager.getCertificateContext(hostAndPort.host);
-      SecureSocket secureSocket = await SecureSocket.secureServer(
-          channel.socket, certificate,
-          bufferedData: data);
+      var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
+      SecureSocket secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
       channel.secureSocket = secureSocket;
       channel.pipeline.listen(channel);
     } catch (error, trace) {
@@ -297,10 +288,8 @@ class Network {
   /// 转发请求
   void relay(Channel clientChannel, Channel remoteChannel) {
     var rawCodec = RawCodec();
-    clientChannel.pipeline
-        .handle(rawCodec, rawCodec, RelayHandler(remoteChannel));
-    remoteChannel.pipeline
-        .handle(rawCodec, rawCodec, RelayHandler(clientChannel));
+    clientChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(remoteChannel));
+    remoteChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(clientChannel));
   }
 }
 
@@ -326,8 +315,7 @@ class Server extends Network {
 
 class Client extends Network {
   Future<Channel> connect(HostAndPort hostAndPort) async {
-    return Socket.connect(hostAndPort.host, hostAndPort.port,
-            timeout: const Duration(seconds: 10))
+    return Socket.connect(hostAndPort.host, hostAndPort.port, timeout: const Duration(seconds: 10))
         .then((socket) => listen(socket));
   }
 }

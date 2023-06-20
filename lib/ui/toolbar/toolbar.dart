@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:network/ui/toolbar/setting/setting.dart';
-import 'package:network/ui/toolbar/ssl/ssl.dart';
+import 'package:network_proxy/ui/toolbar/setting/setting.dart';
+import 'package:network_proxy/ui/toolbar/ssl/ssl.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../network/bin/server.dart';

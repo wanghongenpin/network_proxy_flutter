@@ -2,16 +2,16 @@ import 'dart:io';
 
 class SystemProxy {
   /// 设置系统代理
-  static void setSystemProxy(int port) async {
+  static void setSystemProxy(int port, bool enableSsl) async {
     if (Platform.isMacOS) {
-      _setProxyServerMacOS("127.0.0.1:$port");
+      _setProxyServerMacOS("127.0.0.1:$port", enableSsl);
     } else if (Platform.isWindows) {
       _setProxyServerWindows("127.0.0.1:$port");
       setProxyEnableWindows(true);
     }
   }
 
- static Future<bool> _setProxyServerMacOS(String proxyServer, {bool? enableSsl}) async {
+  static Future<bool> _setProxyServerMacOS(String proxyServer, bool enableSsl) async {
     var match = RegExp(r"^(?:http://)?(?<host>.+):(?<port>\d+)$").firstMatch(proxyServer);
     if (match == null) {
       print('proxyServer parse error!');
@@ -31,13 +31,13 @@ class SystemProxy {
     return results.exitCode == 0;
   }
 
-  static Future<bool> setProxyEnableMacOS(bool proxyEnable, {bool? enableSsl}) async {
+  static Future<bool> setProxyEnableMacOS(bool proxyEnable, bool enableSsl) async {
     var proxyMode = proxyEnable ? 'on' : 'off';
     var results = await Process.run('bash', [
       '-c',
       _concatCommands([
         'networksetup -setwebproxystate wi-fi $proxyMode',
-        enableSsl == true ? 'networksetup -setsecurewebproxystate wi-fi $proxyMode' : '',
+        enableSsl ? 'networksetup -setsecurewebproxystate wi-fi $proxyMode' : '',
       ])
     ]);
     return results.exitCode == 0;
@@ -83,7 +83,6 @@ class SystemProxy {
     print('set proxyServer $proxyServer, exitCode: ${results.exitCode}, stdout: ${results.stderr}');
     return results.exitCode == 0;
   }
-
 
   static _concatCommands(List<String> commands) {
     return commands.where((element) => element.isNotEmpty).join(' && ');

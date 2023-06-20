@@ -1,10 +1,11 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:network/network/http/chunked_codec.dart';
+import 'package:network_proxy/network/http/body_reader.dart';
 
 import '../../utils/compress.dart';
 import '../channel.dart';
+import '../util/logger.dart';
 import 'http.dart';
 import 'http_headers.dart';
 
@@ -25,8 +26,7 @@ class HttpConstants {
 enum State {
   readInitial,
   readHeader,
-  readFixedLengthContent,
-  readChunked,
+  body,
   done,
 }
 
@@ -37,8 +37,7 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
 
   late T message;
 
-  ChunkedInput? chunkedInput;
-  final BytesBuilder buffer = BytesBuilder();
+  BodyReader? bodyReader;
 
   T createMessage(List<String> reqLine);
 
@@ -49,36 +48,29 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     //请求行
     if (_state == State.readInitial) {
       init();
-      var initialLine = _readInitialLine(data);
-      message = createMessage(initialLine);
-      _state = State.readHeader;
+      try {
+        var initialLine = _readInitialLine(data);
+        message = createMessage(initialLine);
+        _state = State.readHeader;
+      } catch (e, cause) {
+        log.e("解析请求行失败 [${String.fromCharCodes(data)}]", e, cause);
+        rethrow;
+      }
     }
 
     //请求头
     if (_state == State.readHeader) {
       _readHeader(data, message);
-      _state = message.headers.isChunked ? State.readChunked : State.readFixedLengthContent;
+      _state = State.body;
+      bodyReader = BodyReader(message);
     }
 
-    //固定长度请求体
-    if (_state == State.readFixedLengthContent) {
-      if (message.contentLength > 0) {
-        buffer.add(data.sublist(_httpParse.index));
-      }
-
-      if (message.contentLength == -1 || buffer.length >= message.contentLength) {
-        message.body = buffer.length == 0 ? null : buffer.toBytes();
-        buffer.clear();
+    //请求体
+    if (_state == State.body) {
+      var result = bodyReader!.readBody(data.sublist(_httpParse.index));
+      if (result.isDone) {
         _state = State.done;
-      }
-    }
-
-    //chunked编码
-    if (_state == State.readChunked) {
-      ChunkedContent content = chunkedInput!.readChunked(data.sublist(_httpParse.index));
-      if (content.state == ChunkedState.done) {
-        message.body = content.content;
-        _state = State.done;
+        message.body = result.body;
       }
     }
 
@@ -93,9 +85,9 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
 
   void init() {
     _httpParse.reset();
-    buffer.clear();
-    chunkedInput = ChunkedInput();
+    bodyReader = null;
   }
+
   void initialLine(BytesBuilder buffer, T message);
 
   @override

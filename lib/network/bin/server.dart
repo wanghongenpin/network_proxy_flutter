@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:network/network/util/host_filter.dart';
+import 'package:network_proxy/network/util/host_filter.dart';
 
 import '../channel.dart';
 import '../handler.dart';
@@ -27,8 +27,7 @@ class ProxyServer {
   bool get enableSsl => _enableSsl;
 
   File configFile() {
-    var userHome =
-        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    var userHome = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
     var separator = Platform.pathSeparator;
     return File("${userHome!}$separator.proxyPin${separator}config.cnf");
   }
@@ -54,13 +53,11 @@ class ProxyServer {
     }
     server.enableSsl = _enableSsl;
     server.initChannel((channel) {
-      channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(),
-          HttpChannelHandler(listener: listener));
+      channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(), HttpChannelHandler(listener: listener));
     });
-
     return server.bind(port).then((serverSocket) {
       log.i("listen on $port");
-      SystemProxy.setSystemProxy(port);
+      SystemProxy.setSystemProxy(port, enableSsl);
       this.server = server;
       return server;
     });
@@ -70,7 +67,7 @@ class ProxyServer {
   Future<Server?> stop() async {
     log.i("stop on $port");
     if (Platform.isMacOS) {
-      await SystemProxy.setProxyEnableMacOS(false);
+      await SystemProxy.setProxyEnableMacOS(false, enableSsl);
     } else if (Platform.isWindows) {
       await SystemProxy.setProxyEnableWindows(false);
     }

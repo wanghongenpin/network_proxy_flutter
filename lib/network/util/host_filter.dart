@@ -1,4 +1,3 @@
-
 void main() {
   print(HostFilter.filter("stackoverflow.com"));
 }
@@ -67,4 +66,12 @@ abstract class HostList {
 
 class Whites extends HostList {}
 
-class Blacks extends HostList {}
+class Blacks extends HostList {
+  Blacks() {
+    enabled = true;
+    list.add(RegExp(".*.github.com"));
+    list.add(RegExp("github.com"));
+    list.add(RegExp(".*.google.com"));
+    list.add(RegExp(".*.apple.com"));
+  }
+}

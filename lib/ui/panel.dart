@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:network/network/http/http.dart';
-import 'package:network/utils/lang.dart';
+import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/utils/lang.dart';
 
 class NetworkTabController extends StatefulWidget {
   final tabs = <Tab>[

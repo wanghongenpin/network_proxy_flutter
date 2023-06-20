@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:network/network/bin/server.dart';
-import 'package:network/ui/toolbar/setting/theme.dart';
+import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/toolbar/setting/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../network/util/host_filter.dart';

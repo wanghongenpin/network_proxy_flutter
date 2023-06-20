@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:basic_utils/basic_utils.dart';
 import 'package:flutter/services.dart';
-import 'package:network/network/util/x509.dart';
+import 'package:network_proxy/network/util/x509.dart';
 
 Future<void> main() async {
   await CertificateManager.getCertificateContext('www.jianshu.com');
@@ -52,6 +52,7 @@ class CertificateManager {
 
     return SecurityContext.defaultContext
       ..useCertificateChainBytes(cer.codeUnits)
+      ..allowLegacyUnsafeRenegotiation = true
       ..usePrivateKeyBytes(CryptoUtils.encodeRSAPrivateKeyToPemPkcs1(rsaPrivateKey).codeUnits);
   }
 
@@ -62,8 +63,8 @@ class CertificateManager {
       'C': 'CN',
       'ST': 'BJ',
       'L': 'BJ',
-      'O': 'network',
-      'OU': 'Proxy',
+      'O': 'Proxy',
+      'OU': 'ProxyPin',
     };
     x509Subject['CN'] = host;
 
