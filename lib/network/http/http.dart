@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:network_proxy/network/channel.dart';
+
 import 'http_headers.dart';
 
 ///定义HTTP消息的接口，为HttpRequest和HttpResponse提供公共属性。
@@ -48,7 +50,11 @@ abstract class HttpMessage {
 class HttpRequest extends HttpMessage {
   final String uri;
   late HttpMethod method;
+  late String requestUrl;
+  String? path;
+  HostAndPort? hostAndPort;
   final DateTime requestTime = DateTime.now();
+  String? remoteDomain;
 
   HttpRequest(this.method, this.uri, String protocolVersion) : super(protocolVersion);
 

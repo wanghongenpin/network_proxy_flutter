@@ -7,6 +7,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/network/util/logger.dart';
 
 import 'handler.dart';
 
@@ -119,12 +120,24 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   void channelRead(Channel channel, Uint8List msg) {
     try {
       var data = _decoder.decode(msg);
-      if (data != null) {
-        if (data is HttpResponse) {
-          data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
-        }
-        _handler.channelRead(channel, data!);
+      if (data == null) {
+        return;
       }
+      if (data is HttpRequest) {
+        data.hostAndPort ??= getHostAndPort(data);
+        data.remoteDomain = data.hostAndPort.toString();
+        data.requestUrl = data.uri.startsWith("/") ? '${data.remoteDomain}${data.uri}' : data.uri;
+        try {
+          data.path = Uri.parse(data.requestUrl).path;
+        } catch (e) {
+          logger.e("data.requestUrl ${data.requestUrl}", e, StackTrace.current);
+        }
+      }
+
+      if (data is HttpResponse) {
+        data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
+      }
+      _handler.channelRead(channel, data!);
     } catch (error, trace) {
       exceptionCaught(channel, error, trace: trace);
     }
@@ -200,6 +213,7 @@ class HostAndPort {
 
 /// 解码
 abstract interface class Decoder<T> {
+  /// 解码 如果返回null说明数据不完整
   T? decode(Uint8List data);
 }
 

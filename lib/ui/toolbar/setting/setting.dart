@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/toolbar/setting/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../network/util/host_filter.dart';
 import 'filter.dart';
 
 class Setting extends StatefulWidget {
@@ -26,9 +26,7 @@ class _SettingState extends State<Setting> {
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
-          PopupMenuItem<String>(
-              child: PortWidget(proxyServer: widget.proxyServer)
-          ),
+          PopupMenuItem<String>(child: PortWidget(proxyServer: widget.proxyServer)),
           const PopupMenuItem(
             child: ThemeSetting(),
           ),
@@ -39,13 +37,15 @@ class _SettingState extends State<Setting> {
                   trailing: const Icon(Icons.arrow_right),
                   onTap: () => _filter())),
           PopupMenuItem<String>(
-            child: const ListTile(
-                title: Text("Github"),
-                dense: true,
-                trailing: Icon(Icons.arrow_right)),
+              child: ListTile(
+                  title: const Text("请求重写"),
+                  dense: true,
+                  trailing: const Icon(Icons.arrow_right),
+                  onTap: () => _reqeustRewrite())),
+          PopupMenuItem<String>(
+            child: const ListTile(title: Text("Github"), dense: true, trailing: Icon(Icons.arrow_right)),
             onTap: () {
-              launchUrl(Uri.parse(
-                  "https://github.com/wanghongenpin/network-proxy-flutter"));
+              launchUrl(Uri.parse("https://github.com/wanghongenpin/network-proxy-flutter"));
             },
           )
         ];
@@ -53,49 +53,34 @@ class _SettingState extends State<Setting> {
     );
   }
 
+  void _reqeustRewrite() {
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            scrollable: true,
+            title: Row(children: [
+              const Text("请求重写"),
+              Expanded(
+                  child: Align(
+                      alignment: Alignment.topRight,
+                      child: ElevatedButton.icon(
+                          icon: const Icon(Icons.close, size: 15),
+                          label: const Text("关闭"),
+                          onPressed: () => Navigator.of(context).pop())))
+            ]),
+            content: RequestRewrite(proxyServer: widget.proxyServer),
+          );
+        });
+  }
+
   void _filter() {
-    final ValueNotifier<bool> hostEnableNotifier = ValueNotifier(false);
     showDialog(
       barrierDismissible: false,
       context: context,
       builder: (context) {
-        return AlertDialog(
-            scrollable: true,
-            actions: [
-              FilledButton(
-                  child: const Text("关闭"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    hostEnableNotifier.dispose();
-                  }),
-            ],
-            title: const Text("域名过滤", style: TextStyle(fontSize: 18)),
-            content: SizedBox(
-              width: 680,
-              height: 450,
-              child: Flex(
-                direction: Axis.horizontal,
-                children: [
-                  Expanded(
-                      flex: 1,
-                      child: DomainFilter(
-                          title: "白名单",
-                          subtitle: "只代理白名单中的域名, 白名单启用黑名单将会失效",
-                          hostList: HostFilter.whitelist,
-                          proxyServer: widget.proxyServer,
-                          hostEnableNotifier: hostEnableNotifier)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      flex: 1,
-                      child: DomainFilter(
-                          title: "黑名单",
-                          subtitle: "黑名单中的域名不会代理",
-                          hostList: HostFilter.blacklist,
-                          proxyServer: widget.proxyServer,
-                          hostEnableNotifier: hostEnableNotifier)),
-                ],
-              ),
-            ));
+        return FilterDialog(proxyServer: widget.proxyServer);
       },
     );
   }
@@ -122,8 +107,7 @@ class _PortState extends State<PortWidget> {
     textController.text = widget.proxyServer.port.toString();
     portFocus.addListener(() async {
       //失去焦点
-      if (!portFocus.hasFocus &&
-          textController.text != widget.proxyServer.port.toString()) {
+      if (!portFocus.hasFocus && textController.text != widget.proxyServer.port.toString()) {
         widget.proxyServer.port = int.parse(textController.text);
         widget.proxyServer.restart();
         widget.proxyServer.flushConfig();

@@ -18,11 +18,9 @@ class NetworkTabController extends StatefulWidget {
 
   NetworkTabController() : super(key: GlobalKey<_NetworkTabState>());
 
-  void change(HttpRequest request, HttpResponse? response) {
+  void change(HttpRequest? request, HttpResponse? response) {
     this.request.set(request);
-    if (response != null) {
-      this.response.set(response);
-    }
+    this.response.set(response);
     var state = key as GlobalKey<_NetworkTabState>;
     state.currentState?.changeState();
   }
@@ -40,7 +38,6 @@ class _NetworkTabState extends State<NetworkTabController> {
 
   @override
   Widget build(BuildContext context) {
-
     return DefaultTabController(
         length: widget.tabs.length,
         child: Scaffold(
@@ -63,7 +60,7 @@ class _NetworkTabState extends State<NetworkTabController> {
     }
     var response = widget.response.get();
     var content = [
-      rowWidget("Request URL", request.uri),
+      rowWidget("Request URL", request.requestUrl),
       const SizedBox(height: 20),
       rowWidget("Request Method", request.method.name),
       const SizedBox(height: 20),
@@ -161,7 +158,8 @@ class _NetworkTabState extends State<NetworkTabController> {
   }
 
   Iterable<Widget>? _cookieWidget(String? cookie) {
-    return cookie?.split(";")
+    return cookie
+        ?.split(";")
         .map((e) => Strings.splitFirst(e, "="))
         .where((element) => element != null)
         .map((e) => rowWidget(e!.key, e.value));

@@ -16,8 +16,7 @@ void main() async {
   //设置窗口大小
   await windowManager.ensureInitialized();
   WindowOptions windowOptions = WindowOptions(
-      minimumSize: const Size(930, 500),
-      size: const Size(1080, 620),
+      minimumSize: const Size(960, 680),
       center: true,
       titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -28,6 +27,7 @@ void main() async {
   runApp(const FluentApp());
 }
 
+/// 主题
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
 class FluentApp extends StatelessWidget {
@@ -85,8 +85,8 @@ class _NetworkHomePagePageState extends State<NetworkHomePage> implements EventL
           child: Toolbar(proxyServer, domainWidget),
         ),
         body: Row(children: [
-          SizedBox(width: 420, child: domainWidget),
-          const Spacer(),
+          SizedBox(width: 400, child: domainWidget),
+          const VerticalDivider(),
           Expanded(flex: 100, child: domainWidget.panel),
         ]));
   }

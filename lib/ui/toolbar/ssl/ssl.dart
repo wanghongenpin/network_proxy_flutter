@@ -4,8 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/utils/ip.dart';
 
-
-
 class SslWidget extends StatefulWidget {
   final ProxyServer proxyServer;
 

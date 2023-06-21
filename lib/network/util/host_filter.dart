@@ -19,6 +19,7 @@ class HostFilter {
     if (whitelist.enabled) {
       return whitelist.list.every((element) => !element.hasMatch(host));
     }
+
     if (blacklist.enabled) {
       return blacklist.list.any((element) => element.hasMatch(host));
     }
@@ -36,6 +37,7 @@ abstract class HostList {
       return;
     }
     List? list = map['list'];
+    this.list.clear();
     list?.forEach((element) {
       this.list.add(RegExp(element));
     });

@@ -53,7 +53,7 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
         message = createMessage(initialLine);
         _state = State.readHeader;
       } catch (e, cause) {
-        log.e("解析请求行失败 [${String.fromCharCodes(data)}]", e, cause);
+        logger.e("解析请求行失败 [${String.fromCharCodes(data)}]", e, cause);
         rethrow;
       }
     }

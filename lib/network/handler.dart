@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
-import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/network/util/request_rewrite.dart';
 
 import 'channel.dart';
 import 'http/codec.dart';
@@ -26,11 +26,12 @@ abstract class EventListener {
   void onResponse(Channel channel, HttpResponse response);
 }
 
-///
+/// http请求处理器
 class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   EventListener? listener;
+  RequestRewrites? requestRewrites;
 
-  HttpChannelHandler({this.listener});
+  HttpChannelHandler({this.listener, this.requestRewrites});
 
   @override
   void channelRead(Channel channel, HttpRequest msg) async {
@@ -64,10 +65,9 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
-      if (httpRequest.uri.startsWith("/")) {
-        remoteChannel.putAttribute(AttributeKeys.uri, '${channel.getAttribute(AttributeKeys.host)}${httpRequest.uri}');
-      } else {
-        remoteChannel.putAttribute(AttributeKeys.uri, httpRequest.uri);
+      var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.path);
+      if (replaceBody?.isNotEmpty == true) {
+        httpRequest.body = utf8.encode(replaceBody!);
       }
 
       // log.i("[${channel.id}] ${remoteChannel.getAttribute(AttributeKeys.uri)}");
@@ -99,7 +99,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     var hostAndPort = getHostAndPort(httpRequest);
     clientChannel.putAttribute(AttributeKeys.host, hostAndPort);
 
-    var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener);
+    var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
     var proxyChannel = await HttpClients.connect(hostAndPort, proxyHandler);
     clientChannel.putAttribute(clientId, proxyChannel);
 
@@ -117,13 +117,20 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   final Channel clientChannel;
 
   EventListener? listener;
+  RequestRewrites? requestRewrites;
 
-  HttpResponseProxyHandler(this.clientChannel, {this.listener});
+  HttpResponseProxyHandler(this.clientChannel, {this.listener, this.requestRewrites});
 
   @override
   void channelRead(Channel channel, HttpResponse msg) {
     msg.request = clientChannel.getAttribute(AttributeKeys.request);
     // log.i("[${clientChannel.id}] Response ${msg.bodyAsString}");
+
+    var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.path);
+    if (replaceBody?.isNotEmpty == true) {
+      msg.body = utf8.encode(replaceBody!);
+    }
+
     listener?.onResponse(clientChannel, msg);
     //发送给客户端
     clientChannel.write(msg);

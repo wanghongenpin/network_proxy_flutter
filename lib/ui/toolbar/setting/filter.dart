@@ -3,6 +3,69 @@ import 'package:network_proxy/network/bin/server.dart';
 
 import '../../../network/util/host_filter.dart';
 
+class FilterDialog extends StatefulWidget {
+  final ProxyServer proxyServer;
+
+  const FilterDialog({super.key, required this.proxyServer});
+
+  @override
+  State<FilterDialog> createState() => _FilterDialogState();
+}
+
+class _FilterDialogState extends State<FilterDialog> {
+  final ValueNotifier<bool> hostEnableNotifier = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    hostEnableNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+        scrollable: true,
+        title: Row(children: [
+          const Text("域名过滤", style: TextStyle(fontSize: 18)),
+          Expanded(
+              child: Align(
+                  alignment: Alignment.topRight,
+                  child: ElevatedButton.icon(
+                      icon: const Icon(Icons.close, size: 15),
+                      label: const Text("关闭"),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      })))
+        ]),
+        content: SizedBox(
+          width: 680,
+          height: 450,
+          child: Flex(
+            direction: Axis.horizontal,
+            children: [
+              Expanded(
+                  flex: 1,
+                  child: DomainFilter(
+                      title: "白名单",
+                      subtitle: "只代理白名单中的域名, 白名单启用黑名单将会失效",
+                      hostList: HostFilter.whitelist,
+                      proxyServer: widget.proxyServer,
+                      hostEnableNotifier: hostEnableNotifier)),
+              const SizedBox(width: 10),
+              Expanded(
+                  flex: 1,
+                  child: DomainFilter(
+                      title: "黑名单",
+                      subtitle: "黑名单中的域名不会代理",
+                      hostList: HostFilter.blacklist,
+                      proxyServer: widget.proxyServer,
+                      hostEnableNotifier: hostEnableNotifier)),
+            ],
+          ),
+        ));
+  }
+}
+
 class DomainFilter extends StatefulWidget {
   final String title;
   final String subtitle;
@@ -15,7 +78,8 @@ class DomainFilter extends StatefulWidget {
       required this.title,
       required this.subtitle,
       required this.hostList,
-      required this.hostEnableNotifier, required this.proxyServer});
+      required this.hostEnableNotifier,
+      required this.proxyServer});
 
   @override
   State<StatefulWidget> createState() {
@@ -53,13 +117,16 @@ class _DomainFilterState extends State<DomainFilter> {
                   });
             }),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          FilledButton.tonal(
+          FilledButton.icon(
+              icon: const Icon(Icons.add),
               onPressed: () {
                 add();
               },
-              child: const Text("增加")),
-          TextButton(
-              child: const Text("删除"),
+              label: const Text("增加")),
+          const SizedBox(width: 10),
+          TextButton.icon(
+              icon: const Icon(Icons.remove),
+              label: const Text("删除"),
               onPressed: () {
                 if (domainList.selected().isEmpty) {
                   return;

@@ -26,9 +26,8 @@ class DomainWidget extends StatefulWidget {
 
   void clean() {
     var state = key as GlobalKey<_DomainWidgetState>;
+    panel.change(null, null);
     state.currentState?.clean();
-    panel.request.set(null);
-    panel.response.set(null);
   }
 
   @override
