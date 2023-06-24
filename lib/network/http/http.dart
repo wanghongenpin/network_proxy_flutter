@@ -97,7 +97,9 @@ enum HttpMethod {
   patch("PATCH"),
   delete("DELETE"),
   trace("TRACE"),
-  connect("CONNECT");
+  connect("CONNECT"),
+  propfind("PROPFIND"),
+  ;
 
   final String name;
 

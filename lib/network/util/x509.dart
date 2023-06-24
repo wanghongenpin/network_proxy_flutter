@@ -10,7 +10,7 @@ class X509Generate {
   static const String END_CERT = '-----END CERTIFICATE-----';
 
   //所在国家
-  static const String C = "2.5.4.6";
+  static const String COUNTRY_NAME = "2.5.4.6";
   static const String SERIAL_NUMBER = "2.5.4.5";
   static const String DN_QUALIFIER = "2.5.4.46";
 
@@ -33,6 +33,7 @@ class X509Generate {
     List<String>? sans,
     String serialNumber = '1',
     Map<String, String>? issuer,
+    Map<String, String>? subject,
   }) {
     var data = ASN1Sequence();
 
@@ -50,26 +51,12 @@ class X509Generate {
     blockProtocol.add(ASN1Null());
     data.add(blockProtocol);
 
-    issuer ??= Map.from(caRoot.tbsCertificate!.subject);
+    issuer ??= Map.from(caRoot.tbsCertificate!.issuer);
 
     // Add Issuer
     var issuerSeq = ASN1Sequence();
     for (var k in issuer.keys) {
-      var value = issuer[k];
-      ASN1Object pString;
-      if (C == k || SERIAL_NUMBER == k || k == DN_QUALIFIER) {
-        pString = ASN1PrintableString(stringValue: value);
-      } else {
-        pString = ASN1UTF8String(utf8StringValue: value);
-      }
-      ASN1ObjectIdentifier oIdentifier;
-      try {
-        oIdentifier = ASN1ObjectIdentifier.fromName(k);
-      } on UnsupportedObjectIdentifierException {
-        oIdentifier = ASN1ObjectIdentifier.fromIdentifierString(k);
-      }
-      var innerSequence = ASN1Sequence(elements: [oIdentifier, pString]);
-      var s = ASN1Set(elements: [innerSequence]);
+      var s = _identifier(k, issuer[k]!);
       issuerSeq.add(s);
     }
     data.add(issuerSeq);
@@ -82,24 +69,17 @@ class X509Generate {
 
     // Add Subject
     var subjectSeq = ASN1Sequence();
-    for (var k in caRoot.tbsCertificate!.subject.keys) {
-      var value = caRoot.tbsCertificate!.subject[k];
-      ASN1Object pString;
-      if (C == k || SERIAL_NUMBER == k || k == DN_QUALIFIER) {
-        pString = ASN1PrintableString(stringValue: value);
-      } else {
-        pString = ASN1UTF8String(utf8StringValue: value);
-      }
-      var oIdentifier = ASN1ObjectIdentifier.fromIdentifierString(k);
-      var innerSequence = ASN1Sequence(elements: [oIdentifier, pString]);
-      var s = ASN1Set(elements: [innerSequence]);
+    subject ??= Map.from(caRoot.tbsCertificate!.subject);
+
+    for (var k in subject.keys) {
+      var s = _identifier(k, subject[k]!);
       subjectSeq.add(s);
     }
+
     data.add(subjectSeq);
 
     // Add Public Key
     data.add(_makePublicKeyBlock(publicKey));
-
     // Add Extensions
     if (IterableUtils.isNotNullOrEmpty(sans)) {
       var extensionTopSequence = ASN1Sequence();
@@ -132,6 +112,25 @@ class X509Generate {
     return '$BEGIN_CERT\n${chunks.join('\r\n')}\n$END_CERT';
   }
 
+  static ASN1Set _identifier(String k, String value) {
+    ASN1ObjectIdentifier oIdentifier;
+    try {
+      oIdentifier = ASN1ObjectIdentifier.fromName(k);
+    } on UnsupportedObjectIdentifierException {
+      oIdentifier = ASN1ObjectIdentifier.fromIdentifierString(k);
+    }
+
+    ASN1Object pString;
+    var identifier = oIdentifier.objectIdentifierAsString;
+    if (identifier == COUNTRY_NAME || SERIAL_NUMBER == identifier || identifier == DN_QUALIFIER) {
+      pString = ASN1PrintableString(stringValue: value);
+    } else {
+      pString = ASN1UTF8String(utf8StringValue: value);
+    }
+
+    var innerSequence = ASN1Sequence(elements: [oIdentifier, pString]);
+    return  ASN1Set(elements: [innerSequence]);
+  }
   static Uint8List _rsaSign(Uint8List inBytes, RSAPrivateKey privateKey, String signingAlgorithm) {
     var signer = Signer('$signingAlgorithm/RSA');
     signer.init(true, PrivateKeyParameter<RSAPrivateKey>(privateKey));

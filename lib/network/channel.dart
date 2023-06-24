@@ -15,6 +15,7 @@ import 'handler.dart';
 abstract class ChannelHandler<T> {
   var log = Logger(
       printer: PrettyPrinter(
+    methodCount: 0,
     errorMethodCount: 8,
     lineLength: 120,
     colors: true,
@@ -65,6 +66,11 @@ class Channel {
     var data = pipeline._encoder.encode(obj);
     _socket.add(data);
     await _socket.flush();
+  }
+
+  Future<void> writeAndClose(Object obj) async {
+    await write(obj);
+    close();
   }
 
   void close() {
@@ -125,10 +131,10 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       }
       if (data is HttpRequest) {
         data.hostAndPort ??= getHostAndPort(data);
-        data.remoteDomain = data.hostAndPort.toString();
+        data.remoteDomain = data.hostAndPort?.url;
         data.requestUrl = data.uri.startsWith("/") ? '${data.remoteDomain}${data.uri}' : data.uri;
         try {
-          data.path = Uri.parse(data.requestUrl).path;
+          data.path = data.hostAndPort?.isSsl() == true ? data.uri : Uri.parse(data.requestUrl).path;
         } catch (e) {
           logger.e("data.requestUrl ${data.requestUrl}", e, StackTrace.current);
         }
@@ -224,7 +230,7 @@ abstract interface class Encoder<T> {
 
 /// 编解码器
 abstract class Codec<T> implements Decoder<T>, Encoder<T> {
-  static const int defaultMaxInitialLineLength = 8192;
+  static const int defaultMaxInitialLineLength = 10240;
   static const int maxBodyLength = 1024000;
 }
 
@@ -329,7 +335,7 @@ class Server extends Network {
 
 class Client extends Network {
   Future<Channel> connect(HostAndPort hostAndPort) async {
-    return Socket.connect(hostAndPort.host, hostAndPort.port, timeout: const Duration(seconds: 10))
+    return Socket.connect(hostAndPort.host, hostAndPort.port, timeout: const Duration(seconds: 5))
         .then((socket) => listen(socket));
   }
 }

@@ -61,8 +61,6 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     //请求头
     if (_state == State.readHeader) {
       _readHeader(data, message);
-      _state = State.body;
-      bodyReader = BodyReader(message);
     }
 
     //请求体
@@ -131,8 +129,11 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
 
   //读取请求头
   void _readHeader(Uint8List data, T message) {
-    _httpParse.parseHeader(data, message.headers);
-    message.contentLength = message.headers.contentLength;
+    if (_httpParse.parseHeader(data, message.headers)) {
+      message.contentLength = message.headers.contentLength;
+      _state = State.body;
+      bodyReader = BodyReader(message);
+    }
   }
 
   //转换body
@@ -193,6 +194,7 @@ class HttpResponseCodec extends HttpCodec<HttpResponse> {
 /// http解析器
 class HttpParse {
   int index = 0;
+  BytesBuilder inBytes = BytesBuilder();
 
   /// 解析请求行
   List<String> parseInitialLine(Uint8List data, int size) {
@@ -214,15 +216,40 @@ class HttpParse {
   }
 
   /// 解析请求头
-  void parseHeader(Uint8List data, HttpHeaders headers) {
+  bool parseHeader(Uint8List data, HttpHeaders headers) {
+    if (inBytes.length > Codec.defaultMaxInitialLineLength) {
+      inBytes.clear();
+      throw Exception("header too long");
+    }
+
     while (true) {
-      var line = parseLine(data);
+      Uint8List line = Uint8List(0);
+      for (int i = index; i < data.length; i++) {
+        if (_isLineEnd(data, i)) {
+          line = data.sublist(index, i - 1);
+          index = i + 1;
+          break;
+        }
+        if (i == data.length - 1) {
+          inBytes.add(data.sublist(index, i + 1));
+          index = i + 1;
+          return false;
+        }
+      }
+
       if (line.isEmpty) {
         break;
+      }
+
+      if (inBytes.isNotEmpty) {
+        inBytes.add(line);
+        line = inBytes.toBytes();
+        inBytes.clear();
       }
       var header = _splitHeader(line);
       headers.set(header[0], header[1]);
     }
+    return true;
   }
 
   Uint8List parseLine(Uint8List data) {

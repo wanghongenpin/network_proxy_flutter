@@ -79,12 +79,20 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   void _crtDownload(Channel channel, HttpRequest request) async {
     const String fileMimeType = 'application/x-x509-ca-cert';
-    var body = await rootBundle.load('assets/certs/ca.crt');
     var response = HttpResponse(request.protocolVersion, HttpStatus.ok);
     response.headers.set(HttpHeaders.CONTENT_TYPE, fileMimeType);
-    response.headers.set("Content-Disposition", 'attachment; filename="ProxyPin CA.crt"');
+    response.headers.set("Content-Disposition", 'inline;filename=ProxyPinCA.crt');
+    response.headers.set("Connection", 'close');
+
+    var body = await rootBundle.load('assets/certs/ca.crt');
+    response.headers.set("Content-Length", body.lengthInBytes.toString());
+
+    if (request.method == HttpMethod.head) {
+      channel.writeAndClose(response);
+      return;
+    }
     response.body = body.buffer.asUint8List();
-    channel.write(response);
+    channel.writeAndClose(response);
   }
 
   /// 获取远程连接

@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:basic_utils/basic_utils.dart';
-import 'package:flutter/services.dart';
 import 'package:network_proxy/network/util/x509.dart';
 
 Future<void> main() async {
@@ -34,6 +33,7 @@ class CertificateManager {
   static String? get(String host) {
     return _certificateMap[host];
   }
+
   static X509CertificateData get caCert => _caCert;
 
   /// 获取域名自签名证书
@@ -62,15 +62,14 @@ class CertificateManager {
     Map<String, String> x509Subject = {
       'C': 'CN',
       'ST': 'BJ',
-      'L': 'BJ',
+      'L': 'BeiJing',
       'O': 'Proxy',
       'OU': 'ProxyPin',
     };
     x509Subject['CN'] = host;
 
-    Map<String, String> issuer = Map.from(_caCert.tbsCertificate!.subject);
     var csrPem = X509Generate.generateSelfSignedCertificate(caRoot, serverPubKey, caPriKey, 365,
-        sans: [host], serialNumber: Random().nextInt(1000000).toString(), issuer: issuer);
+        sans: [host], serialNumber: Random().nextInt(1000000).toString(), subject: x509Subject);
     return csrPem;
   }
 
@@ -79,14 +78,14 @@ class CertificateManager {
       return;
     }
     //从项目目录加入ca根证书
-    var caPem = await rootBundle.loadString('assets/certs/ca.crt');
-    // var caPem = await File('assets/certs/ca.crt').readAsString();
+    // var caPem = await rootBundle.loadString('assets/certs/ca.crt');
+    var caPem = await File('assets/certs/ca.crt').readAsString();
     _caCert = X509Utils.x509CertificateFromPem(caPem);
     //根据CA证书subject来动态生成目标服务器证书的issuer和subject
 
     //从项目目录加入ca私钥
-    var privateBytes = await rootBundle.load('assets/certs/ca_private.der');
-    // var privateBytes = await File('assets/certs/ca_private.der').readAsBytes();
+    // var privateBytes = await rootBundle.load('assets/certs/ca_private.der');
+    var privateBytes = await File('assets/certs/ca_private.der').readAsBytes();
     _caPriKey = CryptoUtils.rsaPrivateKeyFromDERBytes(privateBytes.buffer.asUint8List());
 
     _initialized = true;
