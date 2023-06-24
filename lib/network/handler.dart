@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/services.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
+import 'package:network_proxy/network/util/file_read.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
 
 import 'channel.dart';
@@ -84,7 +84,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     response.headers.set("Content-Disposition", 'inline;filename=ProxyPinCA.crt');
     response.headers.set("Connection", 'close');
 
-    var body = await rootBundle.load('assets/certs/ca.crt');
+    var body = await FileRead.read('assets/certs/ca.crt');
     response.headers.set("Content-Length", body.lengthInBytes.toString());
 
     if (request.method == HttpMethod.head) {

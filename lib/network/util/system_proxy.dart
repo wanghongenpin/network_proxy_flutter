@@ -6,8 +6,7 @@ class SystemProxy {
     if (Platform.isMacOS) {
       _setProxyServerMacOS("127.0.0.1:$port", enableSsl);
     } else if (Platform.isWindows) {
-      _setProxyServerWindows("127.0.0.1:$port");
-      setProxyEnableWindows(true);
+      _setProxyServerWindows("127.0.0.1:$port").then((value) => setProxyEnableWindows(true));
     }
   }
 

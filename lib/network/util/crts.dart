@@ -5,6 +5,8 @@ import 'dart:math';
 import 'package:basic_utils/basic_utils.dart';
 import 'package:network_proxy/network/util/x509.dart';
 
+import 'file_read.dart';
+
 Future<void> main() async {
   await CertificateManager.getCertificateContext('www.jianshu.com');
   CertificateManager.caCert.tbsCertificateSeqAsString;
@@ -78,14 +80,12 @@ class CertificateManager {
       return;
     }
     //从项目目录加入ca根证书
-    // var caPem = await rootBundle.loadString('assets/certs/ca.crt');
-    var caPem = await File('assets/certs/ca.crt').readAsString();
+    var caPem = await FileRead.readAsString('assets/certs/ca.crt');
     _caCert = X509Utils.x509CertificateFromPem(caPem);
     //根据CA证书subject来动态生成目标服务器证书的issuer和subject
 
     //从项目目录加入ca私钥
-    // var privateBytes = await rootBundle.load('assets/certs/ca_private.der');
-    var privateBytes = await File('assets/certs/ca_private.der').readAsBytes();
+    var privateBytes = await FileRead.read('assets/certs/ca_private.der');
     _caPriKey = CryptoUtils.rsaPrivateKeyFromDERBytes(privateBytes.buffer.asUint8List());
 
     _initialized = true;

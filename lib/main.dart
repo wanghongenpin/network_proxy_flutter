@@ -15,8 +15,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //设置窗口大小
   await windowManager.ensureInitialized();
+
   WindowOptions windowOptions = WindowOptions(
-      minimumSize: const Size(960, 680),
+      minimumSize: const Size(980, 600),
+      size: Platform.isMacOS ? const Size(1200, 750) : const Size(1080, 650),
       center: true,
       titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
   windowManager.waitUntilReadyToShow(windowOptions, () async {

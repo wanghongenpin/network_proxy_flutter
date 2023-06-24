@@ -63,7 +63,7 @@ class X509Generate {
 
     // Add Validity
     var validitySeq = ASN1Sequence();
-    validitySeq.add(ASN1UtcTime(DateTime.now().toUtc()));
+    validitySeq.add(ASN1UtcTime(DateTime.now().subtract(const Duration(days: 3)).toUtc()));
     validitySeq.add(ASN1UtcTime(DateTime.now().add(Duration(days: days)).toUtc()));
     data.add(validitySeq);
 
