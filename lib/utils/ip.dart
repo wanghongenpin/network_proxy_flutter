@@ -15,3 +15,7 @@ Future<String> localIp() async {
   String ip = await NetworkInterface.list().then((interfaces) => interfaces.first.addresses.first.address);
   return ip;
 }
+
+Future<String> networkName() {
+  return NetworkInterface.list().then((interfaces) => interfaces.first.name);
+}

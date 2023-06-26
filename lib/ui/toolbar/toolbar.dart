@@ -11,9 +11,9 @@ import 'launch/launch.dart';
 
 class Toolbar extends StatefulWidget {
   final ProxyServer proxyServer;
-  final DomainWidget domainWidget;
+  final GlobalKey<DomainWidgetState> domainStateKey;
 
-  const Toolbar(this.proxyServer, this.domainWidget, {super.key});
+  const Toolbar(this.proxyServer, this.domainStateKey, {super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -33,7 +33,7 @@ class _ToolbarState extends State<Toolbar> with WindowListener {
             tooltip: "清理",
             icon: const Icon(Icons.cleaning_services_outlined),
             onPressed: () {
-              widget.domainWidget.clean();
+              widget.domainStateKey.currentState?.clean();
             }),
         const Padding(padding: EdgeInsets.only(left: 30)),
         SslWidget(proxyServer: widget.proxyServer),

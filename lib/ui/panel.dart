@@ -16,22 +16,22 @@ class NetworkTabController extends StatefulWidget {
   final ValueWrap<HttpRequest> request = ValueWrap();
   final ValueWrap<HttpResponse> response = ValueWrap();
 
-  NetworkTabController() : super(key: GlobalKey<_NetworkTabState>());
+  NetworkTabController() : super(key: GlobalKey<NetworkTabState>());
 
   void change(HttpRequest? request, HttpResponse? response) {
     this.request.set(request);
     this.response.set(response);
-    var state = key as GlobalKey<_NetworkTabState>;
+    var state = key as GlobalKey<NetworkTabState>;
     state.currentState?.changeState();
   }
 
   @override
   State<StatefulWidget> createState() {
-    return _NetworkTabState();
+    return NetworkTabState();
   }
 }
 
-class _NetworkTabState extends State<NetworkTabController> {
+class NetworkTabState extends State<NetworkTabController> {
   void changeState() {
     setState(() {});
   }

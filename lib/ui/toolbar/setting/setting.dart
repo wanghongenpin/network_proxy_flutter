@@ -26,23 +26,32 @@ class _SettingState extends State<Setting> {
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
-          PopupMenuItem<String>(child: PortWidget(proxyServer: widget.proxyServer)),
+          PopupMenuItem<String>(padding: const EdgeInsets.all(0), child: PortWidget(proxyServer: widget.proxyServer)),
           const PopupMenuItem(
+            padding: EdgeInsets.all(0),
             child: ThemeSetting(),
           ),
           PopupMenuItem<String>(
+              padding: const EdgeInsets.all(0),
               child: ListTile(
                   title: const Text("域名过滤"),
                   dense: true,
+                  hoverColor: Colors.transparent,
+                  focusColor: Colors.transparent,
                   trailing: const Icon(Icons.arrow_right),
                   onTap: () => _filter())),
           PopupMenuItem<String>(
+              padding: const EdgeInsets.all(0),
               child: ListTile(
-                  title: const Text("请求重写"),
-                  dense: true,
-                  trailing: const Icon(Icons.arrow_right),
-                  onTap: () => _reqeustRewrite())),
+                title: const Text("请求重写"),
+                dense: true,
+                hoverColor: Colors.transparent,
+                focusColor: Colors.transparent,
+                trailing: const Icon(Icons.arrow_right),
+                onTap: () => _reqeustRewrite(),
+              )),
           PopupMenuItem<String>(
+            padding: const EdgeInsets.all(0),
             child: const ListTile(title: Text("Github"), dense: true, trailing: Icon(Icons.arrow_right)),
             onTap: () {
               launchUrl(Uri.parse("https://github.com/wanghongenpin/network-proxy-flutter"));

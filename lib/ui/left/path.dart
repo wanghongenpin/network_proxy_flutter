@@ -36,6 +36,7 @@ class _PathRowState extends State<PathRow> {
     var title = '${request.method.name} ${Uri.parse(request.uri).path}';
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
     return ListTile(
+        minLeadingWidth: 25,
         leading: Icon(getIcon(), size: 16, color: widget.color),
         title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
         subtitle: Text(

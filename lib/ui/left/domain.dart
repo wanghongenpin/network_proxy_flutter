@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/ui/components.dart';
 import 'package:network_proxy/ui/left/path.dart';
 
 import '../../network/channel.dart';
@@ -12,42 +13,25 @@ import '../panel.dart';
 class DomainWidget extends StatefulWidget {
   final NetworkTabController panel;
 
-  DomainWidget({required this.panel}) : super(key: GlobalKey<_DomainWidgetState>());
-
-  void add(Channel channel, HttpRequest request) {
-    var state = key as GlobalKey<_DomainWidgetState>;
-    state.currentState?.add(channel, request);
-  }
-
-  void addResponse(Channel channel, HttpResponse response) {
-    var state = key as GlobalKey<_DomainWidgetState>;
-    state.currentState?.addResponse(channel, response);
-  }
-
-  void clean() {
-    var state = key as GlobalKey<_DomainWidgetState>;
-    panel.change(null, null);
-    state.currentState?.clean();
-  }
+  const DomainWidget({super.key, required this.panel});
 
   @override
   State<StatefulWidget> createState() {
-    return _DomainWidgetState();
+    return DomainWidgetState();
   }
 }
 
-class _DomainWidgetState extends State<DomainWidget> {
+class DomainWidgetState extends State<DomainWidget> {
   LinkedHashMap<HostAndPort, HeaderBody> containerMap = LinkedHashMap<HostAndPort, HeaderBody>();
 
   @override
   Widget build(BuildContext context) {
     var list = containerMap.values;
-    return ListView.builder(
-        itemBuilder: (BuildContext context, int index) => list.elementAt(index), itemCount: list.length);
+    return SingleChildScrollView(child: Column(children: list.toList()));
   }
 
   ///添加请求
-  void add(Channel channel, HttpRequest request) {
+  add(Channel channel, HttpRequest request) {
     HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
     HeaderBody? headerBody = containerMap[hostAndPort];
     var listURI = PathRow(request, widget.panel);
@@ -64,14 +48,15 @@ class _DomainWidgetState extends State<DomainWidget> {
   }
 
   ///添加响应
-  void addResponse(Channel channel, HttpResponse response) {
+  addResponse(Channel channel, HttpResponse response) {
     HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
     HeaderBody? headerBody = containerMap[hostAndPort];
     headerBody?.getBody(channel.id)?.add(response);
   }
 
   ///清理
-  void clean() {
+  clean() {
+    widget.panel.change(null, null);
     setState(() {
       containerMap.clear();
     });
@@ -107,6 +92,8 @@ class HeaderBody extends StatefulWidget {
 }
 
 class _HeaderBodyState extends State<HeaderBody> {
+  final GlobalKey<ColorTransitionState> transitionState = GlobalKey<ColorTransitionState>();
+
   late bool selected;
 
   @override
@@ -117,6 +104,7 @@ class _HeaderBodyState extends State<HeaderBody> {
 
   changeState() {
     setState(() {});
+    transitionState.currentState?.show();
   }
 
   @override
@@ -128,16 +116,21 @@ class _HeaderBodyState extends State<HeaderBody> {
   }
 
   Widget _hostWidget(String title) {
-    return ListTile(
-        leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 16),
-        dense: true,
-        horizontalTitleGap: 0,
-        visualDensity: const VisualDensity(vertical: -3.6),
-        title: Text(title, textAlign: TextAlign.left),
-        onTap: () {
-          setState(() {
-            selected = !selected;
-          });
-        });
+    return ColorTransition(
+        key: transitionState,
+        duration: const Duration(milliseconds: 1500),
+        begin: Colors.white30,
+        child: ListTile(
+            minLeadingWidth: 25,
+            leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 16),
+            dense: true,
+            horizontalTitleGap: 0,
+            visualDensity: const VisualDensity(vertical: -3.6),
+            title: Text(title, textAlign: TextAlign.left),
+            onTap: () {
+              setState(() {
+                selected = !selected;
+              });
+            }));
   }
 }

@@ -37,13 +37,15 @@ class FluentApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ThemeData(brightness: Brightness.dark, useMaterial3: false);
     return ValueListenableBuilder<ThemeMode>(
         valueListenable: themeNotifier,
         builder: (_, ThemeMode currentMode, __) {
           return MaterialApp(
             title: 'ProxyPin',
+            debugShowCheckedModeBanner: false,
             theme: ThemeData.light(useMaterial3: true),
-            darkTheme: ThemeData(brightness: Brightness.dark, useMaterial3: false),
+            darkTheme: ThemeData.dark(useMaterial3: false),
             themeMode: currentMode,
             home: const NetworkHomePage(),
           );
@@ -59,37 +61,42 @@ class NetworkHomePage extends StatefulWidget {
 }
 
 class _NetworkHomePagePageState extends State<NetworkHomePage> implements EventListener {
+  final domainStateKey = GlobalKey<DomainWidgetState>();
   final NetworkTabController panel = NetworkTabController();
-  late DomainWidget domainWidget;
+
   late ProxyServer proxyServer;
 
   @override
   void onRequest(Channel channel, HttpRequest request) {
-    domainWidget.add(channel, request);
+    domainStateKey.currentState!.add(channel, request);
   }
 
   @override
   void onResponse(Channel channel, HttpResponse response) {
-    domainWidget.addResponse(channel, response);
+    domainStateKey.currentState!.addResponse(channel, response);
   }
 
   @override
   void initState() {
     super.initState();
-    domainWidget = DomainWidget(panel: panel);
     proxyServer = ProxyServer(listener: this);
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final domainWidget = DomainWidget(key: domainStateKey, panel: panel);
+
     return Scaffold(
         appBar: Tab(
-          child: Toolbar(proxyServer, domainWidget),
+          child: Toolbar(proxyServer, domainStateKey),
         ),
-        body: Row(children: [
-          SizedBox(width: 400, child: domainWidget),
-          const VerticalDivider(),
-          Expanded(flex: 100, child: domainWidget.panel),
-        ]));
+        body: Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              SizedBox(width: 400, child: domainWidget),
+              const VerticalDivider(),
+              Expanded(flex: 100, child: panel),
+            ])));
   }
 }

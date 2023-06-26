@@ -18,6 +18,7 @@ dependencies:
   window_manager: ^0.3.4
   path_provider: ^2.0.15
   url_launcher: ^6.1.11
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

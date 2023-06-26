@@ -144,10 +144,10 @@ class _DomainFilterState extends State<DomainFilter> {
 
   @override
   void dispose() {
-    super.dispose();
     if (changed) {
       widget.proxyServer.flushConfig();
     }
+    super.dispose();
   }
 
   void add() {

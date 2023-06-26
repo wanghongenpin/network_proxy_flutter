@@ -23,20 +23,26 @@ class _SslState extends State<SslWidget> {
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
-          PopupMenuItem(child: _Switch(proxyServer: widget.proxyServer)),
+          PopupMenuItem(padding: const EdgeInsets.all(0), child: _Switch(proxyServer: widget.proxyServer)),
           PopupMenuItem(
+              padding: const EdgeInsets.all(0),
               child: ListTile(
-            dense: true,
-            title: const Text("安装根证书到系统"),
-            trailing: const Icon(Icons.arrow_right),
-            onTap: () {
-              pcCer();
-            },
-          )),
+                dense: true,
+                hoverColor: Colors.transparent,
+                focusColor: Colors.transparent,
+                title: const Text("安装根证书到系统"),
+                trailing: const Icon(Icons.arrow_right),
+                onTap: () {
+                  pcCer();
+                },
+              )),
           PopupMenuItem<String>(
+            padding: const EdgeInsets.all(0),
             child: ListTile(
                 title: const Text("安装根证书到手机"),
                 dense: true,
+                hoverColor: Colors.transparent,
+                focusColor: Colors.transparent,
                 trailing: const Icon(Icons.arrow_right),
                 onTap: () async {
                   mobileCer(await localIp());
@@ -124,6 +130,7 @@ class _SwitchState extends State<_Switch> {
   @override
   Widget build(BuildContext context) {
     return SwitchListTile(
+        hoverColor: Colors.transparent,
         title: const Text("启用Https代理", style: TextStyle(fontSize: 12)),
         visualDensity: const VisualDensity(horizontal: -4),
         dense: true,
