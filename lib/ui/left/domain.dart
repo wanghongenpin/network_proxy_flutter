@@ -1,7 +1,10 @@
 import 'dart:collection';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/component/transition.dart';
 import 'package:network_proxy/ui/left/path.dart';
 
@@ -12,8 +15,9 @@ import '../panel.dart';
 ///左侧域名
 class DomainWidget extends StatefulWidget {
   final NetworkTabController panel;
+  final ProxyServer proxyServer;
 
-  const DomainWidget({super.key, required this.panel});
+  const DomainWidget({super.key, required this.panel, required this.proxyServer});
 
   @override
   State<StatefulWidget> createState() {
@@ -40,10 +44,16 @@ class DomainWidgetState extends State<DomainWidget> {
       return;
     }
 
-    headerBody = HeaderBody(hostAndPort.url);
+    headerBody = HeaderBody(hostAndPort, proxyServer: widget.proxyServer, onRemove: () => remove(hostAndPort));
     headerBody.addBody(channel.id, listURI);
     setState(() {
       containerMap[hostAndPort] = headerBody!;
+    });
+  }
+
+  remove(HostAndPort hostAndPort) {
+    setState(() {
+      containerMap.remove(hostAndPort);
     });
   }
 
@@ -65,24 +75,27 @@ class DomainWidgetState extends State<DomainWidget> {
 
 ///标题和内容布局 标题是域名 内容是域名下请求
 class HeaderBody extends StatefulWidget {
-  final Map<String, PathRow> map = HashMap<String, PathRow>();
+  final Map<String, PathRow> channelIdPathMap = HashMap<String, PathRow>();
 
-  final String header;
+  final HostAndPort header;
+  final ProxyServer proxyServer;
   final Queue<PathRow> _body = Queue();
   final bool selected;
+  final Function()? onRemove;
 
-  HeaderBody(this.header, {this.selected = false}) : super(key: GlobalKey<_HeaderBodyState>());
+  HeaderBody(this.header, {this.selected = false, this.onRemove, required this.proxyServer})
+      : super(key: GlobalKey<_HeaderBodyState>());
 
   ///添加请求
   void addBody(String key, PathRow widget) {
     _body.addFirst(widget);
-    map[key] = widget;
+    channelIdPathMap[key] = widget;
     var state = super.key as GlobalKey<_HeaderBodyState>;
     state.currentState?.changeState();
   }
 
   PathRow? getBody(String key) {
-    return map[key];
+    return channelIdPathMap[key];
   }
 
   @override
@@ -109,9 +122,8 @@ class _HeaderBodyState extends State<HeaderBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [
-      _hostWidget(widget.header),
+    return Column(children: [
+      _hostWidget(widget.header.url),
       Offstage(offstage: !selected, child: Column(children: widget._body.toList()))
     ]);
   }
@@ -121,17 +133,47 @@ class _HeaderBodyState extends State<HeaderBody> {
         key: transitionState,
         duration: const Duration(milliseconds: 1500),
         begin: Colors.white30,
-        child: ListTile(
-            minLeadingWidth: 25,
-            leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 16),
-            dense: true,
-            horizontalTitleGap: 0,
-            visualDensity: const VisualDensity(vertical: -3.6),
-            title: Text(title, textAlign: TextAlign.left),
+        child: GestureDetector(
+            onSecondaryLongPressDown: menu,
+            child: ListTile(
+                minLeadingWidth: 25,
+                leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 16),
+                dense: true,
+                horizontalTitleGap: 0,
+                visualDensity: const VisualDensity(vertical: -3.6),
+                title: Text(title, textAlign: TextAlign.left),
+                onTap: () {
+                  setState(() {
+                    selected = !selected;
+                  });
+                })));
+  }
+
+  menu(LongPressDownDetails details) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        details.globalPosition.dx,
+        details.globalPosition.dy,
+        details.globalPosition.dx,
+        details.globalPosition.dy,
+      ),
+      items: <PopupMenuEntry>[
+        PopupMenuItem(
+            height: 35,
+            child: const Text("添加黑名单", style: TextStyle(fontSize: 12)),
             onTap: () {
-              setState(() {
-                selected = !selected;
-              });
-            }));
+              HostFilter.blacklist.add(widget.header.host);
+              widget.proxyServer.flushConfig();
+            }),
+        PopupMenuItem(height: 35, child: const Text("删除", style: TextStyle(fontSize: 12)), onTap: () => _delete()),
+      ],
+    );
+  }
+
+  _delete() {
+    widget.channelIdPathMap.clear();
+    widget._body.clear();
+    widget.onRemove?.call();
   }
 }

@@ -104,14 +104,16 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     if (body != null && body.isNotEmpty) {
       message.headers.contentLength = body.length;
     }
-    message.headers.forEach((key, value) {
-      builder
-        ..add(key.codeUnits)
-        ..addByte(HttpConstants.colon)
-        ..addByte(HttpConstants.sp)
-        ..add(value.codeUnits)
-        ..addByte(HttpConstants.cr)
-        ..addByte(HttpConstants.lf);
+    message.headers.forEach((key, values) {
+      for (var v in values) {
+        builder
+          ..add(key.codeUnits)
+          ..addByte(HttpConstants.colon)
+          ..addByte(HttpConstants.sp)
+          ..add(v.codeUnits)
+          ..addByte(HttpConstants.cr)
+          ..addByte(HttpConstants.lf);
+      }
     });
     builder.addByte(HttpConstants.cr);
     builder.addByte(HttpConstants.lf);
@@ -247,7 +249,7 @@ class HttpParse {
         inBytes.clear();
       }
       var header = _splitHeader(line);
-      headers.set(header[0], header[1]);
+      headers.add(header[0], header[1]);
     }
     return true;
   }

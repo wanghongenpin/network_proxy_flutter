@@ -8,18 +8,33 @@ class HttpHeaders {
   static const String TRANSFER_ENCODING = "Transfer-Encoding";
   static const String Cookie = "Cookie";
 
-  final LinkedHashMap<String, String> _headers = LinkedHashMap<String, String>();
+  final LinkedHashMap<String, List<String>> _headers = LinkedHashMap<String, List<String>>();
 
   // 由小写标头名称键入的原始标头名称。
-  final Map<String, String> _originalHeaderNames = {};
+  final Map<String, List<String>> _originalHeaderNames = {};
 
   ///设置header。
   void set(String name, String value) {
-    _headers[name.toLowerCase()] = value;
-    _originalHeaderNames[name] = value;
+    _headers[name.toLowerCase()] = [value];
+    _originalHeaderNames[name] = [value];
+  }
+
+  void add(String name, String value) {
+    if (_headers.containsKey(name.toLowerCase())) {
+      _headers[name.toLowerCase()]!.add(value);
+      _originalHeaderNames[name]!.add(value);
+      return;
+    }
+
+    _headers[name.toLowerCase()] = [value];
+    _originalHeaderNames[name] = [value];
   }
 
   String? get(String name) {
+    return _headers[name.toLowerCase()]?.first;
+  }
+
+  List<String>? getList(String name) {
     return _headers[name.toLowerCase()];
   }
 
@@ -54,7 +69,7 @@ class HttpHeaders {
   bool get isChunked => get(HttpHeaders.TRANSFER_ENCODING) == "chunked";
   String get cookie => get(Cookie) ?? "";
 
-  void forEach(void Function(String name, String value) f) {
+  void forEach(void Function(String name,  List<String> values) f) {
     _originalHeaderNames.forEach(f);
   }
 

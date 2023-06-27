@@ -85,7 +85,7 @@ class _NetworkHomePagePageState extends State<NetworkHomePage> implements EventL
 
   @override
   Widget build(BuildContext context) {
-    final domainWidget = DomainWidget(key: domainStateKey, panel: panel);
+    final domainWidget = DomainWidget(key: domainStateKey, proxyServer: proxyServer, panel: panel);
 
     return Scaffold(
         appBar: Tab(

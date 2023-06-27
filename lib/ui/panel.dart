@@ -91,7 +91,7 @@ class NetworkTabState extends State<NetworkTabController> {
   Widget cookies() {
     var requestCookie = _cookieWidget(widget.request.get()?.cookie);
 
-    var responseCookie = _cookieWidget(widget.response.get()?.headers.get("Set-Cookie"));
+    var responseCookie = widget.response.get()?.headers.getList("Set-Cookie")?.expand((e) => _cookieWidget(e)!);
     return ListView(children: [
       expansionTile("Request Cookies", requestCookie?.toList() ?? []),
       // const Divider(),
@@ -102,12 +102,14 @@ class NetworkTabState extends State<NetworkTabController> {
 
   Widget message(HttpMessage? message, String type) {
     var headers = <Widget>[];
-    message?.headers.forEach((name, value) {
-      headers.add(Row(children: [
-        Expanded(flex: 2, child: SelectableText(name)),
-        Expanded(flex: 4, child: SelectableText(value)),
-        const SizedBox(height: 20),
-      ]));
+    message?.headers.forEach((name, values) {
+      for (var v in values) {
+        headers.add(Row(children: [
+          Expanded(flex: 2, child: SelectableText(name)),
+          Expanded(flex: 4, child: SelectableText(v)),
+          const SizedBox(height: 20),
+        ]));
+      }
     });
 
     Widget? bodyWidgets = message == null ? null : getBody(type, message);
@@ -166,7 +168,8 @@ class NetworkTabState extends State<NetworkTabController> {
   }
 
   Widget rowWidget(final String name, String? value) {
-    return Row(children: [
+    return Row(
+        children: [
       Expanded(flex: 2, child: SelectableText(name)),
       Expanded(flex: 4, child: SelectableText(value ?? ''))
     ]);

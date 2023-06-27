@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_proxy/ui/toolbar/setting/setting.dart';
 import 'package:network_proxy/ui/toolbar/ssl/ssl.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../network/bin/server.dart';
 import '../left/domain.dart';
@@ -33,7 +34,14 @@ class _ToolbarState extends State<Toolbar> {
       if (ModalRoute.of(context)?.isCurrent == false) {
         Navigator.of(context).pop();
       }
+      return;
     }
+
+    if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyW)) {
+      windowManager.blur();
+      return;
+    }
+
   }
 
   @override
