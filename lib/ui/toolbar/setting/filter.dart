@@ -155,6 +155,7 @@ class _DomainFilterState extends State<DomainFilter> {
     String? host;
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return AlertDialog(
               scrollable: true,
@@ -168,7 +169,7 @@ class _DomainFilterState extends State<DomainFilter> {
                             onSaved: (val) => host = val)
                       ]))),
               actions: [
-                ElevatedButton(
+                FilledButton(
                     child: const Text("添加"),
                     onPressed: () {
                       (formKey.currentState as FormState).save();
@@ -181,6 +182,11 @@ class _DomainFilterState extends State<DomainFilter> {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
                         }
                       }
+                      Navigator.of(context).pop();
+                    }),
+                ElevatedButton(
+                    child: const Text("关闭"),
+                    onPressed: () {
                       Navigator.of(context).pop();
                     })
               ]);
@@ -211,9 +217,9 @@ class DomainList extends StatefulWidget {
 
 class _DomainListState extends State<DomainList> {
   late Map<int, bool> selected = {};
-
   @override
   Widget build(BuildContext context) {
+
     return Container(
         padding: const EdgeInsets.only(top: 10),
         height: 300,

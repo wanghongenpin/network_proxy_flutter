@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/component/split_view.dart';
 import 'package:network_proxy/ui/left/domain.dart';
 import 'package:network_proxy/ui/panel.dart';
 import 'package:network_proxy/ui/toolbar/toolbar.dart';
@@ -84,19 +85,12 @@ class _NetworkHomePagePageState extends State<NetworkHomePage> implements EventL
 
   @override
   Widget build(BuildContext context) {
-
     final domainWidget = DomainWidget(key: domainStateKey, panel: panel);
 
     return Scaffold(
         appBar: Tab(
           child: Toolbar(proxyServer, domainStateKey),
         ),
-        body: Padding(
-            padding: const EdgeInsets.only(top: 5),
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              SizedBox(width: 400, child: domainWidget),
-              const VerticalDivider(),
-              Expanded(flex: 100, child: panel),
-            ])));
+        body: VerticalSplitView(ratio: 0.3, minRatio: 0.15, maxRatio: 0.9, left: domainWidget, right: panel));
   }
 }

@@ -2,7 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/ui/components.dart';
+import 'package:network_proxy/ui/component/transition.dart';
 import 'package:network_proxy/ui/left/path.dart';
 
 import '../../network/channel.dart';
@@ -109,7 +109,8 @@ class _HeaderBodyState extends State<HeaderBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
+    return Column(
+        children: [
       _hostWidget(widget.header),
       Offstage(offstage: !selected, child: Column(children: widget._body.toList()))
     ]);

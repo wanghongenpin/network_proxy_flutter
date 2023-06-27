@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:network_proxy/ui/toolbar/setting/setting.dart';
 import 'package:network_proxy/ui/toolbar/ssl/ssl.dart';
-import 'package:window_manager/window_manager.dart';
 
 import '../../network/bin/server.dart';
 import '../left/domain.dart';
@@ -21,7 +21,27 @@ class Toolbar extends StatefulWidget {
   }
 }
 
-class _ToolbarState extends State<Toolbar> with WindowListener {
+class _ToolbarState extends State<Toolbar> {
+  @override
+  void initState() {
+    super.initState();
+    RawKeyboard.instance.addListener(onKeyEvent);
+  }
+
+  void onKeyEvent(RawKeyEvent event) {
+    if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
+      if (ModalRoute.of(context)?.isCurrent == false) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    RawKeyboard.instance.removeListener(onKeyEvent);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(

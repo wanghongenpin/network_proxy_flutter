@@ -94,6 +94,7 @@ class _RequestRewriteState extends State<RequestRewrite> {
   void add([int currentIndex = -1]) {
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return RuleAddDialog(
               requestRewrites: widget.proxyServer.requestRewrites,
@@ -187,6 +188,11 @@ class RuleAddDialog extends StatelessWidget {
                   onChange.call();
                   Navigator.of(context).pop();
                 }
+              }),
+          ElevatedButton(
+              child: const Text("关闭"),
+              onPressed: () {
+                Navigator.of(context).pop();
               })
         ]);
   }
