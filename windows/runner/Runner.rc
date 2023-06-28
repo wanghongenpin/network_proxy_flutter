@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.network" "\0"
-            VALUE "FileDescription", "network" "\0"
+            VALUE "CompanyName", "com.proxy.pin" "\0"
+            VALUE "FileDescription", "ProxyPin" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "network" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2023 com.network. All rights reserved." "\0"
-            VALUE "OriginalFilename", "network.exe" "\0"
-            VALUE "ProductName", "network" "\0"
+            VALUE "InternalName", "ProxyPin" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2023 com.proxy.pin. All rights reserved." "\0"
+            VALUE "OriginalFilename", "ProxyPin.exe" "\0"
+            VALUE "ProductName", "ProxyPin" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

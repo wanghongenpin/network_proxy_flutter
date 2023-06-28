@@ -1,19 +1,24 @@
 import 'dart:io';
 
 import 'package:network_proxy/utils/ip.dart';
+import 'package:proxy_manager/proxy_manager.dart';
 
 class SystemProxy {
+
   /// 设置系统代理
   static void setSystemProxy(int port, bool enableSsl) async {
     if (Platform.isMacOS) {
       _setProxyServerMacOS("127.0.0.1:$port", enableSsl);
     } else if (Platform.isWindows) {
-      _setProxyServerWindows("127.0.0.1:$port").then((value) => setProxyEnableWindows(true));
+      _setProxyServerWindows(port, enableSsl)
+          .then((value) => setProxyEnableWindows(true));
     }
   }
 
-  static Future<bool> _setProxyServerMacOS(String proxyServer, bool enableSsl) async {
-    var match = RegExp(r"^(?:http://)?(?<host>.+):(?<port>\d+)$").firstMatch(proxyServer);
+  static Future<bool> _setProxyServerMacOS(
+      String proxyServer, bool enableSsl) async {
+    var match = RegExp(r"^(?:http://)?(?<host>.+):(?<port>\d+)$")
+        .firstMatch(proxyServer);
     if (match == null) {
       print('proxyServer parse error!');
       return false;
@@ -25,22 +30,28 @@ class SystemProxy {
       '-c',
       _concatCommands([
         'networksetup -setwebproxy $name $host $port',
-        enableSsl == true ? 'networksetup -setsecurewebproxy $name $host $port' : '',
+        enableSsl == true
+            ? 'networksetup -setsecurewebproxy $name $host $port'
+            : '',
         'networksetup -setproxybypassdomains $name 192.168.0.0/16 10.0.0.0/8 172.16.0.0/12 127.0.0.1 localhost *.local timestamp.apple.com sequoia.apple.com seed-sequoia.siri.apple.com *.google.com',
       ])
     ]);
-    print('set proxyServer, exitCode: ${results.exitCode}, stdout: ${results.stdout}');
+    print(
+        'set proxyServer, exitCode: ${results.exitCode}, stdout: ${results.stdout}');
     return results.exitCode == 0;
   }
 
-  static Future<bool> setProxyEnableMacOS(bool proxyEnable, bool enableSsl) async {
+  static Future<bool> setProxyEnableMacOS(
+      bool proxyEnable, bool enableSsl) async {
     var proxyMode = proxyEnable ? 'on' : 'off';
     var name = await hardwarePort();
     var results = await Process.run('bash', [
       '-c',
       _concatCommands([
         'networksetup -setwebproxystate $name $proxyMode',
-        enableSsl ? 'networksetup -setsecurewebproxystate $name $proxyMode' : '',
+        enableSsl
+            ? 'networksetup -setsecurewebproxystate $name $proxyMode'
+            : '',
       ])
     ]);
     return results.exitCode == 0;
@@ -70,18 +81,14 @@ class SystemProxy {
     return results.stdout.toString().split(", ")[0];
   }
 
-  static Future<bool> _setProxyServerWindows(String proxyServer) async {
+  static Future<bool> _setProxyServerWindows(
+      int proxyPort, bool enableSsl) async {
+    ProxyManager manager = ProxyManager();
+    await manager.setAsSystemProxy(ProxyTypes.http, "127.0.0.1", proxyPort);
+    if (enableSsl) {
+      // await manager.setAsSystemProxy(ProxyTypes.https, "127.0.0.1", 8888);
+    }
     var results = await Process.run('reg', [
-      'add',
-      'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-      '/v',
-      'ProxyServer',
-      '/f',
-      '/d',
-      proxyServer,
-    ]);
-
-    Process.run('reg', [
       'add',
       'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
       '/v',
@@ -93,7 +100,8 @@ class SystemProxy {
       '/f',
     ]);
 
-    print('set proxyServer $proxyServer, exitCode: ${results.exitCode}, stdout: ${results.stderr}');
+    print(
+        'set proxyServer $proxyPort, exitCode: ${results.exitCode}, stdout: ${results.stderr}');
     return results.exitCode == 0;
   }
 
@@ -118,6 +126,8 @@ class SystemProxy {
 }
 
 void main() async {
-  var r = await SystemProxy.hardwarePort();
-  print(r);
+  // single instance
+  ProxyManager manager = ProxyManager();
+// set a http proxy
+  await manager.setAsSystemProxy(ProxyTypes.http, "127.0.0.1", 1087);
 }

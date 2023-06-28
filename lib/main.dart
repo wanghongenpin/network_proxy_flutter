@@ -38,7 +38,6 @@ class FluentApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ThemeData(brightness: Brightness.dark, useMaterial3: false);
     return ValueListenableBuilder<ThemeMode>(
         valueListenable: themeNotifier,
         builder: (_, ThemeMode currentMode, __) {
@@ -46,7 +45,7 @@ class FluentApp extends StatelessWidget {
             title: 'ProxyPin',
             debugShowCheckedModeBanner: false,
             theme: ThemeData.light(useMaterial3: true),
-            darkTheme: ThemeData.dark(useMaterial3: false),
+            darkTheme: ThemeData(useMaterial3: false),
             themeMode: currentMode,
             home: const NetworkHomePage(),
           );
