@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/split_view.dart';
@@ -21,7 +22,8 @@ void main() async {
       minimumSize: const Size(980, 600),
       size: Platform.isMacOS ? const Size(1200, 750) : const Size(1080, 650),
       center: true,
-      titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
+      titleBarStyle:
+          Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
@@ -38,14 +40,21 @@ class FluentApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var lightTheme = ThemeData.light(useMaterial3: true);
+    var darkTheme = ThemeData.dark(useMaterial3: false);
+    if (Platform.isWindows) {
+      lightTheme = lightTheme.useSystemChineseFont();
+      darkTheme = darkTheme.useSystemChineseFont();
+    }
+
     return ValueListenableBuilder<ThemeMode>(
         valueListenable: themeNotifier,
         builder: (_, ThemeMode currentMode, __) {
           return MaterialApp(
             title: 'ProxyPin',
             debugShowCheckedModeBanner: false,
-            theme: ThemeData.light(useMaterial3: true),
-            darkTheme: ThemeData(useMaterial3: false),
+            theme: lightTheme,
+            darkTheme: darkTheme,
             themeMode: currentMode,
             home: const NetworkHomePage(),
           );
@@ -60,7 +69,8 @@ class NetworkHomePage extends StatefulWidget {
   State<NetworkHomePage> createState() => _NetworkHomePagePageState();
 }
 
-class _NetworkHomePagePageState extends State<NetworkHomePage> implements EventListener {
+class _NetworkHomePagePageState extends State<NetworkHomePage>
+    implements EventListener {
   final domainStateKey = GlobalKey<DomainWidgetState>();
   final NetworkTabController panel = NetworkTabController();
 
@@ -84,7 +94,8 @@ class _NetworkHomePagePageState extends State<NetworkHomePage> implements EventL
 
   @override
   Widget build(BuildContext context) {
-    final domainWidget = DomainWidget(key: domainStateKey, proxyServer: proxyServer, panel: panel);
+    final domainWidget = DomainWidget(
+        key: domainStateKey, proxyServer: proxyServer, panel: panel);
 
     return Scaffold(
         appBar: Tab(

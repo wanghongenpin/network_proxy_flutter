@@ -251,8 +251,8 @@ class _RequestRuleListState extends State<RequestRuleList> {
           columns: const <DataColumn>[
             DataColumn(label: Text('启用')),
             DataColumn(label: Text('URL')),
-            DataColumn(label: Text('重写请求体')),
-            DataColumn(label: Text('重写响应体')),
+            DataColumn(label: Text('请求体')),
+            DataColumn(label: Text('响应体')),
           ],
           rows: List.generate(
               widget.requestRewrites.rules.length,

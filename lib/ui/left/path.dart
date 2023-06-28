@@ -12,7 +12,8 @@ class PathRow extends StatefulWidget {
 
   final NetworkTabController panel;
 
-  PathRow(this.request, this.panel, {Key? key, this.color = Colors.green}) : super(key: GlobalKey<_PathRowState>());
+  PathRow(this.request, this.panel, {Key? key, this.color = Colors.green})
+      : super(key: GlobalKey<_PathRowState>());
 
   @override
   State<PathRow> createState() => _PathRowState();
@@ -40,11 +41,13 @@ class _PathRowState extends State<PathRow> {
         leading: Icon(getIcon(), size: 16, color: widget.color),
         title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
         subtitle: Text(
-            '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} '),
+            '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
+            maxLines: 1),
         selected: selected,
         // trailing: const Icon(Icons.chevron_right),
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 50.0),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 0, horizontal: 50.0),
         onTap: onClick);
   }
 

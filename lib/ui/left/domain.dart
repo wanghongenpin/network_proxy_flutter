@@ -131,8 +131,8 @@ class _HeaderBodyState extends State<HeaderBody> {
   Widget _hostWidget(String title) {
     return ColorTransition(
         key: transitionState,
-        duration: const Duration(milliseconds: 1500),
-        begin: Colors.white30,
+        duration: const Duration(milliseconds: 1800),
+        begin: Theme.of(context).focusColor,
         child: GestureDetector(
             onSecondaryLongPressDown: menu,
             child: ListTile(
@@ -141,7 +141,11 @@ class _HeaderBodyState extends State<HeaderBody> {
                 dense: true,
                 horizontalTitleGap: 0,
                 visualDensity: const VisualDensity(vertical: -3.6),
-                title: Text(title, textAlign: TextAlign.left),
+                title: Text(title,
+                    textAlign: TextAlign.left,
+                    style: const TextStyle(fontSize: 16),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
                 onTap: () {
                   setState(() {
                     selected = !selected;

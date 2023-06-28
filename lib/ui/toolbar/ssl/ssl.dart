@@ -65,10 +65,10 @@ class _SslState extends State<SslWidget> {
               title: const Text("电脑https抓包配置", style: TextStyle(fontSize: 16)),
               alignment: Alignment.center,
               children: [
-                const Text("1.下载根证书安装到本系统（已完成忽略）"),
+                const Text("1. 下载根证书安装到本系统（已完成忽略）"),
                 FilledButton(onPressed: () => _downloadCert(), child: const Text("下载证书")),
                 const SizedBox(height: 10),
-                const Text("2.双击安装证书，Mac安装完选择“始终信任此证书”,\n   Windows选择“受信任的根证书颁发机构” "),
+                const Text("2. 双击安装证书，Mac安装完选择“始终信任此证书”,\n   Windows选择“受信任的根证书颁发机构” "),
               ]);
         });
   }
@@ -84,17 +84,17 @@ class _SslState extends State<SslWidget> {
               children: [
                 const Text("1. 根证书安装到本系统（已完成忽略）"),
                 const SizedBox(height: 10),
-                SelectableText.rich(TextSpan(text: "2.配置手机Wifi代理 Host：$host  Port：${widget.proxyServer.port}")),
+                SelectableText.rich(TextSpan(text: "2. 配置手机Wifi代理 Host：$host  Port：${widget.proxyServer.port}")),
                 const SizedBox(height: 10),
                 const Row(
                   children: [
-                    Text("3.打开手机系统自带浏览器访问：\t"),
+                    Text("3. 打开手机系统自带浏览器访问：\t"),
                     SelectableText.rich(
                         TextSpan(text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text("4.打开手机设置下载安装证书(Profile)和信任证书(Certificate) \n\t  设置 > 通用 > 关于本机 > 证书信任设置"),
+                const Text("4. 打开手机设置下载安装证书(Profile)和信任证书(Certificate) \n\t  设置 > 通用 > 关于本机 > 证书信任设置"),
                 const SizedBox(height: 20),
                 const Text("  微信小程序ios需要开启本地网络权限", style: TextStyle(fontWeight: FontWeight.bold)),
               ]);
@@ -102,15 +102,15 @@ class _SslState extends State<SslWidget> {
   }
 
   void _downloadCert() async {
-    final String? path = await getSavePath(suggestedName: "ProxyPinCA.crt");
-    if (path != null) {
+    final FileSaveLocation? location = await getSaveLocation(suggestedName: "ProxyPinCA.crt");
+    if (location != null) {
       const String fileMimeType = 'application/x-x509-ca-cert';
       var body = await rootBundle.load('assets/certs/ca.crt');
       final XFile xFile = XFile.fromData(
         body.buffer.asUint8List(),
         mimeType: fileMimeType,
       );
-      await xFile.saveTo(path);
+      await xFile.saveTo(location.path);
     }
   }
 }

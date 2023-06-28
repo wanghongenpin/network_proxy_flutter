@@ -118,15 +118,15 @@ class _DomainFilterState extends State<DomainFilter> {
             }),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           FilledButton.icon(
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add, size: 14),
               onPressed: () {
                 add();
               },
-              label: const Text("增加")),
+              label: const Text("增加", style: TextStyle(fontSize: 12))),
           const SizedBox(width: 10),
           TextButton.icon(
-              icon: const Icon(Icons.remove),
-              label: const Text("删除"),
+              icon: const Icon(Icons.remove, size: 14),
+              label: const Text("删除", style: TextStyle(fontSize: 12)),
               onPressed: () {
                 if (domainList.selected().isEmpty) {
                   return;
@@ -217,9 +217,9 @@ class DomainList extends StatefulWidget {
 
 class _DomainListState extends State<DomainList> {
   late Map<int, bool> selected = {};
+
   @override
   Widget build(BuildContext context) {
-
     return Container(
         padding: const EdgeInsets.only(top: 10),
         height: 300,

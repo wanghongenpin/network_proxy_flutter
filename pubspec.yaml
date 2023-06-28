@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  basic_utils: ^5.6.0
+  basic_utils:
   logger: ^1.4.0
   date_format: ^2.0.7
   file_selector: ^0.9.3
@@ -19,6 +19,7 @@ dependencies:
   path_provider: ^2.0.15
   url_launcher: ^6.1.11
   proxy_manager: ^0.0.3
+  chinese_font_library:
 dev_dependencies:
   flutter_test:
     sdk: flutter
