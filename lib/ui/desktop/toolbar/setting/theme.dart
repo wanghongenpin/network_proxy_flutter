@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:network_proxy/main.dart';
 
-import '../../../main.dart';
 
 class ThemeSetting extends StatelessWidget {
-  const ThemeSetting({Key? key}) : super(key: key);
+  final bool dense;
+
+  const ThemeSetting({Key? key, this.dense = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton(
         tooltip: themeNotifier.value.name,
-        surfaceTintColor: Colors.white70,
+        surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
         offset: const Offset(150, 0),
         itemBuilder: (BuildContext context) {
           return [
@@ -30,10 +32,10 @@ class ThemeSetting extends StatelessWidget {
                 }),
           ];
         },
-        child: const ListTile(
-          title: Text("主题"),
-          trailing: Icon(Icons.arrow_right),
-          dense: true,
+        child: ListTile(
+          title: const Text("主题"),
+          trailing: const Icon(Icons.arrow_right),
+          dense: dense,
         ));
   }
 }

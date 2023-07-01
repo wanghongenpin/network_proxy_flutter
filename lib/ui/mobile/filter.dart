@@ -3,16 +3,17 @@ import 'package:network_proxy/network/bin/server.dart';
 
 import '../../../network/util/host_filter.dart';
 
-class FilterDialog extends StatefulWidget {
+class MobileFilterWidget extends StatefulWidget {
   final ProxyServer proxyServer;
+  final HostList hostList;
 
-  const FilterDialog({super.key, required this.proxyServer});
+  const MobileFilterWidget({super.key, required this.proxyServer, required this.hostList});
 
   @override
-  State<FilterDialog> createState() => _FilterDialogState();
+  State<MobileFilterWidget> createState() => _MobileFilterState();
 }
 
-class _FilterDialogState extends State<FilterDialog> {
+class _MobileFilterState extends State<MobileFilterWidget> {
   final ValueNotifier<bool> hostEnableNotifier = ValueNotifier(false);
 
   @override
@@ -23,46 +24,20 @@ class _FilterDialogState extends State<FilterDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-        scrollable: true,
-        title: Row(children: [
-          const Text("域名过滤", style: TextStyle(fontSize: 18)),
-          Expanded(
-              child: Align(
-                  alignment: Alignment.topRight,
-                  child: ElevatedButton.icon(
-                      icon: const Icon(Icons.close, size: 15),
-                      label: const Text("关闭"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      })))
-        ]),
-        content: SizedBox(
-          width: 680,
-          height: 450,
-          child: Flex(
-            direction: Axis.horizontal,
-            children: [
-              Expanded(
-                  flex: 1,
-                  child: DomainFilter(
-                      title: "白名单",
-                      subtitle: "只代理白名单中的域名, 白名单启用黑名单将会失效",
-                      hostList: HostFilter.whitelist,
-                      proxyServer: widget.proxyServer,
-                      hostEnableNotifier: hostEnableNotifier)),
-              const SizedBox(width: 10),
-              Expanded(
-                  flex: 1,
-                  child: DomainFilter(
-                      title: "黑名单",
-                      subtitle: "黑名单中的域名不会代理",
-                      hostList: HostFilter.blacklist,
-                      proxyServer: widget.proxyServer,
-                      hostEnableNotifier: hostEnableNotifier)),
-            ],
-          ),
-        ));
+    var title = widget.hostList.runtimeType == Whites ? "白名单" : "黑名单";
+    var subtitle = widget.hostList.runtimeType == Whites ? "只代理白名单中的域名, 白名单启用黑名单将会失效" : "黑名单中的域名不会代理";
+    return Scaffold(
+        appBar: AppBar(title: const Text("域名过滤", style: TextStyle(fontSize: 16))),
+        body: Container(
+          padding: const EdgeInsets.all(10),
+          child: DomainFilter(
+              title: title,
+              subtitle: subtitle,
+              hostList: widget.hostList,
+              proxyServer: widget.proxyServer,
+              hostEnableNotifier: hostEnableNotifier),
+        )
+    );
   }
 }
 

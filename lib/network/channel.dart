@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:logger/logger.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
@@ -13,15 +12,7 @@ import 'handler.dart';
 
 ///处理I/O事件或截获I/O操作
 abstract class ChannelHandler<T> {
-  var log = Logger(
-      printer: PrettyPrinter(
-    methodCount: 0,
-    errorMethodCount: 8,
-    lineLength: 120,
-    colors: true,
-    printEmojis: false,
-    excludeBox: {Level.info: true, Level.debug: true},
-  ));
+  var log = logger;
 
   void channelActive(Channel channel) {}
 
@@ -51,7 +42,9 @@ class Channel {
   final int remotePort;
 
   Channel(this._socket)
-      : _id = DateTime.now().millisecondsSinceEpoch + Random().nextInt(999999),
+      : _id = DateTime
+      .now()
+      .millisecondsSinceEpoch + Random().nextInt(999999),
         remoteAddress = _socket.remoteAddress,
         remotePort = _socket.remotePort;
 
@@ -130,7 +123,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
         return;
       }
       if (data is HttpRequest) {
-        data.hostAndPort ??= getHostAndPort(data);
+        data.hostAndPort = channel.getAttribute(AttributeKeys.host) ?? getHostAndPort(data);
         data.remoteDomain = data.hostAndPort?.url;
         data.requestUrl = data.uri.startsWith("/") ? '${data.remoteDomain}${data.uri}' : data.uri;
         try {
@@ -178,7 +171,7 @@ class HostAndPort {
     String domain = url;
     String? scheme;
     //域名格式 直接解析
-    if (url.startsWith(httpScheme)) {
+    if (url.startsWith(httpScheme) || url.startsWith(httpsScheme)) {
       //httpScheme
       scheme = url.startsWith(httpsScheme) ? httpsScheme : httpScheme;
       domain = url.substring(scheme.length).split("/")[0];
@@ -202,11 +195,11 @@ class HostAndPort {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is HostAndPort &&
-          runtimeType == other.runtimeType &&
-          scheme == other.scheme &&
-          host == other.host &&
-          port == other.port;
+          other is HostAndPort &&
+              runtimeType == other.runtimeType &&
+              scheme == other.scheme &&
+              host == other.host &&
+              port == other.port;
 
   @override
   int get hashCode => scheme.hashCode ^ host.hashCode ^ port.hashCode;
@@ -292,7 +285,7 @@ class Network {
       //客户端ssl
       Channel remoteChannel = channel.getAttribute(channel.id);
       remoteChannel.secureSocket =
-          await SecureSocket.secure(remoteChannel.socket, onBadCertificate: (certificate) => true);
+      await SecureSocket.secure(remoteChannel.socket, onBadCertificate: (certificate) => true);
       remoteChannel.pipeline.listen(remoteChannel);
 
       //服务端ssl

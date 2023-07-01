@@ -6,17 +6,23 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 class NetworkTabController extends StatefulWidget {
-  final tabs = <Tab>[
-    const Tab(child: Text('General', style: TextStyle(fontSize: 18))),
-    const Tab(child: Text('Request', style: TextStyle(fontSize: 18))),
-    const Tab(child: Text('Response', style: TextStyle(fontSize: 18))),
-    const Tab(child: Text('Cookies', style: TextStyle(fontSize: 18))),
+  final tabs = [
+    'General',
+    'Request',
+    'Response',
+    'Cookies',
   ];
 
   final ValueWrap<HttpRequest> request = ValueWrap();
   final ValueWrap<HttpResponse> response = ValueWrap();
+  final Widget? title;
+  final TextStyle? tabStyle;
 
-  NetworkTabController() : super(key: GlobalKey<NetworkTabState>());
+  NetworkTabController({HttpRequest? httpRequest, HttpResponse? httpResponse, this.title, this.tabStyle})
+      : super(key: GlobalKey<NetworkTabState>()) {
+    request.set(httpRequest);
+    response.set(httpResponse);
+  }
 
   void change(HttpRequest? request, HttpResponse? response) {
     this.request.set(request);
@@ -31,26 +37,46 @@ class NetworkTabController extends StatefulWidget {
   }
 }
 
-class NetworkTabState extends State<NetworkTabController> {
+class NetworkTabState extends State<NetworkTabController> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   void changeState() {
     setState(() {});
   }
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: widget.tabs.length, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-        length: widget.tabs.length,
-        child: Scaffold(
-          appBar: AppBar(title: TabBar(tabs: widget.tabs)),
-          body: TabBarView(
-            children: [
-              general(),
-              request(),
-              response(),
-              cookies(),
-            ],
-          ),
-        ));
+    var tabBar = TabBar(
+      controller: _tabController,
+      labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+      tabs: widget.tabs.map((title) => Tab(child: Text(title, style: widget.tabStyle, maxLines: 1))).toList(),
+    );
+
+    Widget appBar = widget.title == null ? tabBar : AppBar(title: widget.title, bottom: tabBar);
+    return Scaffold(
+      appBar: appBar as PreferredSizeWidget?,
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          general(),
+          request(),
+          response(),
+          cookies(),
+        ],
+      ),
+    );
   }
 
   Widget general() {
@@ -138,8 +164,7 @@ class NetworkTabState extends State<NetworkTabController> {
   Widget? getBody(String type, HttpMessage message) {
     if (message.body?.isNotEmpty == true) {
       if (message.contentType == ContentType.image) {
-        return expansionTile("$type Body",
-            [Image.memory(Uint8List.fromList(message.body ?? []), fit: BoxFit.cover, width: 200, height: 200)]);
+        return expansionTile("$type Body", [Image.memory(Uint8List.fromList(message.body ?? []), fit: BoxFit.cover)]);
       } else {
         try {
           if (message.contentType == ContentType.json) {
@@ -168,8 +193,7 @@ class NetworkTabState extends State<NetworkTabController> {
   }
 
   Widget rowWidget(final String name, String? value) {
-    return Row(
-        children: [
+    return Row(children: [
       Expanded(flex: 2, child: SelectableText(name)),
       Expanded(flex: 4, child: SelectableText(value ?? ''))
     ]);

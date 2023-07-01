@@ -4,9 +4,11 @@ import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/split_view.dart';
-import 'package:network_proxy/ui/left/domain.dart';
+import 'package:network_proxy/ui/desktop/left/domain.dart';
+import 'package:network_proxy/ui/desktop/toolbar/toolbar.dart';
+import 'package:network_proxy/ui/mobile.dart';
 import 'package:network_proxy/ui/panel.dart';
-import 'package:network_proxy/ui/toolbar/toolbar.dart';
+import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'network/channel.dart';
@@ -15,19 +17,20 @@ import 'network/http/http.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  //设置窗口大小
-  await windowManager.ensureInitialized();
+  if (Platforms.isDesktop()) {
+    //设置窗口大小
+    await windowManager.ensureInitialized();
 
-  WindowOptions windowOptions = WindowOptions(
-      minimumSize: const Size(980, 600),
-      size: Platform.isMacOS ? const Size(1200, 750) : const Size(1080, 650),
-      center: true,
-      titleBarStyle:
-          Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
+    WindowOptions windowOptions = WindowOptions(
+        minimumSize: const Size(980, 600),
+        size: Platform.isMacOS ? const Size(1200, 750) : const Size(1080, 650),
+        center: true,
+        titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
 
   runApp(const FluentApp());
 }
@@ -41,7 +44,7 @@ class FluentApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var lightTheme = ThemeData.light(useMaterial3: true);
-    var darkTheme = ThemeData.dark(useMaterial3: false);
+    var darkTheme = ThemeData.dark(useMaterial3: !Platforms.isDesktop());
     if (Platform.isWindows) {
       lightTheme = lightTheme.useSystemChineseFont();
       darkTheme = darkTheme.useSystemChineseFont();
@@ -56,23 +59,22 @@ class FluentApp extends StatelessWidget {
             theme: lightTheme,
             darkTheme: darkTheme,
             themeMode: currentMode,
-            home: const NetworkHomePage(),
+            home: Platforms.isDesktop() ?  const DesktopHomePage() : const MobileHomePage(),
           );
         });
   }
 }
 
-class NetworkHomePage extends StatefulWidget {
-  const NetworkHomePage({super.key});
+class DesktopHomePage extends StatefulWidget {
+  const DesktopHomePage({super.key});
 
   @override
-  State<NetworkHomePage> createState() => _NetworkHomePagePageState();
+  State<DesktopHomePage> createState() => _DesktopHomePagePageState();
 }
 
-class _NetworkHomePagePageState extends State<NetworkHomePage>
-    implements EventListener {
+class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventListener {
   final domainStateKey = GlobalKey<DomainWidgetState>();
-  final NetworkTabController panel = NetworkTabController();
+  final NetworkTabController panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 18));
 
   late ProxyServer proxyServer;
 
@@ -94,8 +96,7 @@ class _NetworkHomePagePageState extends State<NetworkHomePage>
 
   @override
   Widget build(BuildContext context) {
-    final domainWidget = DomainWidget(
-        key: domainStateKey, proxyServer: proxyServer, panel: panel);
+    final domainWidget = DomainWidget(key: domainStateKey, proxyServer: proxyServer, panel: panel);
 
     return Scaffold(
         appBar: Tab(

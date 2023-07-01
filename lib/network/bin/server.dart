@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/utils/platform.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../channel.dart';
 import '../handler.dart';
@@ -29,16 +31,23 @@ class ProxyServer {
 
   bool get enableSsl => _enableSsl;
 
-  File homeDir() {
-    var userHome = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+  Future<File> homeDir() async {
+    String? userHome;
+    if (Platforms.isDesktop()) {
+      userHome = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    } else {
+      userHome = (await getApplicationSupportDirectory()).path;
+    }
+
     var separator = Platform.pathSeparator;
     return File("${userHome!}$separator.proxypin");
   }
 
   /// 配置文件
-  File configFile() {
+  Future<File> configFile() async {
     var separator = Platform.pathSeparator;
-    return File("${homeDir().path}${separator}config.cnf");
+    var home = await homeDir();
+    return File("${home.path}${separator}config.cnf");
   }
 
   /// 是否启用ssl
@@ -95,8 +104,11 @@ class ProxyServer {
 
   /// 刷新配置文件
   flushConfig() async {
-    var file = configFile();
-    await file.create(recursive: true);
+    var file = await configFile();
+    var exists = await file.exists();
+    if (!exists) {
+      file = await file.create(recursive: true);
+    }
     HostFilter.whitelist.toJson();
     HostFilter.blacklist.toJson();
     var json = jsonEncode(toJson());
@@ -106,7 +118,7 @@ class ProxyServer {
 
   /// 加载配置文件
   Future<void> _loadConfig() async {
-    var file = configFile();
+    var file = await configFile();
     var exits = await file.exists();
     if (!exits) {
       return;
@@ -123,7 +135,8 @@ class ProxyServer {
 
   /// 加载请求重写配置文件
   Future<void> _loadRequestRewriteConfig() async {
-    var file = File('${homeDir().path}${Platform.pathSeparator}request_rewrite.json');
+    var home = await homeDir();
+    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
     var exits = await file.exists();
     if (!exits) {
       return;
@@ -137,7 +150,8 @@ class ProxyServer {
 
   /// 保存请求重写配置文件
   flushRequestRewriteConfig() async {
-    var file = File('${homeDir().path}${Platform.pathSeparator}request_rewrite.json');
+    var home = await homeDir();
+    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
     bool exists = await file.exists();
     if (!exists) {
       await file.create(recursive: true);

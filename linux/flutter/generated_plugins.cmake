@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
+  proxy_manager
   screen_retriever
   url_launcher_linux
   window_manager

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:network_proxy/network/http/http.dart';
 
 import '../../utils/num.dart';
+import '../channel.dart';
 import 'codec.dart';
 
 class Result {
@@ -29,6 +30,11 @@ class BodyReader {
       : _state = message.headers.isChunked ? ReaderState.readChunkSize : ReaderState.readFixedLengthContent;
 
   Result readBody(Uint8List data) {
+    if (_bodyBuffer.length > Codec.maxBodyLength) {
+      _bodyBuffer.clear();
+      throw Exception('Body length exceeds ${Codec.maxBodyLength}');
+    }
+
     _offset = 0;
 
     //chunked编码

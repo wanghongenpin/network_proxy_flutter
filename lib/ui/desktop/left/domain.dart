@@ -3,14 +3,13 @@ import 'dart:collection';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/component/transition.dart';
-import 'package:network_proxy/ui/left/path.dart';
-
-import '../../network/channel.dart';
-import '../../network/util/attribute_keys.dart';
-import '../panel.dart';
+import 'package:network_proxy/ui/desktop/left/path.dart';
+import 'package:network_proxy/ui/panel.dart';
 
 ///左侧域名
 class DomainWidget extends StatefulWidget {
@@ -143,7 +142,7 @@ class _HeaderBodyState extends State<HeaderBody> {
                 visualDensity: const VisualDensity(vertical: -3.6),
                 title: Text(title,
                     textAlign: TextAlign.left,
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(fontSize: 14),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 onTap: () {

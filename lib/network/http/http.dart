@@ -51,10 +51,12 @@ class HttpRequest extends HttpMessage {
   final String uri;
   late HttpMethod method;
   late String requestUrl;
+
   String? path;
   HostAndPort? hostAndPort;
   final DateTime requestTime = DateTime.now();
   String? remoteDomain;
+  HttpResponse? response;
 
   HttpRequest(this.method, this.uri, String protocolVersion) : super(protocolVersion);
 

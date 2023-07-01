@@ -56,7 +56,8 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
     channel.putAttribute(AttributeKeys.request, httpRequest);
 
-    if (httpRequest.uri == 'http://proxy.pin/ssl') {
+    if (httpRequest.uri == 'http://proxy.pin/ssl' ||
+        httpRequest.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
       _crtDownload(channel, httpRequest);
       return;
     }
@@ -65,12 +66,13 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
+      // log.i("[${channel.id}] ${httpRequest.requestUrl}");
+
       var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.path);
       if (replaceBody?.isNotEmpty == true) {
         httpRequest.body = utf8.encode(replaceBody!);
       }
 
-      // log.i("[${channel.id}] ${remoteChannel.getAttribute(AttributeKeys.uri)}");
       listener?.onRequest(channel, httpRequest);
       //实现抓包代理转发
       await remoteChannel.write(httpRequest);
@@ -132,6 +134,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   @override
   void channelRead(Channel channel, HttpResponse msg) {
     msg.request = clientChannel.getAttribute(AttributeKeys.request);
+    msg.request?.response= msg;
     // log.i("[${clientChannel.id}] Response ${msg.bodyAsString}");
 
     var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.path);

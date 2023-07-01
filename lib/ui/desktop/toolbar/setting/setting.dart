@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/server.dart';
-import 'package:network_proxy/ui/toolbar/setting/request_rewrite.dart';
-import 'package:network_proxy/ui/toolbar/setting/theme.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'filter.dart';
@@ -26,11 +26,8 @@ class _SettingState extends State<Setting> {
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
-          PopupMenuItem<String>(padding: const EdgeInsets.all(0), child: PortWidget(proxyServer: widget.proxyServer)),
-          const PopupMenuItem(
-            padding: EdgeInsets.all(0),
-            child: ThemeSetting(),
-          ),
+          PopupMenuItem<String>(padding: const EdgeInsets.all(0), child: PortWidget(proxyServer: widget.proxyServer, textStyle: const TextStyle(fontSize: 13))),
+          const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
           PopupMenuItem<String>(
               padding: const EdgeInsets.all(0),
               child: ListTile(
@@ -97,8 +94,9 @@ class _SettingState extends State<Setting> {
 
 class PortWidget extends StatefulWidget {
   final ProxyServer proxyServer;
+  final TextStyle? textStyle;
 
-  const PortWidget({super.key, required this.proxyServer});
+  const PortWidget({super.key, required this.proxyServer, this.textStyle});
 
   @override
   State<StatefulWidget> createState() {
@@ -135,7 +133,7 @@ class _PortState extends State<PortWidget> {
   Widget build(BuildContext context) {
     return Row(children: [
       const Padding(padding: EdgeInsets.only(left: 16)),
-      const Text("端口号：", style: TextStyle(fontSize: 13)),
+      Text("端口号：", style: widget.textStyle),
       SizedBox(
           width: 80,
           child: TextFormField(

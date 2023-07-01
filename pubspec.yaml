@@ -15,7 +15,7 @@ dependencies:
   logger: ^1.4.0
   date_format: ^2.0.7
   file_selector: ^0.9.3
-  window_manager: ^0.3.4
+  window_manager: ^0.3.5
   path_provider: ^2.0.15
   url_launcher: ^6.1.11
   proxy_manager: ^0.0.3

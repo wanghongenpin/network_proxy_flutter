@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:network_proxy/ui/toolbar/setting/setting.dart';
-import 'package:network_proxy/ui/toolbar/ssl/ssl.dart';
+import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
+import 'package:network_proxy/ui/desktop/toolbar/ssl/ssl.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../../network/bin/server.dart';
 import '../left/domain.dart';
 import 'launch/launch.dart';
 
@@ -39,6 +39,11 @@ class _ToolbarState extends State<Toolbar> {
 
     if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyW)) {
       windowManager.blur();
+      return;
+    }
+    if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyQ)) {
+      print(" windowManager.close()");
+      windowManager.close();
       return;
     }
 

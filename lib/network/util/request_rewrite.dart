@@ -1,5 +1,5 @@
 class RequestRewrites {
-  bool enabled = false;
+  bool enabled = true;
   final List<RequestRewriteRule> rules = [];
 
   load(Map<String, dynamic>? map) {
