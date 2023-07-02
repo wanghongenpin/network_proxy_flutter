@@ -6,7 +6,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/split_view.dart';
 import 'package:network_proxy/ui/desktop/left/domain.dart';
 import 'package:network_proxy/ui/desktop/toolbar/toolbar.dart';
-import 'package:network_proxy/ui/mobile.dart';
+import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/panel.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';

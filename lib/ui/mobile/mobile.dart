@@ -10,9 +10,10 @@ import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:network_proxy/ui/mobile/filter.dart';
 import 'package:network_proxy/ui/mobile/ssl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import 'mobile/request.dart';
-import 'mobile/request_rewrite.dart';
+import 'request.dart';
+import 'request_rewrite.dart';
 
 class MobileHomePage extends StatefulWidget {
   const MobileHomePage({super.key});
@@ -99,7 +100,10 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
             title: const Text("域名黑名单"),
             trailing: const Icon(Icons.arrow_right),
             onTap: () => _filter(HostFilter.blacklist)),
-        ListTile(title: const Text("请求重写"), trailing: const Icon(Icons.arrow_right), onTap: () => _reqeustRewrite())
+        ListTile(title: const Text("请求重写"), trailing: const Icon(Icons.arrow_right), onTap: () => _reqeustRewrite()),
+        ListTile(title: const Text("Github"), trailing: const Icon(Icons.arrow_right), onTap: () {
+          launchUrl(Uri.parse("https://github.com/wanghongenpin/network-proxy-flutter"), mode: LaunchMode.externalApplication);
+        })
       ],
     ));
   }

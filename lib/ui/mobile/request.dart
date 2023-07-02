@@ -89,7 +89,6 @@ class RequestSequenceState extends State<RequestSequence> {
   @override
   initState() {
     super.initState();
-    print("initState ${widget.list.length}");
     list.addAll(widget.list.reversed);
   }
 
