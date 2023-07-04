@@ -8,26 +8,31 @@ import NetworkExtension
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-     GeneratedPluginRegistrant.register(with: self)
-     
-      let manager = NETunnelProviderManager()
-      let conf = NETunnelProviderProtocol()
-      conf.serverAddress = "https://127.0.0.1"
-//      // Include network traffic.
-//      let setting = NEProxySettings()
-//      setting.httpsEnabled = true
-//      setting.httpEnabled = true
-//      setting.httpsServer = NEProxyServer.init(address: "127.0.0.1", port:  8888)
-//      conf.proxySettings = setting
-//      
-      manager.protocolConfiguration = conf
-      manager.localizedDescription = "ProxyPin"
-      manager.isEnabled = true
+      GeneratedPluginRegistrant.register(with: self)
+
+//      let url = URL(string: "http://www.baidu.com")!
+//      let task = URLSession.shared.dataTask(with: url) {(data, response, error) in
+//          guard let data = data else { return }
+//          print(String(data: data, encoding: .utf8)!)
+//      }
+//      task.resume()
+
+      let controller: FlutterViewController = window.rootViewController as! FlutterViewController ;
+      let batteryChannel = FlutterMethodChannel.init(name: "com.proxy/proxyVpn", binaryMessenger: controller as! FlutterBinaryMessenger);
+          batteryChannel.setMethodCallHandler({
+              (call: FlutterMethodCall, result: FlutterResult) -> Void in
+              if ("stopVpn" == call.method) {
+                  VpnManager.shared.disconnect()
+              } else {
+                  let arguments = call.arguments as? Dictionary<String, AnyObject>
+                  VpnManager.shared.connect(host: arguments?["proxyHost"] as? String ,port: arguments?["proxyPort"] as? Int)
+              }
+          })
+
       
-      manager.saveToPreferences {error in
-              if error != nil{print("vpn erroor" ,error);return;}
-      }
-    
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+     
+     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+
+
 }

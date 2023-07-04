@@ -26,6 +26,7 @@ class MobileHomePage extends StatefulWidget {
 
 class MobileHomeState extends State<MobileHomePage> implements EventListener {
   static const MethodChannel proxyVpnChannel = MethodChannel('com.proxy/proxyVpn');
+  final ValueNotifier<bool> sllEnableListenable = ValueNotifier<bool>(true);
 
   late ProxyServer proxyServer;
   final requestStateKey = GlobalKey<RequestWidgetState>();
@@ -43,7 +44,14 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   @override
   void initState() {
     proxyServer = ProxyServer(listener: this);
+    proxyServer.initialize().then((value) => sllEnableListenable.value = proxyServer.enableSsl);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    sllEnableListenable.dispose();
+    super.dispose();
   }
 
   @override
@@ -54,16 +62,19 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
               tooltip: "清理",
               icon: const Icon(Icons.cleaning_services_outlined),
               onPressed: () => requestStateKey.currentState?.clean()),
-          IconButton(
-              tooltip: "Https代理",
-              icon: const Icon(Icons.https),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (BuildContext context) {
-                    return MobileSslWidget(proxyServer: proxyServer);
-                  }),
-                );
-              })
+          ValueListenableBuilder(
+              valueListenable: sllEnableListenable,
+              builder: (_, bool enabled, __) => IconButton(
+                  tooltip: "Https代理",
+                  icon: Icon(Icons.https, color: enabled ? null : Colors.red),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (BuildContext context) {
+                        return MobileSslWidget(
+                            proxyServer: proxyServer, onEnableChange: (val) => sllEnableListenable.value = val);
+                      }),
+                    );
+                  }))
         ]),
         drawer: drawer(),
         floatingActionButton: FloatingActionButton(
@@ -101,9 +112,13 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
             trailing: const Icon(Icons.arrow_right),
             onTap: () => _filter(HostFilter.blacklist)),
         ListTile(title: const Text("请求重写"), trailing: const Icon(Icons.arrow_right), onTap: () => _reqeustRewrite()),
-        ListTile(title: const Text("Github"), trailing: const Icon(Icons.arrow_right), onTap: () {
-          launchUrl(Uri.parse("https://github.com/wanghongenpin/network-proxy-flutter"), mode: LaunchMode.externalApplication);
-        })
+        ListTile(
+            title: const Text("Github"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () {
+              launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"),
+                  mode: LaunchMode.externalApplication);
+            })
       ],
     ));
   }

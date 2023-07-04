@@ -213,6 +213,7 @@ class DomainListState extends State<DomainList> {
   Map<HostAndPort, List<HttpRequest>> containerMap = {};
 
   LinkedHashSet<HostAndPort> container = LinkedHashSet<HostAndPort>();
+  List<HostAndPort> list = [];
   HostAndPort? showHostAndPort;
 
   @override
@@ -228,10 +229,13 @@ class DomainListState extends State<DomainList> {
       }
       list.add(request);
     }
+
+    list = container.toList();
   }
 
   add(HttpRequest request) {
     var hostAndPort = request.hostAndPort!;
+    container.remove(hostAndPort);
     container.add(hostAndPort);
     var list = containerMap[hostAndPort];
     if (list == null) {
@@ -243,6 +247,7 @@ class DomainListState extends State<DomainList> {
       requestSequenceKey.currentState?.add(request);
     }
 
+    this.list = [...container].reversed.toList();
     setState(() {});
   }
 
@@ -261,22 +266,23 @@ class DomainListState extends State<DomainList> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: container.length,
+    return ListView.separated(
+        separatorBuilder: (context, index) =>  Divider(height: 0.5, color: Theme.of(context).focusColor),
+        itemCount: list.length,
         itemBuilder: (context, index) {
           var time = formatDate(
-              containerMap[container.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
+              containerMap[list.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
           return ListTile(
-              title: Text(container.elementAt(index).url, maxLines: 1, overflow: TextOverflow.ellipsis),
+              title: Text(list.elementAt(index).url, maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: const Icon(Icons.chevron_right),
-              subtitle: Text("最后请求时间: $time,  次数: ${containerMap[container.elementAt(index)]!.length}",
+              subtitle: Text("最后请求时间: $time,  次数: ${containerMap[list.elementAt(index)]!.length}",
                   maxLines: 1, overflow: TextOverflow.ellipsis),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  showHostAndPort = container.elementAt(index);
+                  showHostAndPort = list.elementAt(index);
                   return Scaffold(
                       appBar: AppBar(title: const Text("请求列表")),
-                      body: RequestSequence(key: requestSequenceKey, list: containerMap[container.elementAt(index)]!));
+                      body: RequestSequence(key: requestSequenceKey, list: containerMap[list.elementAt(index)]!));
                 }));
               });
         });

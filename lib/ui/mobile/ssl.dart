@@ -4,14 +4,25 @@ import 'package:url_launcher/url_launcher.dart';
 
 class MobileSslWidget extends StatefulWidget {
   final ProxyServer proxyServer;
+  final Function(bool val) onEnableChange;
 
-  const MobileSslWidget({super.key, required this.proxyServer});
+  const MobileSslWidget({super.key, required this.proxyServer, required this.onEnableChange});
 
   @override
   State<MobileSslWidget> createState() => _MobileSslState();
 }
 
 class _MobileSslState extends State<MobileSslWidget> {
+  bool changed = false;
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (changed) {
+      widget.proxyServer.flushConfig();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,7 +31,16 @@ class _MobileSslState extends State<MobileSslWidget> {
           centerTitle: true,
         ),
         body: Column(children: [
-          _Switch(proxyServer: widget.proxyServer),
+          SwitchListTile(
+              hoverColor: Colors.transparent,
+              title: const Text("启用Https代理", style: TextStyle(fontSize: 16)),
+              value: widget.proxyServer.enableSsl,
+              onChanged: (val) {
+                widget.proxyServer.enableSsl = val;
+                widget.onEnableChange(val);
+                changed = true;
+                setState(() {});
+              }),
           ExpansionTile(
               title: const Text("安装根证书"),
               initiallyExpanded: true,
@@ -37,39 +57,5 @@ class _MobileSslState extends State<MobileSslWidget> {
 
   void _downloadCert() async {
     launchUrl(Uri.parse("http://127.0.0.1:${widget.proxyServer.port}/ssl"), mode: LaunchMode.externalApplication);
-  }
-}
-
-class _Switch extends StatefulWidget {
-  final ProxyServer proxyServer;
-
-  const _Switch({Key? key, required this.proxyServer}) : super(key: key);
-
-  @override
-  State<_Switch> createState() => _SwitchState();
-}
-
-class _SwitchState extends State<_Switch> {
-  bool changed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile(
-        hoverColor: Colors.transparent,
-        title: const Text("启用Https代理", style: TextStyle(fontSize: 16)),
-        value: widget.proxyServer.enableSsl,
-        onChanged: (val) {
-          widget.proxyServer.enableSsl = val;
-          changed = true;
-          setState(() {});
-        });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    if (changed) {
-      widget.proxyServer.flushConfig();
-    }
   }
 }

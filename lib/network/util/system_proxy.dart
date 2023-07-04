@@ -15,6 +15,15 @@ class SystemProxy {
     }
   }
 
+  static void setSystemProxyEnable(bool enable) async {
+    if (Platform.isMacOS) {
+      setProxyEnableMacOS(enable, true);
+    } else if (Platform.isWindows) {
+      setProxyEnableWindows(enable);
+    }
+  }
+
+
   static Future<bool> _setProxyServerMacOS(int port, bool enableSsl) async {
     _hardwarePort = await hardwarePort();
     var results = await Process.run('bash', [
@@ -64,7 +73,6 @@ class SystemProxy {
         'networksetup -listnetworkserviceorder |grep "Device: $name" -A 1 |grep "Hardware Port" |awk -F ": " \'{print \$2}\'',
       ])
     ]);
-    print(results);
     return results.stdout.toString().split(", ")[0];
   }
 

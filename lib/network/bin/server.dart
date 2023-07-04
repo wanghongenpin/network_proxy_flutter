@@ -19,7 +19,7 @@ Future<void> main() async {
 
 /// 代理服务器
 class ProxyServer {
-  bool init = false;
+  bool _init = false;
   int port = 8888;
   bool _enableSsl = false;
 
@@ -30,6 +30,15 @@ class ProxyServer {
   ProxyServer({this.listener});
 
   bool get enableSsl => _enableSsl;
+
+  //初始化
+  Future<void> initialize() async {
+    if (!_init) {
+      await _loadConfig();
+      // 读取配置文件
+      _init = true;
+    }
+  }
 
   Future<File> homeDir() async {
     String? userHome;
@@ -66,9 +75,9 @@ class ProxyServer {
   /// 启动代理服务
   Future<Server> start() async {
     Server server = Server();
-    if (!init) {
+    if (!_init) {
       // 读取配置文件
-      init = true;
+      _init = true;
       await _loadConfig();
     }
 

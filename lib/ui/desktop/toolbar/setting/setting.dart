@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/util/system_proxy.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,6 +18,8 @@ class Setting extends StatefulWidget {
 }
 
 class _SettingState extends State<Setting> {
+  final ValueNotifier<bool> enableDesktopListenable = ValueNotifier<bool>(true);
+
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
@@ -26,7 +29,23 @@ class _SettingState extends State<Setting> {
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
-          PopupMenuItem<String>(padding: const EdgeInsets.all(0), child: PortWidget(proxyServer: widget.proxyServer, textStyle: const TextStyle(fontSize: 13))),
+          PopupMenuItem<String>(
+              padding: const EdgeInsets.all(0),
+              child: PortWidget(proxyServer: widget.proxyServer, textStyle: const TextStyle(fontSize: 13))),
+          PopupMenuItem<String>(
+              padding: const EdgeInsets.all(0),
+              child: ValueListenableBuilder(
+                  valueListenable: enableDesktopListenable,
+                  builder: (_, val, __) => SwitchListTile(
+                      hoverColor: Colors.transparent,
+                      title: const Text("启用电脑抓包", style: TextStyle(fontSize: 12)),
+                      visualDensity: const VisualDensity(horizontal: -4),
+                      dense: true,
+                      value: val,
+                      onChanged: (val) {
+                        SystemProxy.setSystemProxyEnable(val);
+                        enableDesktopListenable.value = val;
+                      }))),
           const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
           PopupMenuItem<String>(
               padding: const EdgeInsets.all(0),
@@ -51,7 +70,7 @@ class _SettingState extends State<Setting> {
             padding: const EdgeInsets.all(0),
             child: const ListTile(title: Text("Github"), dense: true, trailing: Icon(Icons.arrow_right)),
             onTap: () {
-              launchUrl(Uri.parse("https://github.com/wanghongenpin/network-proxy-flutter"));
+              launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"));
             },
           )
         ];

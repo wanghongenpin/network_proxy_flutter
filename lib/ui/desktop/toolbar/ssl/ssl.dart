@@ -14,16 +14,17 @@ class SslWidget extends StatefulWidget {
 }
 
 class _SslState extends State<SslWidget> {
+
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.https),
+      icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red),
       surfaceTintColor: Colors.white70,
       tooltip: "Https代理",
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
-          PopupMenuItem(padding: const EdgeInsets.all(0), child: _Switch(proxyServer: widget.proxyServer)),
+          PopupMenuItem(padding: const EdgeInsets.all(0), child: _Switch(proxyServer: widget.proxyServer, onEnableChange: (val) => setState(() {}))),
           PopupMenuItem(
               padding: const EdgeInsets.all(0),
               child: ListTile(
@@ -47,10 +48,7 @@ class _SslState extends State<SslWidget> {
                 onTap: () async {
                   mobileCer(await localIp());
                 }),
-          ),
-          // const PopupMenuItem<String>(
-          //   child: ListTile(title: Text("安装根证书到Android"), dense: true, trailing: Icon(Icons.arrow_right)),
-          // )
+          )
         ];
       },
     );
@@ -117,8 +115,9 @@ class _SslState extends State<SslWidget> {
 
 class _Switch extends StatefulWidget {
   final ProxyServer proxyServer;
+  final Function(bool val) onEnableChange;
 
-  const _Switch({Key? key, required this.proxyServer}) : super(key: key);
+  const _Switch({Key? key, required this.proxyServer, required this.onEnableChange}) : super(key: key);
 
   @override
   State<_Switch> createState() => _SwitchState();
@@ -138,6 +137,7 @@ class _SwitchState extends State<_Switch> {
         onChanged: (val) {
           widget.proxyServer.enableSsl = val;
           changed = true;
+          widget.onEnableChange(val);
           setState(() {});
         });
   }

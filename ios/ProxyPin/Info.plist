@@ -5,9 +5,9 @@
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.networkextension.app-proxy</string>
+		<string>com.apple.networkextension.packet-tunnel</string>
 		<key>NSExtensionPrincipalClass</key>
-		<string>$(PRODUCT_MODULE_NAME).AppProxyProvider</string>
+		<string>$(PRODUCT_MODULE_NAME).PacketTunnelProvider</string>
 	</dict>
 </dict>
 </plist>
