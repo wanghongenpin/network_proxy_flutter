@@ -81,10 +81,12 @@ class RequestSequence extends StatefulWidget {
 }
 
 class RequestSequenceState extends State<RequestSequence> {
-  GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
+  // GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
   Map<HttpRequest, GlobalKey<RequestRowState>> indexes = HashMap();
 
   late Queue<HttpRequest> list = Queue();
+
+  bool changing = false;
 
   @override
   initState() {
@@ -95,7 +97,17 @@ class RequestSequenceState extends State<RequestSequence> {
   ///添加请求
   add(HttpRequest request) {
     list.addFirst(request);
-    listKey.currentState?.insertItem(0);
+    // listKey.currentState?.insertItem(0);
+
+    //防止频繁刷新
+    if (!changing) {
+      changing = true;
+      Future.delayed(const Duration(milliseconds: 500), () {
+        setState(() {
+          changing = false;
+        });
+      });
+    }
   }
 
   ///添加响应
@@ -109,22 +121,19 @@ class RequestSequenceState extends State<RequestSequence> {
     setState(() {
       list.clear();
       indexes.clear();
-      listKey.currentState?.removeAllItems((context, animation) => Container());
+      // listKey.currentState?.removeAllItems((context, animation) => Container());
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedList(
-        key: listKey,
-        initialItemCount: list.length,
-        itemBuilder: (context, index, Animation<double> animation) {
+    return ListView.separated(
+        separatorBuilder: (context, index) => Divider(height: 0.5, color: Theme.of(context).focusColor),
+        itemCount: list.length,
+        itemBuilder: (context, index) {
           GlobalKey<RequestRowState> key = GlobalKey();
           indexes[list.elementAt(index)] = key;
-          return Container(
-              decoration:
-                  BoxDecoration(border: Border(bottom: BorderSide(width: 0.5, color: Theme.of(context).focusColor))),
-              child: RequestRow(key: key, request: list.elementAt(index)));
+          return RequestRow(key: key, request: list.elementAt(index));
         });
   }
 }
@@ -215,6 +224,7 @@ class DomainListState extends State<DomainList> {
   LinkedHashSet<HostAndPort> container = LinkedHashSet<HostAndPort>();
   List<HostAndPort> list = [];
   HostAndPort? showHostAndPort;
+  bool changing = false;
 
   @override
   initState() {
@@ -248,7 +258,15 @@ class DomainListState extends State<DomainList> {
     }
 
     this.list = [...container].reversed.toList();
-    setState(() {});
+    //防止频繁刷新
+    if (!changing) {
+      changing = true;
+      Future.delayed(const Duration(milliseconds: 500), () {
+        setState(() {
+          changing = false;
+        });
+      });
+    }
   }
 
   addResponse(HttpResponse response) {
@@ -259,19 +277,20 @@ class DomainListState extends State<DomainList> {
 
   clean() {
     setState(() {
-      containerMap.clear();
+      list.clear();
       container.clear();
+      containerMap.clear();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-        separatorBuilder: (context, index) =>  Divider(height: 0.5, color: Theme.of(context).focusColor),
+        separatorBuilder: (context, index) => Divider(height: 0.5, color: Theme.of(context).focusColor),
         itemCount: list.length,
         itemBuilder: (context, index) {
-          var time = formatDate(
-              containerMap[list.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
+          var time =
+              formatDate(containerMap[list.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
           return ListTile(
               title: Text(list.elementAt(index).url, maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: const Icon(Icons.chevron_right),

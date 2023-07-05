@@ -124,6 +124,10 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       }
       if (data is HttpRequest) {
         data.hostAndPort = channel.getAttribute(AttributeKeys.host) ?? getHostAndPort(data);
+        if (data.headers.host() != null) {
+          data.hostAndPort?.host = data.headers.host()!;
+        }
+
         data.remoteDomain = data.hostAndPort?.url;
         data.requestUrl = data.uri.startsWith("/") ? '${data.remoteDomain}${data.uri}' : data.uri;
         try {
@@ -157,7 +161,7 @@ class HostAndPort {
   static const String httpScheme = "http://";
   static const String httpsScheme = "https://";
   final String scheme;
-  final String host;
+  String host;
   final int port;
 
   HostAndPort(this.scheme, this.host, this.port);

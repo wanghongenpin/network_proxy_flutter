@@ -38,7 +38,7 @@ class _SettingState extends State<Setting> {
                   valueListenable: enableDesktopListenable,
                   builder: (_, val, __) => SwitchListTile(
                       hoverColor: Colors.transparent,
-                      title: const Text("启用电脑抓包", style: TextStyle(fontSize: 12)),
+                      title: const Text("抓取电脑请求", style: TextStyle(fontSize: 12)),
                       visualDensity: const VisualDensity(horizontal: -4),
                       dense: true,
                       value: val,

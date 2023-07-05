@@ -22,6 +22,9 @@ class HttpHeaders {
   void add(String name, String value) {
     if (_headers.containsKey(name.toLowerCase())) {
       _headers[name.toLowerCase()]!.add(value);
+      if (!_originalHeaderNames.containsKey(name)) {
+        _originalHeaderNames[name] = [];
+      }
       _originalHeaderNames[name]!.add(value);
       return;
     }
@@ -76,6 +79,7 @@ class HttpHeaders {
   set contentType(String contentType) => set(CONTENT_TYPE, contentType);
   String get contentType => get(CONTENT_TYPE) ?? "";
 
+  String? host() => get(HOST);
   @override
   String toString() {
     return 'HttpHeaders{$_originalHeaderNames}';
