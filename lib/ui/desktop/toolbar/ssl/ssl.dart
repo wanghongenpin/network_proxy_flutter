@@ -14,17 +14,31 @@ class SslWidget extends StatefulWidget {
 }
 
 class _SslState extends State<SslWidget> {
+  bool _enableSsl = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.proxyServer.initializedListener(() {
+      _enableSsl = widget.proxyServer.enableSsl;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
-      icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red),
+      icon: Icon(Icons.https, color: _enableSsl ? null : Colors.red),
       surfaceTintColor: Colors.white70,
       tooltip: "Https代理",
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
-          PopupMenuItem(padding: const EdgeInsets.all(0), child: _Switch(proxyServer: widget.proxyServer, onEnableChange: (val) => setState(() {}))),
+          PopupMenuItem(
+              padding: const EdgeInsets.all(0),
+              child: _Switch(
+                  proxyServer: widget.proxyServer,
+                  onEnableChange: (val) => setState(() {_enableSsl = val;}))),
           PopupMenuItem(
               padding: const EdgeInsets.all(0),
               child: ListTile(

@@ -29,9 +29,14 @@ import NetworkExtension
               }
           })
 
-      
-     
+
+
      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+
+  override func applicationWillTerminate(_ application: UIApplication) {
+    VpnManager.shared.disconnect()
   }
 
 

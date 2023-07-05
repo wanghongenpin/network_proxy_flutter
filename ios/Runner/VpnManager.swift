@@ -12,7 +12,8 @@ enum VPNStatus {
 
 
 class VpnManager{
-
+    var activeVPN: NETunnelProviderManager?;
+    
     public var proxtHost: String = "127.0.0.01"
     public var proxyPort: Int = 8888
 
@@ -138,6 +139,7 @@ extension VpnManager{
 
 // Actions
 extension VpnManager{
+    
     func connect(host: String?, port: Int?){
         self.proxtHost = host ?? self.proxtHost
         self.proxyPort = port ?? self.proxyPort
@@ -145,6 +147,7 @@ extension VpnManager{
         self.loadAndCreatePrividerManager { (manager) in
             guard let manager = manager else{return}
             do{
+                self.activeVPN = manager
                 try manager.connection.startVPNTunnel()
             }catch let err{
                 print("connect: ", err)
@@ -153,8 +156,16 @@ extension VpnManager{
     }
 
     func disconnect(){
+        if (activeVPN != nil) {
+            print("stopVPNTunnel activeVPN")
+            activeVPN?.connection.stopVPNTunnel()
+            return
+        }
+        
         loadProviderManager{
+            print("stopVPNTunnel")
             $0?.connection.stopVPNTunnel()
+           
         }
     }
 

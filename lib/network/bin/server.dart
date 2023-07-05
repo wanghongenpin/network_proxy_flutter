@@ -19,7 +19,7 @@ Future<void> main() async {
 
 /// 代理服务器
 class ProxyServer {
-  bool _init = false;
+  bool init = false;
   int port = 8888;
   bool _enableSsl = false;
 
@@ -27,17 +27,15 @@ class ProxyServer {
   EventListener? listener;
   RequestRewrites requestRewrites = RequestRewrites();
 
+  List<Function> _initializedListeners = [];
+
   ProxyServer({this.listener});
 
   bool get enableSsl => _enableSsl;
 
   //初始化
-  Future<void> initialize() async {
-    if (!_init) {
-      await _loadConfig();
-      // 读取配置文件
-      _init = true;
-    }
+  Future<void> initializedListener(Function action) async {
+    _initializedListeners.add(action);
   }
 
   Future<File> homeDir() async {
@@ -75,10 +73,13 @@ class ProxyServer {
   /// 启动代理服务
   Future<Server> start() async {
     Server server = Server();
-    if (!_init) {
+    if (!init) {
       // 读取配置文件
-      _init = true;
+      init = true;
       await _loadConfig();
+      for (var element in _initializedListeners) {
+        element.call();
+      }
     }
 
     server.enableSsl = _enableSsl;

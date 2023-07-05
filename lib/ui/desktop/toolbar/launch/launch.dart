@@ -17,13 +17,14 @@ class SocketLaunch extends StatefulWidget {
   }
 }
 
-class _SocketLaunchState extends State<SocketLaunch> with WindowListener {
+class _SocketLaunchState extends State<SocketLaunch> with WindowListener, WidgetsBindingObserver {
   bool started = true;
 
   @override
   void initState() {
     super.initState();
     windowManager.addListener(this);
+    WidgetsBinding.instance.addObserver(this);
     widget.proxyServer.start();
     widget.onStart?.call();
   }
@@ -31,6 +32,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener {
   @override
   void dispose() {
     windowManager.removeListener(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -39,6 +41,18 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener {
     print("onWindowClose");
     await widget.proxyServer.stop();
     started = false;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    //页面即将关闭
+    if (state == AppLifecycleState.detached) {
+      print('AppLifecycleState.detached');
+      // widget.onStop?.call();
+      widget.proxyServer.stop();
+      started = false;
+    }
   }
 
   @override

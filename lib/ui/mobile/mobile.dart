@@ -44,7 +44,9 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   @override
   void initState() {
     proxyServer = ProxyServer(listener: this);
-    proxyServer.initialize().then((value) => sllEnableListenable.value = proxyServer.enableSsl);
+    proxyServer.initializedListener(() {
+      sllEnableListenable.value = proxyServer.enableSsl;
+    });
     super.initState();
   }
 

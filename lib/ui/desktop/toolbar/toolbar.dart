@@ -23,13 +23,11 @@ class Toolbar extends StatefulWidget {
 }
 
 class _ToolbarState extends State<Toolbar> {
-  final ValueNotifier<bool> sllEnableListenable = ValueNotifier<bool>(true);
 
   @override
   void initState() {
     super.initState();
     RawKeyboard.instance.addListener(onKeyEvent);
-    widget.proxyServer.initialize().then((value) => sllEnableListenable.value = widget.proxyServer.enableSsl);
   }
 
   void onKeyEvent(RawKeyEvent event) {
@@ -72,9 +70,7 @@ class _ToolbarState extends State<Toolbar> {
               widget.domainStateKey.currentState?.clean();
             }),
         const Padding(padding: EdgeInsets.only(left: 30)),
-        ValueListenableBuilder(
-            valueListenable: sllEnableListenable,
-            builder: (_, value, __) => SslWidget(proxyServer: widget.proxyServer)),
+        SslWidget(proxyServer: widget.proxyServer),
         const Padding(padding: EdgeInsets.only(left: 30)),
         Setting(proxyServer: widget.proxyServer),
       ],
