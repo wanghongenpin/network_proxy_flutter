@@ -29,15 +29,47 @@ import NetworkExtension
               }
           })
 
-
-
      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
+    override func applicationWillTerminate(_ application: UIApplication) {
+      VpnManager.shared.disconnect()
+    }
 
-  override func applicationWillTerminate(_ application: UIApplication) {
-    VpnManager.shared.disconnect()
-  }
+   var timer: Timer?
+   var bgTask: UIBackgroundTaskIdentifier?
 
+
+    override func applicationDidEnterBackground(_ application: UIApplication) {
+//        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(timerAction), userInfo: nil, repeats: true)
+//        RunLoop.current.add(timer!, forMode: RunLoop.Mode.common)
+//               bgTask = application.beginBackgroundTask(expirationHandler: nil)
+    }
+
+    @objc func timerAction() {
+      print(UIApplication.shared.backgroundTimeRemaining )
+      if UIApplication.shared.backgroundTimeRemaining < 60.0 {
+          let application = UIApplication.shared
+          bgTask = application.beginBackgroundTask(expirationHandler: nil)
+      }
+    }
+
+    var backgroundUpdateTask: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier(rawValue: 0)
+    func endBackgroundUpdateTask() {
+        AudioManager.shared.openBackgroundAudioAutoplay = false
+        UIApplication.shared.endBackgroundTask(self.backgroundUpdateTask)
+        self.backgroundUpdateTask = UIBackgroundTaskIdentifier.invalid
+    }
+
+    override func applicationWillResignActive(_ application: UIApplication) {
+        AudioManager.shared.openBackgroundAudioAutoplay = true
+        self.backgroundUpdateTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+            self.endBackgroundUpdateTask()
+        })
+    }
+    override  func applicationDidBecomeActive(_ application: UIApplication) {
+        self.endBackgroundUpdateTask()
+
+    }
 
 }

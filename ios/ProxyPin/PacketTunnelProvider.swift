@@ -18,9 +18,10 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             exit(EXIT_FAILURE)
         }
         let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
-        
+        networkSettings.mtu = 1500
+        NSLog(conf.debugDescription)
         //http代理
-        let host = conf["proxtHost"] as! String
+        let host = conf["proxyHost"] as! String
         let proxyPort =  conf["proxyPort"] as! Int
         let proxySettings = NEProxySettings()
         proxySettings.httpEnabled = true
@@ -28,8 +29,9 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         proxySettings.httpsEnabled = true
         proxySettings.httpsServer = NEProxyServer(address: host, port: proxyPort)
         proxySettings.matchDomains = [""]
+
         networkSettings.proxySettings =  proxySettings
-    
+
         setTunnelNetworkSettings(networkSettings) {
            error in
            guard error == nil else {
@@ -43,23 +45,24 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
        }
         NSLog("startTunnelend")
     }
-    
+
     override func stopTunnel(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
         completionHandler()
     }
-    
+
     override func handleAppMessage(_ messageData: Data, completionHandler: ((Data?) -> Void)?) {
         // Add code here to handle the message.
         if let handler = completionHandler {
+            NSLog("handleAppMessage ", messageData.debugDescription)
             handler(messageData)
         }
     }
-    
+
     override func sleep(completionHandler: @escaping () -> Void) {
         // Add code here to get ready to sleep.
         completionHandler()
     }
-    
+
     override func wake() {
         // Add code here to wake up.
     }

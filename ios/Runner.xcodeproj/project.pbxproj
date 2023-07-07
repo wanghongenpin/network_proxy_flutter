@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 55;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -19,6 +19,8 @@
 		9B0912222A54593A001108B7 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B0912212A54593A001108B7 /* NetworkExtension.framework */; };
 		9B0912252A54593A001108B7 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0912242A54593A001108B7 /* PacketTunnelProvider.swift */; };
 		9B09122A2A54593A001108B7 /* ProxyPin.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9B0912202A54593A001108B7 /* ProxyPin.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9B70772D2A5718FB00F184A9 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B70772C2A5718FB00F184A9 /* AudioManager.swift */; };
+		9B7077362A5728B900F184A9 /* silence.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 9B7077352A5728B900F184A9 /* silence.mp3 */; };
 		B375908E625E0AED772FA2C0 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D37E307095F2B3E689A68827 /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -92,6 +94,8 @@
 		9B0912242A54593A001108B7 /* PacketTunnelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketTunnelProvider.swift; sourceTree = "<group>"; };
 		9B0912262A54593A001108B7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9B0912272A54593A001108B7 /* ProxyPin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ProxyPin.entitlements; sourceTree = "<group>"; };
+		9B70772C2A5718FB00F184A9 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		9B7077352A5728B900F184A9 /* silence.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = silence.mp3; sourceTree = "<group>"; };
 		D37E307095F2B3E689A68827 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E328C7F89A365CDC0EAD15C6 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -192,6 +196,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				9B7077352A5728B900F184A9 /* silence.mp3 */,
 				9B09121A2A5457B3001108B7 /* VpnManager.swift */,
 				9B0912192A545757001108B7 /* Runner.entitlements */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
@@ -202,6 +207,7 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				9B70772C2A5718FB00F184A9 /* AudioManager.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -303,7 +309,7 @@
 				};
 			};
 			buildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
-			compatibilityVersion = "Xcode 9.3";
+			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -334,6 +340,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9B7077362A5728B900F184A9 /* silence.mp3 in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
@@ -460,6 +467,7 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				9B70772D2A5718FB00F184A9 /* AudioManager.swift in Sources */,
 				9B09121B2A5457B3001108B7 /* VpnManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -805,7 +813,7 @@
 				INFOPLIST_FILE = ProxyPin/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ProxyPin;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -843,7 +851,7 @@
 				INFOPLIST_FILE = ProxyPin/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ProxyPin;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -878,7 +886,7 @@
 				INFOPLIST_FILE = ProxyPin/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ProxyPin;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

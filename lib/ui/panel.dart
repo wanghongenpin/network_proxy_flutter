@@ -107,11 +107,21 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
   }
 
   Widget request() {
-    return message(widget.request.get(), "Request");
+    return ListView(children: [
+      Padding(
+          padding: const EdgeInsetsDirectional.only(start: 20, top: 20),
+          child: rowWidget("Path", widget.request.get()?.path.toString())),
+      ...message(widget.request.get(), "Request")
+    ]);
   }
 
   Widget response() {
-    return message(widget.response.get(), "Response");
+    return ListView(children: [
+      Padding(
+          padding: const EdgeInsetsDirectional.only(start: 20, top: 20),
+          child: rowWidget("StatusCode", widget.response.get()?.status.code.toString())),
+      ...message(widget.response.get(), "Response")
+    ]);
   }
 
   Widget cookies() {
@@ -126,7 +136,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     ]);
   }
 
-  Widget message(HttpMessage? message, String type) {
+  List<Widget> message(HttpMessage? message, String type) {
     var headers = <Widget>[];
     message?.headers.forEach((name, values) {
       for (var v in values) {
@@ -140,15 +150,14 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
     Widget? bodyWidgets = message == null ? null : getBody(type, message);
 
-    return ListView(children: [
-      ExpansionTile(
-          title: Text("$type Headers", style: const TextStyle(fontWeight: FontWeight.bold)),
-          initiallyExpanded: true,
-          shape: const Border(),
-          childrenPadding: const EdgeInsets.only(left: 20, bottom: 20),
-          children: headers),
-      bodyWidgets ?? const SizedBox()
-    ]);
+    Widget headerWidget = ExpansionTile(
+        title: Text("$type Headers", style: const TextStyle(fontWeight: FontWeight.bold)),
+        initiallyExpanded: true,
+        shape: const Border(),
+        childrenPadding: const EdgeInsets.only(left: 20, bottom: 20),
+        children: headers);
+
+    return [headerWidget, bodyWidgets ?? const SizedBox()];
   }
 
   Widget expansionTile(String title, List<Widget> content) {

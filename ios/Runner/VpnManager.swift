@@ -14,7 +14,7 @@ enum VPNStatus {
 class VpnManager{
     var activeVPN: NETunnelProviderManager?;
     
-    public var proxtHost: String = "127.0.0.01"
+    public var proxyHost: String = "127.0.0.01"
     public var proxyPort: Int = 8888
 
     static let shared = VpnManager()
@@ -94,7 +94,7 @@ extension VpnManager{
             }
    
             var conf = [String:AnyObject]()
-            conf["proxtHost"] = self.proxtHost as AnyObject
+            conf["proxyHost"] = self.proxyHost as AnyObject
             conf["proxyPort"] = self.proxyPort as AnyObject
             
             let orignConf = manager.protocolConfiguration as! NETunnelProviderProtocol
@@ -141,7 +141,7 @@ extension VpnManager{
 extension VpnManager{
     
     func connect(host: String?, port: Int?){
-        self.proxtHost = host ?? self.proxtHost
+        self.proxyHost = host ?? self.proxyHost
         self.proxyPort = port ?? self.proxyPort
         
         self.loadAndCreatePrividerManager { (manager) in
