@@ -102,7 +102,7 @@ class RequestSequenceState extends State<RequestSequence> {
     //防止频繁刷新
     if (!changing) {
       changing = true;
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(milliseconds: 200), () {
         setState(() {
           changing = false;
         });
@@ -261,7 +261,7 @@ class DomainListState extends State<DomainList> {
     //防止频繁刷新
     if (!changing) {
       changing = true;
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(milliseconds: 200), () {
         setState(() {
           changing = false;
         });

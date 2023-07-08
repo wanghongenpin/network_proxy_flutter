@@ -20,6 +20,10 @@ dependencies:
   url_launcher: ^6.1.11
   proxy_manager: ^0.0.3
   chinese_font_library:
+  qr_flutter: ^4.1.0
+  qrscan: ^0.3.3
+  flutter_barcode_scanner: ^2.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

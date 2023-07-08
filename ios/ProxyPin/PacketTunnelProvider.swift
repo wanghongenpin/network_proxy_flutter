@@ -18,7 +18,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             exit(EXIT_FAILURE)
         }
         let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
-        networkSettings.mtu = 1500
         NSLog(conf.debugDescription)
         //http代理
         let host = conf["proxyHost"] as! String

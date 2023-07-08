@@ -1,5 +1,8 @@
-import 'package:basic_utils/basic_utils.dart';
-import 'package:network_proxy/network/channel.dart';
+import 'dart:io';
 
 void main() {
+  print(Platform.version);
+  print(Platform.localHostname);
+  print(Platform.operatingSystem);
+  print(Platform.localeName);
 }

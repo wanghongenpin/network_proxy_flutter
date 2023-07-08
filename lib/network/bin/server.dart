@@ -27,7 +27,7 @@ class ProxyServer {
   EventListener? listener;
   RequestRewrites requestRewrites = RequestRewrites();
 
-  List<Function> _initializedListeners = [];
+  final List<Function> _initializedListeners = [];
 
   ProxyServer({this.listener});
 

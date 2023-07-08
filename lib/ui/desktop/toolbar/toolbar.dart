@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
 import 'package:network_proxy/ui/desktop/toolbar/ssl/ssl.dart';
+import 'package:network_proxy/utils/ip.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../left/domain.dart';
 import 'launch/launch.dart';
@@ -23,7 +25,6 @@ class Toolbar extends StatefulWidget {
 }
 
 class _ToolbarState extends State<Toolbar> {
-
   @override
   void initState() {
     super.initState();
@@ -62,18 +63,59 @@ class _ToolbarState extends State<Toolbar> {
       children: [
         Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 80 : 30)),
         SocketLaunch(proxyServer: widget.proxyServer),
-        const Padding(padding: EdgeInsets.only(left: 30)),
+        const Padding(padding: EdgeInsets.only(left: 20)),
         IconButton(
             tooltip: "清理",
             icon: const Icon(Icons.cleaning_services_outlined),
             onPressed: () {
               widget.domainStateKey.currentState?.clean();
             }),
-        const Padding(padding: EdgeInsets.only(left: 30)),
+        const Padding(padding: EdgeInsets.only(left: 20)),
         SslWidget(proxyServer: widget.proxyServer),
-        const Padding(padding: EdgeInsets.only(left: 30)),
+        const Padding(padding: EdgeInsets.only(left: 20)),
         Setting(proxyServer: widget.proxyServer),
+        const Padding(padding: EdgeInsets.only(left: 20)),
+        IconButton(
+            tooltip: "手机连接",
+            icon: const Icon(Icons.phone_iphone),
+            onPressed: () async {
+              final host = await localIp();
+              phoneConnect(host, widget.proxyServer.port);
+            }),
       ],
     );
+  }
+
+  phoneConnect(String host, int port) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("手机连接", style: TextStyle(fontSize: 16)),
+            content: SizedBox(
+                height: 250,
+                width: 300,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    QrImageView(
+                      backgroundColor: Colors.white,
+                      data: "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
+                      version: QrVersions.auto,
+                      size: 200.0,
+                    ),
+                    const SizedBox(height: 20),
+                    const Text("请使用手机版扫描二维码"),
+                  ],
+                )),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("取消")),
+            ],
+          );
+        });
   }
 }

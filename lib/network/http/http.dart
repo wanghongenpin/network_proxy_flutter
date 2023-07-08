@@ -58,7 +58,7 @@ class HttpRequest extends HttpMessage {
   String? remoteDomain;
   HttpResponse? response;
 
-  HttpRequest(this.method, this.uri, String protocolVersion) : super(protocolVersion);
+  HttpRequest(this.method, this.uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
 
   @override
   String toString() {

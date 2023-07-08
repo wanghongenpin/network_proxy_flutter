@@ -155,7 +155,7 @@ class HttpRequestCodec extends HttpCodec<HttpRequest> {
   @override
   HttpRequest createMessage(List<String> reqLine) {
     HttpMethod httpMethod = HttpMethod.valueOf(reqLine[0]);
-    return HttpRequest(httpMethod, reqLine[1], reqLine[2]);
+    return HttpRequest(httpMethod, reqLine[1], protocolVersion: reqLine[2]);
   }
 
   @override

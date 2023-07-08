@@ -4,9 +4,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 class MobileSslWidget extends StatefulWidget {
   final ProxyServer proxyServer;
-  final Function(bool val) onEnableChange;
+  final Function(bool val)? onEnableChange;
 
-  const MobileSslWidget({super.key, required this.proxyServer, required this.onEnableChange});
+  const MobileSslWidget({super.key, required this.proxyServer, this.onEnableChange});
 
   @override
   State<MobileSslWidget> createState() => _MobileSslState();
@@ -17,10 +17,10 @@ class _MobileSslState extends State<MobileSslWidget> {
 
   @override
   void dispose() {
-    super.dispose();
     if (changed) {
       widget.proxyServer.flushConfig();
     }
+    super.dispose();
   }
 
   @override
@@ -37,7 +37,7 @@ class _MobileSslState extends State<MobileSslWidget> {
               value: widget.proxyServer.enableSsl,
               onChanged: (val) {
                 widget.proxyServer.enableSsl = val;
-                widget.onEnableChange(val);
+                if (widget.onEnableChange != null) widget.onEnableChange!(val);
                 changed = true;
                 setState(() {});
               }),

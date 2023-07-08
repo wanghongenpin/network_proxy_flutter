@@ -1,19 +1,17 @@
+import 'dart:async';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/desktop/toolbar/launch/launch.dart';
-import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
-import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
-import 'package:network_proxy/ui/mobile/filter.dart';
-import 'package:network_proxy/ui/mobile/ssl.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:network_proxy/ui/mobile/connect_remote.dart';
+import 'package:network_proxy/ui/mobile/menu.dart';
 
 import 'request.dart';
-import 'request_rewrite.dart';
 
 class MobileHomePage extends StatefulWidget {
   const MobileHomePage({super.key});
@@ -26,10 +24,13 @@ class MobileHomePage extends StatefulWidget {
 
 class MobileHomeState extends State<MobileHomePage> implements EventListener {
   static const MethodChannel proxyVpnChannel = MethodChannel('com.proxy/proxyVpn');
-  final ValueNotifier<bool> sllEnableListenable = ValueNotifier<bool>(true);
+
+  final requestStateKey = GlobalKey<RequestWidgetState>();
 
   late ProxyServer proxyServer;
-  final requestStateKey = GlobalKey<RequestWidgetState>();
+  ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
+
+  Timer? _connectCheckTimer;
 
   @override
   void onRequest(Channel channel, HttpRequest request) {
@@ -44,100 +45,96 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   @override
   void initState() {
     proxyServer = ProxyServer(listener: this);
-    proxyServer.initializedListener(() {
-      sllEnableListenable.value = proxyServer.enableSsl;
+    desktop.addListener(() {
+      if (desktop.value.connect) {
+        proxyServer.server?.remoteHost = "http://${desktop.value.host}:${desktop.value.port}";
+        checkConnectTask(context);
+      } else {
+        proxyServer.server?.remoteHost = null;
+        _connectCheckTimer?.cancel();
+      }
     });
     super.initState();
   }
 
   @override
   void dispose() {
-    sllEnableListenable.dispose();
+    desktop.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(centerTitle: true, title: const Text("ProxyPin"), actions: [
-          IconButton(
-              tooltip: "清理",
-              icon: const Icon(Icons.cleaning_services_outlined),
-              onPressed: () => requestStateKey.currentState?.clean()),
-          ValueListenableBuilder(
-              valueListenable: sllEnableListenable,
-              builder: (_, bool enabled, __) => IconButton(
-                  tooltip: "Https代理",
-                  icon: Icon(Icons.https, color: enabled ? null : Colors.red),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (BuildContext context) {
-                        return MobileSslWidget(
-                            proxyServer: proxyServer, onEnableChange: (val) => sllEnableListenable.value = val);
-                      }),
-                    );
-                  }))
-        ]),
-        drawer: drawer(),
-        floatingActionButton: FloatingActionButton(
-            onPressed: () {},
-            child: SocketLaunch(
-              proxyServer: proxyServer,
-              size: 38,
-              onStart: () {
-                proxyVpnChannel.invokeMethod("startVpn", {"proxyHost": "127.0.0.1", "proxyPort": proxyServer.port});
-              },
-              onStop: () {
-                proxyVpnChannel.invokeMethod("stopVpn");
-              },
-            )),
-        body: RequestWidget(key: requestStateKey, proxyServer: proxyServer));
-  }
-
-  Drawer drawer() {
-    return Drawer(
-        child: ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
-          child: const Text('设置'),
-        ),
-        PortWidget(proxyServer: proxyServer),
-        const ThemeSetting(),
-        ListTile(
-            title: const Text("域名白名单"),
-            trailing: const Icon(Icons.arrow_right),
-            onTap: () => _filter(HostFilter.whitelist)),
-        ListTile(
-            title: const Text("域名黑名单"),
-            trailing: const Icon(Icons.arrow_right),
-            onTap: () => _filter(HostFilter.blacklist)),
-        ListTile(title: const Text("请求重写"), trailing: const Icon(Icons.arrow_right), onTap: () => _reqeustRewrite()),
-        ListTile(
-            title: const Text("Github"),
-            trailing: const Icon(Icons.arrow_right),
-            onTap: () {
-              launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"),
-                  mode: LaunchMode.externalApplication);
-            })
-      ],
-    ));
-  }
-
-  void _filter(HostList hostList) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (BuildContext context) {
-        return MobileFilterWidget(proxyServer: proxyServer, hostList: hostList);
-      }),
+      drawerDragStartBehavior: DragStartBehavior.down,
+      appBar: AppBar(centerTitle: true, title: const Text("ProxyPin", style: TextStyle(fontSize: 16)), actions: [
+        IconButton(
+            tooltip: "清理",
+            icon: const Icon(Icons.cleaning_services_outlined),
+            onPressed: () => requestStateKey.currentState?.clean()),
+        const SizedBox(width: 10),
+        MoreEnum(proxyServer: proxyServer, desktop: desktop),
+        const SizedBox(width: 20)
+      ]),
+      drawer: DrawerWidget(proxyServer: proxyServer),
+      floatingActionButton: FloatingActionButton(
+          onPressed: () {},
+          child: SocketLaunch(proxyServer: proxyServer, size: 38, onStart: () => startVpn(), onStop: () => stopVpn())),
+      body: ValueListenableBuilder(
+          valueListenable: desktop,
+          builder: (context, value, _) {
+            return Column(children: [
+              value.connect == false
+                  ? const SizedBox()
+                  : Container(
+                      margin: const EdgeInsets.only(top: 5, bottom: 5),
+                      height: 50,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
+                          return ConnectRemote(desktop: desktop, proxyServer: proxyServer);
+                        })),
+                        child: Text("已连接${value.os?.toUpperCase()}，手机抓包已关闭",
+                            style: Theme.of(context).textTheme.titleMedium),
+                      )),
+              Expanded(child: RequestWidget(key: requestStateKey, proxyServer: proxyServer))
+            ]);
+          }),
     );
   }
 
-  void _reqeustRewrite() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (BuildContext context) {
-        return MobileRequestRewrite(proxyServer: proxyServer);
-      }),
-    );
+  checkConnectTask(BuildContext context) async {
+    int retry = 0;
+    _connectCheckTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) async {
+      try {
+        var response = await HttpClients.get("http://${desktop.value.host}:${desktop.value.port}/ping")
+            .timeout(const Duration(seconds: 1));
+        if (response.bodyAsString == "pong") {
+          retry = 0;
+          return;
+        }
+      } catch (e) {
+        retry++;
+      }
+
+      if (retry > 3) {
+        _connectCheckTimer?.cancel();
+        _connectCheckTimer = null;
+        desktop.value = RemoteModel(connect: false);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("检查远程连接失败，已断开")));
+        }
+      }
+    });
+  }
+
+  stopVpn() {
+    proxyVpnChannel.invokeMethod("stopVpn");
+  }
+
+  startVpn() {
+    String host = "127.0.0.1";
+    int port = proxyServer.port;
+    proxyVpnChannel.invokeMethod("startVpn", {"proxyHost": host, "proxyPort": port});
   }
 }

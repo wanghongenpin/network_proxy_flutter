@@ -42,9 +42,7 @@ class Channel {
   final int remotePort;
 
   Channel(this._socket)
-      : _id = DateTime
-      .now()
-      .millisecondsSinceEpoch + Random().nextInt(999999),
+      : _id = DateTime.now().millisecondsSinceEpoch + Random().nextInt(999999),
         remoteAddress = _socket.remoteAddress,
         remotePort = _socket.remotePort;
 
@@ -56,6 +54,10 @@ class Channel {
   set secureSocket(SecureSocket secureSocket) => _socket = secureSocket;
 
   Future<void> write(Object obj) async {
+    if (isClosed) {
+      return;
+    }
+
     var data = pipeline._encoder.encode(obj);
     _socket.add(data);
     await _socket.flush();
@@ -115,9 +117,23 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
     _handler.channelActive(channel);
   }
 
+  /// 转发请求
+  void relay(Channel clientChannel, Channel remoteChannel) {
+    var rawCodec = RawCodec();
+    clientChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(remoteChannel));
+    remoteChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(clientChannel));
+  }
+
   @override
   void channelRead(Channel channel, Uint8List msg) {
     try {
+      HostAndPort? remote = channel.getAttribute(AttributeKeys.remote);
+      if (remote != null && channel.getAttribute(channel.id) != null) {
+        relay(channel, channel.getAttribute(channel.id));
+        _handler.channelRead(channel, msg);
+        return;
+      }
+
       var data = _decoder.decode(msg);
       if (data == null) {
         return;
@@ -199,11 +215,11 @@ class HostAndPort {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is HostAndPort &&
-              runtimeType == other.runtimeType &&
-              scheme == other.scheme &&
-              host == other.host &&
-              port == other.port;
+      other is HostAndPort &&
+          runtimeType == other.runtimeType &&
+          scheme == other.scheme &&
+          host == other.host &&
+          port == other.port;
 
   @override
   int get hashCode => scheme.hashCode ^ host.hashCode ^ port.hashCode;
@@ -250,6 +266,7 @@ abstract interface class ChannelInitializer {
 class Network {
   late Function _channelInitializer;
   bool enableSsl = false;
+  String? remoteHost;
 
   Network initChannel(void Function(Channel channel) initializer) {
     _channelInitializer = initializer;
@@ -268,6 +285,11 @@ class Network {
 
   _onEvent(Uint8List data, Channel channel) async {
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
+
+    if (remoteHost != null) {
+      channel.putAttribute(AttributeKeys.remote, HostAndPort.of(remoteHost!));
+    }
+
     //黑名单 直接转发
     if (HostFilter.filter(hostAndPort?.host) || (hostAndPort?.isSsl() == true && !enableSsl)) {
       relay(channel, channel.getAttribute(channel.id));
@@ -288,8 +310,9 @@ class Network {
     try {
       //客户端ssl
       Channel remoteChannel = channel.getAttribute(channel.id);
+
       remoteChannel.secureSocket =
-      await SecureSocket.secure(remoteChannel.socket, onBadCertificate: (certificate) => true);
+          await SecureSocket.secure(remoteChannel.socket, onBadCertificate: (certificate) => true);
       remoteChannel.pipeline.listen(remoteChannel);
 
       //服务端ssl
@@ -326,13 +349,14 @@ class Server extends Network {
   Future<ServerSocket> stop() async {
     if (!isRunning) return serverSocket;
     isRunning = false;
-    return serverSocket.close();
+    await serverSocket.close();
+    return serverSocket;
   }
 }
 
 class Client extends Network {
   Future<Channel> connect(HostAndPort hostAndPort) async {
-    return Socket.connect(hostAndPort.host, hostAndPort.port, timeout: const Duration(seconds: 5))
+    return Socket.connect(hostAndPort.host, hostAndPort.port, timeout: const Duration(seconds: 3))
         .then((socket) => listen(socket));
   }
 }

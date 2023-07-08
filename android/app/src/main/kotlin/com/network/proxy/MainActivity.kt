@@ -10,9 +10,10 @@ import io.flutter.plugin.common.MethodChannel
 
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.proxy/proxyVpn"
-
-    private val VPN_REQUEST_CODE: Int = 24
+    companion object {
+        const val VPN_CHANNEL = "com.proxy/proxyVpn"
+        const val VPN_REQUEST_CODE: Int = 24
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,7 +22,14 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+        vpnMethodChannel(flutterEngine)
+    }
+
+    /**
+     * vpn方法通道
+     */
+    private fun vpnMethodChannel(flutterEngine: FlutterEngine) {
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, VPN_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "startVpn" -> {

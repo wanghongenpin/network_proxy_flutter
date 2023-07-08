@@ -155,10 +155,11 @@ extension VpnManager{
         }
     }
 
-    func disconnect(){
+    func disconnect() {
         if (activeVPN != nil) {
             print("stopVPNTunnel activeVPN")
             activeVPN?.connection.stopVPNTunnel()
+            activeVPN = nil
             return
         }
         

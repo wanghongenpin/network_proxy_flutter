@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -5,7 +6,9 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/file_read.dart';
+import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
+import 'package:network_proxy/utils/ip.dart';
 
 import 'channel.dart';
 import 'http/codec.dart';
@@ -35,6 +38,33 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   @override
   void channelRead(Channel channel, HttpRequest msg) async {
+    channel.putAttribute(AttributeKeys.request, msg);
+
+    if (msg.path == '/config' && (await localIp()) == msg.hostAndPort?.host) {
+      var response = HttpResponse(msg.protocolVersion, HttpStatus.ok);
+      var body = {
+        "requestRewrites": requestRewrites?.toJson(),
+        'whitelist': HostFilter.whitelist.toJson(),
+        'blacklist': HostFilter.blacklist.toJson(),
+      };
+      response.body = utf8.encode(json.encode(body));
+      channel.writeAndClose(response);
+      return;
+    }
+    if ((await localIp()) == msg.hostAndPort?.host) {
+      var response = HttpResponse(msg.protocolVersion, HttpStatus.ok);
+      response.body = utf8.encode('pong');
+      response.headers.set("os", Platform.operatingSystem);
+      response.headers.set("hostname", Platform.isAndroid ? Platform.operatingSystem : Platform.localHostname);
+      channel.writeAndClose(response);
+      return;
+    }
+
+    if (msg.uri == 'http://proxy.pin/ssl' || msg.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
+      _crtDownload(channel, msg);
+      return;
+    }
+
     forward(channel, msg).catchError((error, trace) {
       channel.close();
       if (error is SocketException &&
@@ -54,19 +84,11 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
-    channel.putAttribute(AttributeKeys.request, httpRequest);
-
-    if (httpRequest.uri == 'http://proxy.pin/ssl' ||
-        httpRequest.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
-      _crtDownload(channel, httpRequest);
-      return;
-    }
-
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
-      // log.i("[${channel.id}] ${httpRequest.requestUrl}");
+      log.i("[${channel.id}] ${httpRequest.requestUrl}");
 
       var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.path);
       if (replaceBody?.isNotEmpty == true) {
@@ -110,6 +132,15 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     clientChannel.putAttribute(AttributeKeys.host, hostAndPort);
 
     var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
+
+    HostAndPort? remote = clientChannel.getAttribute(AttributeKeys.remote);
+    if (remote != null) {
+      var proxyChannel = await HttpClients.connect(remote, proxyHandler);
+      clientChannel.putAttribute(clientId, proxyChannel);
+      proxyChannel.write(httpRequest);
+      return proxyChannel;
+    }
+
     var proxyChannel = await HttpClients.connect(hostAndPort, proxyHandler);
     clientChannel.putAttribute(clientId, proxyChannel);
 
@@ -134,7 +165,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   @override
   void channelRead(Channel channel, HttpResponse msg) {
     msg.request = clientChannel.getAttribute(AttributeKeys.request);
-    msg.request?.response= msg;
+    msg.request?.response = msg;
     // log.i("[${clientChannel.id}] Response ${msg.bodyAsString}");
 
     var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.path);
@@ -172,10 +203,39 @@ class RelayHandler extends ChannelHandler<Object> {
 
 class HttpClients {
   /// 建立连接
-  static Future<Channel> connect(HostAndPort hostAndPort, ChannelHandler<HttpResponse> handler) async {
+  static Future<Channel> connect(HostAndPort hostAndPort, ChannelHandler handler) async {
     var client = Client()
       ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
 
     return client.connect(hostAndPort);
+  }
+
+  static Future<HttpResponse> get(String url, {Duration duration = const Duration(seconds: 3)}) async {
+    var httpResponseHandler = HttpResponseHandler();
+
+    var client = Client()
+      ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), httpResponseHandler));
+
+    Channel channel = await client.connect(HostAndPort.of(url));
+    HttpRequest msg = HttpRequest(HttpMethod.get, url);
+
+    await channel.write(msg);
+
+    return httpResponseHandler.getResponse(duration).whenComplete(() => channel.close());
+  }
+}
+
+class HttpResponseHandler extends ChannelHandler<HttpResponse> {
+  final Completer<HttpResponse> _completer = Completer<HttpResponse>();
+
+  @override
+  void channelRead(Channel channel, HttpResponse msg) {
+    log.i("[${channel.id}] Response ${msg.bodyAsString}");
+    _completer.complete(msg);
+    channel.close();
+  }
+
+  Future<HttpResponse> getResponse(Duration duration) {
+    return _completer.future.timeout(duration);
   }
 }

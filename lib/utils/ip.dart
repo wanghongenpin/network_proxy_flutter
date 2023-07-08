@@ -11,9 +11,13 @@ void main() {
       }));
 }
 
+String? ip;
+
 Future<String> localIp() async {
-  String ip = await NetworkInterface.list().then((interfaces) => interfaces.first.addresses.first.address);
-  return ip;
+  ip ??= await NetworkInterface.list().then((interfaces) {
+    return interfaces.firstWhere((it) => it.name == "en0", orElse: () => interfaces.first).addresses.first.address;
+  });
+  return ip!;
 }
 
 Future<String> networkName() {
