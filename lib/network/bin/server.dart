@@ -134,7 +134,7 @@ class ProxyServer {
       return;
     }
     Map<String, dynamic> config = jsonDecode(await file.readAsString());
-    logger.i('加载配置文件 [$file] $config');
+    logger.i('加载配置文件 [$file]');
     enableSsl = config['enableSsl'] == true;
     port = config['port'] ?? port;
     HostFilter.whitelist.load(config['whitelist']);

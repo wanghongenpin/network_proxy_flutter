@@ -92,6 +92,8 @@ class _ToolbarState extends State<Toolbar> {
         builder: (context) {
           return AlertDialog(
             title: const Text("手机连接", style: TextStyle(fontSize: 16)),
+            contentPadding: const EdgeInsets.only(top: 5),
+            actionsPadding: const EdgeInsets.only(bottom: 5),
             content: SizedBox(
                 height: 250,
                 width: 300,

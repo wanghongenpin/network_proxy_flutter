@@ -21,6 +21,7 @@ dependencies:
   proxy_manager: ^0.0.3
   chinese_font_library:
   qr_flutter: ^4.1.0
+  permission_handler: ^10.4.2
   qrscan: ^0.3.3
   flutter_barcode_scanner: ^2.0.0
 

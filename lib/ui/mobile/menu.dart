@@ -12,6 +12,7 @@ import 'package:network_proxy/ui/mobile/setting/filter.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
 import 'package:network_proxy/utils/ip.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
 import 'package:url_launcher/url_launcher.dart';
@@ -33,7 +34,7 @@ class DrawerWidget extends StatelessWidget {
         ),
         PortWidget(proxyServer: proxyServer),
         ListTile(
-            title: const Text("Https代理"),
+            title: const Text("HTTPS抓包"),
             trailing: const Icon(Icons.arrow_right),
             onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
         const ThemeSetting(),
@@ -93,8 +94,10 @@ class MoreEnum extends StatelessWidget {
       itemBuilder: (BuildContext context) {
         return <PopupMenuItem>[
           PopupMenuItem(
+              padding: const EdgeInsets.only(left: 0),
               child: ListTile(
-                  title: const Text("Https代理"),
+                  dense: true,
+                  title: const Text("HTTPS抓包"),
                   leading: Icon(Icons.https, color: proxyServer.enableSsl ? null : Colors.red),
                   onTap: () {
                     Navigator.of(context).push(
@@ -104,24 +107,28 @@ class MoreEnum extends StatelessWidget {
                     );
                   })),
           PopupMenuItem(
+              padding: const EdgeInsets.only(left: 0),
               child: ListTile(
-            leading: const Icon(Icons.qr_code_scanner_outlined),
-            title: const Text("连接终端"),
-            onTap: () {
-              connectRemote(context);
-            },
-          )),
+                dense: true,
+                leading: const Icon(Icons.qr_code_scanner_outlined),
+                title: const Text("连接终端"),
+                onTap: () {
+                  connectRemote(context);
+                },
+              )),
           PopupMenuItem(
+              padding: const EdgeInsets.only(left: 0),
               child: ListTile(
-            leading: const Icon(Icons.phone_iphone),
-            title: const Text("我的二维码"),
-            onTap: () async {
-              var ip = await localIp();
-              if (context.mounted) {
-                phoneConnect(context, ip, proxyServer.port);
-              }
-            },
-          )),
+                dense: true,
+                leading: const Icon(Icons.phone_iphone),
+                title: const Text("我的二维码"),
+                onTap: () async {
+                  var ip = await localIp();
+                  if (context.mounted) {
+                    phoneConnect(context, ip, proxyServer.port);
+                  }
+                },
+              )),
         ];
       },
     );
@@ -130,6 +137,10 @@ class MoreEnum extends StatelessWidget {
   connectRemote(BuildContext context) async {
     String scanRes;
     if (Platform.isAndroid) {
+      var status = await Permission.camera.status;
+      if (!status.isGranted) {
+        status = await Permission.camera.request();
+      }
       scanRes = await scanner.scan() ?? "-1";
     } else {
       scanRes = await FlutterBarcodeScanner.scanBarcode("#ff6666", "取消", true, ScanMode.QR);
@@ -190,6 +201,8 @@ class MoreEnum extends StatelessWidget {
         context: context,
         builder: (context) {
           return AlertDialog(
+            contentPadding: const EdgeInsets.only(top: 5),
+            actionsPadding: const EdgeInsets.only(bottom: 5),
             title: const Text("远程连接，将请求转发到其他终端", style: TextStyle(fontSize: 16)),
             content: SizedBox(
                 height: 240,
