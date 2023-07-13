@@ -9,7 +9,7 @@ import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/component/transition.dart';
 import 'package:network_proxy/ui/desktop/left/path.dart';
-import 'package:network_proxy/ui/panel.dart';
+import 'package:network_proxy/ui/content/panel.dart';
 
 ///左侧域名
 class DomainWidget extends StatefulWidget {

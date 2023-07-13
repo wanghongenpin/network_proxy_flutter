@@ -6,7 +6,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
 
 import '../../network/channel.dart';
-import '../panel.dart';
+import '../content/panel.dart';
 
 class RequestWidget extends StatefulWidget {
   final ProxyServer proxyServer;

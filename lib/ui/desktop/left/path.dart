@@ -1,7 +1,7 @@
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/ui/panel.dart';
+import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 ///请求 URI

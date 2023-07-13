@@ -18,7 +18,19 @@ class Setting extends StatefulWidget {
 }
 
 class _SettingState extends State<Setting> {
-  final ValueNotifier<bool> enableDesktopListenable = ValueNotifier<bool>(true);
+  late ValueNotifier<bool> enableDesktopListenable;
+
+  @override
+  void initState() {
+    enableDesktopListenable = ValueNotifier<bool>(widget.proxyServer.enableDesktop);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    enableDesktopListenable.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,10 +53,12 @@ class _SettingState extends State<Setting> {
                       title: const Text("抓取电脑请求", style: TextStyle(fontSize: 12)),
                       visualDensity: const VisualDensity(horizontal: -4),
                       dense: true,
-                      value: val,
+                      value: widget.proxyServer.enableDesktop,
                       onChanged: (val) {
-                        SystemProxy.setSystemProxyEnable(val);
-                        enableDesktopListenable.value = val;
+                        SystemProxy.setSystemProxyEnable(val, widget.proxyServer.enableSsl);
+                        widget.proxyServer.enableDesktop = val;
+                        enableDesktopListenable.value = !enableDesktopListenable.value;
+                        widget.proxyServer.flushConfig();
                       }))),
           const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
           PopupMenuItem<String>(

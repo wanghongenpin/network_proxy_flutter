@@ -1,9 +1,8 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/utils/lang.dart';
+
+import 'body.dart';
 
 class NetworkTabController extends StatefulWidget {
   final tabs = [
@@ -67,15 +66,17 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     Widget appBar = widget.title == null ? tabBar : AppBar(title: widget.title, bottom: tabBar);
     return Scaffold(
       appBar: appBar as PreferredSizeWidget?,
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          general(),
-          request(),
-          response(),
-          cookies(),
-        ],
-      ),
+      body: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              general(),
+              request(),
+              response(),
+              cookies(),
+            ],
+          )),
     );
   }
 
@@ -107,19 +108,21 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
   }
 
   Widget request() {
+    if (widget.request.get() == null) {
+      return const SizedBox();
+    }
     return ListView(children: [
-      Padding(
-          padding: const EdgeInsetsDirectional.only(start: 20, top: 20),
-          child: rowWidget("Path", widget.request.get()?.path.toString())),
+      rowWidget("URI", widget.request.get()?.path.toString()),
       ...message(widget.request.get(), "Request")
     ]);
   }
 
   Widget response() {
+    if (widget.response.get() == null) {
+      return const SizedBox();
+    }
     return ListView(children: [
-      Padding(
-          padding: const EdgeInsetsDirectional.only(start: 20, top: 20),
-          child: rowWidget("StatusCode", widget.response.get()?.status.code.toString())),
+      rowWidget("StatusCode", widget.response.get()?.status.code.toString()),
       ...message(widget.response.get(), "Response")
     ]);
   }
@@ -148,49 +151,26 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       }
     });
 
-    Widget? bodyWidgets = message == null ? null : getBody(type, message);
+    Widget bodyWidgets = HttpBodyWidget(httpMessage: message);
 
     Widget headerWidget = ExpansionTile(
+        tilePadding: const EdgeInsets.only(left: 0),
         title: Text("$type Headers", style: const TextStyle(fontWeight: FontWeight.bold)),
         initiallyExpanded: true,
         shape: const Border(),
-        childrenPadding: const EdgeInsets.only(left: 20, bottom: 20),
         children: headers);
 
-    return [headerWidget, bodyWidgets ?? const SizedBox()];
+    return [headerWidget, bodyWidgets];
   }
 
   Widget expansionTile(String title, List<Widget> content) {
     return ExpansionTile(
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        tilePadding: const EdgeInsets.only(left: 0),
         expandedAlignment: Alignment.topLeft,
-        childrenPadding: const EdgeInsets.only(left: 20),
         initiallyExpanded: true,
         shape: const Border(),
         children: content);
-  }
-
-  Widget? getBody(String type, HttpMessage message) {
-    if (message.body?.isNotEmpty == true) {
-      if (message.contentType == ContentType.image) {
-        return expansionTile("$type Body", [Image.memory(Uint8List.fromList(message.body ?? []), fit: BoxFit.cover)]);
-      } else {
-        try {
-          if (message.contentType == ContentType.json) {
-            // 格式化JSON字符串
-            var jsonObject = json.decode(message.bodyAsString);
-            var prettyJsonString = const JsonEncoder.withIndent('  ').convert(jsonObject);
-            return expansionTile("$type Body", [SelectableText.rich(TextSpan(text: prettyJsonString))]);
-          }
-        } catch (e) {
-          // ignore: avoid_print
-          print(e);
-        }
-
-        return expansionTile("$type Body", [SelectableText.rich(TextSpan(text: message.bodyAsString))]);
-      }
-    }
-    return null;
   }
 
   Iterable<Widget>? _cookieWidget(String? cookie) {

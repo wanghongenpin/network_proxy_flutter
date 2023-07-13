@@ -88,7 +88,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
-      log.i("[${channel.id}] ${httpRequest.requestUrl}");
+      // log.i("[${channel.id}] ${httpRequest.requestUrl}");
 
       var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.path);
       if (replaceBody?.isNotEmpty == true) {

@@ -20,8 +20,9 @@ Future<void> main() async {
 /// 代理服务器
 class ProxyServer {
   bool init = false;
-  int port = 8888;
+  int port = 6666;
   bool _enableSsl = false;
+  bool enableDesktop = true;
 
   Server? server;
   EventListener? listener;
@@ -89,8 +90,10 @@ class ProxyServer {
     });
     return server.bind(port).then((serverSocket) {
       logger.i("listen on $port");
-      SystemProxy.setSystemProxy(port, enableSsl);
       this.server = server;
+      if (enableDesktop) {
+        SystemProxy.setSystemProxy(port, enableSsl);
+      }
       return server;
     });
   }
@@ -98,10 +101,12 @@ class ProxyServer {
   /// 停止代理服务
   Future<Server?> stop() async {
     logger.i("stop on $port");
-    if (Platform.isMacOS) {
-      await SystemProxy.setProxyEnableMacOS(false, enableSsl);
-    } else if (Platform.isWindows) {
-      await SystemProxy.setProxyEnableWindows(false);
+    if (enableDesktop) {
+      if (Platform.isMacOS) {
+        await SystemProxy.setProxyEnableMacOS(false, enableSsl);
+      } else if (Platform.isWindows) {
+        await SystemProxy.setProxyEnableWindows(false);
+      }
     }
     await server?.stop();
     return server;
@@ -135,8 +140,9 @@ class ProxyServer {
     }
     Map<String, dynamic> config = jsonDecode(await file.readAsString());
     logger.i('加载配置文件 [$file]');
-    enableSsl = config['enableSsl'] == true;
     port = config['port'] ?? port;
+    enableSsl = config['enableSsl'] == true;
+    enableDesktop = config['enableDesktop'] == true;
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
 
@@ -154,7 +160,7 @@ class ProxyServer {
 
     Map<String, dynamic> config = jsonDecode(await file.readAsString());
 
-    logger.i('加载请求重写配置文件 [$file] $config');
+    logger.i('加载请求重写配置文件 [$file]');
     requestRewrites.load(config);
   }
 
@@ -175,6 +181,7 @@ class ProxyServer {
     return {
       'port': port,
       'enableSsl': enableSsl,
+      'enableDesktop': enableDesktop,
       'whitelist': HostFilter.whitelist.toJson(),
       'blacklist': HostFilter.blacklist.toJson(),
     };

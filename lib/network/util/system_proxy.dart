@@ -15,14 +15,13 @@ class SystemProxy {
     }
   }
 
-  static void setSystemProxyEnable(bool enable) async {
+  static void setSystemProxyEnable(bool enable, bool sslSetting) async {
     if (Platform.isMacOS) {
-      setProxyEnableMacOS(enable, true);
+      setProxyEnableMacOS(enable, sslSetting);
     } else if (Platform.isWindows) {
       setProxyEnableWindows(enable);
     }
   }
-
 
   static Future<bool> _setProxyServerMacOS(int port, bool enableSsl) async {
     _hardwarePort = await hardwarePort();
@@ -38,7 +37,7 @@ class SystemProxy {
     return results.exitCode == 0;
   }
 
-  static Future<bool> setProxyEnableMacOS(bool proxyEnable, bool enableSsl) async {
+  static Future<bool> setProxyEnableMacOS(bool proxyEnable, bool sslSetting) async {
     var proxyMode = proxyEnable ? 'on' : 'off';
     _hardwarePort ??= await hardwarePort();
     print('set proxyEnable: $proxyEnable, name: $_hardwarePort');
@@ -47,7 +46,7 @@ class SystemProxy {
       '-c',
       _concatCommands([
         'networksetup -setwebproxystate $_hardwarePort $proxyMode',
-        enableSsl ? 'networksetup -setsecurewebproxystate $_hardwarePort $proxyMode' : '',
+        sslSetting ? 'networksetup -setsecurewebproxystate $_hardwarePort $proxyMode' : '',
       ])
     ]);
     return results.exitCode == 0;

@@ -25,8 +25,8 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
     super.initState();
     windowManager.addListener(this);
     WidgetsBinding.instance.addObserver(this);
-    widget.proxyServer.start();
-    widget.onStart?.call();
+    widget.proxyServer.start()
+    .then((value) => widget.onStart?.call());
   }
 
   @override

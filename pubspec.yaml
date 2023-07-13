@@ -24,6 +24,8 @@ dependencies:
   permission_handler: ^10.4.2
   qrscan: ^0.3.3
   flutter_barcode_scanner: ^2.0.0
+  flutter_json_viewer_new: ^0.0.1
+  flutter_toastr: ^1.0.3
 
 dev_dependencies:
   flutter_test:

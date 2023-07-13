@@ -4,10 +4,10 @@ import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/split_view.dart';
+import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/domain.dart';
 import 'package:network_proxy/ui/desktop/toolbar/toolbar.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
-import 'package:network_proxy/ui/panel.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -59,7 +59,7 @@ class FluentApp extends StatelessWidget {
             theme: lightTheme,
             darkTheme: darkTheme,
             themeMode: currentMode,
-            home: Platforms.isDesktop() ?  const DesktopHomePage() : const MobileHomePage(),
+            home: Platforms.isDesktop() ? const DesktopHomePage() : const MobileHomePage(),
           );
         });
   }
