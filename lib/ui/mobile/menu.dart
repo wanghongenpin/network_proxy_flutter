@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
@@ -169,7 +170,7 @@ class MoreEnum extends StatelessWidget {
               hostname: response.headers.get("hostname"));
 
           if (context.mounted && Navigator.canPop(context)) {
-            showSnackBar(context, "连接成功");
+            FlutterToastr.show("连接成功", context);
             Navigator.pop(context);
           }
         }
@@ -186,15 +187,10 @@ class MoreEnum extends StatelessWidget {
       return;
     }
     if (context.mounted) {
-      showSnackBar(context, "无法识别的二维码");
+      FlutterToastr.show("无法识别的二维码", context);
     }
   }
 
-  showSnackBar(BuildContext context, String text) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
-    }
-  }
 
   phoneConnect(BuildContext context, String host, int port) {
     showDialog(

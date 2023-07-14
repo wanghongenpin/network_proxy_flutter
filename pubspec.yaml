@@ -14,14 +14,14 @@ dependencies:
   basic_utils:
   logger: ^1.4.0
   date_format: ^2.0.7
-  file_selector: ^0.9.5
+  file_selector: ^1.0.0
   window_manager: ^0.3.5
   path_provider: ^2.0.15
   url_launcher: ^6.1.11
   proxy_manager: ^0.0.3
   chinese_font_library:
   qr_flutter: ^4.1.0
-  permission_handler: ^10.4.2
+  permission_handler: ^10.4.3
   qrscan: ^0.3.3
   flutter_barcode_scanner: ^2.0.0
   flutter_json_viewer_new: ^0.0.1

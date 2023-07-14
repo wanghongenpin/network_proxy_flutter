@@ -122,7 +122,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       return const SizedBox();
     }
     return ListView(children: [
-      rowWidget("URI", Uri.decodeFull(widget.request.get()?.path.toString() ?? '')),
+      rowWidget("URI", Uri.decodeFull(widget.request.get()?.path() ?? '')),
       ...message(widget.request.get(), "Request")
     ]);
   }

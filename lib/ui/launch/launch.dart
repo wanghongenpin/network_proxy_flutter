@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:window_manager/window_manager.dart';
@@ -18,15 +19,22 @@ class SocketLaunch extends StatefulWidget {
 }
 
 class _SocketLaunchState extends State<SocketLaunch> with WindowListener, WidgetsBindingObserver {
-  bool started = true;
+  bool started = false;
 
   @override
   void initState() {
     super.initState();
     windowManager.addListener(this);
     WidgetsBinding.instance.addObserver(this);
-    widget.proxyServer.start()
-    .then((value) => widget.onStart?.call());
+    //启动代理服务器
+    widget.proxyServer.start().then((value) {
+      setState(() {
+        started = true;
+      });
+      widget.onStart?.call();
+    }).catchError((e) {
+      FlutterToastr.show("启动失败，请检查端口号${widget.proxyServer.port}是否被占用", context, duration: 3);
+    });
   }
 
   @override
@@ -67,9 +75,13 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
           } else {
             widget.onStart?.call();
           }
-          result.then((value) => setState(() {
-                started = !started;
-              }));
+          result
+              .then((value) => setState(() {
+                    started = !started;
+                  }))
+              .catchError((e) {
+            FlutterToastr.show("启动失败，请检查端口号${widget.proxyServer.port}是否被占用", context);
+          });
         });
   }
 }

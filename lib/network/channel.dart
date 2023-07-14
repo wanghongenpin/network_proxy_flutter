@@ -146,12 +146,11 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
           data.hostAndPort?.host = data.headers.host()!;
         }
 
-        data.remoteDomain = data.hostAndPort?.domain;
-        data.requestUrl = data.uri.startsWith("/") ? '${data.remoteDomain}${data.uri}' : data.uri;
-        try {
-          data.path = data.hostAndPort?.isSsl() == true ? data.uri : Uri.parse(data.requestUrl).path;
-        } catch (e) {
-          logger.e("data.requestUrl ${data.requestUrl}", e, StackTrace.current);
+        //websocket协议
+        if (data.headers.get("Upgrade") == 'websocket' && channel.getAttribute(channel.id) != null) {
+          relay(channel, channel.getAttribute(channel.id));
+          channel.pipeline.channelRead(channel, msg);
+          return;
         }
       }
 
@@ -374,7 +373,8 @@ class Client extends Network {
     return Socket.connect(host, hostAndPort.port, timeout: const Duration(seconds: 3)).then((socket) => listen(socket));
   }
 
-  Future<Channel> sllConnect(HostAndPort hostAndPort) async {
+  /// ssl连接
+  Future<Channel> secureConnect(HostAndPort hostAndPort) async {
     return SecureSocket.connect(hostAndPort.host, hostAndPort.port,
         timeout: const Duration(seconds: 3), onBadCertificate: (certificate) => true).then((socket) => listen(socket));
   }

@@ -8,11 +8,22 @@ import 'http/codec.dart';
 
 class HttpClients {
   /// 建立连接
-  static Future<Channel> connect(HostAndPort hostAndPort, ChannelHandler handler) async {
+  static Future<Channel> rawConnect(HostAndPort hostAndPort, ChannelHandler handler) async {
     var client = Client()
       ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
 
     return client.connect(hostAndPort);
+  }
+
+  /// 建立连接
+  static Future<Channel> connect(Uri uri, ChannelHandler handler) async {
+    Client client = Client()
+      ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
+    if (uri.scheme == "https" || uri.scheme == "wss") {
+      return client.secureConnect(HostAndPort.of(uri.toString()));
+    }
+
+    return client.connect(HostAndPort.of(uri.toString()));
   }
 
   /// 发送get请求

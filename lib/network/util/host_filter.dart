@@ -75,5 +75,6 @@ class Blacks extends HostList {
     list.add(RegExp("github.com"));
     list.add(RegExp(".*.google.com"));
     list.add(RegExp(".*.apple.com"));
+    list.add(RegExp(".*.icloud.com"));
   }
 }

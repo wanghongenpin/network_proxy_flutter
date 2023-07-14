@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,8 +24,7 @@ class _SslState extends State<SslWidget> {
 
     widget.proxyServer.initializedListener(() {
       _enableSsl = widget.proxyServer.enableSsl;
-      setState(() {
-      });
+      setState(() {});
     });
   }
 
@@ -40,7 +41,9 @@ class _SslState extends State<SslWidget> {
               padding: const EdgeInsets.all(0),
               child: _Switch(
                   proxyServer: widget.proxyServer,
-                  onEnableChange: (val) => setState(() {_enableSsl = val;}))),
+                  onEnableChange: (val) => setState(() {
+                        _enableSsl = val;
+                      }))),
           PopupMenuItem(
               padding: const EdgeInsets.all(0),
               child: ListTile(
@@ -82,7 +85,18 @@ class _SslState extends State<SslWidget> {
                 const Text("1. 下载根证书安装到本系统（已完成忽略）"),
                 FilledButton(onPressed: () => _downloadCert(), child: const Text("下载证书")),
                 const SizedBox(height: 10),
-                const Text("2. 双击安装证书，Mac安装完选择“始终信任此证书”,\n   Windows选择“受信任的根证书颁发机构” "),
+                Text("2. 双击安装证书，${Platform.isMacOS ? "“Mac安装完选择“始终信任此证书”" : "Windows选择“受信任的根证书颁发机构”"}"),
+                const SizedBox(height: 10),
+                Platform.isMacOS
+                    ? Image.network("https://foruda.gitee.com/images/1689323260158189316/c2d881a4_1073801.png",
+                        width: 800, height: 500)
+                    : Row(children: [
+                        Image.network("https://foruda.gitee.com/images/1689335589122168223/c904a543_1073801.png",
+                            width: 400, height: 400),
+                        const SizedBox(width: 10),
+                        Image.network("https://foruda.gitee.com/images/1689335334688878324/f6aa3a3a_1073801.png",
+                            width: 400, height: 400)
+                      ])
               ]);
         });
   }

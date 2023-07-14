@@ -51,15 +51,24 @@ abstract class HttpMessage {
 class HttpRequest extends HttpMessage {
   final String uri;
   late HttpMethod method;
-  late String requestUrl;
 
-  String? path;
   HostAndPort? hostAndPort;
   final DateTime requestTime = DateTime.now();
-  String? remoteDomain;
   HttpResponse? response;
 
   HttpRequest(this.method, this.uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
+
+  String? remoteDomain() => hostAndPort?.domain;
+
+  String get requestUrl => uri.startsWith("/") ? '${remoteDomain()}$uri' : uri;
+
+  String? path() {
+    try {
+      return hostAndPort?.isSsl() == true ? uri : Uri.parse(requestUrl).path;
+    } catch (e) {
+      return null;
+    }
+  }
 
   ///复制请求
   HttpRequest copy({String? uri}) {

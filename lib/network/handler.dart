@@ -71,7 +71,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   //请求本服务
   localRequest(HttpRequest msg, Channel channel) async {
     //获取配置
-    if (msg.path == '/config') {
+    if (msg.path() == '/config') {
       var response = HttpResponse(msg.protocolVersion, HttpStatus.ok);
       var body = {
         "requestRewrites": requestRewrites?.toJson(),
@@ -92,13 +92,14 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
+
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
       // log.i("[${channel.id}] ${httpRequest.requestUrl}");
 
-      var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.path);
+      var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.path());
       if (replaceBody?.isNotEmpty == true) {
         httpRequest.body = utf8.encode(replaceBody!);
       }
@@ -146,13 +147,13 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     //远程代理
     HostAndPort? remote = clientChannel.getAttribute(AttributeKeys.remote);
     if (remote != null) {
-      var proxyChannel = await HttpClients.connect(remote, proxyHandler);
+      var proxyChannel = await HttpClients.rawConnect(remote, proxyHandler);
       clientChannel.putAttribute(clientId, proxyChannel);
       proxyChannel.write(httpRequest);
       return proxyChannel;
     }
 
-    var proxyChannel = await HttpClients.connect(hostAndPort, proxyHandler);
+    var proxyChannel = await HttpClients.rawConnect(hostAndPort, proxyHandler);
     clientChannel.putAttribute(clientId, proxyChannel);
 
     //https代理新建连接请求
@@ -179,7 +180,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     msg.request?.response = msg;
     // log.i("[${clientChannel.id}] Response ${msg.bodyAsString}");
 
-    var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.path);
+    var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.path());
     if (replaceBody?.isNotEmpty == true) {
       msg.body = utf8.encode(replaceBody!);
     }
