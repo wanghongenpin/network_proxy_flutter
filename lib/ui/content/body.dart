@@ -18,8 +18,9 @@ class HttpBodyWidget extends StatefulWidget {
   }
 }
 
-class HttpBodyState extends State<HttpBodyWidget> with SingleTickerProviderStateMixin {
+class HttpBodyState extends State<HttpBodyWidget> {
   ValueNotifier<int> tabIndex = ValueNotifier(0);
+  String? body;
 
   @override
   void dispose() {
@@ -29,12 +30,14 @@ class HttpBodyState extends State<HttpBodyWidget> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
-    var tabs = Tabs.of(widget.httpMessage?.contentType);
     if (widget.httpMessage?.body == null || widget.httpMessage?.body?.isEmpty == true) {
       return const SizedBox();
     }
 
-    tabIndex.value = 0;
+    var tabs = Tabs.of(widget.httpMessage?.contentType);
+    body = widget.httpMessage?.bodyAsString;
+
+    if (tabIndex.value >= tabs.list.length) tabIndex.value = 0;
 
     List<Widget> list = [
       widget.inNewWindow ? const SizedBox() : titleWidget(),
@@ -67,16 +70,15 @@ class HttpBodyState extends State<HttpBodyWidget> with SingleTickerProviderState
             icon: const Icon(Icons.copy),
             tooltip: '复制',
             onPressed: () {
-              var body = widget.httpMessage?.bodyAsString;
-              if (body == null || body.isEmpty) {
+              if (body == null || body?.isEmpty == true) {
                 return;
               }
-              Clipboard.setData(ClipboardData(text: body)).then((value) => FlutterToastr.show("复制成功", context));
+              Clipboard.setData(ClipboardData(text: body!)).then((value) => FlutterToastr.show("复制成功", context));
             }),
         const SizedBox(width: 5),
         inNewWindow
             ? const SizedBox()
-            : IconButton(icon: const Icon(Icons.open_in_new), tooltip: '新窗口打开', onPressed: () => openNew()),
+            : IconButton(icon: const Icon(Icons.open_in_new), tooltip: '新窗口打开', onPressed: () => openNew())
       ],
     );
   }
@@ -92,21 +94,24 @@ class HttpBodyState extends State<HttpBodyWidget> with SingleTickerProviderState
 
   Widget getBody(ViewType type) {
     var message = widget.httpMessage;
-    if (message == null) {
+    if (message == null || body == null) {
       return const SizedBox();
     }
 
     try {
       if (type == ViewType.json) {
-        return JsonViewer(json.decode(message.bodyAsString));
+        return JsonViewer(json.decode(body!));
       }
 
       if (type == ViewType.jsonText) {
-        var jsonObject = json.decode(message.bodyAsString);
+        var jsonObject = json.decode(body!);
         var prettyJsonString = const JsonEncoder.withIndent('  ').convert(jsonObject);
         return SelectableText(prettyJsonString);
       }
 
+      if (type == ViewType.formUrl) {
+        return SelectableText(Uri.decodeFull(body!));
+      }
       if (type == ViewType.image) {
         return Image.memory(Uint8List.fromList(message.body ?? []), fit: BoxFit.none);
       }
@@ -114,7 +119,7 @@ class HttpBodyState extends State<HttpBodyWidget> with SingleTickerProviderState
       // ignore: avoid_print
       print(e);
     }
-    return SelectableText.rich(TextSpan(text: message.bodyAsString));
+    return SelectableText.rich(TextSpan(text: body));
   }
 }
 
@@ -136,6 +141,9 @@ class Tabs {
     if (contentType == ContentType.text) {
       tabs.list.add(ViewType.jsonText);
     }
+    if (contentType == ContentType.formUrl || contentType == ContentType.json) {
+      tabs.list.add(ViewType.text);
+    }
     return tabs;
   }
 
@@ -146,6 +154,7 @@ class Tabs {
 
 enum ViewType {
   text("Text"),
+  formUrl("URL 解码"),
   json("JSON"),
   jsonText("JSON Text"),
   html("HTML"),

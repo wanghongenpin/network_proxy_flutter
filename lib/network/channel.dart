@@ -55,6 +55,7 @@ class Channel {
 
   Future<void> write(Object obj) async {
     if (isClosed) {
+      logger.w("channel is closed $obj");
       return;
     }
 
@@ -138,13 +139,14 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       if (data == null) {
         return;
       }
+
       if (data is HttpRequest) {
         data.hostAndPort = channel.getAttribute(AttributeKeys.host) ?? getHostAndPort(data);
         if (data.headers.host() != null && data.headers.host()?.contains(":") == false) {
           data.hostAndPort?.host = data.headers.host()!;
         }
 
-        data.remoteDomain = data.hostAndPort?.url;
+        data.remoteDomain = data.hostAndPort?.domain;
         data.requestUrl = data.uri.startsWith("/") ? '${data.remoteDomain}${data.uri}' : data.uri;
         try {
           data.path = data.hostAndPort?.isSsl() == true ? data.uri : Uri.parse(data.requestUrl).path;
@@ -182,6 +184,10 @@ class HostAndPort {
 
   HostAndPort(this.scheme, this.host, this.port);
 
+  factory HostAndPort.host(String host, int port) {
+    return HostAndPort(port == 443 ? httpsScheme : httpScheme, host, port);
+  }
+
   bool isSsl() {
     return httpsScheme.startsWith(scheme);
   }
@@ -195,20 +201,23 @@ class HostAndPort {
       //httpScheme
       scheme = url.startsWith(httpsScheme) ? httpsScheme : httpScheme;
       domain = url.substring(scheme.length).split("/")[0];
+      //说明支持ipv6
+      if (domain.startsWith('[') && domain.endsWith(']')) {
+        return HostAndPort(scheme, domain, scheme == httpScheme ? 80 : 443);
+      }
     }
     //ip格式 host:port
     List<String> hostAndPort = domain.split(":");
-
     if (hostAndPort.length == 2) {
       bool isSsl = hostAndPort[1] == "443";
       scheme = isSsl ? httpsScheme : httpScheme;
       return HostAndPort(scheme, hostAndPort[0], int.parse(hostAndPort[1]));
     }
     scheme ??= httpScheme;
-    return HostAndPort(scheme, hostAndPort[0], 80);
+    return HostAndPort(scheme, hostAndPort[0], scheme == httpScheme ? 80 : 443);
   }
 
-  String get url {
+  String get domain {
     return '$scheme$host${(port == 80 || port == 443) ? "" : ":$port"}';
   }
 
@@ -226,7 +235,7 @@ class HostAndPort {
 
   @override
   String toString() {
-    return url;
+    return domain;
   }
 }
 
@@ -356,7 +365,17 @@ class Server extends Network {
 
 class Client extends Network {
   Future<Channel> connect(HostAndPort hostAndPort) async {
-    return Socket.connect(hostAndPort.host, hostAndPort.port, timeout: const Duration(seconds: 3))
-        .then((socket) => listen(socket));
+    String host = hostAndPort.host;
+    //说明支持ipv6
+    if (host.startsWith("[") && host.endsWith(']')) {
+      host = host.substring(host.lastIndexOf(":") + 1, host.length - 1);
+    }
+
+    return Socket.connect(host, hostAndPort.port, timeout: const Duration(seconds: 3)).then((socket) => listen(socket));
+  }
+
+  Future<Channel> sllConnect(HostAndPort hostAndPort) async {
+    return SecureSocket.connect(hostAndPort.host, hostAndPort.port,
+        timeout: const Duration(seconds: 3), onBadCertificate: (certificate) => true).then((socket) => listen(socket));
   }
 }

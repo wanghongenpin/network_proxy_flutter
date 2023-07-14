@@ -19,6 +19,7 @@ class HttpHeaders {
     _originalHeaderNames[name] = [value];
   }
 
+  ///添加header。
   void add(String name, String value) {
     if (_headers.containsKey(name.toLowerCase())) {
       _headers[name.toLowerCase()]!.add(value);
@@ -31,6 +32,15 @@ class HttpHeaders {
 
     _headers[name.toLowerCase()] = [value];
     _originalHeaderNames[name] = [value];
+  }
+
+  //批量添加
+  addAll(HttpHeaders headers) {
+    headers.forEach((key, values) {
+      for (var val in values) {
+        add(key, val);
+      }
+    });
   }
 
   String? get(String name) {
@@ -70,16 +80,29 @@ class HttpHeaders {
   bool get isGzip => get(HttpHeaders.CONTENT_ENCODING) == "gzip";
 
   bool get isChunked => get(HttpHeaders.TRANSFER_ENCODING) == "chunked";
+
   String get cookie => get(Cookie) ?? "";
 
-  void forEach(void Function(String name,  List<String> values) f) {
+  void forEach(void Function(String name, List<String> values) f) {
     _originalHeaderNames.forEach(f);
   }
 
   set contentType(String contentType) => set(CONTENT_TYPE, contentType);
+
   String get contentType => get(CONTENT_TYPE) ?? "";
 
   String? host() => get(HOST);
+
+  String headerLines() {
+    StringBuffer sb = StringBuffer();
+    forEach((name, values) {
+      for (var value in values) {
+        sb.writeln("$name: $value");
+      }
+    });
+
+    return sb.toString();
+  }
   @override
   String toString() {
     return 'HttpHeaders{$_originalHeaderNames}';

@@ -11,7 +11,7 @@ import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 import 'channel.dart';
-import 'http/codec.dart';
+import 'http_client.dart';
 
 /// 获取主机和端口
 HostAndPort getHostAndPort(HttpRequest request) {
@@ -39,24 +39,9 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   @override
   void channelRead(Channel channel, HttpRequest msg) async {
     channel.putAttribute(AttributeKeys.request, msg);
-
-    if (msg.path == '/config' && (await localIp()) == msg.hostAndPort?.host) {
-      var response = HttpResponse(msg.protocolVersion, HttpStatus.ok);
-      var body = {
-        "requestRewrites": requestRewrites?.toJson(),
-        'whitelist': HostFilter.whitelist.toJson(),
-        'blacklist': HostFilter.blacklist.toJson(),
-      };
-      response.body = utf8.encode(json.encode(body));
-      channel.writeAndClose(response);
-      return;
-    }
+    //请求本服务
     if ((await localIp()) == msg.hostAndPort?.host) {
-      var response = HttpResponse(msg.protocolVersion, HttpStatus.ok);
-      response.body = utf8.encode('pong');
-      response.headers.set("os", Platform.operatingSystem);
-      response.headers.set("hostname", Platform.isAndroid ? Platform.operatingSystem : Platform.localHostname);
-      channel.writeAndClose(response);
+      localRequest(msg, channel);
       return;
     }
 
@@ -65,6 +50,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       return;
     }
 
+    //转发请求
     forward(channel, msg).catchError((error, trace) {
       channel.close();
       if (error is SocketException &&
@@ -82,6 +68,28 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     remoteChannel?.close();
   }
 
+  //请求本服务
+  localRequest(HttpRequest msg, Channel channel) async {
+    //获取配置
+    if (msg.path == '/config') {
+      var response = HttpResponse(msg.protocolVersion, HttpStatus.ok);
+      var body = {
+        "requestRewrites": requestRewrites?.toJson(),
+        'whitelist': HostFilter.whitelist.toJson(),
+        'blacklist': HostFilter.blacklist.toJson(),
+      };
+      response.body = utf8.encode(json.encode(body));
+      channel.writeAndClose(response);
+      return;
+    }
+
+    var response = HttpResponse(msg.protocolVersion, HttpStatus.ok);
+    response.body = utf8.encode('pong');
+    response.headers.set("os", Platform.operatingSystem);
+    response.headers.set("hostname", Platform.isAndroid ? Platform.operatingSystem : Platform.localHostname);
+    channel.writeAndClose(response);
+  }
+
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
@@ -95,7 +103,9 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
         httpRequest.body = utf8.encode(replaceBody!);
       }
 
-      listener?.onRequest(channel, httpRequest);
+      if (!HostFilter.filter(httpRequest.hostAndPort?.host)) {
+        listener?.onRequest(channel, httpRequest);
+      }
       //实现抓包代理转发
       await remoteChannel.write(httpRequest);
     }
@@ -133,6 +143,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
 
+    //远程代理
     HostAndPort? remote = clientChannel.getAttribute(AttributeKeys.remote);
     if (remote != null) {
       var proxyChannel = await HttpClients.connect(remote, proxyHandler);
@@ -173,7 +184,9 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
       msg.body = utf8.encode(replaceBody!);
     }
 
-    listener?.onResponse(clientChannel, msg);
+    if (!HostFilter.filter(msg.request?.hostAndPort?.host)) {
+      listener?.onResponse(clientChannel, msg);
+    }
     //发送给客户端
     clientChannel.write(msg);
   }
@@ -198,44 +211,5 @@ class RelayHandler extends ChannelHandler<Object> {
   @override
   void channelInactive(Channel channel) {
     remoteChannel.close();
-  }
-}
-
-class HttpClients {
-  /// 建立连接
-  static Future<Channel> connect(HostAndPort hostAndPort, ChannelHandler handler) async {
-    var client = Client()
-      ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
-
-    return client.connect(hostAndPort);
-  }
-
-  static Future<HttpResponse> get(String url, {Duration duration = const Duration(seconds: 3)}) async {
-    var httpResponseHandler = HttpResponseHandler();
-
-    var client = Client()
-      ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), httpResponseHandler));
-
-    Channel channel = await client.connect(HostAndPort.of(url));
-    HttpRequest msg = HttpRequest(HttpMethod.get, url);
-
-    await channel.write(msg);
-
-    return httpResponseHandler.getResponse(duration).whenComplete(() => channel.close());
-  }
-}
-
-class HttpResponseHandler extends ChannelHandler<HttpResponse> {
-  final Completer<HttpResponse> _completer = Completer<HttpResponse>();
-
-  @override
-  void channelRead(Channel channel, HttpResponse msg) {
-    log.i("[${channel.id}] Response ${msg.bodyAsString}");
-    _completer.complete(msg);
-    channel.close();
-  }
-
-  Future<HttpResponse> getResponse(Duration duration) {
-    return _completer.future.timeout(duration);
   }
 }

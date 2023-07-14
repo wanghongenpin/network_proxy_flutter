@@ -1,7 +1,14 @@
 import 'package:date_format/date_format.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/panel.dart';
+import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 ///请求 URI
@@ -11,8 +18,9 @@ class PathRow extends StatefulWidget {
   final ValueWrap<HttpResponse> response = ValueWrap();
 
   final NetworkTabController panel;
+  final ProxyServer proxyServer;
 
-  PathRow(this.request, this.panel, {Key? key, this.color = Colors.green})
+  PathRow(this.request, this.panel, {Key? key, this.color = Colors.green, required this.proxyServer})
       : super(key: GlobalKey<_PathRowState>());
 
   @override
@@ -26,6 +34,7 @@ class PathRow extends StatefulWidget {
 }
 
 class _PathRowState extends State<PathRow> {
+  //选择的节点
   static _PathRowState? selectedState;
 
   bool selected = false;
@@ -36,25 +45,72 @@ class _PathRowState extends State<PathRow> {
     var response = widget.response.get();
     var title = '${request.method.name} ${Uri.parse(request.uri).path}';
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
-    return ListTile(
-        minLeadingWidth: 25,
-        leading: Icon(getIcon(), size: 16, color: widget.color),
-        title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
-        subtitle: Text(
-            '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
-            maxLines: 1),
-        selected: selected,
-        // trailing: const Icon(Icons.chevron_right),
-        dense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 0, horizontal: 50.0),
-        onTap: onClick);
+    return GestureDetector(
+        onSecondaryLongPressDown: menu,
+        child: ListTile(
+            minLeadingWidth: 25,
+            leading: Icon(getIcon(widget.response.get()), size: 16, color: widget.color),
+            title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
+            subtitle: Text(
+                '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
+                maxLines: 1),
+            selected: selected,
+            dense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 50.0),
+            onTap: onClick));
   }
 
   void changeState() {
     setState(() {});
   }
 
+  ///右键菜单
+  menu(LongPressDownDetails details) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        details.globalPosition.dx,
+        details.globalPosition.dy,
+        details.globalPosition.dx,
+        details.globalPosition.dy,
+      ),
+      items: <PopupMenuEntry>[
+        PopupMenuItem(
+            height: 38,
+            child: const Text("复制请求链接", style: TextStyle(fontSize: 14)),
+            onTap: () {
+              var requestUrl = widget.request.requestUrl;
+              Clipboard.setData(ClipboardData(text: requestUrl))
+                  .then((value) => FlutterToastr.show('已复制到剪切板', context));
+            }),
+        PopupMenuItem(
+            height: 38,
+            child: const Text("复制请求和响应", style: TextStyle(fontSize: 14)),
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))
+                  .then((value) => FlutterToastr.show('已复制到剪切板', context));
+            }),
+        PopupMenuItem(
+            height: 38,
+            child: const Text("复制 cURL 请求", style: TextStyle(fontSize: 14)),
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
+                  .then((value) => FlutterToastr.show('已复制到剪切板', context));
+            }),
+        PopupMenuItem(
+            height: 38,
+            child: const Text("重放请求", style: TextStyle(fontSize: 14)),
+            onTap: () {
+              var request = widget.request.copy(uri: widget.request.requestUrl);
+              HttpClients.proxyRequest("127.0.0.1", widget.proxyServer.port, request);
+
+              FlutterToastr.show('已重新发送请求', context);
+            }),
+      ],
+    );
+  }
+
+  //点击事件
   void onClick() {
     if (selected) {
       return;
@@ -62,6 +118,8 @@ class _PathRowState extends State<PathRow> {
     setState(() {
       selected = true;
     });
+
+    //切换选中的节点
     if (selectedState?.mounted == true && selectedState != this) {
       selectedState?.setState(() {
         selectedState?.selected = false;
@@ -69,22 +127,5 @@ class _PathRowState extends State<PathRow> {
     }
     selectedState = this;
     widget.panel.change(widget.request, widget.response.get());
-  }
-
-  IconData getIcon() {
-    var map = {
-      ContentType.json: Icons.data_object,
-      ContentType.html: Icons.html,
-      ContentType.js: Icons.javascript,
-      ContentType.image: Icons.image,
-      ContentType.text: Icons.text_fields,
-      ContentType.css: Icons.css,
-      ContentType.font: Icons.font_download,
-    };
-    if (widget.response.isNull()) {
-      return Icons.http;
-    }
-    var contentType = widget.response.get()?.contentType;
-    return map[contentType] ?? Icons.http;
   }
 }

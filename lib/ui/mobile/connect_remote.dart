@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/server.dart';
-import 'package:network_proxy/network/handler.dart';
+import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 
 class RemoteModel {

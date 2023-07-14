@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/ui/component/share.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 import 'body.dart';
@@ -58,13 +59,22 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
   @override
   Widget build(BuildContext context) {
     var tabBar = TabBar(
+      padding: const EdgeInsets.only(bottom: 0),
       controller: _tabController,
       labelPadding: const EdgeInsets.symmetric(horizontal: 10),
       tabs: widget.tabs.map((title) => Tab(child: Text(title, style: widget.tabStyle, maxLines: 1))).toList(),
     );
 
-    Widget appBar = widget.title == null ? tabBar : AppBar(title: widget.title, bottom: tabBar);
+    Widget appBar = widget.title == null
+        ? tabBar
+        : AppBar(
+            title: widget.title,
+            bottom: tabBar,
+            actions: [ShareWidget(request: widget.request.get(), response: widget.response.get())],
+          );
+
     return Scaffold(
+      endDrawerEnableOpenDragGesture: false,
       appBar: appBar as PreferredSizeWidget?,
       body: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
@@ -112,7 +122,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       return const SizedBox();
     }
     return ListView(children: [
-      rowWidget("URI", widget.request.get()?.path.toString()),
+      rowWidget("URI", Uri.decodeFull(widget.request.get()?.path.toString() ?? '')),
       ...message(widget.request.get(), "Request")
     ]);
   }
@@ -133,7 +143,6 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     var responseCookie = widget.response.get()?.headers.getList("Set-Cookie")?.expand((e) => _cookieWidget(e)!);
     return ListView(children: [
       expansionTile("Request Cookies", requestCookie?.toList() ?? []),
-      // const Divider(),
       const SizedBox(height: 20),
       expansionTile("Response Cookies", responseCookie?.toList() ?? []),
     ]);

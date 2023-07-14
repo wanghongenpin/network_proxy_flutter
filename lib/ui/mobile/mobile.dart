@@ -7,6 +7,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/launch/launch.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/menu.dart';

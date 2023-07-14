@@ -7,15 +7,19 @@ class SystemProxy {
   static String? _hardwarePort;
 
   /// 设置系统代理
-  static void setSystemProxy(int port, bool enableSsl) async {
+  static void setSystemProxy(int port,  bool sslSetting) async {
     if (Platform.isMacOS) {
-      _setProxyServerMacOS(port, enableSsl);
+      _setProxyServerMacOS(port, sslSetting);
     } else if (Platform.isWindows) {
-      _setProxyServerWindows(port, enableSsl);
+      _setProxyServerWindows(port, sslSetting);
     }
   }
 
-  static void setSystemProxyEnable(bool enable, bool sslSetting) async {
+  static void setSystemProxyEnable(int port, bool enable, bool sslSetting) async {
+    if (enable) {
+      setSystemProxy(port, sslSetting);
+      return;
+    }
     if (Platform.isMacOS) {
       setProxyEnableMacOS(enable, sslSetting);
     } else if (Platform.isWindows) {
@@ -23,13 +27,13 @@ class SystemProxy {
     }
   }
 
-  static Future<bool> _setProxyServerMacOS(int port, bool enableSsl) async {
+  static Future<bool> _setProxyServerMacOS(int port, bool sslSetting) async {
     _hardwarePort = await hardwarePort();
     var results = await Process.run('bash', [
       '-c',
       _concatCommands([
         'networksetup -setwebproxy $_hardwarePort 127.0.0.1 $port',
-        enableSsl == true ? 'networksetup -setsecurewebproxy $_hardwarePort 127.0.0.1 $port' : '',
+        sslSetting == true ? 'networksetup -setsecurewebproxy $_hardwarePort 127.0.0.1 $port' : '',
         'networksetup -setproxybypassdomains $_hardwarePort 192.168.0.0/16 10.0.0.0/8 172.16.0.0/12 127.0.0.1 localhost *.local timestamp.apple.com sequoia.apple.com seed-sequoia.siri.apple.com *.google.com',
       ])
     ]);
@@ -75,7 +79,7 @@ class SystemProxy {
     return results.stdout.toString().split(", ")[0];
   }
 
-  static Future<bool> _setProxyServerWindows(int proxyPort, bool enableSsl) async {
+  static Future<bool> _setProxyServerWindows(int proxyPort, bool sslSetting) async {
     ProxyManager manager = ProxyManager();
     await manager.setAsSystemProxy(ProxyTypes.http, "127.0.0.1", proxyPort);
 

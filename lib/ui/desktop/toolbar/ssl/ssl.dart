@@ -22,6 +22,8 @@ class _SslState extends State<SslWidget> {
 
     widget.proxyServer.initializedListener(() {
       _enableSsl = widget.proxyServer.enableSsl;
+      setState(() {
+      });
     });
   }
 

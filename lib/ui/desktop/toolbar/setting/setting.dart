@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'filter.dart';
 
+///设置菜单
 class Setting extends StatefulWidget {
   final ProxyServer proxyServer;
 
@@ -34,6 +35,7 @@ class _SettingState extends State<Setting> {
 
   @override
   Widget build(BuildContext context) {
+
     return PopupMenuButton<String>(
       tooltip: "设置",
       icon: const Icon(Icons.settings),
@@ -55,34 +57,15 @@ class _SettingState extends State<Setting> {
                       dense: true,
                       value: widget.proxyServer.enableDesktop,
                       onChanged: (val) {
-                        SystemProxy.setSystemProxyEnable(val, widget.proxyServer.enableSsl);
+                        SystemProxy.setSystemProxyEnable(widget.proxyServer.port, val, widget.proxyServer.enableSsl);
                         widget.proxyServer.enableDesktop = val;
                         enableDesktopListenable.value = !enableDesktopListenable.value;
                         widget.proxyServer.flushConfig();
                       }))),
           const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
-          PopupMenuItem<String>(
-              padding: const EdgeInsets.all(0),
-              child: ListTile(
-                  title: const Text("域名过滤"),
-                  dense: true,
-                  hoverColor: Colors.transparent,
-                  focusColor: Colors.transparent,
-                  trailing: const Icon(Icons.arrow_right),
-                  onTap: () => _filter())),
-          PopupMenuItem<String>(
-              padding: const EdgeInsets.all(0),
-              child: ListTile(
-                title: const Text("请求重写"),
-                dense: true,
-                hoverColor: Colors.transparent,
-                focusColor: Colors.transparent,
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () => _reqeustRewrite(),
-              )),
-          PopupMenuItem<String>(
-            padding: const EdgeInsets.all(0),
-            child: const ListTile(title: Text("Github"), dense: true, trailing: Icon(Icons.arrow_right)),
+          menuItem("域名过滤", onTap: () => _filter()),
+          menuItem("请求重写", onTap: () => _reqeustRewrite()),
+          menuItem("Github",
             onTap: () {
               launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"));
             },
@@ -92,6 +75,20 @@ class _SettingState extends State<Setting> {
     );
   }
 
+  PopupMenuItem<String> menuItem(String title, {GestureTapCallback? onTap}) {
+    return PopupMenuItem<String>(
+        padding: const EdgeInsets.all(0),
+        child: ListTile(
+          title: Text(title),
+          dense: true,
+          hoverColor: Colors.transparent,
+          focusColor: Colors.transparent,
+          trailing: const Icon(Icons.arrow_right),
+          onTap: onTap,
+        ));
+  }
+
+  ///请求重写Dialog
   void _reqeustRewrite() {
     showDialog(
         barrierDismissible: false,
@@ -114,6 +111,7 @@ class _SettingState extends State<Setting> {
         });
   }
 
+  ///show域名过滤Dialog
   void _filter() {
     showDialog(
       barrierDismissible: false,

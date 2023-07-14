@@ -142,7 +142,7 @@ class ProxyServer {
     logger.i('加载配置文件 [$file]');
     port = config['port'] ?? port;
     enableSsl = config['enableSsl'] == true;
-    enableDesktop = config['enableDesktop'] == true;
+    enableDesktop = config['enableDesktop'] ?? true;
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
 

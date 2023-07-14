@@ -36,8 +36,9 @@ class DomainWidgetState extends State<DomainWidget> {
   ///添加请求
   add(Channel channel, HttpRequest request) {
     HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
+    //按照域名分类
     HeaderBody? headerBody = containerMap[hostAndPort];
-    var listURI = PathRow(request, widget.panel);
+    var listURI = PathRow(request, widget.panel, proxyServer: widget.proxyServer);
     if (headerBody != null) {
       headerBody.addBody(channel.id, listURI);
       return;
@@ -122,7 +123,7 @@ class _HeaderBodyState extends State<HeaderBody> {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      _hostWidget(widget.header.url),
+      _hostWidget(widget.header.domain),
       Offstage(offstage: !selected, child: Column(children: widget._body.toList()))
     ]);
   }
@@ -163,13 +164,13 @@ class _HeaderBodyState extends State<HeaderBody> {
       ),
       items: <PopupMenuEntry>[
         PopupMenuItem(
-            height: 35,
-            child: const Text("添加黑名单", style: TextStyle(fontSize: 12)),
+            height: 38,
+            child: const Text("添加黑名单", style: TextStyle(fontSize: 14)),
             onTap: () {
               HostFilter.blacklist.add(widget.header.host);
               widget.proxyServer.flushConfig();
             }),
-        PopupMenuItem(height: 35, child: const Text("删除", style: TextStyle(fontSize: 12)), onTap: () => _delete()),
+        PopupMenuItem(height: 38, child: const Text("删除", style: TextStyle(fontSize: 14)), onTap: () => _delete()),
       ],
     );
   }

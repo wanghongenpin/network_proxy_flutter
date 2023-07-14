@@ -13,6 +13,7 @@ abstract class HttpMessage {
     "font-woff": ContentType.font,
     "text/html": ContentType.html,
     "text/plain": ContentType.text,
+    "application/x-www-form-urlencoded": ContentType.formUrl,
     "image": ContentType.image,
     "application/json": ContentType.json
   };
@@ -60,13 +61,22 @@ class HttpRequest extends HttpMessage {
 
   HttpRequest(this.method, this.uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
 
+  ///复制请求
+  HttpRequest copy({String? uri}) {
+    var request = HttpRequest(method, uri ?? this.uri, protocolVersion: protocolVersion);
+    request.headers.addAll(headers);
+    request.contentLength = contentLength;
+    request.body = body;
+    return request;
+  }
+
   @override
   String toString() {
     return 'HttpReqeust{version: $protocolVersion, url: $uri, method: ${method.name}, headers: $headers, contentLength: $contentLength, bodyLength: ${body?.length}}';
   }
 }
 
-enum ContentType { json, js, html, text, css, font, image, http }
+enum ContentType { json, formUrl, js, html, text, css, font, image, http }
 
 ///HTTP响应。
 class HttpResponse extends HttpMessage {
