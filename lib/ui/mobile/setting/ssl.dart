@@ -61,20 +61,12 @@ class _MobileSslState extends State<MobileSslWidget> {
   List<Widget> ios() {
     return [
       TextButton(onPressed: () {}, child: const Text("2. 安装根证书 -> 信任证书")),
-      TextButton(
-          onPressed: () {},
-          child: const Text(
-            "2.1 安装根证书 设置 > 已下载描述文件 > 安装",
-          )),
+      TextButton(onPressed: () {}, child: const Text("2.1 安装根证书 设置 > 已下载描述文件 > 安装")),
       Padding(
           padding: const EdgeInsets.only(left: 15),
           child:
               Image.network("https://foruda.gitee.com/images/1689346516243774963/c56bc546_1073801.png", height: 400)),
-      TextButton(
-          onPressed: () {},
-          child: const Text(
-            "2.2 信任根证书 设置 > 通用 > 关于本机 -> 证书信任设置",
-          )),
+      TextButton(onPressed: () {}, child: const Text("2.2 信任根证书 设置 > 通用 > 关于本机 -> 证书信任设置")),
       Padding(
           padding: const EdgeInsets.only(left: 15),
           child:
@@ -85,7 +77,7 @@ class _MobileSslState extends State<MobileSslWidget> {
   List<Widget> android() {
     return [
       TextButton(onPressed: () {}, child: const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书")),
-      Image.network("https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png", height: 600),
+      Image.network("https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png"),
     ];
   }
 

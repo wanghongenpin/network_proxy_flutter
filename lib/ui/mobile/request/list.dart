@@ -2,29 +2,25 @@ import 'dart:collection';
 
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/http_client.dart';
-import 'package:network_proxy/ui/component/utils.dart';
-import 'package:network_proxy/utils/curl.dart';
+import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/ui/mobile/request/request.dart';
 
-import '../../network/channel.dart';
-import '../content/panel.dart';
-
-class RequestWidget extends StatefulWidget {
+class RequestListWidget extends StatefulWidget {
   final ProxyServer proxyServer;
 
-  const RequestWidget({super.key, required this.proxyServer});
+  const RequestListWidget({super.key, required this.proxyServer});
 
   @override
   State<StatefulWidget> createState() {
-    return RequestWidgetState();
+    return RequestListState();
   }
 }
 
-class RequestWidgetState extends State<RequestWidget> {
+class RequestListState extends State<RequestListWidget> {
   final tabs = <Tab>[
     const Tab(child: Text('全部请求')),
     const Tab(child: Text('域名列表')),
@@ -44,7 +40,7 @@ class RequestWidgetState extends State<RequestWidget> {
           body: TabBarView(
             children: [
               RequestSequence(key: requestSequenceKey, list: container, proxyServer: widget.proxyServer),
-              DomainList(key: domainListKey, list: container, proxyServer: widget.proxyServer),
+              DomainList(key: domainListKey, list: container, proxyServer: widget.proxyServer, onRemove: remove),
             ],
           ),
         ));
@@ -64,6 +60,10 @@ class RequestWidgetState extends State<RequestWidget> {
     domainListKey.currentState?.addResponse(response);
   }
 
+  remove(List<HttpRequest> list) {
+    container.removeWhere((element) => list.contains(element));
+  }
+
   ///清理
   clean() {
     setState(() {
@@ -74,6 +74,7 @@ class RequestWidgetState extends State<RequestWidget> {
   }
 }
 
+///请求序列 列表
 class RequestSequence extends StatefulWidget {
   final List<HttpRequest> list;
   final ProxyServer proxyServer;
@@ -87,7 +88,6 @@ class RequestSequence extends StatefulWidget {
 }
 
 class RequestSequenceState extends State<RequestSequence> {
-  // GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
   Map<HttpRequest, GlobalKey<RequestRowState>> indexes = HashMap();
 
   late Queue<HttpRequest> list = Queue();
@@ -141,106 +141,13 @@ class RequestSequenceState extends State<RequestSequence> {
   }
 }
 
-class RequestRow extends StatefulWidget {
-  final HttpRequest request;
-  final ProxyServer proxyServer;
-
-  const RequestRow({super.key, required this.request, required this.proxyServer});
-
-  @override
-  State<StatefulWidget> createState() {
-    return RequestRowState();
-  }
-}
-
-///请求行
-class RequestRowState extends State<RequestRow> {
-  late HttpRequest request;
-  HttpResponse? response;
-
-  change(HttpResponse response) {
-    setState(() {
-      this.response = response;
-    });
-  }
-
-  @override
-  void initState() {
-    request = widget.request;
-    response = request.response;
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var title = '${request.method.name} ${request.requestUrl}';
-    var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
-    return ListTile(
-        leading: Icon(getIcon(response), size: 16, color: Colors.green),
-        title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
-        subtitle: Text(
-            '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
-            maxLines: 1),
-        trailing: const Icon(Icons.chevron_right),
-        onLongPress: () {
-          menu(menuPosition(context));
-        },
-        onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            return NetworkTabController(
-                httpRequest: request,
-                httpResponse: response,
-                title: const Text("抓包详情", style: TextStyle(fontSize: 16)));
-          }));
-        });
-  }
-
-  ///右键菜单
-  menu(RelativeRect position) {
-    // Feedback.forLongPress(context);
-    HapticFeedback.lightImpact();
-
-    showMenu(
-      context: context,
-      position: position,
-      items: <PopupMenuEntry>[
-        PopupMenuItem(
-            child: const Text("复制请求链接"),
-            onTap: () {
-              var requestUrl = widget.request.requestUrl;
-              Clipboard.setData(ClipboardData(text: requestUrl))
-                  .then((value) => FlutterToastr.show('已复制到剪切板', context));
-            }),
-        PopupMenuItem(
-            child: const Text("复制请求和响应"),
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: copyRequest(widget.request, response)))
-                  .then((value) => FlutterToastr.show('已复制到剪切板', context));
-            }),
-        PopupMenuItem(
-            child: const Text("复制 cURL 请求"),
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
-                  .then((value) => FlutterToastr.show('已复制到剪切板', context));
-            }),
-        PopupMenuItem(
-            child: const Text("重放请求", style: TextStyle(fontSize: 14)),
-            onTap: () {
-              var request = widget.request.copy(uri: widget.request.requestUrl);
-              HttpClients.proxyRequest("127.0.0.1", widget.proxyServer.port, request);
-              FlutterToastr.show('已重新发送请求', context);
-            }),
-      ],
-    );
-  }
-}
-
 ///域名列表
 class DomainList extends StatefulWidget {
   final List<HttpRequest> list;
   final ProxyServer proxyServer;
+  final Function(List<HttpRequest>)? onRemove;
 
-  const DomainList({super.key, required this.list, required this.proxyServer});
+  const DomainList({super.key, required this.list, required this.proxyServer, this.onRemove});
 
   @override
   State<StatefulWidget> createState() {
@@ -251,9 +158,13 @@ class DomainList extends StatefulWidget {
 class DomainListState extends State<DomainList> {
   GlobalKey<RequestSequenceState> requestSequenceKey = GlobalKey<RequestSequenceState>();
 
+  //域名和对应请求列表的映射
   Map<HostAndPort, List<HttpRequest>> containerMap = {};
 
+  //域名列表 为了维护插入顺序
   LinkedHashSet<HostAndPort> container = LinkedHashSet<HostAndPort>();
+
+  //显示的域名 最新的在顶部
   List<HostAndPort> list = [];
   HostAndPort? showHostAndPort;
   bool changing = false;
@@ -320,7 +231,7 @@ class DomainListState extends State<DomainList> {
     return ListView.separated(
         separatorBuilder: (context, index) => Divider(height: 0.5, color: Theme.of(context).focusColor),
         itemCount: list.length,
-        itemBuilder: (context, index) {
+        itemBuilder: (ctx, index) {
           var time =
               formatDate(containerMap[list.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
           return ListTile(
@@ -328,6 +239,7 @@ class DomainListState extends State<DomainList> {
               trailing: const Icon(Icons.chevron_right),
               subtitle: Text("最后请求时间: $time,  次数: ${containerMap[list.elementAt(index)]!.length}",
                   maxLines: 1, overflow: TextOverflow.ellipsis),
+              onLongPress: () => menu(index),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
                   showHostAndPort = list.elementAt(index);
@@ -339,6 +251,76 @@ class DomainListState extends State<DomainList> {
                           proxyServer: widget.proxyServer));
                 }));
               });
+        });
+  }
+
+  ///菜单
+  menu(int index) {
+    var hostAndPort = list.elementAt(index);
+    showModalBottomSheet(
+        context: context,
+        enableDrag: true,
+        builder: (ctx) {
+          return Wrap(
+            alignment: WrapAlignment.center,
+            children: [
+              TextButton(
+                  child: const SizedBox(width: double.infinity, child: Text("添加黑名单", textAlign: TextAlign.center)),
+                  onPressed: () {
+                    HostFilter.blacklist.add(hostAndPort.host);
+                    widget.proxyServer.flushConfig();
+                    FlutterToastr.show("已添加至黑名单", context);
+                    Navigator.of(context).pop();
+                  }),
+              const Divider(thickness: 0.5),
+              TextButton(
+                  child: const SizedBox(width: double.infinity, child: Text("添加白名单", textAlign: TextAlign.center)),
+                  onPressed: () {
+                    HostFilter.whitelist.add(hostAndPort.host);
+                    widget.proxyServer.flushConfig();
+                    FlutterToastr.show("已添加至白名单", context);
+                    Navigator.of(context).pop();
+                  }),
+              const Divider(thickness: 0.5),
+              TextButton(
+                  child: const SizedBox(width: double.infinity, child: Text("删除白名单", textAlign: TextAlign.center)),
+                  onPressed: () {
+                    HostFilter.whitelist.remove(hostAndPort.host);
+                    widget.proxyServer.flushConfig();
+                    FlutterToastr.show("已删除白名单", context);
+                    Navigator.of(context).pop();
+                  }),
+              const Divider(thickness: 0.5),
+              TextButton(
+                  child: const SizedBox(width: double.infinity, child: Text("删除", textAlign: TextAlign.center)),
+                  onPressed: () {
+                    setState(() {
+                      var requests = containerMap.remove(hostAndPort);
+                      container.remove(hostAndPort);
+                      list.removeAt(index);
+                      if (requests != null) {
+                        widget.onRemove?.call(requests);
+                      }
+                      FlutterToastr.show("删除成功", context);
+                      Navigator.of(context).pop();
+                    });
+                  }),
+              Container(
+                color: Theme.of(context).hoverColor,
+                height: 8,
+              ),
+              TextButton(
+                child: Container(
+                    height: 60,
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(top: 10),
+                    child: const Text("取消", textAlign: TextAlign.center)),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
         });
   }
 }

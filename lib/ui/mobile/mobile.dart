@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
@@ -11,8 +11,7 @@ import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/launch/launch.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/menu.dart';
-
-import 'request.dart';
+import 'package:network_proxy/ui/mobile/request/list.dart';
 
 class MobileHomePage extends StatefulWidget {
   const MobileHomePage({super.key});
@@ -24,9 +23,7 @@ class MobileHomePage extends StatefulWidget {
 }
 
 class MobileHomeState extends State<MobileHomePage> implements EventListener {
-  static const MethodChannel proxyVpnChannel = MethodChannel('com.proxy/proxyVpn');
-
-  final requestStateKey = GlobalKey<RequestWidgetState>();
+  final requestStateKey = GlobalKey<RequestListState>();
 
   late ProxyServer proxyServer;
   ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
@@ -73,14 +70,18 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
             tooltip: "清理",
             icon: const Icon(Icons.cleaning_services_outlined),
             onPressed: () => requestStateKey.currentState?.clean()),
-        const SizedBox(width: 10),
+        const SizedBox(width: 2),
         MoreEnum(proxyServer: proxyServer, desktop: desktop),
-        const SizedBox(width: 20)
+        const SizedBox(width: 10)
       ]),
       drawer: DrawerWidget(proxyServer: proxyServer),
       floatingActionButton: FloatingActionButton(
           onPressed: () {},
-          child: SocketLaunch(proxyServer: proxyServer, size: 38, onStart: () => startVpn(), onStop: () => stopVpn())),
+          child: SocketLaunch(
+              proxyServer: proxyServer,
+              size: 38,
+              onStart: () => Vpn.startVpn("127.0.0.1", proxyServer.port),
+              onStop: () => Vpn.stopVpn())),
       body: ValueListenableBuilder(
           valueListenable: desktop,
           builder: (context, value, _) {
@@ -98,7 +99,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
                         child: Text("已连接${value.os?.toUpperCase()}，手机抓包已关闭",
                             style: Theme.of(context).textTheme.titleMedium),
                       )),
-              Expanded(child: RequestWidget(key: requestStateKey, proxyServer: proxyServer))
+              Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
             ]);
           }),
     );
@@ -127,15 +128,5 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
         }
       }
     });
-  }
-
-  stopVpn() {
-    proxyVpnChannel.invokeMethod("stopVpn");
-  }
-
-  startVpn() {
-    String host = "127.0.0.1";
-    int port = proxyServer.port;
-    proxyVpnChannel.invokeMethod("startVpn", {"proxyHost": host, "proxyPort": port});
   }
 }

@@ -153,6 +153,7 @@ class _HeaderBodyState extends State<HeaderBody> {
                 })));
   }
 
+  //域名右键菜单
   menu(LongPressDownDetails details) {
     showMenu(
       context: context,
@@ -168,6 +169,20 @@ class _HeaderBodyState extends State<HeaderBody> {
             child: const Text("添加黑名单", style: TextStyle(fontSize: 14)),
             onTap: () {
               HostFilter.blacklist.add(widget.header.host);
+              widget.proxyServer.flushConfig();
+            }),
+        PopupMenuItem(
+            height: 38,
+            child: const Text("添加白名单", style: TextStyle(fontSize: 14)),
+            onTap: () {
+              HostFilter.whitelist.add(widget.header.host);
+              widget.proxyServer.flushConfig();
+            }),
+        PopupMenuItem(
+            height: 38,
+            child: const Text("删除白名单", style: TextStyle(fontSize: 14)),
+            onTap: () {
+              HostFilter.whitelist.remove(widget.header.host);
               widget.proxyServer.flushConfig();
             }),
         PopupMenuItem(height: 38, child: const Text("删除", style: TextStyle(fontSize: 14)), onTap: () => _delete()),

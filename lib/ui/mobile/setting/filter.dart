@@ -36,8 +36,7 @@ class _MobileFilterState extends State<MobileFilterWidget> {
               hostList: widget.hostList,
               proxyServer: widget.proxyServer,
               hostEnableNotifier: hostEnableNotifier),
-        )
-    );
+        ));
   }
 }
 
@@ -70,20 +69,15 @@ class _DomainFilterState extends State<DomainFilter> {
   Widget build(BuildContext context) {
     domainList = DomainList(widget.hostList);
 
-    return Column(
+    return ListView(
       children: [
-        ListTile(
-          title: Text(widget.title),
-          subtitle: Text(widget.subtitle, style: const TextStyle(fontSize: 12)),
-          titleAlignment: ListTileTitleAlignment.center,
-        ),
+        ListTile(title: Text(widget.title), subtitle: Text(widget.subtitle, style: const TextStyle(fontSize: 12))),
         const SizedBox(height: 10),
         ValueListenableBuilder(
             valueListenable: widget.hostEnableNotifier,
             builder: (_, bool enable, __) {
               return SwitchListTile(
                   title: const Text('是否启用'),
-                  dense: true,
                   value: widget.hostList.enabled,
                   onChanged: (value) {
                     widget.hostList.enabled = value;
@@ -93,15 +87,15 @@ class _DomainFilterState extends State<DomainFilter> {
             }),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           FilledButton.icon(
-              icon: const Icon(Icons.add, size: 14),
+              icon: const Icon(Icons.add),
               onPressed: () {
                 add();
               },
-              label: const Text("增加", style: TextStyle(fontSize: 12))),
+              label: const Text("增加")),
           const SizedBox(width: 10),
           TextButton.icon(
-              icon: const Icon(Icons.remove, size: 14),
-              label: const Text("删除", style: TextStyle(fontSize: 12)),
+              icon: const Icon(Icons.remove),
+              label: const Text("删除"),
               onPressed: () {
                 if (domainList.selected().isEmpty) {
                   return;
@@ -130,7 +124,6 @@ class _DomainFilterState extends State<DomainFilter> {
     String? host;
     showDialog(
         context: context,
-        barrierDismissible: false,
         builder: (BuildContext context) {
           return AlertDialog(
               scrollable: true,
@@ -197,7 +190,6 @@ class _DomainListState extends State<DomainList> {
   Widget build(BuildContext context) {
     return Container(
         padding: const EdgeInsets.only(top: 10),
-        height: 300,
         child: SingleChildScrollView(
             child: DataTable(
           border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),

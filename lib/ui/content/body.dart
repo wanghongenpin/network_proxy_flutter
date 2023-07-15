@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer_new/flutter_json_viewer.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/ui/component/utils.dart';
 
 class HttpBodyWidget extends StatefulWidget {
   final HttpMessage? httpMessage;
@@ -73,7 +74,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
               if (body == null || body?.isEmpty == true) {
                 return;
               }
-              Clipboard.setData(ClipboardData(text: body!)).then((value) => FlutterToastr.show("复制成功", context));
+              Clipboard.setData(ClipboardData(text: body!)).then((value) => FlutterToastr.show("已复制到剪切板", context));
             }),
         const SizedBox(width: 5),
         inNewWindow
@@ -106,7 +107,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
       if (type == ViewType.jsonText) {
         var jsonObject = json.decode(body!);
         var prettyJsonString = const JsonEncoder.withIndent('  ').convert(jsonObject);
-        return SelectableText(prettyJsonString);
+        return SelectableText(prettyJsonString, contextMenuBuilder: contextMenu);
       }
 
       if (type == ViewType.formUrl) {
@@ -119,7 +120,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
       // ignore: avoid_print
       print(e);
     }
-    return SelectableText.rich(TextSpan(text: body));
+    return SelectableText.rich(TextSpan(text: body), contextMenuBuilder: contextMenu);
   }
 }
 

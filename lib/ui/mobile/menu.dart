@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:easy_permission/easy_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
@@ -13,11 +14,11 @@ import 'package:network_proxy/ui/mobile/setting/filter.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
 import 'package:network_proxy/utils/ip.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
 import 'package:url_launcher/url_launcher.dart';
 
+///左侧抽屉
 class DrawerWidget extends StatelessWidget {
   final ProxyServer proxyServer;
 
@@ -71,6 +72,7 @@ class DrawerWidget extends StatelessWidget {
     ));
   }
 
+  ///跳转页面
   navigator(BuildContext context, Widget widget) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (BuildContext context) {
@@ -90,8 +92,9 @@ class MoreEnum extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton(
+      tooltip: "扫码连接",
       offset: const Offset(0, 30),
-      child: const Icon(Icons.add_circle_outline, size: 26),
+      child: const SizedBox(height: 38, width: 38, child: Icon(Icons.add_circle_outline, size: 26)),
       itemBuilder: (BuildContext context) {
         return <PopupMenuItem>[
           PopupMenuItem(
@@ -126,7 +129,7 @@ class MoreEnum extends StatelessWidget {
                 onTap: () async {
                   var ip = await localIp();
                   if (context.mounted) {
-                    phoneConnect(context, ip, proxyServer.port);
+                    connectQrCode(context, ip, proxyServer.port);
                   }
                 },
               )),
@@ -135,19 +138,16 @@ class MoreEnum extends StatelessWidget {
     );
   }
 
+  ///扫码连接
   connectRemote(BuildContext context) async {
     String scanRes;
     if (Platform.isAndroid) {
-      var status = await Permission.camera.status;
-      if (!status.isGranted) {
-        status = await Permission.camera.request();
-      }
+      await EasyPermission.requestPermissions([PermissionType.CAMERA]);
       scanRes = await scanner.scan() ?? "-1";
     } else {
       scanRes = await FlutterBarcodeScanner.scanBarcode("#ff6666", "取消", true, ScanMode.QR);
     }
 
-    print(scanRes);
     if (scanRes == "-1") return;
     if (scanRes.startsWith("http")) {
       launchUrl(Uri.parse(scanRes), mode: LaunchMode.externalApplication);
@@ -191,8 +191,8 @@ class MoreEnum extends StatelessWidget {
     }
   }
 
-
-  phoneConnect(BuildContext context, String host, int port) {
+  ///连接二维码
+  connectQrCode(BuildContext context, String host, int port) {
     showDialog(
         context: context,
         builder: (context) {

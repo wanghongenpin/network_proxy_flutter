@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+///颜色过渡动画
 class ColorTransition extends StatefulWidget {
   final Color begin;
   final Color end;

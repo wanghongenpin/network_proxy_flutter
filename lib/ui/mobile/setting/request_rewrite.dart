@@ -40,8 +40,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
         appBar: AppBar(title: const Text("请求重写")),
         body: Container(
             padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: ListView(
               children: [
                 SizedBox(
                     child: ValueListenableBuilder(

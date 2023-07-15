@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/component/share.dart';
+import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 import 'body.dart';
@@ -153,10 +154,11 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     message?.headers.forEach((name, values) {
       for (var v in values) {
         headers.add(Row(children: [
-          Expanded(flex: 2, child: SelectableText(name)),
-          Expanded(flex: 4, child: SelectableText(v)),
-          const SizedBox(height: 20),
+          SelectableText('$name: ',
+              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent)),
+          Expanded( child: SelectableText(v, contextMenuBuilder: contextMenu, maxLines: 5, minLines: 1)),
         ]));
+        headers.add(const Divider(thickness: 0.1));
       }
     });
 
@@ -192,8 +194,13 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
   Widget rowWidget(final String name, String? value) {
     return Row(children: [
-      Expanded(flex: 2, child: SelectableText(name)),
-      Expanded(flex: 4, child: SelectableText(value ?? ''))
+      Expanded(flex: 2, child: SelectableText(name, style: const TextStyle(fontWeight: FontWeight.w500))),
+      Expanded(
+          flex: 4,
+          child: SelectableText(
+            value ?? '',
+            contextMenuBuilder: contextMenu,
+          ))
     ]);
   }
 }

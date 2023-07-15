@@ -8,6 +8,7 @@ import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:share_plus/share_plus.dart';
 
+///分享按钮
 class ShareWidget extends StatelessWidget {
   final HttpRequest? request;
   final HttpResponse? response;

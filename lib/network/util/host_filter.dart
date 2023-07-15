@@ -28,7 +28,7 @@ class HostFilter {
 }
 
 abstract class HostList {
-  /// 白名单
+  /// 列表
   final List<RegExp> list = [];
   bool enabled = false;
 
@@ -45,7 +45,9 @@ abstract class HostList {
   }
 
   void add(String reg) {
-    list.add(RegExp(reg.replaceAll("*", ".*")));
+    var regExp = RegExp(reg.replaceAll("*", ".*"));
+    list.removeWhere((element) => element.pattern == regExp.pattern);
+    list.add(regExp);
   }
 
   void remove(String reg) {

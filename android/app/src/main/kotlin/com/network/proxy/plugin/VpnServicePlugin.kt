@@ -1,0 +1,56 @@
+package com.network.proxy.plugin
+
+import android.content.Intent
+import android.util.Log
+import com.network.proxy.ProxyVpnService
+import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.plugin.common.MethodChannel
+
+class VpnServicePlugin : AndroidFlutterPlugin() {
+    companion object {
+        const val CHANNEL = "com.proxy/proxyVpn"
+        const val REQUEST_CODE: Int = 24
+    }
+
+    override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        val channel = MethodChannel(binding.binaryMessenger, CHANNEL)
+
+        channel.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "startVpn" -> {
+                    val host = call.argument<String>("proxyHost")
+                    val port = call.argument<Int>("proxyPort")
+                    startVpn(host!!, port!!)
+                }
+
+                "stopVpn" -> {
+                    stopVpn()
+                }
+
+                else -> {
+                    result.notImplemented()
+                }
+            }
+        }
+    }
+
+    /**
+     * 启动vpn服务
+     */
+    private fun startVpn(host: String, port: Int) {
+        Log.i("com.network.proxy", "startVpn")
+        val intent = Intent(activity, ProxyVpnService::class.java)
+        intent.putExtra(ProxyVpnService.ProxyHost, host)
+        intent.putExtra(ProxyVpnService.ProxyPort, port)
+        activity.startService(intent)
+    }
+
+    /**
+     * 停止vpn服务
+     */
+    private fun stopVpn() {
+        activity.startService(Intent(activity, ProxyVpnService::class.java).also {
+            it.action = ProxyVpnService.ACTION_DISCONNECT
+        })
+    }
+}

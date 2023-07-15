@@ -7,7 +7,7 @@ class AppDelegate: FlutterAppDelegate {
     return true
   }
 
-   override func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+  override func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
        if !flag {
            for window in NSApp.windows {
                   if !window.isVisible {
@@ -16,8 +16,13 @@ class AppDelegate: FlutterAppDelegate {
                   window.makeKeyAndOrderFront(self)
                   NSApp.activate(ignoringOtherApps: true)
               }
-          }
-         return true
       }
+    return true
+  }
+
+  override func applicationWillTerminate(_ notification: Notification) {
+    print("applicationWillTerminate called")
+    NSLog("applicationWillTerminate")
+  }
 
 }

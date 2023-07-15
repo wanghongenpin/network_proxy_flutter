@@ -1,7 +1,6 @@
 import 'package:network_proxy/network/http/http.dart';
 
 ///复制cURL请求
-
 String curlRequest(HttpRequest request) {
   List<String> headers = [];
   request.headers.forEach((key, values) {

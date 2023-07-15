@@ -33,7 +33,7 @@ class _SslState extends State<SslWidget> {
     return PopupMenuButton<String>(
       icon: Icon(Icons.https, color: _enableSsl ? null : Colors.red),
       surfaceTintColor: Colors.white70,
-      tooltip: "Https代理",
+      tooltip: "HTTPS代理",
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
@@ -79,7 +79,7 @@ class _SslState extends State<SslWidget> {
         builder: (BuildContext context) {
           return SimpleDialog(
               contentPadding: const EdgeInsets.all(16),
-              title: const Text("电脑https抓包配置", style: TextStyle(fontSize: 16)),
+              title: const Text("电脑HTTPS抓包配置", style: TextStyle(fontSize: 16)),
               alignment: Alignment.center,
               children: [
                 const Text("1. 下载根证书安装到本系统（已完成忽略）"),
@@ -107,7 +107,7 @@ class _SslState extends State<SslWidget> {
         builder: (BuildContext context) {
           return SimpleDialog(
               contentPadding: const EdgeInsets.all(16),
-              title: const Text("手机https抓包配置", style: TextStyle(fontSize: 16)),
+              title: const Text("手机HTTPS抓包配置", style: TextStyle(fontSize: 16)),
               alignment: Alignment.center,
               children: [
                 const Text("1. 根证书安装到本系统（已完成忽略）"),
@@ -122,9 +122,9 @@ class _SslState extends State<SslWidget> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text("4. 打开手机设置下载安装证书(Profile)和信任证书(Certificate) \n\t  设置 > 通用 > 关于本机 > 证书信任设置"),
+                const Text("4. 打开手机设置下载安装证书信任证书\n\t  设置 > 通用 > 关于本机 > 证书信任设置"),
                 const SizedBox(height: 20),
-                const Text("  微信小程序ios需要开启本地网络权限", style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text("  抓微信小程序ios需要开启本地网络权限", style: TextStyle(fontWeight: FontWeight.bold)),
               ]);
         });
   }
@@ -160,7 +160,7 @@ class _SwitchState extends State<_Switch> {
   Widget build(BuildContext context) {
     return SwitchListTile(
         hoverColor: Colors.transparent,
-        title: const Text("启用Https代理", style: TextStyle(fontSize: 12)),
+        title: const Text("启用HTTPS代理", style: TextStyle(fontSize: 12)),
         visualDensity: const VisualDensity(horizontal: -4),
         dense: true,
         value: widget.proxyServer.enableSsl,
