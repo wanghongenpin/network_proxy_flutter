@@ -20,7 +20,7 @@ Future<void> main() async {
 /// 代理服务器
 class ProxyServer {
   bool init = false;
-  int port = 6666;
+  int port = 9099;
   bool _enableSsl = false;
   bool enableDesktop = true;
 

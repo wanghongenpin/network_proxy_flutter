@@ -15,7 +15,8 @@ String? ip;
 
 Future<String> localIp() async {
   ip ??= await NetworkInterface.list().then((interfaces) {
-    return interfaces.firstWhere((it) => it.name == "en0", orElse: () => interfaces.first).addresses.first.address;
+    return interfaces.firstWhere((it) => it.name == "en0" || it.name == 'WLAN',
+        orElse: () => interfaces.first).addresses.first.address;
   });
   return ip!;
 }

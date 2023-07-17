@@ -3,7 +3,7 @@
 
 **Mac首次打开会提示已损坏，需要到系统偏好设置-安全性与隐私-允许任何来源。**
 
-国内下载地址：https://gitee.com/wanghongenpin/network-proxy-flutter/releases/tag/0.0.1
+国内下载地址：https://gitee.com/wanghongenpin/network-proxy-flutter/releases
 
 >  ios个人开发者账号用到VPN没法上架AppStore, 后面可能会上架美版AppStore。
 

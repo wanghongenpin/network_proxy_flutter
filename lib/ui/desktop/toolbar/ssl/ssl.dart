@@ -1,10 +1,11 @@
 import 'dart:io';
 
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/utils/ip.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SslWidget extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -82,20 +83,27 @@ class _SslState extends State<SslWidget> {
               title: const Text("电脑HTTPS抓包配置", style: TextStyle(fontSize: 16)),
               alignment: Alignment.center,
               children: [
-                const Text("1. 下载根证书安装到本系统（已完成忽略）"),
-                FilledButton(onPressed: () => _downloadCert(), child: const Text("下载证书")),
+                Text(
+                    " 安装证书到本系统，${Platform.isMacOS ? "“安装完选择“始终信任此证书”" : "选择“受信任的根证书颁发机构”"}"),
                 const SizedBox(height: 10),
-                Text("2. 双击安装证书，${Platform.isMacOS ? "“Mac安装完选择“始终信任此证书”" : "Windows选择“受信任的根证书颁发机构”"}"),
+                FilledButton(
+                    onPressed: _installCert, child: const Text("安装证书")),
                 const SizedBox(height: 10),
                 Platform.isMacOS
-                    ? Image.network("https://foruda.gitee.com/images/1689323260158189316/c2d881a4_1073801.png",
-                        width: 800, height: 500)
+                    ? Image.network(
+                        "https://foruda.gitee.com/images/1689323260158189316/c2d881a4_1073801.png",
+                        width: 800,
+                        height: 500)
                     : Row(children: [
-                        Image.network("https://foruda.gitee.com/images/1689335589122168223/c904a543_1073801.png",
-                            width: 400, height: 400),
+                        Image.network(
+                            "https://foruda.gitee.com/images/1689335589122168223/c904a543_1073801.png",
+                            width: 400,
+                            height: 400),
                         const SizedBox(width: 10),
-                        Image.network("https://foruda.gitee.com/images/1689335334688878324/f6aa3a3a_1073801.png",
-                            width: 400, height: 400)
+                        Image.network(
+                            "https://foruda.gitee.com/images/1689335334688878324/f6aa3a3a_1073801.png",
+                            width: 400,
+                            height: 400)
                       ])
               ]);
         });
@@ -112,34 +120,36 @@ class _SslState extends State<SslWidget> {
               children: [
                 const Text("1. 根证书安装到本系统（已完成忽略）"),
                 const SizedBox(height: 10),
-                SelectableText.rich(TextSpan(text: "2. 配置手机Wifi代理 Host：$host  Port：${widget.proxyServer.port}")),
+                SelectableText.rich(TextSpan(
+                    text:
+                        "2. 配置手机Wifi代理 Host：$host  Port：${widget.proxyServer.port}")),
                 const SizedBox(height: 10),
                 const Row(
                   children: [
                     Text("3. 打开手机系统自带浏览器访问：\t"),
-                    SelectableText.rich(
-                        TextSpan(text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
+                    SelectableText.rich(TextSpan(
+                        text: "http://proxy.pin/ssl",
+                        style: TextStyle(decoration: TextDecoration.underline)))
                   ],
                 ),
                 const SizedBox(height: 10),
                 const Text("4. 打开手机设置下载安装证书信任证书\n\t  设置 > 通用 > 关于本机 > 证书信任设置"),
                 const SizedBox(height: 20),
-                const Text("  抓微信小程序ios需要开启本地网络权限", style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text("  抓微信小程序ios需要开启本地网络权限",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ]);
         });
   }
 
-  void _downloadCert() async {
-    final FileSaveLocation? location = await getSaveLocation(suggestedName: "ProxyPinCA.crt");
-    if (location != null) {
-      const String fileMimeType = 'application/x-x509-ca-cert';
+  void _installCert() async {
+    final String appPath =
+        await getApplicationSupportDirectory().then((value) => value.path);
+    var caFile = File("$appPath${Platform.pathSeparator}ProxyPinCA.crt");
+    if (!(await caFile.exists())) {
       var body = await rootBundle.load('assets/certs/ca.crt');
-      final XFile xFile = XFile.fromData(
-        body.buffer.asUint8List(),
-        mimeType: fileMimeType,
-      );
-      await xFile.saveTo(location.path);
+      await caFile.writeAsBytes(body.buffer.asUint8List());
     }
+    launchUrl(Uri.file(caFile.path));
   }
 }
 
@@ -147,7 +157,9 @@ class _Switch extends StatefulWidget {
   final ProxyServer proxyServer;
   final Function(bool val) onEnableChange;
 
-  const _Switch({Key? key, required this.proxyServer, required this.onEnableChange}) : super(key: key);
+  const _Switch(
+      {Key? key, required this.proxyServer, required this.onEnableChange})
+      : super(key: key);
 
   @override
   State<_Switch> createState() => _SwitchState();

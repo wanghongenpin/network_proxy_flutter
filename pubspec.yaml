@@ -14,7 +14,6 @@ dependencies:
   basic_utils:
   logger: ^1.4.0
   date_format: ^2.0.7
-  file_selector: ^1.0.0
   window_manager: ^0.3.5
   path_provider: ^2.0.15
   url_launcher: ^6.1.11

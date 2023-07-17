@@ -39,14 +39,15 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   @override
   void channelRead(Channel channel, HttpRequest msg) async {
     channel.putAttribute(AttributeKeys.request, msg);
-    //请求本服务
-    if ((await localIp()) == msg.hostAndPort?.host) {
-      localRequest(msg, channel);
-      return;
-    }
 
     if (msg.uri == 'http://proxy.pin/ssl' || msg.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
       _crtDownload(channel, msg);
+      return;
+    }
+
+    //请求本服务
+    if ((await localIp()) == msg.hostAndPort?.host) {
+      localRequest(msg, channel);
       return;
     }
 
