@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/util/crts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MobileSslWidget extends StatefulWidget {
@@ -41,6 +42,7 @@ class _MobileSslState extends State<MobileSslWidget> {
                 widget.proxyServer.enableSsl = val;
                 if (widget.onEnableChange != null) widget.onEnableChange!(val);
                 changed = true;
+                CertificateManager.cleanCache();
                 setState(() {});
               }),
           ExpansionTile(
@@ -82,6 +84,15 @@ class _MobileSslState extends State<MobileSslWidget> {
   }
 
   void _downloadCert() async {
+    if (!widget.proxyServer.isRunning) {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return const Text("请先启动代理服务器");
+          });
+      return;
+    }
     launchUrl(Uri.parse("http://127.0.0.1:${widget.proxyServer.port}/ssl"), mode: LaunchMode.externalApplication);
+    CertificateManager.cleanCache();
   }
 }

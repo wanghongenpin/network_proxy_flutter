@@ -92,6 +92,30 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   void initState() {
     super.initState();
     proxyServer = ProxyServer(listener: this);
+    proxyServer.initializedListener(() {
+      if (!proxyServer.guide) {
+        return;
+      }
+      //首次引导
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) {
+            return AlertDialog(
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        proxyServer.guide = false;
+                        proxyServer.flushConfig();
+                        Navigator.pop(context);
+                      },
+                      child: const Text('关闭'))
+                ],
+                title: const Text('提示', style: TextStyle(fontSize: 18)),
+                content: const Text('默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
+                    '点击的HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。'));
+          });
+    });
   }
 
   @override

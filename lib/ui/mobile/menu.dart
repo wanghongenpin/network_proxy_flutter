@@ -65,7 +65,7 @@ class DrawerWidget extends StatelessWidget {
             title: const Text("下载地址"),
             trailing: const Icon(Icons.arrow_right),
             onTap: () {
-              launchUrl(Uri.parse("https://gitee.com/wanghongenpin/network-proxy-flutter/releases/tag/0.0.1"),
+              launchUrl(Uri.parse("https://gitee.com/wanghongenpin/network-proxy-flutter/releases"),
                   mode: LaunchMode.externalApplication);
             })
       ],

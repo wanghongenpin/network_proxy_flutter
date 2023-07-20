@@ -41,6 +41,9 @@ class Channel {
   final InternetAddress remoteAddress;
   final int remotePort;
 
+  //是否写入中
+  bool isWriting = false;
+
   Channel(this._socket)
       : _id = DateTime.now().millisecondsSinceEpoch + Random().nextInt(999999),
         remoteAddress = _socket.remoteAddress,
@@ -58,10 +61,14 @@ class Channel {
       logger.w("channel is closed $obj");
       return;
     }
-
-    var data = pipeline._encoder.encode(obj);
-    _socket.add(data);
-    await _socket.flush();
+    isWriting = true;
+    try {
+      var data = pipeline._encoder.encode(obj);
+      _socket.add(data);
+      await _socket.flush();
+    } finally {
+      isWriting = false;
+    }
   }
 
   Future<void> writeAndClose(Object obj) async {
@@ -69,9 +76,15 @@ class Channel {
     close();
   }
 
-  void close() {
+  void close() async {
     if (isClosed) {
       return;
+    }
+
+    //写入中，延迟关闭
+    int retry = 0;
+    while (isWriting && retry++ < 10) {
+      await Future.delayed(const Duration(milliseconds: 150));
     }
     _socket.destroy();
     isOpen = false;

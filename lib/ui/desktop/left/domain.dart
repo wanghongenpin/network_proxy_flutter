@@ -10,6 +10,7 @@ import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/component/transition.dart';
 import 'package:network_proxy/ui/desktop/left/path.dart';
 import 'package:network_proxy/ui/content/panel.dart';
+import 'package:network_proxy/ui/desktop/left/search.dart';
 
 ///左侧域名
 class DomainWidget extends StatefulWidget {
@@ -27,10 +28,51 @@ class DomainWidget extends StatefulWidget {
 class DomainWidgetState extends State<DomainWidget> {
   LinkedHashMap<HostAndPort, HeaderBody> containerMap = LinkedHashMap<HostAndPort, HeaderBody>();
 
+  //搜索的文本
+  String? searchText;
+  bool changing = false; //是否存在刷新任务
+
+  changeState() {
+    if (!changing) {
+      changing = true;
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        setState(() {
+          changing = false;
+        });
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var list = containerMap.values;
-    return SingleChildScrollView(child: Column(children: list.toList()));
+    //根究搜素文本过滤
+    if (searchText?.trim().isNotEmpty == true) {
+      list = searchFilter(searchText!);
+    }
+
+    return Scaffold(
+        body: SingleChildScrollView(child: Column(children: list.toList())),
+        bottomNavigationBar: Search(onSearch: (val) {
+          if (val == searchText) {
+            return;
+          }
+          setState(() {
+            searchText = val.toLowerCase();
+          });
+        }));
+  }
+
+  ///搜索过滤
+  List<HeaderBody> searchFilter(String text) {
+    var result = <HeaderBody>[];
+    containerMap.forEach((key, headerBody) {
+      var body = headerBody.filter(text);
+      if (body.isNotEmpty) {
+        result.add(headerBody.copy(body: body, selected: true));
+      }
+    });
+    return result;
   }
 
   ///添加请求
@@ -41,6 +83,11 @@ class DomainWidgetState extends State<DomainWidget> {
     var listURI = PathRow(request, widget.panel, proxyServer: widget.proxyServer);
     if (headerBody != null) {
       headerBody.addBody(channel.id, listURI);
+
+      //搜索状态，刷新数据
+      if (searchText?.isNotEmpty == true) {
+        changeState();
+      }
       return;
     }
 
@@ -75,12 +122,19 @@ class DomainWidgetState extends State<DomainWidget> {
 
 ///标题和内容布局 标题是域名 内容是域名下请求
 class HeaderBody extends StatefulWidget {
+  //请求ID和请求的映射
   final Map<String, PathRow> channelIdPathMap = HashMap<String, PathRow>();
 
   final HostAndPort header;
   final ProxyServer proxyServer;
+
+  //请求列表
   final Queue<PathRow> _body = Queue();
+
+  //是否选中
   final bool selected;
+
+  //移除回调
   final Function()? onRemove;
 
   HeaderBody(this.header, {this.selected = false, this.onRemove, required this.proxyServer})
@@ -96,6 +150,21 @@ class HeaderBody extends StatefulWidget {
 
   PathRow? getBody(String key) {
     return channelIdPathMap[key];
+  }
+
+  ///根据文本过滤
+  Iterable<PathRow> filter(String text) {
+    return _body.where((element) => element.request.requestUrl.toLowerCase().contains(text));
+  }
+
+  ///复制
+  HeaderBody copy({Iterable<PathRow>? body, bool? selected}) {
+    var headerBody =
+        HeaderBody(header, selected: selected ?? this.selected, onRemove: onRemove, proxyServer: proxyServer);
+    if (body != null) {
+      headerBody._body.addAll(body);
+    }
+    return headerBody;
   }
 
   @override
@@ -129,28 +198,31 @@ class _HeaderBodyState extends State<HeaderBody> {
   }
 
   Widget _hostWidget(String title) {
+    var host = GestureDetector(
+        onSecondaryLongPressDown: menu,
+        child: ListTile(
+            minLeadingWidth: 25,
+            leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 16),
+            dense: true,
+            horizontalTitleGap: 0,
+            visualDensity: const VisualDensity(vertical: -3.6),
+            title: Text(title,
+                textAlign: TextAlign.left,
+                style: const TextStyle(fontSize: 14),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
+            onTap: () {
+              setState(() {
+                selected = !selected;
+              });
+            }));
+
     return ColorTransition(
         key: transitionState,
         duration: const Duration(milliseconds: 1800),
         begin: Theme.of(context).focusColor,
-        child: GestureDetector(
-            onSecondaryLongPressDown: menu,
-            child: ListTile(
-                minLeadingWidth: 25,
-                leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 16),
-                dense: true,
-                horizontalTitleGap: 0,
-                visualDensity: const VisualDensity(vertical: -3.6),
-                title: Text(title,
-                    textAlign: TextAlign.left,
-                    style: const TextStyle(fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-                onTap: () {
-                  setState(() {
-                    selected = !selected;
-                  });
-                })));
+        startAnimation: false,
+        child: host);
   }
 
   //域名右键菜单

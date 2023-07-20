@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
@@ -64,8 +63,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawerDragStartBehavior: DragStartBehavior.down,
-      appBar: AppBar(centerTitle: true, title: const Text("ProxyPin", style: TextStyle(fontSize: 16)), actions: [
+      appBar: AppBar(title: search(), actions: [
         IconButton(
             tooltip: "清理",
             icon: const Icon(Icons.cleaning_services_outlined),
@@ -105,6 +103,22 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
     );
   }
 
+  /// 搜索框
+  Widget search() {
+    return Padding(
+        padding: const EdgeInsets.only(left: 20),
+        child: TextField(
+            cursorHeight: 20,
+            keyboardType: TextInputType.url,
+            onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
+            onChanged: (val) {
+              requestStateKey.currentState?.search(val);
+            },
+            decoration:
+                const InputDecoration(border: InputBorder.none, prefixIcon: Icon(Icons.search), hintText: 'Search')));
+  }
+
+  /// 检查远程连接
   checkConnectTask(BuildContext context) async {
     int retry = 0;
     _connectCheckTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) async {

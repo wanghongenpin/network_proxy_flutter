@@ -6,13 +6,15 @@ class ColorTransition extends StatefulWidget {
   final Color end;
   final Duration duration;
   final Widget child;
+  final bool startAnimation;
 
   const ColorTransition(
       {super.key,
-        required this.begin,
-        this.end = Colors.transparent,
-        this.duration = const Duration(milliseconds: 500),
-        required this.child});
+      required this.begin,
+      this.end = Colors.transparent,
+      this.duration = const Duration(milliseconds: 1000),
+      required this.child,
+      this.startAnimation = true});
 
   @override
   State<ColorTransition> createState() {
@@ -42,10 +44,14 @@ class ColorTransitionState extends State<ColorTransition> with SingleTickerProvi
     //颜色动画变化
     _animation = ColorTween(begin: widget.begin, end: widget.end).animate(_animationController);
 
-    //添加到事件队列
-    Future.delayed(const Duration(milliseconds: 150), () {
-      _animationController.forward();
-    });
+    if (widget.startAnimation) {
+      //延迟150毫秒执行动画
+      Future.delayed(const Duration(milliseconds: 150), () {
+        _animationController.forward();
+      });
+    } else {
+      _animationController.value = _animationController.upperBound;
+    }
   }
 
   show() {

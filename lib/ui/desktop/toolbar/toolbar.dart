@@ -91,36 +91,37 @@ class _ToolbarState extends State<Toolbar> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Row(children: [
-              const Text("手机连接", style: TextStyle(fontSize: 18)),
-              Expanded(
-                  child: Align(
-                      alignment: Alignment.topRight,
-                      child: ElevatedButton.icon(
-                          icon: const Icon(Icons.close, size: 15),
-                          label: const Text("关闭"),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          })))
-            ]),
-            contentPadding: const EdgeInsets.all( 10),
-            content: SizedBox(
-                height: 250,
-                width: 300,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    QrImageView(
-                      backgroundColor: Colors.white,
-                      data: "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
-                      version: QrVersions.auto,
-                      size: 200.0,
-                    ),
-                    const SizedBox(height: 20),
-                    const Text("请使用手机版扫描二维码"),
-                  ],
-                ))
-          );
+              title: Row(children: [
+                const Text("手机连接", style: TextStyle(fontSize: 18)),
+                Expanded(
+                    child: Align(
+                        alignment: Alignment.topRight,
+                        child: ElevatedButton.icon(
+                            icon: const Icon(Icons.close, size: 15),
+                            label: const Text("关闭"),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            })))
+              ]),
+              contentPadding: const EdgeInsets.all(10),
+              content: SizedBox(
+                  height: 270,
+                  width: 300,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      QrImageView(
+                        backgroundColor: Colors.white,
+                        data: "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
+                        version: QrVersions.auto,
+                        size: 200.0,
+                      ),
+                      const SizedBox(height: 10),
+                      Text("本机IP：$host:${widget.proxyServer.port}"),
+                      const SizedBox(height: 10),
+                      const Text("请使用手机版扫描二维码"),
+                    ],
+                  )));
         });
   }
 }

@@ -29,6 +29,7 @@ class RequestListState extends State<RequestListWidget> {
   GlobalKey<RequestSequenceState> requestSequenceKey = GlobalKey<RequestSequenceState>();
   GlobalKey<DomainListState> domainListKey = GlobalKey<DomainListState>();
 
+  //请求列表容器
   static List<HttpRequest> container = [];
 
   @override
@@ -60,8 +61,14 @@ class RequestListState extends State<RequestListWidget> {
     domainListKey.currentState?.addResponse(response);
   }
 
+  ///移除
   remove(List<HttpRequest> list) {
     container.removeWhere((element) => list.contains(element));
+  }
+
+  search(String text) {
+    requestSequenceKey.currentState?.search(text.trim());
+    domainListKey.currentState?.search(text.trim());
   }
 
   ///清理
@@ -87,31 +94,35 @@ class RequestSequence extends StatefulWidget {
   }
 }
 
-class RequestSequenceState extends State<RequestSequence> {
+class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliveClientMixin {
+  ///请求和对应的row的映射
   Map<HttpRequest, GlobalKey<RequestRowState>> indexes = HashMap();
 
-  late Queue<HttpRequest> list = Queue();
+  late List<HttpRequest> list = [];
+
+  ///显示的请求列表 最新的在前面
+  late Queue<HttpRequest> view = Queue();
   bool changing = false;
+
+  //搜索关键字
+  String? searchText;
 
   @override
   initState() {
     super.initState();
-    list.addAll(widget.list.reversed);
+    list = widget.list;
+    view.addAll(list.reversed);
   }
 
   ///添加请求
   add(HttpRequest request) {
-    list.addFirst(request);
-
-    //防止频繁刷新
-    if (!changing) {
-      changing = true;
-      Future.delayed(const Duration(milliseconds: 200), () {
-        setState(() {
-          changing = false;
-        });
-      });
+    list.add(request);
+    if (!filter(request)) {
+      return;
     }
+
+    view.addFirst(request);
+    changeState();
   }
 
   ///添加响应
@@ -124,19 +135,63 @@ class RequestSequenceState extends State<RequestSequence> {
   clean() {
     setState(() {
       list.clear();
+      view.clear();
       indexes.clear();
     });
   }
 
+  void search(String text) {
+    text = text.toLowerCase();
+    if (text == searchText) {
+      return;
+    }
+
+    //包含从上次结果过滤
+    if (text.contains(searchText ?? "")) {
+      searchText = text;
+      view.retainWhere(filter);
+    } else {
+      searchText = text;
+      view = Queue.of(list.where(filter).toList().reversed);
+    }
+
+    changeState();
+  }
+
+  bool filter(HttpRequest request) {
+    if (searchText?.isNotEmpty == true) {
+      return request.requestUrl.toLowerCase().contains(searchText!);
+    }
+    return true;
+  }
+
+  changeState() {
+    //防止频繁刷新
+    if (!changing) {
+      changing = true;
+      Future.delayed(const Duration(milliseconds: 300), () {
+        setState(() {
+          changing = false;
+        });
+      });
+    }
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return ListView.separated(
+        cacheExtent: 1000,
         separatorBuilder: (context, index) => Divider(height: 0.5, color: Theme.of(context).focusColor),
-        itemCount: list.length,
+        itemCount: view.length,
         itemBuilder: (context, index) {
           GlobalKey<RequestRowState> key = GlobalKey();
-          indexes[list.elementAt(index)] = key;
-          return RequestRow(key: key, request: list.elementAt(index), proxyServer: widget.proxyServer);
+          indexes[view.elementAt(index)] = key;
+          return RequestRow(key: key, request: view.elementAt(index), proxyServer: widget.proxyServer);
         });
   }
 }
@@ -155,7 +210,7 @@ class DomainList extends StatefulWidget {
   }
 }
 
-class DomainListState extends State<DomainList> {
+class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMixin {
   GlobalKey<RequestSequenceState> requestSequenceKey = GlobalKey<RequestSequenceState>();
 
   //域名和对应请求列表的映射
@@ -168,6 +223,9 @@ class DomainListState extends State<DomainList> {
   List<HostAndPort> list = [];
   HostAndPort? showHostAndPort;
   bool changing = false;
+
+  //搜索关键字
+  String? searchText;
 
   @override
   initState() {
@@ -200,7 +258,11 @@ class DomainListState extends State<DomainList> {
       requestSequenceKey.currentState?.add(request);
     }
 
-    this.list = [...container].reversed.toList();
+    if (!filter(request.hostAndPort!)) {
+      return;
+    }
+
+    this.list = [...container.where(filter)].reversed.toList();
     //防止频繁刷新
     if (!changing) {
       changing = true;
@@ -226,31 +288,59 @@ class DomainListState extends State<DomainList> {
     });
   }
 
+  void search(String text) {
+    text = text.toLowerCase();
+    setState(() {
+      var contains = text.contains(searchText ?? "");
+      searchText = text.toLowerCase();
+      if (contains) {
+        //包含从上次结果过滤
+        list.retainWhere(filter);
+      } else {
+        list = List.of(container.where(filter).toList().reversed);
+      }
+    });
+  }
+
+  bool filter(HostAndPort hostAndPort) {
+    if (searchText?.isNotEmpty == true) {
+      return hostAndPort.domain.toLowerCase().contains(searchText!);
+    }
+    return true;
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return ListView.separated(
         separatorBuilder: (context, index) => Divider(height: 0.5, color: Theme.of(context).focusColor),
+        cacheExtent: 1000,
         itemCount: list.length,
-        itemBuilder: (ctx, index) {
-          var time =
-              formatDate(containerMap[list.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
-          return ListTile(
-              title: Text(list.elementAt(index).domain, maxLines: 1, overflow: TextOverflow.ellipsis),
-              trailing: const Icon(Icons.chevron_right),
-              subtitle: Text("最后请求时间: $time,  次数: ${containerMap[list.elementAt(index)]!.length}",
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
-              onLongPress: () => menu(index),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  showHostAndPort = list.elementAt(index);
-                  return Scaffold(
-                      appBar: AppBar(title: const Text("请求列表")),
-                      body: RequestSequence(
-                          key: requestSequenceKey,
-                          list: containerMap[list.elementAt(index)]!,
-                          proxyServer: widget.proxyServer));
-                }));
-              });
+        itemBuilder: (ctx, index) => title(index));
+  }
+
+  Widget title(int index) {
+    var time =
+        formatDate(containerMap[list.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
+    return ListTile(
+        title: Text(list.elementAt(index).domain, maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: const Icon(Icons.chevron_right),
+        subtitle: Text("最后请求时间: $time,  次数: ${containerMap[list.elementAt(index)]!.length}",
+            maxLines: 1, overflow: TextOverflow.ellipsis),
+        onLongPress: () => menu(index),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            showHostAndPort = list.elementAt(index);
+            return Scaffold(
+                appBar: AppBar(title: const Text("请求列表")),
+                body: RequestSequence(
+                    key: requestSequenceKey,
+                    list: containerMap[list.elementAt(index)]!,
+                    proxyServer: widget.proxyServer));
+          }));
         });
   }
 

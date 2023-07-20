@@ -35,7 +35,6 @@ class _SettingState extends State<Setting> {
 
   @override
   Widget build(BuildContext context) {
-
     return PopupMenuButton<String>(
       tooltip: "设置",
       icon: const Icon(Icons.settings),
@@ -65,7 +64,8 @@ class _SettingState extends State<Setting> {
           const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
           menuItem("域名过滤", onTap: () => _filter()),
           menuItem("请求重写", onTap: () => _reqeustRewrite()),
-          menuItem("Github",
+          menuItem(
+            "Github",
             onTap: () {
               launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"));
             },
@@ -147,7 +147,9 @@ class _PortState extends State<PortWidget> {
       //失去焦点
       if (!portFocus.hasFocus && textController.text != widget.proxyServer.port.toString()) {
         widget.proxyServer.port = int.parse(textController.text);
-        widget.proxyServer.restart();
+        if (widget.proxyServer.isRunning) {
+          widget.proxyServer.restart();
+        }
         widget.proxyServer.flushConfig();
       }
     });

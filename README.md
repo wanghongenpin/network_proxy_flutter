@@ -5,6 +5,8 @@
 
 国内下载地址：https://gitee.com/wanghongenpin/network-proxy-flutter/releases
 
+ios下载地址(Safari浏览器打开)： https://testflight.apple.com/join/gURGH6B4
+
 >  ios个人开发者账号用到VPN没法上架AppStore, 后面可能会上架美版AppStore。
 
 - [ ] 接下来会持续完善功能和体验，请求重放编辑、模拟慢请求, UI优化。

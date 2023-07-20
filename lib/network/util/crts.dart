@@ -38,6 +38,11 @@ class CertificateManager {
 
   static X509CertificateData get caCert => _caCert;
 
+  /// 清除缓存
+  static void cleanCache() {
+    _certificateMap.clear();
+  }
+
   /// 获取域名自签名证书
   static Future<SecurityContext> getCertificateContext(String host) async {
     var cer = _certificateMap[host];

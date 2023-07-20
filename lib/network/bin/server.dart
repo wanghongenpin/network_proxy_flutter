@@ -19,10 +19,18 @@ Future<void> main() async {
 
 /// 代理服务器
 class ProxyServer {
+  //是否初始化
   bool init = false;
   int port = 9099;
   bool _enableSsl = false;
+
   bool enableDesktop = true;
+
+  //是否引导
+  bool guide = false;
+
+  //是否启动
+  bool get isRunning => server?.isRunning ?? false;
 
   Server? server;
   EventListener? listener;
@@ -31,8 +39,6 @@ class ProxyServer {
   final List<Function> _initializedListeners = [];
 
   ProxyServer({this.listener});
-
-  bool get enableSsl => _enableSsl;
 
   //初始化
   Future<void> initializedListener(Function action) async {
@@ -58,7 +64,9 @@ class ProxyServer {
     return File("${home.path}${separator}config.cnf");
   }
 
-  /// 是否启用ssl
+  ///是否启用https抓包
+  bool get enableSsl => _enableSsl;
+
   set enableSsl(bool enableSsl) {
     _enableSsl = enableSsl;
     server?.enableSsl = enableSsl;
@@ -136,13 +144,16 @@ class ProxyServer {
     var file = await configFile();
     var exits = await file.exists();
     if (!exits) {
+      guide = true;
       return;
     }
+
     Map<String, dynamic> config = jsonDecode(await file.readAsString());
     logger.i('加载配置文件 [$file]');
     port = config['port'] ?? port;
     enableSsl = config['enableSsl'] == true;
     enableDesktop = config['enableDesktop'] ?? true;
+    guide = config['guide'] ?? false;
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
 
@@ -179,6 +190,7 @@ class ProxyServer {
 
   Map<String, dynamic> toJson() {
     return {
+      'guide': guide,
       'port': port,
       'enableSsl': enableSsl,
       'enableDesktop': enableDesktop,
