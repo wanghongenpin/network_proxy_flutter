@@ -22,8 +22,11 @@ class ProxyServer {
   //是否初始化
   bool init = false;
   int port = 9099;
+
+  //是否启用https抓包
   bool _enableSsl = false;
 
+  //是否启用桌面抓包
   bool enableDesktop = true;
 
   //是否引导
@@ -33,7 +36,11 @@ class ProxyServer {
   bool get isRunning => server?.isRunning ?? false;
 
   Server? server;
+
+  //请求事件监听
   EventListener? listener;
+
+  //请求重写
   RequestRewrites requestRewrites = RequestRewrites();
 
   final List<Function> _initializedListeners = [];
@@ -48,7 +55,8 @@ class ProxyServer {
   Future<File> homeDir() async {
     String? userHome;
     if (Platforms.isDesktop()) {
-      userHome = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+      userHome =
+          Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
     } else {
       userHome = (await getApplicationSupportDirectory()).path;
     }
@@ -93,8 +101,11 @@ class ProxyServer {
 
     server.enableSsl = _enableSsl;
     server.initChannel((channel) {
-      channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(),
-          HttpChannelHandler(listener: listener, requestRewrites: requestRewrites));
+      channel.pipeline.handle(
+          HttpRequestCodec(),
+          HttpResponseCodec(),
+          HttpChannelHandler(
+              listener: listener, requestRewrites: requestRewrites));
     });
     return server.bind(port).then((serverSocket) {
       logger.i("listen on $port");
@@ -163,7 +174,8 @@ class ProxyServer {
   /// 加载请求重写配置文件
   Future<void> _loadRequestRewriteConfig() async {
     var home = await homeDir();
-    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
+    var file =
+        File('${home.path}${Platform.pathSeparator}request_rewrite.json');
     var exits = await file.exists();
     if (!exits) {
       return;
@@ -178,7 +190,8 @@ class ProxyServer {
   /// 保存请求重写配置文件
   flushRequestRewriteConfig() async {
     var home = await homeDir();
-    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
+    var file =
+        File('${home.path}${Platform.pathSeparator}request_rewrite.json');
     bool exists = await file.exists();
     if (!exists) {
       await file.create(recursive: true);

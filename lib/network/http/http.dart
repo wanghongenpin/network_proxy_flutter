@@ -28,6 +28,17 @@ abstract class HttpMessage {
 
   HttpMessage(this.protocolVersion);
 
+  //json序列化
+  factory HttpMessage.fromJson(Map<String, dynamic> json) {
+    if (json["_class"] == "HttpRequest") {
+      return HttpRequest.fromJson(json);
+    }
+
+    return HttpResponse.fromJson(json);
+  }
+
+  Map<String, dynamic> toJson();
+
   ContentType get contentType => contentTypes.entries
       .firstWhere((element) => headers.contentType.contains(element.key),
           orElse: () => const MapEntry("unknown", ContentType.http))
@@ -80,6 +91,24 @@ class HttpRequest extends HttpMessage {
   }
 
   @override
+  Map<String, dynamic> toJson() {
+    return {
+      '_class': 'HttpRequest',
+      'uri': requestUrl,
+      'method': method.name,
+      'headers': headers.toJson(),
+      'body': bodyAsString,
+    };
+  }
+
+  factory HttpRequest.fromJson(Map<String, dynamic> json) {
+    var request = HttpRequest(HttpMethod.valueOf(json['method']), json['uri']);
+    request.headers.addAll(HttpHeaders.fromJson(json['headers']));
+    request.body = utf8.encode(json['body']);
+    return request;
+  }
+
+  @override
   String toString() {
     return 'HttpReqeust{version: $protocolVersion, url: $uri, method: ${method.name}, headers: $headers, contentLength: $contentLength, bodyLength: ${body?.length}}';
   }
@@ -102,6 +131,26 @@ class HttpResponse extends HttpMessage {
     return '${responseTime.difference(request!.requestTime).inMilliseconds}ms';
   }
 
+  factory HttpResponse.fromJson(Map<String, dynamic> json) {
+    return HttpResponse(json['protocolVersion'], HttpStatus(json['status']['code'], json['status']['reasonPhrase']))
+      ..headers.addAll(HttpHeaders.fromJson(json['headers']))
+      ..body = utf8.encode(json['body']);
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      '_class': 'HttpResponse',
+      'protocolVersion': protocolVersion,
+      'status': {
+        'code': status.code,
+        'reasonPhrase': status.reasonPhrase,
+      },
+      'headers': headers.toJson(),
+      'body': bodyAsString,
+    };
+  }
+
   @override
   String toString() {
     return 'HttpResponse{status: ${status.code}, headers: $headers, contentLength: $contentLength, bodyLength: ${body?.length}}';
@@ -110,13 +159,13 @@ class HttpResponse extends HttpMessage {
 
 ///HTTP请求方法。
 enum HttpMethod {
-  options("OPTIONS"),
   get("GET"),
-  head("HEAD"),
   post("POST"),
   put("PUT"),
   patch("PATCH"),
   delete("DELETE"),
+  options("OPTIONS"),
+  head("HEAD"),
   trace("TRACE"),
   connect("CONNECT"),
   propfind("PROPFIND"),

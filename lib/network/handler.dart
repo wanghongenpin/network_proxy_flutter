@@ -93,7 +93,6 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
-
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
 
     //实现抓包代理转发

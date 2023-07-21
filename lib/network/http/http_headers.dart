@@ -13,6 +13,8 @@ class HttpHeaders {
   // 由小写标头名称键入的原始标头名称。
   final Map<String, List<String>> _originalHeaderNames = {};
 
+  HttpHeaders();
+
   ///设置header。
   void set(String name, String value) {
     _headers[name.toLowerCase()] = [value];
@@ -21,22 +23,29 @@ class HttpHeaders {
 
   ///添加header。
   void add(String name, String value) {
-    if (_headers.containsKey(name.toLowerCase())) {
-      _headers[name.toLowerCase()]!.add(value);
-      if (!_originalHeaderNames.containsKey(name)) {
-        _originalHeaderNames[name] = [];
-      }
-      _originalHeaderNames[name]!.add(value);
-      return;
+    if (!_headers.containsKey(name.toLowerCase())) {
+      _headers[name.toLowerCase()] = [];
+      _originalHeaderNames[name] = [];
     }
 
-    _headers[name.toLowerCase()] = [value];
-    _originalHeaderNames[name] = [value];
+    _headers[name.toLowerCase()]?.add(value);
+    _originalHeaderNames[name]?.add(value);
   }
 
-  //批量添加
-  addAll(HttpHeaders headers) {
-    headers.forEach((key, values) {
+  ///添加header。
+  void addValues(String name, List<String> values) {
+    if (!_headers.containsKey(name.toLowerCase())) {
+      _headers[name.toLowerCase()] = [];
+      _originalHeaderNames[name] = [];
+    }
+
+    _headers[name.toLowerCase()]?.addAll(values);
+    _originalHeaderNames[name]?.addAll(values);
+  }
+
+  ///从headers中添加
+  addAll(HttpHeaders? headers) {
+    headers?.forEach((key, values) {
       for (var val in values) {
         add(key, val);
       }
@@ -103,6 +112,28 @@ class HttpHeaders {
 
     return sb.toString();
   }
+
+  ///转换json
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    forEach((name, values) {
+      json[name] = values;
+    });
+    return json;
+  }
+
+  ///从json解析
+  factory HttpHeaders.fromJson(Map<String, dynamic> json) {
+    HttpHeaders headers = HttpHeaders();
+    json.forEach((key, values) {
+      for (var element in (values as List)) {
+        headers.add(key, element.toString());
+      }
+    });
+
+    return headers;
+  }
+
   @override
   String toString() {
     return 'HttpHeaders{$_originalHeaderNames}';

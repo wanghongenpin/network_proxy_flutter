@@ -3,17 +3,20 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:share_plus/share_plus.dart';
 
 ///分享按钮
 class ShareWidget extends StatelessWidget {
+  final ProxyServer proxyServer;
   final HttpRequest? request;
   final HttpResponse? response;
 
-  const ShareWidget({super.key, this.request, this.response});
+  const ShareWidget({super.key, required this.proxyServer, this.request, this.response});
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +54,14 @@ class ShareWidget extends StatelessWidget {
                   var file = XFile.fromData(Uint8List.fromList(utf8.encode(curlRequest(request!))),
                       name: "cURL.txt", mimeType: "txt");
                   Share.shareXFiles([file], text: "ProxyPin全平台抓包软件");
+                }),
+            PopupMenuItem(
+                child: const Text('编辑请求重放'),
+                onTap: () {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => MobileRequestEditor(request: request, proxyServer: proxyServer)));
+                  });
                 }),
           ]);
         });

@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:date_format/date_format.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +14,7 @@ import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
+import 'package:window_manager/window_manager.dart';
 
 ///请求 URI
 class PathRow extends StatefulWidget {
@@ -101,13 +106,42 @@ class _PathRowState extends State<PathRow> {
             height: 38,
             child: const Text("重放请求", style: TextStyle(fontSize: 14)),
             onTap: () {
+              if (!widget.proxyServer.isRunning) {
+                FlutterToastr.show('代理服务未启动', context);
+                return;
+              }
               var request = widget.request.copy(uri: widget.request.requestUrl);
               HttpClients.proxyRequest("127.0.0.1", widget.proxyServer.port, request);
 
               FlutterToastr.show('已重新发送请求', context);
             }),
+        PopupMenuItem(
+            height: 38,
+            child: const Text("编辑重放请求", style: TextStyle(fontSize: 14)),
+            onTap: () {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                requestEdit();
+              });
+            }),
       ],
     );
+  }
+
+  requestEdit() async {
+    var size = MediaQuery.of(context).size;
+    var ratio = 1.0;
+    if (Platform.isWindows) {
+      WindowManager.instance.getDevicePixelRatio();
+    }
+
+    final window = await DesktopMultiWindow.createWindow(jsonEncode(
+      {'name': 'RequestEditor', 'request': widget.request, 'proxyPort': widget.proxyServer.port},
+    ));
+    window.setTitle('请求编辑');
+    window
+      ..setFrame(const Offset(100, 100) & Size(860 * ratio, size.height * ratio))
+      ..center()
+      ..show();
   }
 
   //点击事件

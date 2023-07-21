@@ -49,6 +49,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
     print("onWindowClose");
     await widget.proxyServer.stop();
     started = false;
+    windowManager.destroy();
   }
 
   @override

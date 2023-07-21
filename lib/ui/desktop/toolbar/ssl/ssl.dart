@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
 import 'package:network_proxy/utils/ip.dart';
@@ -91,6 +92,10 @@ class _SslState extends State<SslWidget> {
                 focusColor: Colors.transparent,
                 trailing: const Icon(Icons.arrow_right),
                 onTap: () async {
+                  if (!widget.proxyServer.isRunning) {
+                    FlutterToastr.show("请先启动抓包", context);
+                    return;
+                  }
                   launchUrl(Uri.parse("http://127.0.0.1:${widget.proxyServer.port}/ssl"));
                 }),
           )
@@ -220,7 +225,14 @@ class _SslState extends State<SslWidget> {
                 const SizedBox(height: 10),
                 const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书"),
                 const SizedBox(height: 10),
-                Image.network("https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png", height: 600)
+                ClipRRect(
+                    child: Align(
+                        alignment: Alignment.topCenter,
+                        heightFactor: .7,
+                        child: Image.network(
+                          "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
+                          height: 550,
+                        )))
               ]);
         });
   }

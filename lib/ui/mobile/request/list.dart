@@ -85,8 +85,9 @@ class RequestListState extends State<RequestListWidget> {
 class RequestSequence extends StatefulWidget {
   final List<HttpRequest> list;
   final ProxyServer proxyServer;
+  final bool displayDomain;
 
-  const RequestSequence({super.key, required this.list, required this.proxyServer});
+  const RequestSequence({super.key, required this.list, required this.proxyServer, this.displayDomain = true});
 
   @override
   State<StatefulWidget> createState() {
@@ -186,12 +187,16 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
     return ListView.separated(
         cacheExtent: 1000,
-        separatorBuilder: (context, index) => Divider(height: 0.5, color: Theme.of(context).focusColor),
+        separatorBuilder: (context, index) => Divider(thickness: 0.2, color: Theme.of(context).dividerColor),
         itemCount: view.length,
         itemBuilder: (context, index) {
           GlobalKey<RequestRowState> key = GlobalKey();
           indexes[view.elementAt(index)] = key;
-          return RequestRow(key: key, request: view.elementAt(index), proxyServer: widget.proxyServer);
+          return RequestRow(
+              key: key,
+              request: view.elementAt(index),
+              proxyServer: widget.proxyServer,
+              displayDomain: widget.displayDomain);
         });
   }
 }
@@ -316,7 +321,8 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   Widget build(BuildContext context) {
     super.build(context);
     return ListView.separated(
-        separatorBuilder: (context, index) => Divider(height: 0.5, color: Theme.of(context).focusColor),
+        padding: EdgeInsets.zero,
+        separatorBuilder: (context, index) => Divider(thickness: 0.2, color: Theme.of(context).dividerColor),
         cacheExtent: 1000,
         itemCount: list.length,
         itemBuilder: (ctx, index) => title(index));
@@ -326,6 +332,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     var time =
         formatDate(containerMap[list.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
     return ListTile(
+        visualDensity: const VisualDensity( vertical: -4),
         title: Text(list.elementAt(index).domain, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: const Icon(Icons.chevron_right),
         subtitle: Text("最后请求时间: $time,  次数: ${containerMap[list.elementAt(index)]!.length}",
@@ -335,9 +342,10 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
           Navigator.push(context, MaterialPageRoute(builder: (context) {
             showHostAndPort = list.elementAt(index);
             return Scaffold(
-                appBar: AppBar(title: const Text("请求列表")),
+                appBar: AppBar(title: Text(list.elementAt(index).domain, style: const TextStyle(fontSize: 16))),
                 body: RequestSequence(
                     key: requestSequenceKey,
+                    displayDomain: false,
                     list: containerMap[list.elementAt(index)]!,
                     proxyServer: widget.proxyServer));
           }));

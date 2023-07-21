@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/component/share.dart';
 import 'package:network_proxy/ui/component/utils.dart';
@@ -14,12 +15,14 @@ class NetworkTabController extends StatefulWidget {
     'Cookies',
   ];
 
+  final ProxyServer proxyServer;
   final ValueWrap<HttpRequest> request = ValueWrap();
   final ValueWrap<HttpResponse> response = ValueWrap();
   final Widget? title;
   final TextStyle? tabStyle;
 
-  NetworkTabController({HttpRequest? httpRequest, HttpResponse? httpResponse, this.title, this.tabStyle})
+  NetworkTabController(
+      {HttpRequest? httpRequest, HttpResponse? httpResponse, this.title, this.tabStyle, required this.proxyServer})
       : super(key: GlobalKey<NetworkTabState>()) {
     request.set(httpRequest);
     response.set(httpResponse);
@@ -71,7 +74,10 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
         : AppBar(
             title: widget.title,
             bottom: tabBar,
-            actions: [ShareWidget(request: widget.request.get(), response: widget.response.get())],
+            actions: [
+              ShareWidget(
+                  proxyServer: widget.proxyServer, request: widget.request.get(), response: widget.response.get())
+            ],
           );
 
     return Scaffold(
@@ -156,7 +162,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
         headers.add(Row(children: [
           SelectableText('$name: ',
               style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent)),
-          Expanded( child: SelectableText(v, contextMenuBuilder: contextMenu, maxLines: 5, minLines: 1)),
+          Expanded(child: SelectableText(v, contextMenuBuilder: contextMenu, maxLines: 5, minLines: 1)),
         ]));
         headers.add(const Divider(thickness: 0.1));
       }

@@ -1,17 +1,22 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_json_viewer_new/flutter_json_viewer.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/utils/platform.dart';
+import 'package:window_manager/window_manager.dart';
 
 class HttpBodyWidget extends StatefulWidget {
   final HttpMessage? httpMessage;
   final bool inNewWindow; //是否在新窗口
+  final WindowController? windowController;
 
-  const HttpBodyWidget({super.key, required this.httpMessage, this.inNewWindow = false});
+  const HttpBodyWidget({super.key, required this.httpMessage, this.inNewWindow = false, this.windowController});
 
   @override
   State<StatefulWidget> createState() {
@@ -24,8 +29,23 @@ class HttpBodyState extends State<HttpBodyWidget> {
   String? body;
 
   @override
+  void initState() {
+    super.initState();
+    RawKeyboard.instance.addListener(onKeyEvent);
+  }
+
+  void onKeyEvent(RawKeyEvent event) {
+    if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyW)) {
+      RawKeyboard.instance.removeListener(onKeyEvent);
+      widget.windowController?.close();
+      return;
+    }
+  }
+
+  @override
   void dispose() {
     tabIndex.dispose();
+    RawKeyboard.instance.removeListener(onKeyEvent);
     super.dispose();
   }
 
@@ -53,17 +73,25 @@ class HttpBodyState extends State<HttpBodyWidget> {
       ) //body
     ];
 
-    return DefaultTabController(
+    var tabController = DefaultTabController(
         length: tabs.list.length,
         child: widget.inNewWindow
             ? ListView(children: list)
             : Column(crossAxisAlignment: CrossAxisAlignment.start, children: list));
+
+    if (widget.inNewWindow) {
+      return Scaffold(
+          appBar: AppBar(title: titleWidget(inNewWindow: true), toolbarHeight: Platform.isWindows ? 36 : null),
+          body: tabController);
+    }
+    return tabController;
   }
 
   Widget titleWidget({inNewWindow = false}) {
     var type = widget.httpMessage is HttpRequest ? "Request" : "Response";
 
     return Row(
+      mainAxisAlignment: widget.inNewWindow ? MainAxisAlignment.center : MainAxisAlignment.start,
       children: [
         Text('$type Body', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(width: 15),
@@ -84,13 +112,26 @@ class HttpBodyState extends State<HttpBodyWidget> {
     );
   }
 
-  void openNew() {
+  void openNew() async {
+    if (Platforms.isDesktop()) {
+      var size = MediaQuery.of(context).size;
+      var ratio = 1.0;
+      if (Platform.isWindows) {
+        WindowManager.instance.getDevicePixelRatio();
+      }
+      final window = await DesktopMultiWindow.createWindow(jsonEncode(
+        {'name': 'HttpBodyWidget', 'httpMessage': widget.httpMessage, 'inNewWindow': true},
+      ));
+      window
+        ..setTitle(widget.httpMessage is HttpRequest ? '请求体' : '响应体')
+        ..setFrame(const Offset(100, 100) & Size(800 * ratio, size.height * ratio))
+        ..center()
+        ..show();
+      return;
+    }
+
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (_) => Scaffold(
-                appBar: AppBar(title: titleWidget(inNewWindow: true)),
-                body: HttpBodyWidget(httpMessage: widget.httpMessage, inNewWindow: true))));
+        context, MaterialPageRoute(builder: (_) => HttpBodyWidget(httpMessage: widget.httpMessage, inNewWindow: true)));
   }
 
   Widget getBody(ViewType type) {

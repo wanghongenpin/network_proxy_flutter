@@ -23,7 +23,8 @@ class _SettingState extends State<Setting> {
 
   @override
   void initState() {
-    enableDesktopListenable = ValueNotifier<bool>(widget.proxyServer.enableDesktop);
+    enableDesktopListenable =
+        ValueNotifier<bool>(widget.proxyServer.enableDesktop);
     super.initState();
   }
 
@@ -44,7 +45,9 @@ class _SettingState extends State<Setting> {
         return [
           PopupMenuItem<String>(
               padding: const EdgeInsets.all(0),
-              child: PortWidget(proxyServer: widget.proxyServer, textStyle: const TextStyle(fontSize: 13))),
+              child: PortWidget(
+                  proxyServer: widget.proxyServer,
+                  textStyle: const TextStyle(fontSize: 13))),
           PopupMenuItem<String>(
               padding: const EdgeInsets.all(0),
               child: ValueListenableBuilder(
@@ -145,7 +148,8 @@ class _PortState extends State<PortWidget> {
     textController.text = widget.proxyServer.port.toString();
     portFocus.addListener(() async {
       //失去焦点
-      if (!portFocus.hasFocus && textController.text != widget.proxyServer.port.toString()) {
+      if (!portFocus.hasFocus &&
+          textController.text != widget.proxyServer.port.toString()) {
         widget.proxyServer.port = int.parse(textController.text);
         if (widget.proxyServer.isRunning) {
           widget.proxyServer.restart();

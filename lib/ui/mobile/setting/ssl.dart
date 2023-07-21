@@ -79,7 +79,14 @@ class _MobileSslState extends State<MobileSslWidget> {
   List<Widget> android() {
     return [
       TextButton(onPressed: () {}, child: const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书")),
-      Image.network("https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png"),
+      ClipRRect(
+          child: Align(
+              alignment: Alignment.topCenter,
+              heightFactor: .7,
+              child: Image.network(
+                "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
+                height: 680,
+              )))
     ];
   }
 
@@ -88,7 +95,7 @@ class _MobileSslState extends State<MobileSslWidget> {
       showDialog(
           context: context,
           builder: (context) {
-            return const Text("请先启动代理服务器");
+            return const Text("请先启动抓包");
           });
       return;
     }

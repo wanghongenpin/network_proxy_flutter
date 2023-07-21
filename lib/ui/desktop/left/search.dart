@@ -17,7 +17,7 @@ class Search extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: TextField(
-        cursorHeight: 15,
+        cursorHeight: 22,
         onChanged: (val) async {
           value = val;
 

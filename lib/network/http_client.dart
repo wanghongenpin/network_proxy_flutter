@@ -48,7 +48,7 @@ class HttpClients {
 
   /// 发送代理请求
   static Future<HttpResponse> proxyRequest(String proxyHost, int port, HttpRequest request,
-      {Duration duration = const Duration(seconds: 3)}) async {
+      {Duration timeout = const Duration(seconds: 3)}) async {
     var httpResponseHandler = HttpResponseHandler();
 
     bool isHttps = request.uri.startsWith("https://");
@@ -60,14 +60,13 @@ class HttpClients {
     if (isHttps) {
       HttpRequest proxyRequest = HttpRequest(HttpMethod.connect, request.uri);
       await channel.write(proxyRequest);
-      var proxyResp = await httpResponseHandler.getResponse(duration);
-      print(proxyResp);
+      await httpResponseHandler.getResponse(timeout);
       channel.secureSocket = await SecureSocket.secure(channel.socket, onBadCertificate: (certificate) => true);
     }
 
     httpResponseHandler.resetResponse();
     await channel.write(request);
-    return httpResponseHandler.getResponse(duration).whenComplete(() => channel.close());
+    return httpResponseHandler.getResponse(timeout).whenComplete(() => channel.close());
   }
 }
 
@@ -86,5 +85,11 @@ class HttpResponseHandler extends ChannelHandler<HttpResponse> {
 
   void resetResponse() {
     _completer = Completer<HttpResponse>();
+  }
+
+  @override
+  void channelInactive(Channel channel) {
+    log.i("[${channel.id}] channelInactive");
+    _completer.completeError("channelInactive");
   }
 }
