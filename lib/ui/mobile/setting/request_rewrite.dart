@@ -149,10 +149,10 @@ class RuleAddDialog extends StatelessWidget {
                             });
                       }),
                   TextFormField(
-                      decoration: const InputDecoration(labelText: 'URL', hintText: '/api/v1/*'),
+                      decoration: const InputDecoration(labelText: 'Path', hintText: '/api/v1/*'),
                       validator: (val) {
                         if (val == null || val.isEmpty) {
-                          return 'URL不能为空';
+                          return 'Path不能为空';
                         }
                         return null;
                       },

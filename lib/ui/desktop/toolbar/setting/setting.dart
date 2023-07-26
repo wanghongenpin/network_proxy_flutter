@@ -23,8 +23,7 @@ class _SettingState extends State<Setting> {
 
   @override
   void initState() {
-    enableDesktopListenable =
-        ValueNotifier<bool>(widget.proxyServer.enableDesktop);
+    enableDesktopListenable = ValueNotifier<bool>(widget.proxyServer.enableDesktop);
     super.initState();
   }
 
@@ -45,16 +44,14 @@ class _SettingState extends State<Setting> {
         return [
           PopupMenuItem<String>(
               padding: const EdgeInsets.all(0),
-              child: PortWidget(
-                  proxyServer: widget.proxyServer,
-                  textStyle: const TextStyle(fontSize: 13))),
+              child: PortWidget(proxyServer: widget.proxyServer, textStyle: const TextStyle(fontSize: 13))),
           PopupMenuItem<String>(
               padding: const EdgeInsets.all(0),
               child: ValueListenableBuilder(
                   valueListenable: enableDesktopListenable,
                   builder: (_, val, __) => SwitchListTile(
                       hoverColor: Colors.transparent,
-                      title: const Text("抓取电脑请求", style: TextStyle(fontSize: 12)),
+                      title: const Text("抓取电脑请求"),
                       visualDensity: const VisualDensity(horizontal: -4),
                       dense: true,
                       value: widget.proxyServer.enableDesktop,
@@ -65,8 +62,8 @@ class _SettingState extends State<Setting> {
                         widget.proxyServer.flushConfig();
                       }))),
           const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
-          menuItem("域名过滤", onTap: () => _filter()),
-          menuItem("请求重写", onTap: () => _reqeustRewrite()),
+          menuItem("域名过滤", onTap: () => hostFilter()),
+          menuItem("请求重写", onTap: () => requestRewrite()),
           menuItem(
             "Github",
             onTap: () {
@@ -92,7 +89,7 @@ class _SettingState extends State<Setting> {
   }
 
   ///请求重写Dialog
-  void _reqeustRewrite() {
+  void requestRewrite() {
     showDialog(
         barrierDismissible: false,
         context: context,
@@ -115,7 +112,7 @@ class _SettingState extends State<Setting> {
   }
 
   ///show域名过滤Dialog
-  void _filter() {
+  void hostFilter() {
     showDialog(
       barrierDismissible: false,
       context: context,
@@ -148,8 +145,7 @@ class _PortState extends State<PortWidget> {
     textController.text = widget.proxyServer.port.toString();
     portFocus.addListener(() async {
       //失去焦点
-      if (!portFocus.hasFocus &&
-          textController.text != widget.proxyServer.port.toString()) {
+      if (!portFocus.hasFocus && textController.text != widget.proxyServer.port.toString()) {
         widget.proxyServer.port = int.parse(textController.text);
         if (widget.proxyServer.isRunning) {
           widget.proxyServer.restart();

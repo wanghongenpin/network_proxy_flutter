@@ -46,7 +46,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     }
 
     //请求本服务
-    if ((await localIp()) == msg.hostAndPort?.host) {
+    if ((await localIps()).contains(msg.hostAndPort?.host)) {
       localRequest(msg, channel);
       return;
     }
