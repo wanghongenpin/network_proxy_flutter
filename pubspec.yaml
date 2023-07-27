@@ -24,7 +24,6 @@ dependencies:
   easy_permission: ^1.0.0
   qrscan: ^0.3.3
   flutter_barcode_scanner: ^2.0.0
-  flutter_json_viewer_new: ^0.0.1
   flutter_toastr: ^1.0.3
   share_plus: ^7.0.2
 

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 void main() {
-  NetworkInterface.list().then((interfaces) => interfaces.forEach((interface) {
+  NetworkInterface.list(type: InternetAddressType.IPv4).then((interfaces) => interfaces.forEach((interface) {
         print(interface.name);
         for (var address in interface.addresses) {
           print("  ${address.address}");
@@ -20,11 +20,8 @@ Future<String> localIp() async {
 }
 
 Future<InternetAddress> localAddress() async {
-  return await NetworkInterface.list().then((interfaces) {
-    return interfaces
-        .firstWhere(primary, orElse: () => interfaces.first)
-        .addresses
-        .first;
+  return await NetworkInterface.list(type: InternetAddressType.IPv4).then((interfaces) {
+    return interfaces.firstWhere(primary, orElse: () => interfaces.first).addresses.first;
   });
 }
 
@@ -36,23 +33,29 @@ Future<List<String>> localIps() async {
     return ipList!;
   }
 
-  var list = await NetworkInterface.list();
+  var list = await NetworkInterface.list(type: InternetAddressType.IPv4);
   list.sort((a, b) {
     if (primary(a)) {
       return -1;
     }
     return 1;
   });
-  ipList = list.map((it) => it.addresses.first.address).toList();
+
+  ipList = [];
+  for (var element in list) {
+    if (!ipList!.contains(element.addresses.first.address)) {
+      ipList?.add(element.addresses.first.address);
+    }
+  }
   return ipList!;
 }
 
 Future<String> networkName() {
-  return NetworkInterface.list()
+  return NetworkInterface.list(type: InternetAddressType.IPv4)
       .then((interfaces) => interfaces.firstWhere(primary, orElse: () => interfaces.first).name);
 }
 
 // en0(macos系统) or WLAN(widows设备名)优先
 bool primary(NetworkInterface it) {
-  return it.name == 'en0' || it.name == 'WLAN';
+  return it.name == 'en0' || it.name.startsWith('WLAN') || it.name.startsWith("wlan");
 }

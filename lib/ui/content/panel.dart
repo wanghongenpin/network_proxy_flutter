@@ -162,7 +162,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
         headers.add(Row(children: [
           SelectableText('$name: ',
               style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent)),
-          Expanded(child: SelectableText(v, contextMenuBuilder: contextMenu, maxLines: 5, minLines: 1)),
+          Expanded(child: SelectableText(v, contextMenuBuilder: contextMenu, maxLines: 8, minLines: 1)),
         ]));
         headers.add(const Divider(thickness: 0.1));
       }

@@ -27,8 +27,6 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   late ProxyServer proxyServer;
   ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
 
-  Timer? _connectCheckTimer;
-
   @override
   void onRequest(Channel channel, HttpRequest request) {
     requestStateKey.currentState!.add(channel, request);
@@ -48,7 +46,6 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
         checkConnectTask(context);
       } else {
         proxyServer.server?.remoteHost = null;
-        _connectCheckTimer?.cancel();
       }
     });
     super.initState();
@@ -121,7 +118,12 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   /// 检查远程连接
   checkConnectTask(BuildContext context) async {
     int retry = 0;
-    _connectCheckTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) async {
+    Timer.periodic(const Duration(milliseconds: 3000), (timer) async {
+      if (desktop.value.connect == false) {
+        timer.cancel();
+        return;
+      }
+
       try {
         var response = await HttpClients.get("http://${desktop.value.host}:${desktop.value.port}/ping")
             .timeout(const Duration(seconds: 1));
@@ -134,8 +136,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
       }
 
       if (retry > 3) {
-        _connectCheckTimer?.cancel();
-        _connectCheckTimer = null;
+        timer.cancel();
         desktop.value = RemoteModel(connect: false);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("检查远程连接失败，已断开")));

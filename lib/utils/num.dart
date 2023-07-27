@@ -18,3 +18,8 @@ int hexToInt(String hex) {
   }
   return val;
 }
+
+//int ---> hex
+String intToHex(int i) {
+  return i.toRadixString(16).toUpperCase();
+}

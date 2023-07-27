@@ -147,7 +147,6 @@ class MoreEnum extends StatelessWidget {
     } else {
       scanRes = await FlutterBarcodeScanner.scanBarcode("#ff6666", "取消", true, ScanMode.QR);
     }
-
     if (scanRes == "-1") return;
     if (scanRes.startsWith("http")) {
       launchUrl(Uri.parse(scanRes), mode: LaunchMode.externalApplication);

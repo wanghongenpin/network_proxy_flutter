@@ -37,7 +37,7 @@ class SystemProxy {
         'networksetup -setproxybypassdomains $_hardwarePort 192.168.0.0/16 10.0.0.0/8 172.16.0.0/12 127.0.0.1 localhost *.local timestamp.apple.com sequoia.apple.com seed-sequoia.siri.apple.com *.google.com',
       ])
     ]);
-    print('set proxyServer, exitCode: ${results.exitCode}, stdout: ${results.stdout}');
+    print('set proxyServer, name: $_hardwarePort, exitCode: ${results.exitCode}, stdout: ${results.stdout}');
     return results.exitCode == 0;
   }
 

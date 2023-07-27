@@ -89,7 +89,6 @@ class HttpResponseHandler extends ChannelHandler<HttpResponse> {
 
   @override
   void channelInactive(Channel channel) {
-    log.i("[${channel.id}] channelInactive");
-    _completer.completeError("channelInactive");
+    // log.i("[${channel.id}] channelInactive");
   }
 }

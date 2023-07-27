@@ -4,16 +4,20 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_json_viewer_new/flutter_json_viewer.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/ui/component/json/json_viewer.dart';
+import 'package:network_proxy/ui/component/json/theme.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/utils/num.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../component/json/json_text.dart';
+
 class HttpBodyWidget extends StatefulWidget {
   final HttpMessage? httpMessage;
-  final bool inNewWindow; //是否在新窗口
+  final bool inNewWindow; //是否在新窗口打开
   final WindowController? windowController;
 
   const HttpBodyWidget({super.key, required this.httpMessage, this.inNewWindow = false, this.windowController});
@@ -25,8 +29,8 @@ class HttpBodyWidget extends StatefulWidget {
 }
 
 class HttpBodyState extends State<HttpBodyWidget> {
-  ValueNotifier<int> tabIndex = ValueNotifier(0);
-  String? body;
+  var bodyKey = GlobalKey<_BodyState>();
+  int tabIndex = 0;
 
   @override
   void initState() {
@@ -34,6 +38,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
     RawKeyboard.instance.addListener(onKeyEvent);
   }
 
+  /// 按键事件
   void onKeyEvent(RawKeyEvent event) {
     if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyW)) {
       RawKeyboard.instance.removeListener(onKeyEvent);
@@ -44,7 +49,6 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
   @override
   void dispose() {
-    tabIndex.dispose();
     RawKeyboard.instance.removeListener(onKeyEvent);
     super.dispose();
   }
@@ -56,24 +60,26 @@ class HttpBodyState extends State<HttpBodyWidget> {
     }
 
     var tabs = Tabs.of(widget.httpMessage?.contentType);
-    body = widget.httpMessage?.bodyAsString;
 
-    if (tabIndex.value >= tabs.list.length) tabIndex.value = 0;
+    if (tabIndex >= tabs.list.length) tabIndex = tabs.list.length - 1;
+    bodyKey.currentState?.changeState(widget.httpMessage, tabs.list[tabIndex]);
 
     List<Widget> list = [
       widget.inNewWindow ? const SizedBox() : titleWidget(),
-      TabBar(tabs: tabs.tabList(), onTap: (index) => tabIndex.value = index),
+      TabBar(
+          labelPadding: const EdgeInsets.symmetric(horizontal: 2.0),
+          tabs: tabs.tabList(),
+          onTap: (index) {
+            tabIndex = index;
+            bodyKey.currentState?.changeState(widget.httpMessage, tabs.list[tabIndex]);
+          }),
       Padding(
-        padding: const EdgeInsets.all(10),
-        child: ValueListenableBuilder(
-            valueListenable: tabIndex,
-            builder: (_, value, __) {
-              return getBody(tabs.list[value]);
-            }),
-      ) //body
+          padding: const EdgeInsets.all(10),
+          child: _Body(key: bodyKey, message: widget.httpMessage, viewType: tabs.list[tabIndex])) //body
     ];
 
     var tabController = DefaultTabController(
+        initialIndex: tabIndex,
         length: tabs.list.length,
         child: widget.inNewWindow
             ? ListView(children: list)
@@ -99,10 +105,12 @@ class HttpBodyState extends State<HttpBodyWidget> {
             icon: const Icon(Icons.copy),
             tooltip: '复制',
             onPressed: () {
-              if (body == null || body?.isEmpty == true) {
+              var body = bodyKey.currentState?.body;
+              if (body == null) {
                 return;
               }
-              Clipboard.setData(ClipboardData(text: body!)).then((value) => FlutterToastr.show("已复制到剪切板", context));
+
+              Clipboard.setData(ClipboardData(text: body)).then((value) => FlutterToastr.show("已复制到剪切板", context));
             }),
         const SizedBox(width: 5),
         inNewWindow
@@ -133,35 +141,92 @@ class HttpBodyState extends State<HttpBodyWidget> {
     Navigator.push(
         context, MaterialPageRoute(builder: (_) => HttpBodyWidget(httpMessage: widget.httpMessage, inNewWindow: true)));
   }
+}
 
-  Widget getBody(ViewType type) {
-    var message = widget.httpMessage;
-    if (message == null || body == null) {
+class _Body extends StatefulWidget {
+  final HttpMessage? message;
+  final ViewType viewType;
+
+  const _Body({super.key, this.message, required this.viewType});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _BodyState();
+  }
+}
+
+class _BodyState extends State<_Body> {
+  late ViewType viewType;
+  HttpMessage? message;
+
+  @override
+  void initState() {
+    super.initState();
+    viewType = widget.viewType;
+    message = widget.message;
+  }
+
+  changeState(HttpMessage? message, ViewType viewType) {
+    setState(() {
+      this.message = message;
+      this.viewType = viewType;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _getBody(viewType);
+  }
+
+  String? get body {
+    if (message == null || message?.body == null) {
+      return null;
+    }
+
+    if (viewType == ViewType.hex) {
+      return message!.body!.map(intToHex).join(" ");
+    }
+    if (viewType == ViewType.formUrl) {
+      return Uri.decodeFull(message!.bodyAsString);
+    }
+    if (viewType == ViewType.jsonText || viewType == ViewType.json) {
+      //json格式化
+      var jsonObject = json.decode(message!.bodyAsString);
+      return const JsonEncoder.withIndent("  ").convert(jsonObject);
+    }
+    return message!.bodyAsString;
+  }
+
+  Widget _getBody(ViewType type) {
+    if (message == null || message?.body == null) {
       return const SizedBox();
     }
 
     try {
-      if (type == ViewType.json) {
-        return JsonViewer(json.decode(body!));
+      if (type == ViewType.jsonText) {
+        var jsonObject = json.decode(message!.bodyAsString);
+        return JsonText(json: jsonObject, colorTheme: ColorTheme.of(Theme.of(context).brightness));
       }
 
-      if (type == ViewType.jsonText) {
-        var jsonObject = json.decode(body!);
-        var prettyJsonString = const JsonEncoder.withIndent('  ').convert(jsonObject);
-        return SelectableText(prettyJsonString, contextMenuBuilder: contextMenu);
+      if (type == ViewType.json) {
+        return JsonViewer(json.decode(message!.bodyAsString), colorTheme: ColorTheme.of(Theme.of(context).brightness));
       }
 
       if (type == ViewType.formUrl) {
-        return SelectableText(Uri.decodeFull(body!));
+        return SelectableText(Uri.decodeFull(message!.bodyAsString), contextMenuBuilder: contextMenu);
       }
       if (type == ViewType.image) {
-        return Image.memory(Uint8List.fromList(message.body ?? []), fit: BoxFit.none);
+        return Image.memory(Uint8List.fromList(message?.body ?? []), fit: BoxFit.none);
+      }
+      if (type == ViewType.hex) {
+        return SelectableText(message!.body!.map(intToHex).join(" "), contextMenuBuilder: contextMenu);
       }
     } catch (e) {
       // ignore: avoid_print
       print(e);
     }
-    return SelectableText.rich(TextSpan(text: body), contextMenuBuilder: contextMenu);
+
+    return SelectableText.rich(TextSpan(text: message?.bodyAsString), contextMenuBuilder: contextMenu);
   }
 }
 
@@ -186,11 +251,13 @@ class Tabs {
     if (contentType == ContentType.formUrl || contentType == ContentType.json) {
       tabs.list.add(ViewType.text);
     }
+
+    tabs.list.add(ViewType.hex);
     return tabs;
   }
 
   List<Tab> tabList() {
-    return list.map((e) => Tab(text: e.title)).toList();
+    return list.map((e) => Tab(child: Text(e.title))).toList();
   }
 }
 
@@ -203,6 +270,7 @@ enum ViewType {
   image("Image"),
   css("CSS"),
   js("JavaScript"),
+  hex("Hex"),
   ;
 
   final String title;

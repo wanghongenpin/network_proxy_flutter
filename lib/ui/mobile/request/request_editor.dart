@@ -269,7 +269,6 @@ class HeadersState extends State<Headers> {
 
   //删除
   deleteHeader(String key) {
-    HapticFeedback.heavyImpact();
     showDialog(
         context: context,
         builder: (ctx) {
