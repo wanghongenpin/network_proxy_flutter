@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 
 import '../../../../network/util/host_filter.dart';
 
 class MobileFilterWidget extends StatefulWidget {
-  final ProxyServer proxyServer;
+  final Configuration configuration;
   final HostList hostList;
 
-  const MobileFilterWidget({super.key, required this.proxyServer, required this.hostList});
+  const MobileFilterWidget({super.key, required this.configuration, required this.hostList});
 
   @override
   State<MobileFilterWidget> createState() => _MobileFilterState();
@@ -34,7 +34,7 @@ class _MobileFilterState extends State<MobileFilterWidget> {
               title: title,
               subtitle: subtitle,
               hostList: widget.hostList,
-              proxyServer: widget.proxyServer,
+              configuration: widget.configuration,
               hostEnableNotifier: hostEnableNotifier),
         ));
   }
@@ -44,7 +44,7 @@ class DomainFilter extends StatefulWidget {
   final String title;
   final String subtitle;
   final HostList hostList;
-  final ProxyServer proxyServer;
+  final Configuration configuration;
   final ValueNotifier<bool> hostEnableNotifier;
 
   const DomainFilter(
@@ -53,7 +53,7 @@ class DomainFilter extends StatefulWidget {
       required this.subtitle,
       required this.hostList,
       required this.hostEnableNotifier,
-      required this.proxyServer});
+      required this.configuration});
 
   @override
   State<StatefulWidget> createState() {
@@ -114,7 +114,7 @@ class _DomainFilterState extends State<DomainFilter> {
   @override
   void dispose() {
     if (changed) {
-      widget.proxyServer.flushConfig();
+      widget.configuration.flushConfig();
     }
     super.dispose();
   }

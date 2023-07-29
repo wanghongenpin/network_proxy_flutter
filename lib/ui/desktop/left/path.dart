@@ -131,7 +131,7 @@ class _PathRowState extends State<PathRow> {
     var size = MediaQuery.of(context).size;
     var ratio = 1.0;
     if (Platform.isWindows) {
-      WindowManager.instance.getDevicePixelRatio();
+      ratio = WindowManager.instance.getDevicePixelRatio();
     }
 
     final window = await DesktopMultiWindow.createWindow(jsonEncode(

@@ -125,7 +125,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
       var size = MediaQuery.of(context).size;
       var ratio = 1.0;
       if (Platform.isWindows) {
-        WindowManager.instance.getDevicePixelRatio();
+        ratio = WindowManager.instance.getDevicePixelRatio();
       }
       final window = await DesktopMultiWindow.createWindow(jsonEncode(
         {'name': 'HttpBodyWidget', 'httpMessage': widget.httpMessage, 'inNewWindow': true},

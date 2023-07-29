@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
@@ -75,7 +76,7 @@ class ConnectRemoteState extends State<ConnectRemote> {
         showDialog(
             context: context,
             builder: (context) {
-              return ConfigSyncWidget(proxyServer: widget.proxyServer, config: config);
+              return ConfigSyncWidget(configuration: widget.proxyServer.configuration, config: config);
             });
       }
     }).onError((error, stackTrace) {
@@ -86,10 +87,10 @@ class ConnectRemoteState extends State<ConnectRemote> {
 }
 
 class ConfigSyncWidget extends StatefulWidget {
-  final ProxyServer proxyServer;
+  final Configuration configuration;
   final Map<String, dynamic> config;
 
-  const ConfigSyncWidget({super.key, required this.proxyServer, required this.config});
+  const ConfigSyncWidget({super.key, required this.configuration, required this.config});
 
   @override
   State<StatefulWidget> createState() {
@@ -152,10 +153,10 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
                 HostFilter.blacklist.load(widget.config['blacklist']);
               }
               if (syncRewrite) {
-                widget.proxyServer.requestRewrites.load(widget.config['requestRewrites']);
-                widget.proxyServer.flushRequestRewriteConfig();
+                widget.configuration.requestRewrites.load(widget.config['requestRewrites']);
+                widget.configuration.flushRequestRewriteConfig();
               }
-              widget.proxyServer.flushConfig();
+              widget.configuration.flushConfig();
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('同步成功')));
             }),

@@ -169,5 +169,9 @@ extension VpnManager{
            
         }
     }
+    
+    func isRunning() -> Bool {
+        return vpnStatus == VPNStatus.on
+    }
 
 }

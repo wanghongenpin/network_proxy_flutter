@@ -10,13 +10,6 @@ import NetworkExtension
   ) -> Bool {
       GeneratedPluginRegistrant.register(with: self)
 
-//      let url = URL(string: "http://www.baidu.com")!
-//      let task = URLSession.shared.dataTask(with: url) {(data, response, error) in
-//          guard let data = data else { return }
-//          print(String(data: data, encoding: .utf8)!)
-//      }
-//      task.resume()
-
       let controller: FlutterViewController = window.rootViewController as! FlutterViewController ;
       let batteryChannel = FlutterMethodChannel.init(name: "com.proxy/proxyVpn", binaryMessenger: controller as! FlutterBinaryMessenger);
           batteryChannel.setMethodCallHandler({
@@ -54,14 +47,11 @@ import NetworkExtension
       }
     }
 
-    var backgroundUpdateTask: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier(rawValue: 0)
-    func endBackgroundUpdateTask() {
-        AudioManager.shared.openBackgroundAudioAutoplay = false
-        UIApplication.shared.endBackgroundTask(self.backgroundUpdateTask)
-        self.backgroundUpdateTask = UIBackgroundTaskIdentifier.invalid
-    }
-
     override func applicationWillResignActive(_ application: UIApplication) {
+        if (!VpnManager.shared.isRunning()) {
+            return
+        }
+        
         AudioManager.shared.openBackgroundAudioAutoplay = true
         self.backgroundUpdateTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
             self.endBackgroundUpdateTask()
@@ -69,7 +59,17 @@ import NetworkExtension
     }
     override  func applicationDidBecomeActive(_ application: UIApplication) {
         self.endBackgroundUpdateTask()
-
+    }
+    
+    var backgroundUpdateTask: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier(rawValue: 0)
+    func endBackgroundUpdateTask() {
+        if (!VpnManager.shared.isRunning()) {
+            return
+        }
+        
+        AudioManager.shared.openBackgroundAudioAutoplay = false
+        UIApplication.shared.endBackgroundTask(self.backgroundUpdateTask)
+        self.backgroundUpdateTask = UIBackgroundTaskIdentifier.invalid
     }
 
 }

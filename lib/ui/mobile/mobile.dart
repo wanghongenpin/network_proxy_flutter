@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:network_proxy/native/vpn.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
@@ -13,7 +14,9 @@ import 'package:network_proxy/ui/mobile/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 
 class MobileHomePage extends StatefulWidget {
-  const MobileHomePage({super.key});
+  final Configuration configuration;
+
+  const MobileHomePage({super.key, required this.configuration});
 
   @override
   State<StatefulWidget> createState() {
@@ -39,7 +42,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
 
   @override
   void initState() {
-    proxyServer = ProxyServer(listener: this);
+    proxyServer = ProxyServer(widget.configuration, listener: this);
     desktop.addListener(() {
       if (desktop.value.connect) {
         proxyServer.server?.remoteHost = "http://${desktop.value.host}:${desktop.value.port}";
@@ -48,7 +51,26 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
         proxyServer.server?.remoteHost = null;
       }
     });
+
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.configuration.guide) {
+        //首次引导
+        String content = '默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
+            '点击的设置 -> HTTPS抓包，根据提示安装证书操作即可。';
+        showAlertDialog('提示', content, () {
+          widget.configuration.guide = false;
+          widget.configuration.upgradeNotice = false;
+          widget.configuration.flushConfig();
+        });
+        return;
+      }
+
+      if (widget.configuration.upgradeNotice) {
+        showUpgradeNotice();
+      }
+    });
   }
 
   @override
@@ -74,6 +96,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
           onPressed: () {},
           child: SocketLaunch(
               proxyServer: proxyServer,
+              startup: false,
               size: 38,
               onStart: () => Vpn.startVpn("127.0.0.1", proxyServer.port),
               onStop: () => Vpn.stopVpn())),
@@ -98,6 +121,32 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
             ]);
           }),
     );
+  }
+
+  showUpgradeNotice() {
+    String content = '1. 手机版启动默认不再自动开启抓包，请手动点击启动按钮。\n'
+        '2. 增加外部代理，可配置其他VPN软件地址，开启抓包不会影响访问外网。\n'
+        '3. 搜索功能增强，可直接搜索响应类型和请求方法。';
+    showAlertDialog('更新内容', content, () {
+      widget.configuration.upgradeNotice = false;
+      widget.configuration.flushConfig();
+    });
+  }
+
+  showAlertDialog(String title, String content, Function onClose) {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) {
+          return AlertDialog(actions: [
+            TextButton(
+                onPressed: () {
+                  onClose.call();
+                  Navigator.pop(context);
+                },
+                child: const Text('关闭'))
+          ], title: Text(title, style: const TextStyle(fontSize: 18)), content: Text(content));
+        });
   }
 
   /// 搜索框

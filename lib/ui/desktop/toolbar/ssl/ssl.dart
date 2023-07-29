@@ -19,22 +19,10 @@ class SslWidget extends StatefulWidget {
 }
 
 class _SslState extends State<SslWidget> {
-  bool _enableSsl = true;
-
-  @override
-  void initState() {
-    super.initState();
-
-    widget.proxyServer.initializedListener(() {
-      _enableSsl = widget.proxyServer.enableSsl;
-      setState(() {});
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
-      icon: Icon(Icons.https, color: _enableSsl ? null : Colors.red),
+      icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red),
       surfaceTintColor: Colors.white70,
       tooltip: "HTTPS代理",
       offset: const Offset(10, 30),
@@ -42,11 +30,7 @@ class _SslState extends State<SslWidget> {
         return [
           PopupMenuItem(
               padding: const EdgeInsets.all(0),
-              child: _Switch(
-                  proxyServer: widget.proxyServer,
-                  onEnableChange: (val) => setState(() {
-                        _enableSsl = val;
-                      }))),
+              child: _Switch(proxyServer: widget.proxyServer, onEnableChange: (val) => setState(() {}))),
           PopupMenuItem(
               padding: const EdgeInsets.all(0),
               child: ListTile(
@@ -282,7 +266,7 @@ class _SwitchState extends State<_Switch> {
   void dispose() {
     super.dispose();
     if (changed) {
-      widget.proxyServer.flushConfig();
+      widget.proxyServer.configuration.flushConfig();
     }
   }
 }

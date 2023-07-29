@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/split_view.dart';
 import 'package:network_proxy/ui/content/body.dart';
@@ -20,11 +21,6 @@ import 'network/handler.dart';
 import 'network/http/http.dart';
 
 void main(List<String> args) async {
-  if (Platforms.isMobile()) {
-    runApp(const FluentApp(MobileHomePage()));
-    return;
-  }
-
   //多窗口
   if (args.firstOrNull == 'multi_window') {
     final windowId = int.parse(args[1]);
@@ -34,6 +30,13 @@ void main(List<String> args) async {
   }
 
   WidgetsFlutterBinding.ensureInitialized();
+
+  var configuration = Configuration.instance;
+  if (Platforms.isMobile()) {
+    runApp(FluentApp(MobileHomePage(configuration: (await configuration))));
+    return;
+  }
+
   await windowManager.ensureInitialized();
   //设置窗口大小
   WindowOptions windowOptions = WindowOptions(
@@ -46,7 +49,7 @@ void main(List<String> args) async {
     await windowManager.focus();
   });
 
-  runApp(const FluentApp(DesktopHomePage()));
+  runApp(FluentApp(DesktopHomePage(configuration: (await configuration))));
 }
 
 ///多窗口
@@ -104,7 +107,9 @@ class FluentApp extends StatelessWidget {
 }
 
 class DesktopHomePage extends StatefulWidget {
-  const DesktopHomePage({super.key});
+  final Configuration configuration;
+
+  const DesktopHomePage({super.key, required this.configuration});
 
   @override
   State<DesktopHomePage> createState() => _DesktopHomePagePageState();
@@ -129,13 +134,10 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   @override
   void initState() {
     super.initState();
-    proxyServer = ProxyServer(listener: this);
+    proxyServer = ProxyServer(widget.configuration, listener: this);
     panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 18), proxyServer: proxyServer);
 
-    proxyServer.initializedListener(() {
-      if (!proxyServer.guide) {
-        return;
-      }
+    if (widget.configuration.guide) {
       //首次引导
       showDialog(
           context: context,
@@ -145,8 +147,8 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                 actions: [
                   TextButton(
                       onPressed: () {
-                        proxyServer.guide = false;
-                        proxyServer.flushConfig();
+                        widget.configuration.guide = false;
+                        widget.configuration.flushConfig();
                         Navigator.pop(context);
                       },
                       child: const Text('关闭'))
@@ -155,7 +157,9 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                 content: const Text('默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                     '点击的HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。'));
           });
-    });
+
+      return;
+    }
   }
 
   @override

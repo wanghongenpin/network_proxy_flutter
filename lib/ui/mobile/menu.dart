@@ -43,17 +43,17 @@ class DrawerWidget extends StatelessWidget {
         ListTile(
             title: const Text("域名白名单"),
             trailing: const Icon(Icons.arrow_right),
-            onTap: () =>
-                navigator(context, MobileFilterWidget(proxyServer: proxyServer, hostList: HostFilter.whitelist))),
+            onTap: () => navigator(
+                context, MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.whitelist))),
         ListTile(
             title: const Text("域名黑名单"),
             trailing: const Icon(Icons.arrow_right),
-            onTap: () =>
-                navigator(context, MobileFilterWidget(proxyServer: proxyServer, hostList: HostFilter.blacklist))),
+            onTap: () => navigator(
+                context, MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.blacklist))),
         ListTile(
             title: const Text("请求重写"),
             trailing: const Icon(Icons.arrow_right),
-            onTap: () => navigator(context, MobileRequestRewrite(proxyServer: proxyServer))),
+            onTap: () => navigator(context, MobileRequestRewrite(configuration: proxyServer.configuration))),
         ListTile(
             title: const Text("Github"),
             trailing: const Icon(Icons.arrow_right),
@@ -169,7 +169,7 @@ class MoreEnum extends StatelessWidget {
               hostname: response.headers.get("hostname"));
 
           if (context.mounted && Navigator.canPop(context)) {
-            FlutterToastr.show("连接成功", context);
+            FlutterToastr.show("连接成功${proxyServer.isRunning ? '' : ',手机需要开启抓包才可以抓取请求哦'}", context);
             Navigator.pop(context);
           }
         }

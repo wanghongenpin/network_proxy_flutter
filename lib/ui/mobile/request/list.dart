@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/http.dart';
@@ -160,17 +161,26 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   }
 
   bool filter(HttpRequest request) {
-    if (searchText?.isNotEmpty == true) {
-      return request.requestUrl.toLowerCase().contains(searchText!);
+    if (searchText == null || searchText!.isEmpty) {
+      return true;
     }
-    return true;
+
+    if (request.method.name.toLowerCase() == searchText) {
+      return true;
+    }
+
+    if (request.requestUrl.toLowerCase().contains(searchText!)) {
+      return true;
+    }
+
+    return request.response?.contentType.name.toLowerCase().contains(searchText!) == true;
   }
 
   changeState() {
     //防止频繁刷新
     if (!changing) {
       changing = true;
-      Future.delayed(const Duration(milliseconds: 300), () {
+      Future.delayed(const Duration(milliseconds: 100), () {
         setState(() {
           changing = false;
         });
@@ -217,6 +227,7 @@ class DomainList extends StatefulWidget {
 
 class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMixin {
   GlobalKey<RequestSequenceState> requestSequenceKey = GlobalKey<RequestSequenceState>();
+  late Configuration configuration;
 
   //域名和对应请求列表的映射
   Map<HostAndPort, List<HttpRequest>> containerMap = {};
@@ -235,6 +246,8 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   @override
   initState() {
     super.initState();
+    configuration = widget.proxyServer.configuration;
+
     for (var request in widget.list) {
       var hostAndPort = request.hostAndPort!;
       container.add(hostAndPort);
@@ -271,7 +284,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     //防止频繁刷新
     if (!changing) {
       changing = true;
-      Future.delayed(const Duration(milliseconds: 200), () {
+      Future.delayed(const Duration(milliseconds: 50), () {
         setState(() {
           changing = false;
         });
@@ -332,7 +345,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     var time =
         formatDate(containerMap[list.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
     return ListTile(
-        visualDensity: const VisualDensity( vertical: -4),
+        visualDensity: const VisualDensity(vertical: -4),
         title: Text(list.elementAt(index).domain, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: const Icon(Icons.chevron_right),
         subtitle: Text("最后请求时间: $time,  次数: ${containerMap[list.elementAt(index)]!.length}",
@@ -366,7 +379,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
                   child: const SizedBox(width: double.infinity, child: Text("添加黑名单", textAlign: TextAlign.center)),
                   onPressed: () {
                     HostFilter.blacklist.add(hostAndPort.host);
-                    widget.proxyServer.flushConfig();
+                    configuration.flushConfig();
                     FlutterToastr.show("已添加至黑名单", context);
                     Navigator.of(context).pop();
                   }),
@@ -375,7 +388,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
                   child: const SizedBox(width: double.infinity, child: Text("添加白名单", textAlign: TextAlign.center)),
                   onPressed: () {
                     HostFilter.whitelist.add(hostAndPort.host);
-                    widget.proxyServer.flushConfig();
+                    configuration.flushConfig();
                     FlutterToastr.show("已添加至白名单", context);
                     Navigator.of(context).pop();
                   }),
@@ -384,7 +397,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
                   child: const SizedBox(width: double.infinity, child: Text("删除白名单", textAlign: TextAlign.center)),
                   onPressed: () {
                     HostFilter.whitelist.remove(hostAndPort.host);
-                    widget.proxyServer.flushConfig();
+                    configuration.flushConfig();
                     FlutterToastr.show("已删除白名单", context);
                     Navigator.of(context).pop();
                   }),

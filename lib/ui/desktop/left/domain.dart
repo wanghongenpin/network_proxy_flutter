@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/http.dart';
@@ -154,7 +155,15 @@ class HeaderBody extends StatefulWidget {
 
   ///根据文本过滤
   Iterable<PathRow> filter(String text) {
-    return _body.where((element) => element.request.requestUrl.toLowerCase().contains(text));
+    return _body.where((element) {
+      if (element.request.method.name.toLowerCase() == text) {
+        return true;
+      }
+      if (element.request.requestUrl.toLowerCase().contains(text)) {
+        return true;
+      }
+      return element.response.get()?.contentType.name.toLowerCase().contains(text) == true;
+    });
   }
 
   ///复制
@@ -175,12 +184,13 @@ class HeaderBody extends StatefulWidget {
 
 class _HeaderBodyState extends State<HeaderBody> {
   final GlobalKey<ColorTransitionState> transitionState = GlobalKey<ColorTransitionState>();
-
+  late Configuration configuration;
   late bool selected;
 
   @override
   void initState() {
     super.initState();
+    configuration = widget.proxyServer.configuration;
     selected = widget.selected;
   }
 
@@ -241,21 +251,21 @@ class _HeaderBodyState extends State<HeaderBody> {
             child: const Text("添加黑名单", style: TextStyle(fontSize: 14)),
             onTap: () {
               HostFilter.blacklist.add(widget.header.host);
-              widget.proxyServer.flushConfig();
+              configuration.flushConfig();
             }),
         PopupMenuItem(
             height: 38,
             child: const Text("添加白名单", style: TextStyle(fontSize: 14)),
             onTap: () {
               HostFilter.whitelist.add(widget.header.host);
-              widget.proxyServer.flushConfig();
+              configuration.flushConfig();
             }),
         PopupMenuItem(
             height: 38,
             child: const Text("删除白名单", style: TextStyle(fontSize: 14)),
             onTap: () {
               HostFilter.whitelist.remove(widget.header.host);
-              widget.proxyServer.flushConfig();
+              configuration.flushConfig();
             }),
         PopupMenuItem(height: 38, child: const Text("删除", style: TextStyle(fontSize: 14)), onTap: () => _delete()),
       ],

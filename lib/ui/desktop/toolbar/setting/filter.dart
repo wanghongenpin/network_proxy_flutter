@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 
-
 class FilterDialog extends StatefulWidget {
-  final ProxyServer proxyServer;
+  final Configuration configuration;
 
-  const FilterDialog({super.key, required this.proxyServer});
+  const FilterDialog({super.key, required this.configuration});
 
   @override
   State<FilterDialog> createState() => _FilterDialogState();
@@ -49,7 +48,7 @@ class _FilterDialogState extends State<FilterDialog> {
                       title: "白名单",
                       subtitle: "只代理白名单中的域名, 白名单启用黑名单将会失效",
                       hostList: HostFilter.whitelist,
-                      proxyServer: widget.proxyServer,
+                      configuration: widget.configuration,
                       hostEnableNotifier: hostEnableNotifier)),
               const SizedBox(width: 10),
               Expanded(
@@ -58,7 +57,7 @@ class _FilterDialogState extends State<FilterDialog> {
                       title: "黑名单",
                       subtitle: "黑名单中的域名不会代理",
                       hostList: HostFilter.blacklist,
-                      proxyServer: widget.proxyServer,
+                      configuration: widget.configuration,
                       hostEnableNotifier: hostEnableNotifier)),
             ],
           ),
@@ -70,7 +69,7 @@ class DomainFilter extends StatefulWidget {
   final String title;
   final String subtitle;
   final HostList hostList;
-  final ProxyServer proxyServer;
+  final Configuration configuration;
   final ValueNotifier<bool> hostEnableNotifier;
 
   const DomainFilter(
@@ -79,7 +78,7 @@ class DomainFilter extends StatefulWidget {
       required this.subtitle,
       required this.hostList,
       required this.hostEnableNotifier,
-      required this.proxyServer});
+      required this.configuration});
 
   @override
   State<StatefulWidget> createState() {
@@ -145,7 +144,7 @@ class _DomainFilterState extends State<DomainFilter> {
   @override
   void dispose() {
     if (changed) {
-      widget.proxyServer.flushConfig();
+      widget.configuration.flushConfig();
     }
     super.dispose();
   }

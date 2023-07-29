@@ -7,7 +7,7 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 
 class ProxyVpnService : VpnService() {
-    private lateinit var vpnInterface: ParcelFileDescriptor
+    private var vpnInterface: ParcelFileDescriptor? = null
 
     companion object {
         const val ProxyHost = "ProxyHost"
@@ -35,14 +35,19 @@ class ProxyVpnService : VpnService() {
     }
 
     private fun disconnect() {
-        vpnInterface.close()
+        vpnInterface?.close()
     }
 
     private fun connect(proxyHost: String, proxyPort: Int) {
         vpnInterface = createVpnInterface(proxyHost, proxyPort)
+        if (vpnInterface == null) {
+            val alertDialog = Intent(applicationContext, VpnAlertDialog::class.java)
+            alertDialog.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(alertDialog)
+        }
     }
 
-    private fun createVpnInterface(proxyHost: String, proxyPort: Int): ParcelFileDescriptor {
+    private fun createVpnInterface(proxyHost: String, proxyPort: Int): ParcelFileDescriptor? {
         return Builder()
             .addAddress("10.0.0.2", 32)
             .addRoute("0.0.0.0", 0)
@@ -53,7 +58,7 @@ class ProxyVpnService : VpnService() {
                         .setHttpProxy(ProxyInfo.buildDirectProxy(proxyHost, proxyPort))
                 }
             }
-            .establish() ?: throw IllegalStateException("无法初始化vpnInterface")
+            .establish()
     }
 
 

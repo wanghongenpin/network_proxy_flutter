@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
@@ -20,10 +21,12 @@ class Setting extends StatefulWidget {
 
 class _SettingState extends State<Setting> {
   late ValueNotifier<bool> enableDesktopListenable;
+  late Configuration configuration;
 
   @override
   void initState() {
-    enableDesktopListenable = ValueNotifier<bool>(widget.proxyServer.enableDesktop);
+    configuration = widget.proxyServer.configuration;
+    enableDesktopListenable = ValueNotifier<bool>(configuration.enableDesktop);
     super.initState();
   }
 
@@ -54,12 +57,12 @@ class _SettingState extends State<Setting> {
                       title: const Text("抓取电脑请求"),
                       visualDensity: const VisualDensity(horizontal: -4),
                       dense: true,
-                      value: widget.proxyServer.enableDesktop,
+                      value: configuration.enableDesktop,
                       onChanged: (val) {
                         SystemProxy.setSystemProxyEnable(widget.proxyServer.port, val, widget.proxyServer.enableSsl);
-                        widget.proxyServer.enableDesktop = val;
+                        configuration.enableDesktop = val;
                         enableDesktopListenable.value = !enableDesktopListenable.value;
-                        widget.proxyServer.flushConfig();
+                        configuration.flushConfig();
                       }))),
           const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
           menuItem("域名过滤", onTap: () => hostFilter()),
@@ -106,7 +109,7 @@ class _SettingState extends State<Setting> {
                           label: const Text("关闭"),
                           onPressed: () => Navigator.of(context).pop())))
             ]),
-            content: RequestRewrite(proxyServer: widget.proxyServer),
+            content: RequestRewrite(configuration: configuration),
           );
         });
   }
@@ -117,7 +120,7 @@ class _SettingState extends State<Setting> {
       barrierDismissible: false,
       context: context,
       builder: (context) {
-        return FilterDialog(proxyServer: widget.proxyServer);
+        return FilterDialog(configuration: configuration);
       },
     );
   }
@@ -146,11 +149,11 @@ class _PortState extends State<PortWidget> {
     portFocus.addListener(() async {
       //失去焦点
       if (!portFocus.hasFocus && textController.text != widget.proxyServer.port.toString()) {
-        widget.proxyServer.port = int.parse(textController.text);
+        widget.proxyServer.configuration.port = int.parse(textController.text);
         if (widget.proxyServer.isRunning) {
           widget.proxyServer.restart();
         }
-        widget.proxyServer.flushConfig();
+        widget.proxyServer.configuration.flushConfig();
       }
     });
   }

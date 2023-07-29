@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
 
 class MobileRequestRewrite extends StatefulWidget {
-  final ProxyServer proxyServer;
+  final Configuration configuration;
 
-  const MobileRequestRewrite({super.key, required this.proxyServer});
+  const MobileRequestRewrite({super.key, required this.configuration});
 
   @override
   State<MobileRequestRewrite> createState() => _MobileRequestRewriteState();
@@ -19,15 +19,15 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
   @override
   void initState() {
     super.initState();
-    requestRuleList = RequestRuleList(widget.proxyServer.requestRewrites);
-    enableNotifier = ValueNotifier(widget.proxyServer.requestRewrites.enabled);
+    requestRuleList = RequestRuleList(widget.configuration.requestRewrites);
+    enableNotifier = ValueNotifier(widget.configuration.requestRewrites.enabled);
   }
 
   @override
   void dispose() {
-    if (changed || enableNotifier.value != widget.proxyServer.requestRewrites.enabled) {
-      widget.proxyServer.requestRewrites.enabled = enableNotifier.value;
-      widget.proxyServer.flushRequestRewriteConfig();
+    if (changed || enableNotifier.value != widget.configuration.requestRewrites.enabled) {
+      widget.configuration.requestRewrites.enabled = enableNotifier.value;
+      widget.configuration.flushRequestRewriteConfig();
     }
 
     enableNotifier.dispose();
@@ -81,7 +81,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
 
                         changed = true;
                         setState(() {
-                          widget.proxyServer.requestRewrites.removeIndex(removeSelected);
+                          widget.configuration.requestRewrites.removeIndex(removeSelected);
                           requestRuleList.changeState();
                         });
                       })
@@ -97,7 +97,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
         context: context,
         builder: (BuildContext context) {
           return RuleAddDialog(
-              requestRewrites: widget.proxyServer.requestRewrites,
+              requestRewrites: widget.configuration.requestRewrites,
               currentIndex: currentIndex,
               onChange: () {
                 changed = true;
@@ -248,7 +248,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
               border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
               columns: const <DataColumn>[
                 DataColumn(label: Text('启用')),
-                DataColumn(label: Text('URL')),
+                DataColumn(label: Text('Path')),
                 DataColumn(label: Text('请求体')),
                 DataColumn(label: Text('响应体')),
               ],

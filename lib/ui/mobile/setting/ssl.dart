@@ -21,7 +21,7 @@ class _MobileSslState extends State<MobileSslWidget> {
   @override
   void dispose() {
     if (changed) {
-      widget.proxyServer.flushConfig();
+      widget.proxyServer.configuration.flushConfig();
     }
     super.dispose();
   }
