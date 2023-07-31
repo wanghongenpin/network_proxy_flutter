@@ -342,13 +342,13 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   }
 
   Widget title(int index) {
-    var time =
-        formatDate(containerMap[list.elementAt(index)]!.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
+    var value = containerMap[list.elementAt(index)];
+    var time = value == null ? '' : formatDate(value.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
     return ListTile(
         visualDensity: const VisualDensity(vertical: -4),
         title: Text(list.elementAt(index).domain, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: const Icon(Icons.chevron_right),
-        subtitle: Text("最后请求时间: $time,  次数: ${containerMap[list.elementAt(index)]!.length}",
+        subtitle: Text("最后请求时间: $time,  次数: ${value?.length}",
             maxLines: 1, overflow: TextOverflow.ellipsis),
         onLongPress: () => menu(index),
         onTap: () {

@@ -86,7 +86,9 @@ class HttpHeaders {
 
   set contentLength(int contentLength) => set(CONTENT_LENGTH, contentLength.toString());
 
-  bool get isGzip => get(HttpHeaders.CONTENT_ENCODING) == "gzip";
+  String? get contentEncoding => get(HttpHeaders.CONTENT_ENCODING);
+
+  bool get isGzip => contentEncoding == "gzip";
 
   bool get isChunked => get(HttpHeaders.TRANSFER_ENCODING) == "chunked";
 

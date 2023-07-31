@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:network_proxy/network/channel.dart';
+import 'package:network_proxy/utils/compress.dart';
 
 import 'http_headers.dart';
 
@@ -49,6 +50,9 @@ abstract class HttpMessage {
       return "";
     }
     try {
+      if (headers.contentEncoding == 'br') {
+        return utf8.decode(brDecode(body!));
+      }
       return utf8.decode(body!);
     } catch (e) {
       return String.fromCharCodes(body!);
@@ -97,24 +101,38 @@ class HttpRequest extends HttpMessage {
       'uri': requestUrl,
       'method': method.name,
       'headers': headers.toJson(),
-      'body': bodyAsString,
+      'body': body == null ? null : String.fromCharCodes(body!),
     };
   }
 
   factory HttpRequest.fromJson(Map<String, dynamic> json) {
     var request = HttpRequest(HttpMethod.valueOf(json['method']), json['uri']);
     request.headers.addAll(HttpHeaders.fromJson(json['headers']));
-    request.body = utf8.encode(json['body']);
+    request.body = json['body']?.toString().codeUnits;
     return request;
   }
 
   @override
   String toString() {
-    return 'HttpReqeust{version: $protocolVersion, url: $uri, method: ${method.name}, headers: $headers, contentLength: $contentLength, bodyLength: ${body?.length}}';
+    return 'HttpRequest{version: $protocolVersion, url: $uri, method: ${method.name}, headers: $headers, contentLength: $contentLength, bodyLength: ${body?.length}}';
   }
 }
 
-enum ContentType { json, formUrl, js, html, text, css, font, image, http }
+enum ContentType {
+  json,
+  formUrl,
+  js,
+  html,
+  text,
+  css,
+  font,
+  image,
+  http;
+
+  static ContentType valueOf(String name) {
+    return ContentType.values.firstWhere((element) => element.name == name.toLowerCase(), orElse: () => http);
+  }
+}
 
 ///HTTP响应。
 class HttpResponse extends HttpMessage {
@@ -134,7 +152,7 @@ class HttpResponse extends HttpMessage {
   factory HttpResponse.fromJson(Map<String, dynamic> json) {
     return HttpResponse(json['protocolVersion'], HttpStatus(json['status']['code'], json['status']['reasonPhrase']))
       ..headers.addAll(HttpHeaders.fromJson(json['headers']))
-      ..body = utf8.encode(json['body']);
+      ..body = json['body']?.toString().codeUnits;
   }
 
   @override
@@ -147,7 +165,7 @@ class HttpResponse extends HttpMessage {
         'reasonPhrase': status.reasonPhrase,
       },
       'headers': headers.toJson(),
-      'body': bodyAsString,
+      'body': body == null ? null : String.fromCharCodes(body!),
     };
   }
 

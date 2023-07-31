@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/external_proxy.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -51,22 +52,13 @@ class _SettingState extends State<Setting> {
           PopupMenuItem<String>(
               padding: const EdgeInsets.all(0),
               child: ValueListenableBuilder(
-                  valueListenable: enableDesktopListenable,
-                  builder: (_, val, __) => SwitchListTile(
-                      hoverColor: Colors.transparent,
-                      title: const Text("抓取电脑请求"),
-                      visualDensity: const VisualDensity(horizontal: -4),
-                      dense: true,
-                      value: configuration.enableDesktop,
-                      onChanged: (val) {
-                        SystemProxy.setSystemProxyEnable(widget.proxyServer.port, val, widget.proxyServer.enableSsl);
-                        configuration.enableDesktop = val;
-                        enableDesktopListenable.value = !enableDesktopListenable.value;
-                        configuration.flushConfig();
-                      }))),
+                valueListenable: enableDesktopListenable,
+                builder: (_, val, __) => setSystemProxy(),
+              )),
           const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
-          menuItem("域名过滤", onTap: () => hostFilter()),
-          menuItem("请求重写", onTap: () => requestRewrite()),
+          menuItem("域名过滤", onTap: hostFilter),
+          menuItem("请求重写", onTap: requestRewrite),
+          menuItem("外部代理设置", onTap: setExternalProxy),
           menuItem(
             "Github",
             onTap: () {
@@ -89,6 +81,32 @@ class _SettingState extends State<Setting> {
           trailing: const Icon(Icons.arrow_right),
           onTap: onTap,
         ));
+  }
+
+  ///设置外部代理地址
+  setExternalProxy() {
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return ExternalProxyDialog(configuration: widget.proxyServer.configuration);
+        });
+  }
+
+  ///设置系统代理
+  Widget setSystemProxy() {
+    return SwitchListTile(
+        hoverColor: Colors.transparent,
+        title: const Text("设置为系统代理"),
+        visualDensity: const VisualDensity(horizontal: -4),
+        dense: true,
+        value: configuration.enableDesktop,
+        onChanged: (val) {
+          SystemProxy.setSystemProxyEnable(widget.proxyServer.port, val, widget.proxyServer.enableSsl);
+          configuration.enableDesktop = val;
+          enableDesktopListenable.value = !enableDesktopListenable.value;
+          configuration.flushConfig();
+        });
   }
 
   ///请求重写Dialog

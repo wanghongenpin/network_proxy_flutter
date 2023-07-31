@@ -9,6 +9,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/component/transition.dart';
+import 'package:network_proxy/ui/desktop/left/model/search.dart';
 import 'package:network_proxy/ui/desktop/left/path.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/search.dart';
@@ -29,8 +30,8 @@ class DomainWidget extends StatefulWidget {
 class DomainWidgetState extends State<DomainWidget> {
   LinkedHashMap<HostAndPort, HeaderBody> containerMap = LinkedHashMap<HostAndPort, HeaderBody>();
 
-  //搜索的文本
-  String? searchText;
+  //搜索的内容
+  SearchModel? searchModel;
   bool changing = false; //是否存在刷新任务
 
   changeState() {
@@ -48,27 +49,24 @@ class DomainWidgetState extends State<DomainWidget> {
   Widget build(BuildContext context) {
     var list = containerMap.values;
     //根究搜素文本过滤
-    if (searchText?.trim().isNotEmpty == true) {
-      list = searchFilter(searchText!);
+    if (searchModel?.isNotEmpty == true) {
+      list = searchFilter(searchModel!);
     }
 
     return Scaffold(
         body: SingleChildScrollView(child: Column(children: list.toList())),
         bottomNavigationBar: Search(onSearch: (val) {
-          if (val == searchText) {
-            return;
-          }
           setState(() {
-            searchText = val.toLowerCase();
+            searchModel = val;
           });
         }));
   }
 
   ///搜索过滤
-  List<HeaderBody> searchFilter(String text) {
+  List<HeaderBody> searchFilter(SearchModel searchModel) {
     var result = <HeaderBody>[];
     containerMap.forEach((key, headerBody) {
-      var body = headerBody.filter(text);
+      var body = headerBody.filter(searchModel.keyword?.toLowerCase(), searchModel.contentType);
       if (body.isNotEmpty) {
         result.add(headerBody.copy(body: body, selected: true));
       }
@@ -86,7 +84,7 @@ class DomainWidgetState extends State<DomainWidget> {
       headerBody.addBody(channel.id, listURI);
 
       //搜索状态，刷新数据
-      if (searchText?.isNotEmpty == true) {
+      if (searchModel?.isNotEmpty == true) {
         changeState();
       }
       return;
@@ -154,15 +152,22 @@ class HeaderBody extends StatefulWidget {
   }
 
   ///根据文本过滤
-  Iterable<PathRow> filter(String text) {
+  Iterable<PathRow> filter(String? keyword, ContentType? contentType) {
     return _body.where((element) {
-      if (element.request.method.name.toLowerCase() == text) {
+      if (contentType != null && element.response.get()?.contentType != contentType) {
+        return false;
+      }
+
+      if (keyword == null) {
         return true;
       }
-      if (element.request.requestUrl.toLowerCase().contains(text)) {
+      if (element.request.method.name.toLowerCase() == keyword) {
         return true;
       }
-      return element.response.get()?.contentType.name.toLowerCase().contains(text) == true;
+      if (element.request.requestUrl.toLowerCase().contains(keyword)) {
+        return true;
+      }
+      return element.response.get()?.contentType.name.toLowerCase().contains(keyword) == true;
     });
   }
 

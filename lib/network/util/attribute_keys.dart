@@ -5,4 +5,5 @@ interface class AttributeKeys {
   static const String uri = "URI";
   static const String request = "REQUEST";
   static const String remote = "REMOTE";
+  static const String proxyInfo = "PROXY_INFO";
 }

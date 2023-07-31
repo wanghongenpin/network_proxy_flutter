@@ -55,18 +55,6 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.configuration.guide) {
-        //首次引导
-        String content = '默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
-            '点击的设置 -> HTTPS抓包，根据提示安装证书操作即可。';
-        showAlertDialog('提示', content, () {
-          widget.configuration.guide = false;
-          widget.configuration.upgradeNotice = false;
-          widget.configuration.flushConfig();
-        });
-        return;
-      }
-
       if (widget.configuration.upgradeNotice) {
         showUpgradeNotice();
       }
@@ -117,7 +105,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
                         child: Text("已连接${value.os?.toUpperCase()}，手机抓包已关闭",
                             style: Theme.of(context).textTheme.titleMedium),
                       )),
-              Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
+               Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
             ]);
           }),
     );
@@ -125,8 +113,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
 
   showUpgradeNotice() {
     String content = '1. 手机版启动默认不再自动开启抓包，请手动点击启动按钮。\n'
-        '2. 增加外部代理，可配置其他VPN软件地址，开启抓包不会影响访问外网。\n'
-        '3. 搜索功能增强，可直接搜索响应类型和请求方法。';
+        '2. 搜索功能增强，可直接搜索响应类型和请求方法。\n'
+        '3. 支持brotli编码，br响应类型编码不会再显示乱码';
     showAlertDialog('更新内容', content, () {
       widget.configuration.upgradeNotice = false;
       widget.configuration.flushConfig();

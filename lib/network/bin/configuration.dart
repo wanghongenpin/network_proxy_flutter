@@ -25,6 +25,9 @@ class Configuration {
   //请求重写
   RequestRewrites requestRewrites = RequestRewrites();
 
+  //外部代理
+  ProxyInfo? externalProxy;
+
   Configuration._();
 
   /// 单例
@@ -94,6 +97,9 @@ class Configuration {
     enableDesktop = config['enableDesktop'] ?? true;
     guide = config['guide'] ?? false;
     upgradeNotice = config['upgradeNotice'] ?? true;
+    if (config['externalProxy'] != null) {
+      externalProxy = ProxyInfo.fromJson(config['externalProxy']);
+    }
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
 
@@ -135,8 +141,32 @@ class Configuration {
       'port': port,
       'enableSsl': enableSsl,
       'enableDesktop': enableDesktop,
+      'externalProxy': externalProxy?.toJson(),
       'whitelist': HostFilter.whitelist.toJson(),
       'blacklist': HostFilter.blacklist.toJson(),
+    };
+  }
+}
+
+/// 代理信息
+class ProxyInfo {
+  bool enable = false;
+  String host = '127.0.0.1';
+  int? port;
+
+  ProxyInfo();
+
+  ProxyInfo.fromJson(Map<String, dynamic> json) {
+    enable = json['enable'] == true;
+    host = json['host'];
+    port = json['port'];
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enable': enable,
+      'host': host,
+      'port': port,
     };
   }
 }

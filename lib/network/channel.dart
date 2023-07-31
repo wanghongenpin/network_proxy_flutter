@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
@@ -35,6 +36,8 @@ class Channel {
   final ChannelPipeline pipeline = ChannelPipeline();
   Socket _socket;
   final Map<String, Object> _attributes = {};
+
+  //是否打开
   bool isOpen = true;
 
   //此通道连接到的远程地址
@@ -71,11 +74,13 @@ class Channel {
     }
   }
 
+  ///写入并关闭此channel
   Future<void> writeAndClose(Object obj) async {
     await write(obj);
     close();
   }
 
+  ///关闭此channel
   void close() async {
     if (isClosed) {
       return;
@@ -90,6 +95,7 @@ class Channel {
     isOpen = false;
   }
 
+  ///返回此channel是否打开
   bool get isClosed => !isOpen;
 
   T? getAttribute<T>(String key) {
@@ -205,7 +211,7 @@ class HostAndPort {
   }
 
   /// 根据url构建
-  static HostAndPort of(String url) {
+  static HostAndPort of(String url, {bool? ssl}) {
     String domain = url;
     String? scheme;
     //域名格式 直接解析
@@ -221,11 +227,11 @@ class HostAndPort {
     //ip格式 host:port
     List<String> hostAndPort = domain.split(":");
     if (hostAndPort.length == 2) {
-      bool isSsl = hostAndPort[1] == "443";
+      bool isSsl = ssl ?? hostAndPort[1] == "443";
       scheme = isSsl ? httpsScheme : httpScheme;
       return HostAndPort(scheme, hostAndPort[0], int.parse(hostAndPort[1]));
     }
-    scheme ??= httpScheme;
+    scheme ??= (ssl == true ? httpsScheme : httpScheme);
     return HostAndPort(scheme, hostAndPort[0], scheme == httpScheme ? 80 : 443);
   }
 
@@ -286,8 +292,8 @@ abstract interface class ChannelInitializer {
 
 class Network {
   late Function _channelInitializer;
-  bool enableSsl = false;
   String? remoteHost;
+  Configuration? configuration;
 
   Network initChannel(void Function(Channel channel) initializer) {
     _channelInitializer = initializer;
@@ -305,14 +311,19 @@ class Network {
   }
 
   _onEvent(Uint8List data, Channel channel) async {
-    HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
-
     if (remoteHost != null) {
       channel.putAttribute(AttributeKeys.remote, HostAndPort.of(remoteHost!));
     }
 
-    //黑名单 直接转发
-    if (HostFilter.filter(hostAndPort?.host) || (hostAndPort?.isSsl() == true && !enableSsl)) {
+    //代理信息
+    if (configuration?.externalProxy?.enable == true) {
+      channel.putAttribute(AttributeKeys.proxyInfo, configuration!.externalProxy!);
+    }
+
+    HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
+
+    //黑名单 或 没开启https 直接转发
+    if (HostFilter.filter(hostAndPort?.host) || (hostAndPort?.isSsl() == true && configuration?.enableSsl == false)) {
       relay(channel, channel.getAttribute(channel.id));
       channel.pipeline.channelRead(channel, data);
       return;
@@ -329,15 +340,16 @@ class Network {
 
   void ssl(Channel channel, HostAndPort hostAndPort, Uint8List data) async {
     try {
-      //客户端ssl
+      //客户端ssl握手
       Channel remoteChannel = channel.getAttribute(channel.id);
-
       remoteChannel.secureSocket =
           await SecureSocket.secure(remoteChannel.socket, onBadCertificate: (certificate) => true);
+
       remoteChannel.pipeline.listen(remoteChannel);
 
-      //服务端ssl
+      //ssl自签证书
       var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
+
       SecureSocket secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
       channel.secureSocket = secureSocket;
       channel.pipeline.listen(channel);
@@ -357,6 +369,10 @@ class Network {
 class Server extends Network {
   late ServerSocket serverSocket;
   bool isRunning = false;
+
+  Server(Configuration configuration) {
+    super.configuration = configuration;
+  }
 
   Future<ServerSocket> bind(int port) async {
     serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, port);

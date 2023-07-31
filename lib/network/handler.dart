@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
@@ -20,7 +21,8 @@ HostAndPort getHostAndPort(HttpRequest request) {
   if (request.uri.startsWith("/")) {
     requestUri = request.headers.get(HttpHeaders.HOST)!;
   }
-  return HostAndPort.of(requestUri);
+
+  return HostAndPort.of(requestUri, ssl: request.method == HttpMethod.connect ? true : null);
 }
 
 abstract class EventListener {
@@ -144,7 +146,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
 
-    //远程代理
+    //远程转发
     HostAndPort? remote = clientChannel.getAttribute(AttributeKeys.remote);
     if (remote != null) {
       var proxyChannel = await HttpClients.rawConnect(remote, proxyHandler);
@@ -153,9 +155,17 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       return proxyChannel;
     }
 
+    //https代理
+    ProxyInfo? proxyInfo = clientChannel.getAttribute(AttributeKeys.proxyInfo);
+    if (proxyInfo != null) {
+      var proxyChannel = await HttpClients.rawConnect(HostAndPort.host(proxyInfo.host, proxyInfo.port!), proxyHandler);
+      clientChannel.putAttribute(clientId, proxyChannel);
+      await proxyChannel.write(httpRequest);
+      return proxyChannel;
+    }
+
     var proxyChannel = await HttpClients.rawConnect(hostAndPort, proxyHandler);
     clientChannel.putAttribute(clientId, proxyChannel);
-
     //https代理新建连接请求
     if (httpRequest.method == HttpMethod.connect) {
       await clientChannel.write(HttpResponse(httpRequest.protocolVersion, HttpStatus.ok));

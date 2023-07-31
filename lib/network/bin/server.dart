@@ -16,16 +16,19 @@ Future<void> main() async {
 
 /// 代理服务器
 class ProxyServer {
-  //是否启动
-  bool get isRunning => server?.isRunning ?? false;
+  //socket服务
   Server? server;
 
   //请求事件监听
   EventListener? listener;
 
+  //配置
   final Configuration configuration;
 
   ProxyServer(this.configuration, {this.listener});
+
+  //是否启动
+  bool get isRunning => server?.isRunning ?? false;
 
   ///是否启用https抓包
   bool get enableSsl => configuration.enableSsl;
@@ -34,7 +37,6 @@ class ProxyServer {
 
   set enableSsl(bool enableSsl) {
     configuration.enableSsl = enableSsl;
-    server?.enableSsl = enableSsl;
     if (server == null || server?.isRunning == false) {
       return;
     }
@@ -46,13 +48,13 @@ class ProxyServer {
 
   /// 启动代理服务
   Future<Server> start() async {
-    Server server = Server();
+    Server server = Server(configuration);
 
-    server.enableSsl = configuration.enableSsl;
     server.initChannel((channel) {
       channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(),
           HttpChannelHandler(listener: listener, requestRewrites: configuration.requestRewrites));
     });
+
     return server.bind(port).then((serverSocket) {
       logger.i("listen on $port");
       this.server = server;
