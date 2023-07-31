@@ -78,6 +78,7 @@ class _MobileSslState extends State<MobileSslWidget> {
 
   List<Widget> android() {
     return [
+      TextButton(onPressed: () => _downloadCert(), child: const Text("1.1系统根证书将根证书命名成 243f0bfb.0")),
       TextButton(onPressed: () {}, child: const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书")),
       ClipRRect(
           child: Align(

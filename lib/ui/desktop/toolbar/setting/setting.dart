@@ -58,7 +58,7 @@ class _SettingState extends State<Setting> {
           const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
           menuItem("域名过滤", onTap: hostFilter),
           menuItem("请求重写", onTap: requestRewrite),
-          menuItem("外部代理设置", onTap: setExternalProxy),
+          // menuItem("外部代理设置", onTap: setExternalProxy),
           menuItem(
             "Github",
             onTap: () {
