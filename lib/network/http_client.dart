@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 
 import 'channel.dart';

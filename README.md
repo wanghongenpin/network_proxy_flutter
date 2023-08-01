@@ -5,11 +5,11 @@
 
 国内下载地址：https://gitee.com/wanghongenpin/network-proxy-flutter/releases
 
-ios下载地址(Safari浏览器打开)： https://testflight.apple.com/join/gURGH6B4
+iOS美版AppStore下载地址或直接搜ProxyPin(推荐)：https://apps.apple.com/app/proxypin/id6450932949
 
->  ios个人开发者账号用到VPN没法上架AppStore, 后面可能会上架美版AppStore。
+iOS国内下载地址(有1万名额限制，满了会清理不使用的用户)： https://testflight.apple.com/join/gURGH6B4
 
-- [ ] 接下来会持续完善功能和体验，请求重写功能增、强模拟慢请求、请求debug, UI优化。
+- [ ] 接下来会持续完善功能和体验，请求重写功能增强、模拟慢请求、请求debug, UI优化。
 - [ ] 支持安卓微信小程序抓包，安卓分为系统证书和用户证书，下载的自签名根证书安装都是用户证书，微信不信任用户证书，不Root导致Https抓不了了, 目前市场上所有抓包软件抓不了微信的包，后面单独做个运行空间插件，动态反编译修改配置，信任用户证书来解决。
 - [ ] WebSocket、HTTP2协议支持。
 

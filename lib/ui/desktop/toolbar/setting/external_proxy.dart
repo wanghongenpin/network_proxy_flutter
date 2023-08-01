@@ -51,6 +51,8 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
         content: Form(
             key: formKey,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Text("注意：请将科学上网网站加入域名过滤黑名单。", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 10),
               Row(children: [
                 const Text("是否启用："),
                 Expanded(

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:network_proxy/network/bin/configuration.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
@@ -14,17 +15,7 @@ import 'package:network_proxy/utils/ip.dart';
 import 'channel.dart';
 import 'http_client.dart';
 
-/// 获取主机和端口
-HostAndPort getHostAndPort(HttpRequest request) {
-  String requestUri = request.uri;
-  //有些请求直接是路径 /xxx, 从header取host
-  if (request.uri.startsWith("/")) {
-    requestUri = request.headers.get(HttpHeaders.HOST)!;
-  }
-
-  return HostAndPort.of(requestUri, ssl: request.method == HttpMethod.connect ? true : null);
-}
-
+///请求和响应事件监听
 abstract class EventListener {
   void onRequest(Channel channel, HttpRequest request);
 
@@ -61,7 +52,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
         log.e("连接失败 ${error.message}");
         return;
       }
-      log.e("转发请求失败", error, trace);
+      log.e("转发请求失败", error: error, stackTrace: trace);
     });
   }
 

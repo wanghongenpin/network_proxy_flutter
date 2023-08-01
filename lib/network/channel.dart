@@ -3,6 +3,8 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:network_proxy/network/bin/configuration.dart';
+import 'package:network_proxy/network/host_port.dart';
+import 'package:network_proxy/network/http/codec.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
@@ -23,9 +25,9 @@ abstract class ChannelHandler<T> {
     // log.i("close $channel");
   }
 
-  void exceptionCaught(Channel channel, dynamic cause, {StackTrace? trace}) {
+  void exceptionCaught(Channel channel, dynamic error, {StackTrace? trace}) {
     HostAndPort? attribute = channel.getAttribute(AttributeKeys.host);
-    log.e("error $attribute $channel", cause, trace);
+    log.e("error $attribute $channel", error: error, stackTrace: trace);
     channel.close();
   }
 }
@@ -191,87 +193,6 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   channelInactive(Channel channel) {
     _handler.channelInactive(channel);
   }
-}
-
-class HostAndPort {
-  static const String httpScheme = "http://";
-  static const String httpsScheme = "https://";
-  final String scheme;
-  String host;
-  final int port;
-
-  HostAndPort(this.scheme, this.host, this.port);
-
-  factory HostAndPort.host(String host, int port) {
-    return HostAndPort(port == 443 ? httpsScheme : httpScheme, host, port);
-  }
-
-  bool isSsl() {
-    return httpsScheme.startsWith(scheme);
-  }
-
-  /// 根据url构建
-  static HostAndPort of(String url, {bool? ssl}) {
-    String domain = url;
-    String? scheme;
-    //域名格式 直接解析
-    if (url.startsWith(httpScheme) || url.startsWith(httpsScheme)) {
-      //httpScheme
-      scheme = url.startsWith(httpsScheme) ? httpsScheme : httpScheme;
-      domain = url.substring(scheme.length).split("/")[0];
-      //说明支持ipv6
-      if (domain.startsWith('[') && domain.endsWith(']')) {
-        return HostAndPort(scheme, domain, scheme == httpScheme ? 80 : 443);
-      }
-    }
-    //ip格式 host:port
-    List<String> hostAndPort = domain.split(":");
-    if (hostAndPort.length == 2) {
-      bool isSsl = ssl ?? hostAndPort[1] == "443";
-      scheme = isSsl ? httpsScheme : httpScheme;
-      return HostAndPort(scheme, hostAndPort[0], int.parse(hostAndPort[1]));
-    }
-    scheme ??= (ssl == true ? httpsScheme : httpScheme);
-    return HostAndPort(scheme, hostAndPort[0], scheme == httpScheme ? 80 : 443);
-  }
-
-  String get domain {
-    return '$scheme$host${(port == 80 || port == 443) ? "" : ":$port"}';
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is HostAndPort &&
-          runtimeType == other.runtimeType &&
-          scheme == other.scheme &&
-          host == other.host &&
-          port == other.port;
-
-  @override
-  int get hashCode => scheme.hashCode ^ host.hashCode ^ port.hashCode;
-
-  @override
-  String toString() {
-    return domain;
-  }
-}
-
-/// 解码
-abstract interface class Decoder<T> {
-  /// 解码 如果返回null说明数据不完整
-  T? decode(Uint8List data);
-}
-
-/// 编码
-abstract interface class Encoder<T> {
-  List<int> encode(T data);
-}
-
-/// 编解码器
-abstract class Codec<T> implements Decoder<T>, Encoder<T> {
-  static const int defaultMaxInitialLineLength = 10240;
-  static const int maxBodyLength = 1024000;
 }
 
 class RawCodec extends Codec<Object> {

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:network_proxy/network/channel.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/utils/compress.dart';
 
 import 'http_headers.dart';

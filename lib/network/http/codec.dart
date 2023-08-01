@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:network_proxy/network/http/body_reader.dart';
 
 import '../../utils/compress.dart';
-import '../channel.dart';
 import '../util/logger.dart';
 import 'http.dart';
 import 'http_headers.dart';
@@ -30,6 +29,23 @@ enum State {
   done,
 }
 
+/// 解码
+abstract interface class Decoder<T> {
+  /// 解码 如果返回null说明数据不完整
+  T? decode(Uint8List data);
+}
+
+/// 编码
+abstract interface class Encoder<T> {
+  List<int> encode(T data);
+}
+
+/// 编解码器
+abstract class Codec<T> implements Decoder<T>, Encoder<T> {
+  static const int defaultMaxInitialLineLength = 10240;
+  static const int maxBodyLength = 1024000;
+}
+
 /// http编解码
 abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
   final HttpParse _httpParse = HttpParse();
@@ -53,7 +69,7 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
         message = createMessage(initialLine);
         _state = State.readHeader;
       } catch (e, cause) {
-        logger.e("解析请求行失败 [${String.fromCharCodes(data)}]", e, cause);
+        logger.e("解析请求行失败 [${String.fromCharCodes(data)}]", error: e, stackTrace: cause);
         rethrow;
       }
     }

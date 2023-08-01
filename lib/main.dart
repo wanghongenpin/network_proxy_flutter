@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/component/chinese_font.dart';
 import 'package:network_proxy/ui/component/split_view.dart';
 import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/ui/content/panel.dart';

@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:network_proxy/network/http/http.dart';
 
 import '../../utils/num.dart';
-import '../channel.dart';
 import 'codec.dart';
 
 class Result {
