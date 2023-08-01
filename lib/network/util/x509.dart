@@ -161,18 +161,6 @@ class X509Generate {
     return outer;
   }
 
-  ///
-  /// Converts the hex string to bytes
-  ///
-  static Uint8List _stringAsBytes(String s) {
-    var list = StringUtils.chunk(s, 2);
-    var bytes = <int>[];
-    for (var e in list) {
-      bytes.add(int.parse(e, radix: 16));
-    }
-    return Uint8List.fromList(bytes);
-  }
-
   static String _getDigestFromOi(String oi) {
     switch (oi) {
       case 'ecdsaWithSHA1':

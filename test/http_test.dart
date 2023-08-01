@@ -1,0 +1,15 @@
+import 'dart:io';
+
+main() async {
+  // await socketTest();
+  await webTest();
+}
+
+webTest() async {
+  var httpClient = HttpClient();
+  httpClient.findProxy = (uri) => "PROXY 127.0.0.1:7890";
+  // httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  var httpClientRequest = await httpClient.getUrl(Uri.parse("https://www.v2ex.com"));
+  var response = await httpClientRequest.close();
+  print(response.headers);
+}

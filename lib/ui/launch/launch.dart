@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
 class SocketLaunch extends StatefulWidget {
@@ -31,6 +32,9 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
     if (widget.startup) {
       start();
     }
+    if (Platforms.isDesktop()) {
+      windowManager.setPreventClose(true);
+    }
   }
 
   @override
@@ -42,8 +46,8 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
 
   @override
   void onWindowClose() async {
-    print("onWindowClose");
     await widget.proxyServer.stop();
+    print("onWindowClose");
     started = false;
     windowManager.destroy();
   }

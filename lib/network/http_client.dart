@@ -3,17 +3,51 @@ import 'dart:io';
 
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/network.dart';
 
 import 'channel.dart';
 import 'http/codec.dart';
 
 class HttpClients {
   /// 建立连接
-  static Future<Channel> rawConnect(HostAndPort hostAndPort, ChannelHandler handler) async {
+  static Future<Channel> startConnect(HostAndPort hostAndPort, ChannelHandler handler) async {
     var client = Client()
       ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
 
     return client.connect(hostAndPort);
+  }
+
+  ///代理建立连接
+  static Future<Channel> proxyConnect(HostAndPort hostAndPort, ChannelHandler handler, {ProxyInfo? proxyInfo}) async {
+    var client = Client()
+      ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
+
+    HostAndPort connectHost = proxyInfo == null ? hostAndPort : HostAndPort.host(proxyInfo.host, proxyInfo.port!);
+    var channel = await client.connect(connectHost);
+
+    if (proxyInfo == null || !hostAndPort.isSsl()) {
+      return channel;
+    }
+
+    //代理 发送connect请求
+    var httpResponseHandler = HttpResponseHandler();
+    channel.pipeline.handler = httpResponseHandler;
+
+    HttpRequest proxyRequest = HttpRequest(HttpMethod.connect, '${hostAndPort.host}:${hostAndPort.port}');
+    proxyRequest.headers.set(HttpHeaders.hostHeader, '${hostAndPort.host}:${hostAndPort.port}');
+
+    await channel.write(proxyRequest);
+    var response = await httpResponseHandler.getResponse(const Duration(seconds: 3));
+
+    channel.pipeline.handler = handler;
+
+    if (!response.status.isSuccessful()) {
+      final error = "$hostAndPort Proxy failed to establish tunnel "
+          "(${response.status.code} ${response..status.reasonPhrase})";
+      throw Exception(error);
+    }
+
+    return channel;
   }
 
   /// 建立连接
@@ -52,20 +86,14 @@ class HttpClients {
       {Duration timeout = const Duration(seconds: 3)}) async {
     var httpResponseHandler = HttpResponseHandler();
 
-    bool isHttps = request.uri.startsWith("https://");
-    var client = Client()
-      ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), httpResponseHandler));
+    HostAndPort hostPort = HostAndPort.of(request.uri);
 
-    Channel channel = await client.connect(HostAndPort.host(proxyHost, port));
+    Channel channel = await proxyConnect(proxyInfo: ProxyInfo.of(proxyHost, port), hostPort, httpResponseHandler);
 
-    if (isHttps) {
-      HttpRequest proxyRequest = HttpRequest(HttpMethod.connect, request.uri);
-      await channel.write(proxyRequest);
-      await httpResponseHandler.getResponse(timeout);
+    if (hostPort.isSsl()) {
       channel.secureSocket = await SecureSocket.secure(channel.socket, onBadCertificate: (certificate) => true);
     }
 
-    httpResponseHandler.resetResponse();
     await channel.write(request);
     return httpResponseHandler.getResponse(timeout).whenComplete(() => channel.close());
   }
@@ -76,7 +104,7 @@ class HttpResponseHandler extends ChannelHandler<HttpResponse> {
 
   @override
   void channelRead(Channel channel, HttpResponse msg) {
-    // log.i("[${channel.id}] Response ${msg.bodyAsString}");
+    // log.i("[${channel.id}] Response $msg");
     _completer.complete(msg);
   }
 

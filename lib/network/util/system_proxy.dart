@@ -7,23 +7,26 @@ class SystemProxy {
   static String? _hardwarePort;
 
   /// 设置系统代理
-  static void setSystemProxy(int port,  bool sslSetting) async {
+  static Future<void> setSystemProxy(int port, bool sslSetting) async {
     if (Platform.isMacOS) {
-      _setProxyServerMacOS(port, sslSetting);
+      await _setProxyServerMacOS(port, sslSetting);
     } else if (Platform.isWindows) {
-      _setProxyServerWindows(port, sslSetting);
+      await _setProxyServerWindows(port);
     }
   }
 
-  static void setSystemProxyEnable(int port, bool enable, bool sslSetting) async {
+  /// 设置系统代理 @param sslSetting 是否设置https代理只在mac中有效
+  static Future<void> setSystemProxyEnable(int port, bool enable, bool sslSetting) async {
+    //启用系统代理
     if (enable) {
-      setSystemProxy(port, sslSetting);
+      await setSystemProxy(port, sslSetting);
       return;
     }
+
     if (Platform.isMacOS) {
-      setProxyEnableMacOS(enable, sslSetting);
+      await setProxyEnableMacOS(enable, sslSetting);
     } else if (Platform.isWindows) {
-      setProxyEnableWindows(enable);
+      await setProxyEnableWindows(enable);
     }
   }
 
@@ -34,7 +37,7 @@ class SystemProxy {
       _concatCommands([
         'networksetup -setwebproxy $_hardwarePort 127.0.0.1 $port',
         sslSetting == true ? 'networksetup -setsecurewebproxy $_hardwarePort 127.0.0.1 $port' : '',
-        'networksetup -setproxybypassdomains $_hardwarePort 192.168.0.0/16 10.0.0.0/8 172.16.0.0/12 127.0.0.1 localhost *.local timestamp.apple.com sequoia.apple.com seed-sequoia.siri.apple.com *.google.com',
+        'networksetup -setproxybypassdomains $_hardwarePort 192.168.0.0/16 10.0.0.0/8 172.16.0.0/12 127.0.0.1 localhost *.local timestamp.apple.com',
       ])
     ]);
     print('set proxyServer, name: $_hardwarePort, exitCode: ${results.exitCode}, stdout: ${results.stdout}');
@@ -79,10 +82,12 @@ class SystemProxy {
     return results.stdout.toString().split(", ")[0];
   }
 
-  static Future<bool> _setProxyServerWindows(int proxyPort, bool sslSetting) async {
-    ProxyManager manager = ProxyManager();
-    await manager.setAsSystemProxy(ProxyTypes.http, "127.0.0.1", proxyPort);
+  static Future<bool> _setProxyServerWindows(int proxyPort) async {
+    print("setSystemProxy $proxyPort");
 
+    ProxyManager manager = ProxyManager();
+    await manager.setAsSystemProxy(ProxyTypes.https, "127.0.0.1", proxyPort);
+    print("setSystemProxy end");
     var results = await Process.run('reg', [
       'add',
       'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',

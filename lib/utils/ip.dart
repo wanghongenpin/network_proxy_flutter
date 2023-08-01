@@ -1,14 +1,16 @@
 import 'dart:io';
 
 void main() {
-  NetworkInterface.list(type: InternetAddressType.IPv4).then((interfaces) => interfaces.forEach((interface) {
-        print(interface.name);
-        for (var address in interface.addresses) {
-          print("  ${address.address}");
-          print("  ${address.host}");
-          print("  ${address.type}");
-        }
-      }));
+  NetworkInterface.list(type: InternetAddressType.IPv4).then((interfaces) {
+    for (var interface in interfaces) {
+      print(interface.name);
+      for (var address in interface.addresses) {
+        print("  ${address.address}");
+        print("  ${address.host}");
+        print("  ${address.type}");
+      }
+    }
+  });
 }
 
 String? ip;

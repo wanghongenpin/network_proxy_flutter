@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
-import 'package:network_proxy/network/util/system_proxy.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/external_proxy.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
@@ -27,7 +26,7 @@ class _SettingState extends State<Setting> {
   @override
   void initState() {
     configuration = widget.proxyServer.configuration;
-    enableDesktopListenable = ValueNotifier<bool>(configuration.enableDesktop);
+    enableDesktopListenable = ValueNotifier<bool>(configuration.enableSystemProxy);
     super.initState();
   }
 
@@ -100,10 +99,10 @@ class _SettingState extends State<Setting> {
         title: const Text("设置为系统代理"),
         visualDensity: const VisualDensity(horizontal: -4),
         dense: true,
-        value: configuration.enableDesktop,
+        value: configuration.enableSystemProxy,
         onChanged: (val) {
-          SystemProxy.setSystemProxyEnable(widget.proxyServer.port, val, widget.proxyServer.enableSsl);
-          configuration.enableDesktop = val;
+          widget.proxyServer.setSystemProxyEnable(val);
+          configuration.enableSystemProxy = val;
           enableDesktopListenable.value = !enableDesktopListenable.value;
           configuration.flushConfig();
         });

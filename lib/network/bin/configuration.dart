@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
@@ -13,8 +14,8 @@ class Configuration {
   //是否启用https抓包
   bool enableSsl = false;
 
-  //是否启用桌面抓包
-  bool enableDesktop = true;
+  //是否设置系统代理
+  bool enableSystemProxy = true;
 
   //是否引导
   bool guide = false;
@@ -94,7 +95,7 @@ class Configuration {
     logger.i('加载配置文件 [$file]');
     port = config['port'] ?? port;
     enableSsl = config['enableSsl'] == true;
-    enableDesktop = config['enableDesktop'] ?? true;
+    enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
     guide = config['guide'] ?? false;
     upgradeNotice = config['upgradeNotice'] ?? true;
     if (config['externalProxy'] != null) {
@@ -140,33 +141,10 @@ class Configuration {
       'upgradeNotice': upgradeNotice,
       'port': port,
       'enableSsl': enableSsl,
-      'enableDesktop': enableDesktop,
+      'enableSystemProxy': enableSystemProxy,
       'externalProxy': externalProxy?.toJson(),
       'whitelist': HostFilter.whitelist.toJson(),
       'blacklist': HostFilter.blacklist.toJson(),
-    };
-  }
-}
-
-/// 代理信息
-class ProxyInfo {
-  bool enable = false;
-  String host = '127.0.0.1';
-  int? port;
-
-  ProxyInfo();
-
-  ProxyInfo.fromJson(Map<String, dynamic> json) {
-    enable = json['enable'] == true;
-    host = json['host'];
-    port = json['port'];
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'enable': enable,
-      'host': host,
-      'port': port,
     };
   }
 }

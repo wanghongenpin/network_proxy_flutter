@@ -21,8 +21,8 @@ class HostAndPort {
 
   HostAndPort(this.scheme, this.host, this.port);
 
-  factory HostAndPort.host(String host, int port) {
-    return HostAndPort(port == 443 ? httpsScheme : httpScheme, host, port);
+  factory HostAndPort.host(String host, int port, {String? scheme}) {
+    return HostAndPort(scheme ?? (port == 443 ? httpsScheme : httpScheme), host, port);
   }
 
   bool isSsl() {
@@ -73,5 +73,35 @@ class HostAndPort {
   @override
   String toString() {
     return domain;
+  }
+}
+
+/// 代理信息
+class ProxyInfo {
+  bool enabled = false;
+  String host = '127.0.0.1';
+  int? port;
+
+  ProxyInfo();
+
+  ProxyInfo.of(this.host, this.port) : enabled = true;
+
+  ProxyInfo.fromJson(Map<String, dynamic> json) {
+    enabled = json['enabled'] == true;
+    host = json['host'];
+    port = json['port'];
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'host': host,
+      'port': port,
+    };
+  }
+
+  @override
+  String toString() {
+    return '{enabled: $enabled, host: $host, port: $port}';
   }
 }

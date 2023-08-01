@@ -261,7 +261,12 @@ class HttpStatus {
   }
 
   final int code;
-  final String reasonPhrase;
+  String reasonPhrase;
+
+  HttpStatus reason(String reasonPhrase) {
+    this.reasonPhrase = reasonPhrase;
+    return this;
+  }
 
   HttpStatus(this.code, this.reasonPhrase);
 

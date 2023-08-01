@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
+import 'package:network_proxy/network/host_port.dart';
 
 class ExternalProxyDialog extends StatefulWidget {
   final Configuration configuration;
@@ -20,7 +23,10 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
   @override
   void initState() {
     super.initState();
-    externalProxy = widget.configuration.externalProxy ?? ProxyInfo();
+    externalProxy = ProxyInfo();
+    if (widget.configuration.externalProxy != null) {
+      externalProxy = ProxyInfo.fromJson(widget.configuration.externalProxy!.toJson());
+    }
   }
 
   @override
@@ -35,31 +41,26 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
               },
               child: const Text("取消")),
           TextButton(
-              onPressed: () {
+              onPressed: () async {
                 if (!formKey.currentState!.validate()) {
                   return;
                 }
-                widget.configuration.externalProxy = externalProxy;
-                widget.configuration.flushConfig();
-                if (externalProxy.enable) {
-
-                }
-                Navigator.of(context).pop();
+                submit();
               },
               child: const Text("确定"))
         ],
         content: Form(
             key: formKey,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const Text("注意：请将科学上网网站加入域名过滤黑名单。", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+              const Text("如发现访问失败的外网请将加入域名过滤黑名单。", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
               const SizedBox(height: 10),
               Row(children: [
                 const Text("是否启用："),
                 Expanded(
                     child: Switch(
-                  value: externalProxy.enable,
+                  value: externalProxy.enabled,
                   onChanged: (val) {
-                    setState(() => externalProxy.enable = val);
+                    setState(() => externalProxy.enabled = val);
                   },
                 ))
               ]),
@@ -87,5 +88,44 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                 ))
               ]),
             ])));
+  }
+
+  submit() async {
+    bool setting = true;
+    if (externalProxy.enabled) {
+      try {
+        var socket = await Socket.connect(externalProxy.host, externalProxy.port!, timeout: const Duration(seconds: 1));
+        socket.destroy();
+      } on SocketException catch (_) {
+        setting = false;
+
+        await showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+                  title: const Text("外部代理连接失败"),
+                  content: const Text('网络不通所有接口将会访问失败，是否继续设置外部代理。', style: TextStyle(fontSize: 12)),
+                  actions: [
+                    TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("取消")),
+                    TextButton(
+                        onPressed: () {
+                          setting = true;
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("确定"))
+                  ],
+                ));
+      }
+    }
+
+    if (setting) {
+      widget.configuration.externalProxy = externalProxy;
+      widget.configuration.flushConfig();
+    }
+
+    if (context.mounted) Navigator.of(context).pop();
   }
 }

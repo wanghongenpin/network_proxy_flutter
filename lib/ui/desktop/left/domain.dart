@@ -38,7 +38,7 @@ class DomainWidgetState extends State<DomainWidget> {
   changeState() {
     if (!changing) {
       changing = true;
-      Future.delayed(const Duration(milliseconds: 1500), () {
+      Future.delayed(const Duration(milliseconds: 1000), () {
         setState(() {
           changing = false;
         });

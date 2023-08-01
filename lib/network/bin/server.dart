@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:network_proxy/network/bin/configuration.dart';
 
-import '../channel.dart';
 import '../handler.dart';
 import '../http/codec.dart';
+import '../network.dart';
 import '../util/logger.dart';
 import '../util/system_proxy.dart';
 
@@ -58,8 +58,8 @@ class ProxyServer {
     return server.bind(port).then((serverSocket) {
       logger.i("listen on $port");
       this.server = server;
-      if (configuration.enableDesktop) {
-        SystemProxy.setSystemProxy(port, enableSsl);
+      if (configuration.enableSystemProxy) {
+        setSystemProxyEnable(true);
       }
       return server;
     });
@@ -68,15 +68,22 @@ class ProxyServer {
   /// 停止代理服务
   Future<Server?> stop() async {
     logger.i("stop on $port");
-    if (configuration.enableDesktop) {
-      if (Platform.isMacOS) {
-        await SystemProxy.setProxyEnableMacOS(false, enableSsl);
-      } else if (Platform.isWindows) {
-        await SystemProxy.setProxyEnableWindows(false);
-      }
+    if (configuration.enableSystemProxy) {
+      await setSystemProxyEnable(false);
     }
     await server?.stop();
     return server;
+  }
+
+  /// 设置系统代理
+  setSystemProxyEnable(bool enable) async {
+    //关闭系统代理 恢复成外部代理地址
+    if (!enable && configuration.externalProxy?.enabled == true) {
+      await SystemProxy.setSystemProxy(configuration.externalProxy!.port!, enableSsl);
+      return;
+    }
+
+    await SystemProxy.setSystemProxyEnable(port, enable, enableSsl);
   }
 
   /// 重启代理服务

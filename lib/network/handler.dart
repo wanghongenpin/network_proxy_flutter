@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
@@ -86,11 +85,13 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
+    //获取远程连接
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
+
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
-      // log.i("[${channel.id}] ${httpRequest.requestUrl}");
+      // log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
 
       var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.path());
       if (replaceBody?.isNotEmpty == true) {
@@ -100,7 +101,6 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       if (!HostFilter.filter(httpRequest.hostAndPort?.host)) {
         listener?.onRequest(channel, httpRequest);
       }
-      //实现抓包代理转发
       await remoteChannel.write(httpRequest);
     }
   }
@@ -139,27 +139,23 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     //远程转发
     HostAndPort? remote = clientChannel.getAttribute(AttributeKeys.remote);
-    if (remote != null) {
-      var proxyChannel = await HttpClients.rawConnect(remote, proxyHandler);
+    //外部代理
+    ProxyInfo? proxyInfo = clientChannel.getAttribute(AttributeKeys.proxyInfo);
+
+    if (remote != null || proxyInfo != null) {
+      HostAndPort connectHost = remote ?? HostAndPort.host(proxyInfo!.host, proxyInfo.port!);
+      var proxyChannel = await HttpClients.startConnect(connectHost, proxyHandler);
       clientChannel.putAttribute(clientId, proxyChannel);
       proxyChannel.write(httpRequest);
       return proxyChannel;
     }
 
-    //https代理
-    ProxyInfo? proxyInfo = clientChannel.getAttribute(AttributeKeys.proxyInfo);
-    if (proxyInfo != null) {
-      var proxyChannel = await HttpClients.rawConnect(HostAndPort.host(proxyInfo.host, proxyInfo.port!), proxyHandler);
-      clientChannel.putAttribute(clientId, proxyChannel);
-      await proxyChannel.write(httpRequest);
-      return proxyChannel;
-    }
-
-    var proxyChannel = await HttpClients.rawConnect(hostAndPort, proxyHandler);
+    var proxyChannel = await HttpClients.startConnect(hostAndPort, proxyHandler);
     clientChannel.putAttribute(clientId, proxyChannel);
     //https代理新建连接请求
     if (httpRequest.method == HttpMethod.connect) {
-      await clientChannel.write(HttpResponse(httpRequest.protocolVersion, HttpStatus.ok));
+      await clientChannel
+          .write(HttpResponse(httpRequest.protocolVersion, HttpStatus.ok.reason('Connection established')));
     }
 
     return proxyChannel;
@@ -168,6 +164,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
 /// http响应代理
 class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
+  //客户端的连接
   final Channel clientChannel;
 
   EventListener? listener;
@@ -176,10 +173,10 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   HttpResponseProxyHandler(this.clientChannel, {this.listener, this.requestRewrites});
 
   @override
-  void channelRead(Channel channel, HttpResponse msg) {
+  void channelRead(Channel channel, HttpResponse msg) async {
     msg.request = clientChannel.getAttribute(AttributeKeys.request);
     msg.request?.response = msg;
-    // log.i("[${clientChannel.id}] Response ${msg.bodyAsString}");
+    // log.i("[${clientChannel.id}] Response ${msg}");
 
     var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.path());
     if (replaceBody?.isNotEmpty == true) {
@@ -189,8 +186,9 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     if (!HostFilter.filter(msg.request?.hostAndPort?.host)) {
       listener?.onResponse(clientChannel, msg);
     }
+
     //发送给客户端
-    clientChannel.write(msg);
+    await clientChannel.write(msg);
   }
 
   @override

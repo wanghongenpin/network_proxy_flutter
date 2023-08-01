@@ -1,14 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/codec.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
-import 'package:network_proxy/network/util/crts.dart';
-import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/network/util/logger.dart';
 
 import 'handler.dart';
@@ -59,13 +57,23 @@ class Channel {
 
   Socket get socket => _socket;
 
-  set secureSocket(SecureSocket secureSocket) => _socket = secureSocket;
+  set secureSocket(SecureSocket secureSocket) {
+    _socket = secureSocket;
+    pipeline.listen(this);
+  }
 
   Future<void> write(Object obj) async {
     if (isClosed) {
       logger.w("channel is closed $obj");
       return;
     }
+
+    //只能有一个写入
+    int retry = 0;
+    while (isWriting && retry++ < 30) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
     isWriting = true;
     try {
       var data = pipeline._encoder.encode(obj);
@@ -93,8 +101,8 @@ class Channel {
     while (isWriting && retry++ < 10) {
       await Future.delayed(const Duration(milliseconds: 150));
     }
-    _socket.destroy();
     isOpen = false;
+    _socket.destroy();
   }
 
   ///返回此channel是否打开
@@ -120,12 +128,12 @@ class Channel {
 class ChannelPipeline extends ChannelHandler<Uint8List> {
   late Decoder _decoder;
   late Encoder _encoder;
-  late ChannelHandler _handler;
+  late ChannelHandler handler;
 
   handle(Decoder decoder, Encoder encoder, ChannelHandler handler) {
     _encoder = encoder;
     _decoder = decoder;
-    _handler = handler;
+    this.handler = handler;
   }
 
   void listen(Channel channel) {
@@ -136,7 +144,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
 
   @override
   void channelActive(Channel channel) {
-    _handler.channelActive(channel);
+    handler.channelActive(channel);
   }
 
   /// 转发请求
@@ -152,7 +160,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       HostAndPort? remote = channel.getAttribute(AttributeKeys.remote);
       if (remote != null && channel.getAttribute(channel.id) != null) {
         relay(channel, channel.getAttribute(channel.id));
-        _handler.channelRead(channel, msg);
+        handler.channelRead(channel, msg);
         return;
       }
 
@@ -178,20 +186,20 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       if (data is HttpResponse) {
         data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
       }
-      _handler.channelRead(channel, data!);
+      handler.channelRead(channel, data!);
     } catch (error, trace) {
       exceptionCaught(channel, error, trace: trace);
     }
   }
 
   @override
-  exceptionCaught(Channel channel, dynamic cause, {StackTrace? trace}) {
-    _handler.exceptionCaught(channel, cause, trace: trace);
+  exceptionCaught(Channel channel, dynamic error, {StackTrace? trace}) {
+    handler.exceptionCaught(channel, error, trace: trace);
   }
 
   @override
   channelInactive(Channel channel) {
-    _handler.channelInactive(channel);
+    handler.channelInactive(channel);
   }
 }
 
@@ -209,123 +217,4 @@ class RawCodec extends Codec<Object> {
 
 abstract interface class ChannelInitializer {
   void initChannel(Channel channel);
-}
-
-class Network {
-  late Function _channelInitializer;
-  String? remoteHost;
-  Configuration? configuration;
-
-  Network initChannel(void Function(Channel channel) initializer) {
-    _channelInitializer = initializer;
-    return this;
-  }
-
-  Channel listen(Socket socket) {
-    var channel = Channel(socket);
-    _channelInitializer.call(channel);
-    channel.pipeline.channelActive(channel);
-    socket.listen((data) => _onEvent(data, channel),
-        onError: (error, StackTrace trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
-        onDone: () => channel.pipeline.channelInactive(channel));
-    return channel;
-  }
-
-  _onEvent(Uint8List data, Channel channel) async {
-    if (remoteHost != null) {
-      channel.putAttribute(AttributeKeys.remote, HostAndPort.of(remoteHost!));
-    }
-
-    //代理信息
-    if (configuration?.externalProxy?.enable == true) {
-      channel.putAttribute(AttributeKeys.proxyInfo, configuration!.externalProxy!);
-    }
-
-    HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
-
-    //黑名单 或 没开启https 直接转发
-    if (HostFilter.filter(hostAndPort?.host) || (hostAndPort?.isSsl() == true && configuration?.enableSsl == false)) {
-      relay(channel, channel.getAttribute(channel.id));
-      channel.pipeline.channelRead(channel, data);
-      return;
-    }
-
-    //ssl握手
-    if (hostAndPort?.isSsl() == true) {
-      ssl(channel, hostAndPort!, data);
-      return;
-    }
-
-    channel.pipeline.channelRead(channel, data);
-  }
-
-  void ssl(Channel channel, HostAndPort hostAndPort, Uint8List data) async {
-    try {
-      //客户端ssl握手
-      Channel remoteChannel = channel.getAttribute(channel.id);
-      remoteChannel.secureSocket =
-          await SecureSocket.secure(remoteChannel.socket, onBadCertificate: (certificate) => true);
-
-      remoteChannel.pipeline.listen(remoteChannel);
-
-      //ssl自签证书
-      var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
-
-      SecureSocket secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
-      channel.secureSocket = secureSocket;
-      channel.pipeline.listen(channel);
-    } catch (error, trace) {
-      channel.pipeline._handler.exceptionCaught(channel, error, trace: trace);
-    }
-  }
-
-  /// 转发请求
-  void relay(Channel clientChannel, Channel remoteChannel) {
-    var rawCodec = RawCodec();
-    clientChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(remoteChannel));
-    remoteChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(clientChannel));
-  }
-}
-
-class Server extends Network {
-  late ServerSocket serverSocket;
-  bool isRunning = false;
-
-  Server(Configuration configuration) {
-    super.configuration = configuration;
-  }
-
-  Future<ServerSocket> bind(int port) async {
-    serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, port);
-    serverSocket.listen((socket) {
-      listen(socket);
-    });
-    isRunning = true;
-    return serverSocket;
-  }
-
-  Future<ServerSocket> stop() async {
-    if (!isRunning) return serverSocket;
-    isRunning = false;
-    await serverSocket.close();
-    return serverSocket;
-  }
-}
-
-class Client extends Network {
-  Future<Channel> connect(HostAndPort hostAndPort) async {
-    String host = hostAndPort.host;
-    //说明支持ipv6
-    if (host.startsWith("[") && host.endsWith(']')) {
-      host = host.substring(host.lastIndexOf(":") + 1, host.length - 1);
-    }
-
-    return Socket.connect(host, hostAndPort.port, timeout: const Duration(seconds: 3)).then((socket) => listen(socket));
-  }
-
-  /// ssl连接
-  Future<Channel> secureConnect(HostAndPort hostAndPort) async {
-    return SecureSocket.connect(hostAndPort.host, hostAndPort.port,
-        timeout: const Duration(seconds: 3), onBadCertificate: (certificate) => true).then((socket) => listen(socket));
-  }
 }
