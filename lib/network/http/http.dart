@@ -156,7 +156,7 @@ class HttpResponse extends HttpMessage {
   final DateTime responseTime = DateTime.now();
   HttpRequest? request;
 
-  HttpResponse(String protocolVersion, this.status) : super(protocolVersion);
+  HttpResponse(this.status, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
 
   String costTime() {
     if (request == null) {
@@ -166,7 +166,8 @@ class HttpResponse extends HttpMessage {
   }
 
   factory HttpResponse.fromJson(Map<String, dynamic> json) {
-    return HttpResponse(json['protocolVersion'], HttpStatus(json['status']['code'], json['status']['reasonPhrase']))
+    return HttpResponse(HttpStatus(json['status']['code'], json['status']['reasonPhrase']),
+        protocolVersion: json['protocolVersion'])
       ..headers.addAll(HttpHeaders.fromJson(json['headers']))
       ..body = json['body']?.toString().codeUnits;
   }
@@ -292,6 +293,6 @@ class HttpStatus {
 
   @override
   String toString() {
-    return 'HttpResponseStatus{code: $code, reasonPhrase: $reasonPhrase}';
+    return '$code  $reasonPhrase';
   }
 }

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:network_proxy/utils/ip.dart';
 import 'package:proxy_manager/proxy_manager.dart';
 
+/// @author wanghongen
+/// 2023/7/26
 class SystemProxy {
   static String? _hardwarePort;
 

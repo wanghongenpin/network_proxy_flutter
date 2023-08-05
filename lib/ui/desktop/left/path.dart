@@ -54,7 +54,7 @@ class _PathRowState extends State<PathRow> {
         onSecondaryLongPressDown: menu,
         child: ListTile(
             minLeadingWidth: 25,
-            leading: Icon(getIcon(widget.response.get()), size: 16, color: widget.color),
+            leading: getIcon(widget.response.get()),
             title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
             subtitle: Text(
                 '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',

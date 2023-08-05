@@ -47,7 +47,7 @@ class BodyReader {
   Result readBody(Uint8List data) {
     if (_bodyBuffer.length > Codec.maxBodyLength) {
       _bodyBuffer.clear();
-      throw Exception('Body length exceeds ${Codec.maxBodyLength}');
+      throw ParserException('Body length exceeds ${Codec.maxBodyLength}');
     }
 
     _offset = 0;

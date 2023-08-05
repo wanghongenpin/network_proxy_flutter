@@ -88,8 +88,6 @@ class Network {
       channel.secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
     } catch (error, trace) {
       if (error is HandshakeException) {
-        channel.socket.destroy();
-        subscription?.pause();
         await subscription?.cancel();
       }
       channel.pipeline.exceptionCaught(channel, error, trace: trace);

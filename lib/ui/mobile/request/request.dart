@@ -49,8 +49,9 @@ class RequestRowState extends State<RequestRow> {
         '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''}';
 
     return ListTile(
+        textColor: (response?.status.code ?? 0) < 0 ? Colors.red : null,
         visualDensity: const VisualDensity(vertical: -4),
-        leading: widget.displayDomain ? null : Icon(getIcon(response), size: 16, color: Colors.green),
+        leading: widget.displayDomain ? null : getIcon(response),
         title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1, style: const TextStyle(fontSize: 14)),
         subtitle: Text(subTitle, maxLines: 1, style: const TextStyle(fontSize: 12)),
         trailing: const Icon(Icons.chevron_right),

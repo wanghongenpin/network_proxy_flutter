@@ -5,6 +5,9 @@ import 'package:basic_utils/basic_utils.dart';
 import 'package:pointycastle/asn1/unsupported_object_identifier_exception.dart';
 import 'package:pointycastle/pointycastle.dart';
 
+
+/// @author wanghongen
+/// 2023/7/26
 class X509Generate {
   static const String BEGIN_CERT = '-----BEGIN CERTIFICATE-----';
   static const String END_CERT = '-----END CERTIFICATE-----';

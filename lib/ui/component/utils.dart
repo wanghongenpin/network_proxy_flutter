@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
 
-IconData getIcon(HttpResponse? response) {
+Icon getIcon(HttpResponse? response) {
   var map = {
     ContentType.json: Icons.data_object,
     ContentType.html: Icons.html,
@@ -13,11 +13,16 @@ IconData getIcon(HttpResponse? response) {
     ContentType.css: Icons.css,
     ContentType.font: Icons.font_download,
   };
+
   if (response == null) {
-    return Icons.question_mark;
+    return const Icon(Icons.question_mark, size: 16, color: Colors.green);
   }
+  if (response.status.code < 0) {
+    return const Icon(Icons.error, size: 16, color: Colors.red);
+  }
+
   var contentType = response.contentType;
-  return map[contentType] ?? Icons.http;
+  return Icon(map[contentType] ?? Icons.http, size: 16, color: Colors.green);
 }
 
 String copyRequest(HttpRequest request, HttpResponse? response) {

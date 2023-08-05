@@ -108,7 +108,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       const SizedBox(height: 20),
       rowWidget("Request Method", request.method.name),
       const SizedBox(height: 20),
-      rowWidget("Status Code", response?.status.code.toString()),
+      rowWidget("Status Code", response?.status.toString()),
       const SizedBox(height: 20),
       rowWidget("Remote Address", response?.remoteAddress),
       const SizedBox(height: 20),
@@ -142,7 +142,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
     var scrollController = ScrollController();
     return ListView(controller: scrollController, children: [
-      rowWidget("StatusCode", widget.response.get()?.status.code.toString()),
+      rowWidget("StatusCode", widget.response.get()?.status.toString()),
       ...message(widget.response.get(), "Response", scrollController)
     ]);
   }

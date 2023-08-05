@@ -16,7 +16,7 @@ class JsonText extends StatelessWidget {
   Widget build(BuildContext context) {
     var jsnParser = JsnParser(json, colorTheme, indent);
     var future =
-        compute((message) => message.getJsonTree(), jsnParser).catchError((error) => <Text>[Text(error.toString())]);
+    compute((message) => message.getJsonTree(), jsnParser).catchError((error) => <Text>[Text(error.toString())]);
 
     return FutureBuilder(
         future: future,
@@ -30,7 +30,10 @@ class JsonText extends StatelessWidget {
             } else {
               widget = SizedBox(
                   width: double.infinity,
-                  height: MediaQuery.of(context).size.height - 160,
+                  height: MediaQuery
+                      .of(context)
+                      .size
+                      .height - 160,
                   child: ListView.builder(
                       physics: const BouncingScrollPhysics(),
                       controller: trackingScroll(),
@@ -69,13 +72,15 @@ class JsnParser {
   JsnParser(this.json, this.colorTheme, this.indent);
 
   List<Text> getJsonTree() {
-    List<Text> textList;
+    List<Text> textList = [];
     if (json is Map) {
-      textList = getMapText(json, prefix: indent);
+      textList.add(const Text('{'));
+      textList.addAll(getMapText(json, prefix: indent));
     } else if (json is List) {
-      textList = getArrayText(json);
+      textList.add(const Text('['));
+      textList.addAll(getArrayText(json));
     } else {
-      textList = [Text(json.toString())];
+      textList.add(Text(json.toString()));
     }
     return textList;
   }

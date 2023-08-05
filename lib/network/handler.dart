@@ -28,6 +28,7 @@ import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 import 'channel.dart';
+import 'http/codec.dart';
 import 'http_client.dart';
 
 ///请求和响应事件监听
@@ -61,14 +62,28 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     //转发请求
     forward(channel, msg).catchError((error, trace) {
-      channel.close();
-      if (error is SocketException &&
-          (error.message.contains("Failed host lookup") || error.message.contains("Connection timed out"))) {
-        log.e("连接失败 ${error.message}");
-        return;
-      }
-      log.e("转发请求失败", error: error, stackTrace: trace);
+      exceptionCaught(channel, error, trace: trace);
     });
+  }
+
+  @override
+  void exceptionCaught(Channel channel, error, {StackTrace? trace}) {
+    super.exceptionCaught(channel, error, trace: trace);
+    HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
+    String message = error.toString();
+    HttpStatus status = HttpStatus(-1, message);
+    if (error is HandshakeException) {
+      status = HttpStatus(-2, 'SSL握手失败');
+    } else if (error is ParserException) {
+      status = HttpStatus(-3, error.message);
+    } else if (error is SocketException) {
+      status = HttpStatus(-4, error.message);
+    }
+    HttpRequest request = HttpRequest(HttpMethod.connect, hostAndPort?.domain ?? channel.remoteAddress.host)
+      ..body = message.codeUnits;
+    request.response = HttpResponse(status)..body = message.codeUnits;
+    listener?.onRequest(channel, request);
+    listener?.onResponse(channel, request.response!);
   }
 
   @override
@@ -81,7 +96,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   localRequest(HttpRequest msg, Channel channel) async {
     //获取配置
     if (msg.path() == '/config') {
-      var response = HttpResponse(msg.protocolVersion, HttpStatus.ok);
+      var response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
       var body = {
         "requestRewrites": requestRewrites?.toJson(),
         'whitelist': HostFilter.whitelist.toJson(),
@@ -92,7 +107,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       return;
     }
 
-    var response = HttpResponse(msg.protocolVersion, HttpStatus.ok);
+    var response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
     response.body = utf8.encode('pong');
     response.headers.set("os", Platform.operatingSystem);
     response.headers.set("hostname", Platform.isAndroid ? Platform.operatingSystem : Platform.localHostname);
@@ -122,7 +137,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   void _crtDownload(Channel channel, HttpRequest request) async {
     const String fileMimeType = 'application/x-x509-ca-cert';
-    var response = HttpResponse(request.protocolVersion, HttpStatus.ok);
+    var response = HttpResponse(HttpStatus.ok);
     response.headers.set(HttpHeaders.CONTENT_TYPE, fileMimeType);
     response.headers.set("Content-Disposition", 'inline;filename=ProxyPinCA.crt');
     response.headers.set("Connection", 'close');
@@ -169,8 +184,8 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     clientChannel.putAttribute(clientId, proxyChannel);
     //https代理新建连接请求
     if (httpRequest.method == HttpMethod.connect) {
-      await clientChannel
-          .write(HttpResponse(httpRequest.protocolVersion, HttpStatus.ok.reason('Connection established')));
+      await clientChannel.write(
+          HttpResponse(HttpStatus.ok.reason('Connection established'), protocolVersion: httpRequest.protocolVersion));
     }
 
     return proxyChannel;

@@ -38,6 +38,18 @@ class HttpConstants {
   static const int colon = 58;
 }
 
+class ParserException implements Exception {
+  final String message;
+  final String? source;
+
+  ParserException(this.message, [this.source]);
+
+  @override
+  String toString() {
+    return 'ParserException{message: $message source: $source}';
+  }
+}
+
 enum State {
   readInitial,
   readHeader,
@@ -80,14 +92,9 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     //请求行
     if (_state == State.readInitial) {
       init();
-      try {
-        var initialLine = _readInitialLine(data);
-        message = createMessage(initialLine);
-        _state = State.readHeader;
-      } catch (e, cause) {
-        logger.e("解析请求行失败 [${String.fromCharCodes(data)}]", error: e, stackTrace: cause);
-        rethrow;
-      }
+      var initialLine = _readInitialLine(data);
+      message = createMessage(initialLine);
+      _state = State.readHeader;
     }
 
     //请求头
@@ -209,7 +216,7 @@ class HttpResponseCodec extends HttpCodec<HttpResponse> {
   @override
   HttpResponse createMessage(List<String> reqLine) {
     var httpStatus = HttpStatus(int.parse(reqLine[1]), reqLine[2]);
-    return HttpResponse(reqLine[0], httpStatus);
+    return HttpResponse(httpStatus, protocolVersion: reqLine[0]);
   }
 
   @override
@@ -243,7 +250,7 @@ class HttpParse {
       }
     }
     if (initialLine.length != 3) {
-      throw Exception("parseLine error ${String.fromCharCodes(data)}");
+      throw ParserException("parseLine error", String.fromCharCodes(data));
     }
 
     return initialLine;
