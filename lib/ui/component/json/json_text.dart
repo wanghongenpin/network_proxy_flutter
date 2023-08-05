@@ -40,6 +40,7 @@ class JsonText extends StatelessWidget {
             }
             return SelectionArea(child: widget);
           }
+
           return Container();
         });
   }

@@ -29,7 +29,6 @@ import 'host_port.dart';
 
 class Network {
   late Function _channelInitializer;
-  String? remoteHost;
   Configuration? configuration;
   StreamSubscription? subscription;
 
@@ -49,8 +48,8 @@ class Network {
   }
 
   _onEvent(Uint8List data, Channel channel) async {
-    if (remoteHost != null) {
-      channel.putAttribute(AttributeKeys.remote, HostAndPort.of(remoteHost!));
+    if (configuration?.remoteHost != null) {
+      channel.putAttribute(AttributeKeys.remote, HostAndPort.of(configuration!.remoteHost!));
     }
 
     //代理信息

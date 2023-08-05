@@ -169,7 +169,7 @@ class MoreEnum extends StatelessWidget {
               hostname: response.headers.get("hostname"));
 
           if (context.mounted && Navigator.canPop(context)) {
-            FlutterToastr.show("连接成功${proxyServer.isRunning ? '' : ',手机需要开启抓包才可以抓取请求哦'}", context);
+            FlutterToastr.show("连接成功${proxyServer.isRunning ? '' : ',手机需要开启抓包才可以抓取请求哦'}", context, duration: 3);
             Navigator.pop(context);
           }
         }

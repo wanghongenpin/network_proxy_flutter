@@ -104,12 +104,11 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     //获取远程连接
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
 
-
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
       // log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
 
-      var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.path());
+      var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.hostAndPort?.host, httpRequest.path());
       if (replaceBody?.isNotEmpty == true) {
         httpRequest.body = utf8.encode(replaceBody!);
       }
@@ -194,7 +193,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     msg.request?.response = msg;
     // log.i("[${clientChannel.id}] Response ${msg}");
 
-    var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.path());
+    var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.hostAndPort?.host, msg.request?.path());
     if (replaceBody?.isNotEmpty == true) {
       msg.body = utf8.encode(replaceBody!);
     }

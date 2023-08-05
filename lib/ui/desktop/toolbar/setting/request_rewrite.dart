@@ -124,7 +124,8 @@ class RuleAddDialog extends StatelessWidget {
     }
 
     ValueNotifier<bool> enableNotifier = ValueNotifier(rule == null || rule.enabled);
-    String? url = rule?.url;
+    String? domain = rule?.domain;
+    String? path = rule?.path;
     String? requestBody = rule?.requestBody;
     String? responseBody = rule?.responseBody;
 
@@ -144,10 +145,12 @@ class RuleAddDialog extends StatelessWidget {
                             contentPadding: const EdgeInsets.only(left: 0),
                             title: const Text('是否启用', textAlign: TextAlign.start),
                             value: enable,
-                            onChanged: (value) {
-                              enableNotifier.value = value;
-                            });
+                            onChanged: (value) => enableNotifier.value = value);
                       }),
+                  TextFormField(
+                      decoration: const InputDecoration(labelText: '域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
+                      initialValue: domain,
+                      onSaved: (val) => domain = val),
                   TextFormField(
                       decoration: const InputDecoration(labelText: 'Path', hintText: '/api/v1/*'),
                       validator: (val) {
@@ -156,8 +159,8 @@ class RuleAddDialog extends StatelessWidget {
                         }
                         return null;
                       },
-                      initialValue: url,
-                      onSaved: (val) => url = val),
+                      initialValue: path,
+                      onSaved: (val) => path = val),
                   TextFormField(
                       initialValue: requestBody,
                       decoration: const InputDecoration(labelText: '请求体替换为:'),
@@ -177,10 +180,10 @@ class RuleAddDialog extends StatelessWidget {
                   (formKey.currentState as FormState).save();
 
                   if (currentIndex >= 0) {
-                    requestRewrites.rules[currentIndex] = RequestRewriteRule(enableNotifier.value, url!,
+                    requestRewrites.rules[currentIndex] = RequestRewriteRule(enableNotifier.value, path!, domain,
                         requestBody: requestBody, responseBody: responseBody);
                   } else {
-                    requestRewrites.addRule(RequestRewriteRule(enableNotifier.value, url!,
+                    requestRewrites.addRule(RequestRewriteRule(enableNotifier.value, path!, domain,
                         requestBody: requestBody, responseBody: responseBody));
                   }
 
@@ -250,7 +253,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
           border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
           columns: const <DataColumn>[
             DataColumn(label: Text('启用')),
-            DataColumn(label: Text('Path')),
+            DataColumn(label: Text('URL')),
             DataColumn(label: Text('请求体')),
             DataColumn(label: Text('响应体')),
           ],
@@ -261,7 +264,8 @@ class _RequestRuleListState extends State<RequestRuleList> {
                         DataCell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
                         DataCell(ConstrainedBox(
                             constraints: const BoxConstraints(minWidth: 60),
-                            child: Text(widget.requestRewrites.rules[index].url))),
+                            child: Text(
+                                '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'))),
                         DataCell(Container(
                           constraints: const BoxConstraints(maxWidth: 120),
                           padding: const EdgeInsetsDirectional.all(10),

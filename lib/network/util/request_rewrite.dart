@@ -14,24 +14,30 @@ class RequestRewrites {
     });
   }
 
-  String? findRequestReplaceWith(String? url) {
+  String? findRequestReplaceWith(String? domain, String? url) {
     if (!enabled || url == null) {
       return null;
     }
     for (var rule in rules) {
       if (rule.enabled && rule.urlReg.hasMatch(url)) {
+        if (rule.domain?.isNotEmpty == true && rule.domain != domain) {
+          continue;
+        }
         return rule.requestBody;
       }
     }
     return null;
   }
 
-  String? findResponseReplaceWith(String? url) {
-    if (!enabled || url == null) {
+  String? findResponseReplaceWith(String? domain, String? path) {
+    if (!enabled || path == null) {
       return null;
     }
     for (var rule in rules) {
-      if (rule.enabled && rule.urlReg.hasMatch(url)) {
+      if (rule.enabled && rule.urlReg.hasMatch(path)) {
+        if (rule.domain?.isNotEmpty == true && rule.domain != domain) {
+          continue;
+        }
         return rule.responseBody;
       }
     }
@@ -58,23 +64,25 @@ class RequestRewrites {
 
 class RequestRewriteRule {
   bool enabled = false;
-  final String url;
+  final String path;
+  final String? domain;
   final RegExp urlReg;
   String? requestBody;
   String? responseBody;
 
-  RequestRewriteRule(this.enabled, this.url, {this.requestBody, this.responseBody})
-      : urlReg = RegExp(url.replaceAll("*", ".*"));
+  RequestRewriteRule(this.enabled, this.path, this.domain, {this.requestBody, this.responseBody})
+      : urlReg = RegExp(path.replaceAll("*", ".*"));
 
   factory RequestRewriteRule.formJson(Map<String, dynamic> map) {
-    return RequestRewriteRule(map['enabled'] == true, map['url'],
+    return RequestRewriteRule(map['enabled'] == true, map['path'] ?? map['url'], map['domain'],
         requestBody: map['requestBody'], responseBody: map['responseBody']);
   }
 
   toJson() {
     return {
       'enabled': enabled,
-      'url': url,
+      'domain': domain,
+      'path': path,
       'requestBody': requestBody,
       'responseBody': responseBody,
     };

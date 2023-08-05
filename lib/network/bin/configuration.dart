@@ -44,6 +44,8 @@ class Configuration {
 
   //外部代理
   ProxyInfo? externalProxy;
+  //远程连接 不持久化保存
+  String? remoteHost;
 
   Configuration._();
 
