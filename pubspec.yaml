@@ -2,7 +2,7 @@ name: network_proxy
 description: network proxy
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: '>=3.0.2 <4.0.0'
@@ -14,6 +14,7 @@ dependencies:
   basic_utils: ^5.6.1
   logger: ^2.0.1
   date_format: ^2.0.7
+  flutter_json: ^0.0.1+1
   window_manager: ^0.3.5
   desktop_multi_window: ^0.2.0
   path_provider: ^2.0.15

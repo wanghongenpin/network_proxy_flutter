@@ -128,9 +128,10 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     if (widget.request.get() == null) {
       return const SizedBox();
     }
-    return ListView(children: [
+    var scrollController = ScrollController();
+    return ListView(controller: scrollController, children: [
       rowWidget("URI", Uri.decodeFull(widget.request.get()?.path() ?? '')),
-      ...message(widget.request.get(), "Request")
+      ...message(widget.request.get(), "Request", scrollController)
     ]);
   }
 
@@ -138,9 +139,11 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     if (widget.response.get() == null) {
       return const SizedBox();
     }
-    return ListView(children: [
+
+    var scrollController = ScrollController();
+    return ListView(controller: scrollController, children: [
       rowWidget("StatusCode", widget.response.get()?.status.code.toString()),
-      ...message(widget.response.get(), "Response")
+      ...message(widget.response.get(), "Response", scrollController)
     ]);
   }
 
@@ -155,7 +158,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     ]);
   }
 
-  List<Widget> message(HttpMessage? message, String type) {
+  List<Widget> message(HttpMessage? message, String type, ScrollController scrollController) {
     var headers = <Widget>[];
     message?.headers.forEach((name, values) {
       for (var v in values) {
@@ -168,7 +171,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       }
     });
 
-    Widget bodyWidgets = HttpBodyWidget(httpMessage: message);
+    Widget bodyWidgets = HttpBodyWidget(httpMessage: message, scrollController: scrollController);
 
     Widget headerWidget = ExpansionTile(
         tilePadding: const EdgeInsets.only(left: 0),

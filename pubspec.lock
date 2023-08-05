@@ -150,6 +150,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.0"
+  flutter_json:
+    dependency: "direct main"
+    description:
+      name: flutter_json
+      sha256: "38d76ffce9b3ae3b6a7de7c5dfd57a05f59fae2d0f0351b52524cc69f7ed2725"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.0.1+1"
   flutter_lints:
     dependency: "direct dev"
     description:

@@ -15,7 +15,11 @@ class JsonViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return getContentWidget(jsonObj);
+    return DefaultTextStyle.merge(
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+        ),
+        child: getContentWidget(jsonObj));
   }
 
   Widget getContentWidget(dynamic content) {
@@ -73,6 +77,10 @@ class JsonObjectViewerState extends State<JsonObjectViewer> {
         ],
       ));
       list.add(const SizedBox(height: 4));
+
+      if (openFlag[entry.key] == null) {
+        openFlag[entry.key] = widget.notRoot == false && _isExtensible(entry.value);
+      }
       if ((openFlag[entry.key] ?? false) && entry.value != null) {
         list.add(getContentWidget(entry.value, widget.colorTheme));
       }
@@ -92,18 +100,17 @@ class JsonObjectViewerState extends State<JsonObjectViewer> {
           },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               (openFlag[entry.key] ?? false)
-                  ? const Icon(Icons.arrow_drop_down, size: 14)
-                  : const Icon(Icons.arrow_right, size: 14),
+                  ? const Icon(Icons.keyboard_arrow_down, size: 18)
+                  : const Icon(Icons.keyboard_arrow_right, size: 18),
               Text(entry.key, style: TextStyle(color: widget.colorTheme.propertyKey)),
             ],
           ));
     }
 
     return Row(children: [
-      const Icon(Icons.arrow_right, color: Color.fromARGB(0, 0, 0, 0), size: 14),
+      const Icon(Icons.keyboard_arrow_right, color: Color.fromARGB(0, 0, 0, 0), size: 18),
       Text(entry.key, style: TextStyle(color: widget.colorTheme.propertyKey)),
     ]);
   }
@@ -183,14 +190,16 @@ class _JsonArrayViewerState extends State<JsonArrayViewer> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              openFlag[index] ? const Icon(Icons.arrow_drop_down, size: 14) : const Icon(Icons.arrow_right, size: 14),
+              openFlag[index]
+                  ? const Icon(Icons.keyboard_arrow_down, size: 18)
+                  : const Icon(Icons.keyboard_arrow_right, size: 18),
               Text('[$index]', style: TextStyle(color: widget.colorTheme.propertyKey)),
             ],
           ));
     }
 
     return Row(children: [
-      const Icon(Icons.arrow_right, color: Color.fromARGB(0, 0, 0, 0), size: 14),
+      const Icon(Icons.arrow_right, color: Color.fromARGB(0, 0, 0, 0), size: 18),
       Text('[$index]', style: TextStyle(color: widget.colorTheme.propertyKey)),
     ]);
   }

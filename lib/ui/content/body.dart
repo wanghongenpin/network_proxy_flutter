@@ -19,8 +19,10 @@ class HttpBodyWidget extends StatefulWidget {
   final HttpMessage? httpMessage;
   final bool inNewWindow; //是否在新窗口打开
   final WindowController? windowController;
+  final ScrollController? scrollController;
 
-  const HttpBodyWidget({super.key, required this.httpMessage, this.inNewWindow = false, this.windowController});
+  const HttpBodyWidget(
+      {super.key, required this.httpMessage, this.inNewWindow = false, this.windowController, this.scrollController});
 
   @override
   State<StatefulWidget> createState() {
@@ -75,7 +77,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
           }),
       Padding(
           padding: const EdgeInsets.all(10),
-          child: _Body(key: bodyKey, message: widget.httpMessage, viewType: tabs.list[tabIndex])) //body
+          child: _Body(key: bodyKey, message: widget.httpMessage, viewType: tabs.list[tabIndex], scrollController:widget.scrollController)) //body
     ];
 
     var tabController = DefaultTabController(
@@ -146,8 +148,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
 class _Body extends StatefulWidget {
   final HttpMessage? message;
   final ViewType viewType;
+  final ScrollController? scrollController;
 
-  const _Body({super.key, this.message, required this.viewType});
+  const _Body({super.key, this.message, required this.viewType, this.scrollController});
 
   @override
   State<StatefulWidget> createState() {
@@ -205,7 +208,7 @@ class _BodyState extends State<_Body> {
     try {
       if (type == ViewType.jsonText) {
         var jsonObject = json.decode(message!.bodyAsString);
-        return JsonText(json: jsonObject, colorTheme: ColorTheme.of(Theme.of(context).brightness));
+        return JsonText(json: jsonObject, colorTheme: ColorTheme.of(Theme.of(context).brightness), scrollController: widget.scrollController);
       }
 
       if (type == ViewType.json) {
