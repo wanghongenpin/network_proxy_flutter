@@ -114,6 +114,8 @@ class HttpHeaders {
     _originalHeaderNames.forEach(f);
   }
 
+  Iterable<MapEntry<String, List<String>>> get entries => _originalHeaderNames.entries;
+
   set contentType(String contentType) => set(CONTENT_TYPE, contentType);
 
   String get contentType => get(CONTENT_TYPE) ?? "";

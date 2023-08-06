@@ -70,6 +70,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   void exceptionCaught(Channel channel, error, {StackTrace? trace}) {
     super.exceptionCaught(channel, error, trace: trace);
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
+    hostAndPort ??= HostAndPort.host(channel.remoteAddress.host, channel.remotePort);
     String message = error.toString();
     HttpStatus status = HttpStatus(-1, message);
     if (error is HandshakeException) {
@@ -79,8 +80,9 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     } else if (error is SocketException) {
       status = HttpStatus(-4, error.message);
     }
-    HttpRequest request = HttpRequest(HttpMethod.connect, hostAndPort?.domain ?? channel.remoteAddress.host)
-      ..body = message.codeUnits;
+    HttpRequest request = HttpRequest(HttpMethod.connect, hostAndPort.domain)
+      ..body = message.codeUnits
+    ..hostAndPort = hostAndPort;
     request.response = HttpResponse(status)..body = message.codeUnits;
     listener?.onRequest(channel, request);
     listener?.onResponse(channel, request.response!);

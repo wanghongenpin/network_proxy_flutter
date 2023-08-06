@@ -212,9 +212,13 @@ class RequestRuleList extends StatefulWidget {
   List<int> removeSelected() {
     var state = (key as GlobalKey<_RequestRuleListState>).currentState;
     List<int> list = [];
+    var selectedIndex = state?.currentSelectedIndex;
     state?.selected.forEach((key, value) {
       if (value == true) {
         list.add(key);
+        if (selectedIndex == key) {
+          state.currentSelectedIndex = -1;
+        }
       }
     });
     state?.selected.clear();
@@ -263,7 +267,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                       cells: [
                         DataCell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
                         DataCell(ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 60),
+                            constraints: const BoxConstraints(minWidth: 60,maxWidth: 280),
                             child: Text(
                                 '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'))),
                         DataCell(Container(

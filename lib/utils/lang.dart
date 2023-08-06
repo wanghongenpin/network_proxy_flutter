@@ -25,3 +25,14 @@ class Pair<K, V> {
 
   Pair(this.key, this.value);
 }
+
+class Maps {
+  static K? getKey<K, V>(Map<K, V> map, V? value) {
+    for (var entry in map.entries) {
+      if (entry.value == value) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+}

@@ -31,6 +31,7 @@ abstract class HttpMessage {
     "text/html": ContentType.html,
     "text/plain": ContentType.text,
     "application/x-www-form-urlencoded": ContentType.formUrl,
+    "form-data": ContentType.formData,
     "image": ContentType.image,
     "application/json": ContentType.json
   };
@@ -137,6 +138,7 @@ class HttpRequest extends HttpMessage {
 enum ContentType {
   json,
   formUrl,
+  formData,
   js,
   html,
   text,

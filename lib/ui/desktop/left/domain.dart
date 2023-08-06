@@ -30,6 +30,7 @@ class DomainWidget extends StatefulWidget {
 
 class DomainWidgetState extends State<DomainWidget> {
   LinkedHashMap<HostAndPort, HeaderBody> containerMap = LinkedHashMap<HostAndPort, HeaderBody>();
+  LinkedHashMap<HostAndPort, HeaderBody> searchView = LinkedHashMap<HostAndPort, HeaderBody>();
 
   //搜索的内容
   SearchModel? searchModel;
@@ -49,9 +50,13 @@ class DomainWidgetState extends State<DomainWidget> {
   @override
   Widget build(BuildContext context) {
     var list = containerMap.values;
+
     //根究搜素文本过滤
     if (searchModel?.isNotEmpty == true) {
-      list = searchFilter(searchModel!);
+      searchView = searchFilter(searchModel!);
+      list = searchView.values;
+    } else {
+      searchView.clear();
     }
 
     return Scaffold(
@@ -64,14 +69,16 @@ class DomainWidgetState extends State<DomainWidget> {
   }
 
   ///搜索过滤
-  List<HeaderBody> searchFilter(SearchModel searchModel) {
-    var result = <HeaderBody>[];
+  LinkedHashMap<HostAndPort, HeaderBody> searchFilter(SearchModel searchModel) {
+    LinkedHashMap<HostAndPort, HeaderBody> result = LinkedHashMap<HostAndPort, HeaderBody>();
+
     containerMap.forEach((key, headerBody) {
-      var body = headerBody.filter(searchModel.keyword?.toLowerCase(), searchModel.contentType);
+      var body = headerBody.search(searchModel);
       if (body.isNotEmpty) {
-        result.add(headerBody.copy(body: body, selected: true));
+        result[key] = headerBody.copy(body: body, selected: searchView[key]?.currentSelected);
       }
     });
+
     return result;
   }
 
@@ -84,9 +91,9 @@ class DomainWidgetState extends State<DomainWidget> {
     if (headerBody != null) {
       headerBody.addBody(channel.id, listURI);
 
-      //搜索状态，刷新数据
-      if (searchModel?.isNotEmpty == true) {
-        changeState();
+      //搜索视图
+      if (searchModel?.isNotEmpty == true && headerBody.filter(listURI, searchModel!)) {
+        searchView[hostAndPort]?.addBody(channel.id, listURI);
       }
       return;
     }
@@ -108,7 +115,20 @@ class DomainWidgetState extends State<DomainWidget> {
   addResponse(Channel channel, HttpResponse response) {
     HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
     HeaderBody? headerBody = containerMap[hostAndPort];
-    headerBody?.getBody(channel.id)?.add(response);
+    var pathRow = headerBody?.getBody(channel.id);
+    pathRow?.add(response);
+    if (pathRow == null) {
+      return;
+    }
+
+    //搜索视图
+    if (searchModel?.isNotEmpty == true && headerBody?.filter(pathRow, searchModel!) == true) {
+      var header = searchView[hostAndPort];
+      if (header?.getBody(channel.id) == null) {
+        header?.addBody(channel.id, pathRow);
+      }
+      headerBody?.getBody(channel.id)?.add(response);
+    }
   }
 
   ///清理
@@ -122,6 +142,8 @@ class DomainWidgetState extends State<DomainWidget> {
 
 ///标题和内容布局 标题是域名 内容是域名下请求
 class HeaderBody extends StatefulWidget {
+  final stateKey = GlobalKey<_HeaderBodyState>();
+
   //请求ID和请求的映射
   final Map<String, PathRow> channelIdPathMap = HashMap<String, PathRow>();
 
@@ -144,8 +166,7 @@ class HeaderBody extends StatefulWidget {
   void addBody(String key, PathRow widget) {
     _body.addFirst(widget);
     channelIdPathMap[key] = widget;
-    var state = super.key as GlobalKey<_HeaderBodyState>;
-    state.currentState?.changeState();
+    changeState();
   }
 
   PathRow? getBody(String key) {
@@ -153,38 +174,96 @@ class HeaderBody extends StatefulWidget {
   }
 
   ///根据文本过滤
-  Iterable<PathRow> filter(String? keyword, ContentType? contentType) {
-    return _body.where((element) {
-      if (contentType != null && element.response.get()?.contentType != contentType) {
-        return false;
-      }
-
-      if (keyword == null) {
-        return true;
-      }
-      if (element.request.method.name.toLowerCase() == keyword) {
-        return true;
-      }
-      if (element.request.requestUrl.toLowerCase().contains(keyword)) {
-        return true;
-      }
-      return element.response.get()?.contentType.name.toLowerCase().contains(keyword) == true;
-    });
+  Iterable<PathRow> search(SearchModel searchModel) {
+    return _body.where((element) => filter(element, searchModel));
   }
 
   ///复制
   HeaderBody copy({Iterable<PathRow>? body, bool? selected}) {
-    var headerBody =
-        HeaderBody(header, selected: selected ?? this.selected, onRemove: onRemove, proxyServer: proxyServer);
+    var state = key as GlobalKey<_HeaderBodyState>;
+    var headerBody = HeaderBody(header,
+        selected: selected ?? state.currentState?.selected == true, onRemove: onRemove, proxyServer: proxyServer);
     if (body != null) {
       headerBody._body.addAll(body);
     }
     return headerBody;
   }
 
+  bool get currentSelected {
+    var state = key as GlobalKey<_HeaderBodyState>;
+    return state.currentState?.selected == true;
+  }
+
+  changeState() {
+    var state = key as GlobalKey<_HeaderBodyState>;
+    state.currentState?.changeState();
+  }
+
   @override
   State<StatefulWidget> createState() {
     return _HeaderBodyState();
+  }
+
+  bool filter(PathRow element, SearchModel searchModel) {
+    var request = element.request;
+    var response = element.response.get();
+
+    if (searchModel.requestMethod != null && searchModel.requestMethod != request.method) {
+      return false;
+    }
+    if (searchModel.requestContentType != null && request.contentType != searchModel.requestContentType) {
+      return false;
+    }
+
+    if (searchModel.responseContentType != null && response?.contentType != searchModel.responseContentType) {
+      return false;
+    }
+    if (searchModel.statusCode != null && response?.status.code != searchModel.statusCode) {
+      return false;
+    }
+
+    if (searchModel.keyword == null || searchModel.keyword?.isEmpty == true || searchModel.searchOptions.isEmpty) {
+      return true;
+    }
+
+    for (var option in searchModel.searchOptions) {
+      if (keywordFilter(searchModel.keyword!, option, request, response)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool keywordFilter(String keyword, Option option, HttpRequest request, HttpResponse? response) {
+    if (option == Option.url && request.uri.toString().toLowerCase().contains(keyword.toLowerCase())) {
+      return true;
+    }
+
+    if (option == Option.requestBody && request.bodyAsString.contains(keyword) == true) {
+      return true;
+    }
+    if (option == Option.responseBody && response?.bodyAsString.contains(keyword) == true) {
+      return true;
+    }
+    if (option == Option.method && request.method.name.toLowerCase() == keyword.toLowerCase()) {
+      return true;
+    }
+    if (option == Option.responseContentType && response?.headers.contentType.contains(keyword) == true) {
+      return true;
+    }
+
+    if (option == Option.requestHeader || option == Option.responseHeader) {
+      print(response?.headers.entries);
+      var entries = option == Option.requestHeader ? request.headers.entries : response?.headers.entries ?? [];
+
+      for (var entry in entries) {
+        if (entry.value.any((element) => element.contains(keyword))) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }
 

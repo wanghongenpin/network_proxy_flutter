@@ -212,9 +212,13 @@ class RequestRuleList extends StatefulWidget {
   List<int> removeSelected() {
     var state = (key as GlobalKey<_RequestRuleListState>).currentState;
     List<int> list = [];
+    var selectedIndex = state?.currentSelectedIndex;
     state?.selected.forEach((key, value) {
       if (value == true) {
         list.add(key);
+        if (selectedIndex == key) {
+          state.currentSelectedIndex = -1;
+        }
       }
     });
     state?.selected.clear();

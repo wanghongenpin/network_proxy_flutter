@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/desktop/left/model/search.dart';
+import 'package:network_proxy/ui/desktop/left/search_condition.dart';
 
 class Search extends StatefulWidget {
   final Function(SearchModel searchModel)? onSearch;
@@ -14,7 +15,9 @@ class Search extends StatefulWidget {
 }
 
 class _SearchState extends State<Search> {
-  final SearchModel searchModel = SearchModel("", null);
+  SearchModel searchModel = SearchModel();
+  bool searched = false;
+  TextEditingController keywordController = TextEditingController();
   bool changing = false;
 
   @override
@@ -28,6 +31,7 @@ class _SearchState extends State<Search> {
       ),
       child: TextField(
         cursorHeight: 22,
+        controller: keywordController,
         onChanged: (val) async {
           if (searchModel.keyword == val) {
             return;
@@ -38,6 +42,9 @@ class _SearchState extends State<Search> {
             changing = true;
             Future.delayed(const Duration(milliseconds: 500), () {
               changing = false;
+              if (!searched) {
+                searchModel.searchOptions = {Option.url, Option.method, Option.responseContentType};
+              }
               widget.onSearch?.call(searchModel);
             });
           }
@@ -45,18 +52,53 @@ class _SearchState extends State<Search> {
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.all(0),
           border: InputBorder.none,
-          prefixIcon: const Icon(Icons.search),
+          prefixIcon: InkWell(
+              child: Icon(Icons.search, color: searched ? Colors.green : Colors.blue),
+              onTapDown: (details) {
+                searchDialog(details);
+              }),
           hintText: 'Search',
           suffixIcon: ContentTypeSelect(onSelected: (contentType) {
-            if (searchModel.contentType == contentType) {
-              return;
-            }
-            searchModel.contentType = contentType;
+            searchModel.responseContentType = contentType;
             widget.onSearch?.call(searchModel);
           }),
         ),
       ),
     );
+  }
+
+  searchDialog(TapDownDetails details) {
+    if (!searched) {
+      searchModel.searchOptions = {Option.url};
+    }
+    showMenu(
+        context: context,
+        position: RelativeRect.fromLTRB(
+          details.globalPosition.dx,
+          details.globalPosition.dy - 380,
+          details.globalPosition.dx,
+          details.globalPosition.dy - 380,
+        ),
+        items: [
+          PopupMenuItem(
+              padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
+              enabled: false,
+              child: DefaultTextStyle.merge(
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  child: SizedBox(
+                      width: 500,
+                      height: 350,
+                      child: SearchConditions(
+                          searchModel: searchModel,
+                          onSearch: (val) {
+                            setState(() {
+                              searchModel = val;
+                              searched = searchModel.isNotEmpty;
+                              keywordController.text = searchModel.keyword ?? '';
+                              widget.onSearch?.call(searchModel);
+                            });
+                          }))))
+        ]);
   }
 }
 
@@ -73,7 +115,7 @@ class ContentTypeSelect extends StatefulWidget {
 
 class ContentTypeState extends State<ContentTypeSelect> {
   String value = "全部";
-  List<String> types = ["JSON", "HTML", "JS", "CSS", "IMAGE", 'FONT', "其他", "全部"];
+  List<String> types = ["JSON", "HTML", "JS", "CSS", "TEXT", "IMAGE", "全部"];
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +130,6 @@ class ContentTypeState extends State<ContentTypeSelect> {
         const Icon(Icons.arrow_drop_up, size: 20)
       ]),
       onSelected: (String value) {
-        print(value);
         if (this.value == value) {
           return;
         }

@@ -68,6 +68,10 @@ class JsonObjectViewerState extends State<JsonObjectViewer> {
   _getList() {
     List<Widget> list = [];
     for (MapEntry entry in widget.jsonObj.entries) {
+      if (openFlag[entry.key] == null) {
+        openFlag[entry.key] = widget.notRoot == false && _isExtensible(entry.value);
+      }
+
       list.add(Row(
         children: <Widget>[
           getKeyWidget(entry),
@@ -78,9 +82,6 @@ class JsonObjectViewerState extends State<JsonObjectViewer> {
       ));
       list.add(const SizedBox(height: 4));
 
-      if (openFlag[entry.key] == null) {
-        openFlag[entry.key] = widget.notRoot == false && _isExtensible(entry.value);
-      }
       if ((openFlag[entry.key] ?? false) && entry.value != null) {
         list.add(getContentWidget(entry.value, widget.colorTheme));
       }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -16,7 +17,7 @@ class JsonText extends StatelessWidget {
   Widget build(BuildContext context) {
     var jsnParser = JsnParser(json, colorTheme, indent);
     var future =
-    compute((message) => message.getJsonTree(), jsnParser).catchError((error) => <Text>[Text(error.toString())]);
+        compute((message) => message.getJsonTree(), jsnParser).catchError((error) => <Text>[Text(error.toString())]);
 
     return FutureBuilder(
         future: future,
@@ -25,15 +26,12 @@ class JsonText extends StatelessWidget {
             var textList = snapshot.data as List<Text>;
 
             Widget widget;
-            if (textList.length < 1000) {
+            if (textList.length < 2000) {
               widget = Column(crossAxisAlignment: CrossAxisAlignment.start, children: textList);
             } else {
               widget = SizedBox(
                   width: double.infinity,
-                  height: MediaQuery
-                      .of(context)
-                      .size
-                      .height - 160,
+                  height: MediaQuery.of(context).size.height - 160,
                   child: ListView.builder(
                       physics: const BouncingScrollPhysics(),
                       controller: trackingScroll(),
@@ -60,6 +58,17 @@ class JsonText extends StatelessWidget {
       }
       offset = trackingScroll.offset;
     });
+
+    if (Platform.isIOS) {
+      scrollController?.addListener(() {
+        if (scrollController!.offset >= scrollController!.position.maxScrollExtent) {
+          scrollController?.jumpTo(scrollController!.position.maxScrollExtent);
+          trackingScroll
+              .jumpTo(trackingScroll.offset + (scrollController!.offset - scrollController!.position.maxScrollExtent));
+        }
+      });
+    }
+
     return trackingScroll;
   }
 }
@@ -80,7 +89,7 @@ class JsnParser {
       textList.add(const Text('['));
       textList.addAll(getArrayText(json));
     } else {
-      textList.add(Text(json.toString()));
+      textList.add(Text(json == null ? '' : json.toString()));
     }
     return textList;
   }
