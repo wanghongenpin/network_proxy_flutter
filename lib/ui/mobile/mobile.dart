@@ -12,6 +12,7 @@ import 'package:network_proxy/ui/launch/launch.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
+import 'package:network_proxy/ui/mobile/request/search.dart';
 
 class MobileHomePage extends StatefulWidget {
   final Configuration configuration;
@@ -70,15 +71,19 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: search(), actions: [
-        IconButton(
-            tooltip: "清理",
-            icon: const Icon(Icons.cleaning_services_outlined),
-            onPressed: () => requestStateKey.currentState?.clean()),
-        const SizedBox(width: 2),
-        MoreEnum(proxyServer: proxyServer, desktop: desktop),
-        const SizedBox(width: 10)
-      ]),
+      appBar: AppBar(
+          title: MobileSearch(onSearch: (val) {
+            requestStateKey.currentState?.search(val);
+          }),
+          actions: [
+            IconButton(
+                tooltip: "清理",
+                icon: const Icon(Icons.cleaning_services_outlined),
+                onPressed: () => requestStateKey.currentState?.clean()),
+            const SizedBox(width: 2),
+            MoreEnum(proxyServer: proxyServer, desktop: desktop),
+            const SizedBox(width: 10)
+          ]),
       drawer: DrawerWidget(proxyServer: proxyServer),
       floatingActionButton: FloatingActionButton(
           onPressed: () {},
@@ -91,34 +96,37 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
       body: ValueListenableBuilder(
           valueListenable: desktop,
           builder: (context, value, _) {
+
             return Column(children: [
-              value.connect == false
-                  ? const SizedBox()
-                  : Container(
-                      margin: const EdgeInsets.only(top: 5, bottom: 5),
-                      height: 50,
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-                          return ConnectRemote(desktop: desktop, proxyServer: proxyServer);
-                        })),
-                        child: Text("已连接${value.os?.toUpperCase()}，手机抓包已关闭",
-                            style: Theme.of(context).textTheme.titleMedium),
-                      )),
-               Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
+              value.connect ? remoteConnect(value) : const SizedBox(),
+              Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
             ]);
           }),
     );
   }
 
   showUpgradeNotice() {
-    String content = '1. 手机版启动默认不再自动开启抓包，请手动点击启动按钮。\n'
-        '2. 搜索功能增强，可直接搜索响应类型和请求方法。\n'
-        '3. 支持brotli编码，br响应类型编码不会再显示乱码';
+    String content = '1. 增加高级搜索，点击搜索icon触发。\n'
+        '2. 显示SSL握手异常、建立连接异常、未知异常等请求。\n'
+        '3.响应体大时异步加载json，请求重写增加域名，修复手机扫码连接未开启代理时不转发问题';
     showAlertDialog('更新内容', content, () {
       widget.configuration.upgradeNotice = false;
       widget.configuration.flushConfig();
     });
+  }
+
+  /// 远程连接
+  Widget remoteConnect(RemoteModel value) {
+    return Container(
+        margin: const EdgeInsets.only(top: 5, bottom: 5),
+        height: 50,
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
+            return ConnectRemote(desktop: desktop, proxyServer: proxyServer);
+          })),
+          child: Text("已连接${value.os?.toUpperCase()}，手机抓包已关闭", style: Theme.of(context).textTheme.titleMedium),
+        ));
   }
 
   showAlertDialog(String title, String content, Function onClose) {
@@ -135,21 +143,6 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
                 child: const Text('关闭'))
           ], title: Text(title, style: const TextStyle(fontSize: 18)), content: Text(content));
         });
-  }
-
-  /// 搜索框
-  Widget search() {
-    return Padding(
-        padding: const EdgeInsets.only(left: 20),
-        child: TextField(
-            cursorHeight: 20,
-            keyboardType: TextInputType.url,
-            onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
-            onChanged: (val) {
-              requestStateKey.currentState?.search(val);
-            },
-            decoration:
-                const InputDecoration(border: InputBorder.none, prefixIcon: Icon(Icons.search), hintText: 'Search')));
   }
 
   /// 检查远程连接

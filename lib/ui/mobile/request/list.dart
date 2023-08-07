@@ -9,6 +9,7 @@ import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
 
 class RequestListWidget extends StatefulWidget {
@@ -68,9 +69,9 @@ class RequestListState extends State<RequestListWidget> {
     container.removeWhere((element) => list.contains(element));
   }
 
-  search(String text) {
-    requestSequenceKey.currentState?.search(text.trim());
-    domainListKey.currentState?.search(text.trim());
+  search(SearchModel searchModel) {
+    requestSequenceKey.currentState?.search(searchModel);
+    domainListKey.currentState?.search(searchModel.keyword?.trim());
   }
 
   ///清理
@@ -107,8 +108,8 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   late Queue<HttpRequest> view = Queue();
   bool changing = false;
 
-  //搜索关键字
-  String? searchText;
+  //搜索的内容
+  SearchModel? searchModel;
 
   @override
   initState() {
@@ -120,7 +121,9 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   ///添加请求
   add(HttpRequest request) {
     list.add(request);
-    if (!filter(request)) {
+
+    ///过滤
+    if (searchModel?.isNotEmpty == true && !searchModel!.filter(request, request.response)) {
       return;
     }
 
@@ -133,6 +136,21 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
     response.request?.response = response;
     var state = indexes.remove(response.request);
     state?.currentState?.change(response);
+
+    if (searchModel == null || searchModel!.isEmpty || response.request == null) {
+      return;
+    }
+
+    print("object ${searchModel?.filter(response.request!, response) } ${state == null}");
+    //搜索视图
+    if (searchModel?.filter(response.request!, response) == true && state == null) {
+      print("contains ${view.contains(response.request)}");
+
+      if (!view.contains(response.request)) {
+          view.addFirst(response.request!);
+          changeState();
+      }
+    }
   }
 
   clean() {
@@ -143,38 +161,15 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
     });
   }
 
-  void search(String text) {
-    text = text.toLowerCase();
-    if (text == searchText) {
-      return;
-    }
-
-    //包含从上次结果过滤
-    if (text.contains(searchText ?? "")) {
-      searchText = text;
-      view.retainWhere(filter);
+  ///过滤
+  void search(SearchModel searchModel) {
+    this.searchModel = searchModel;
+    if (searchModel.isEmpty) {
+      view = Queue.of(list.reversed);
     } else {
-      searchText = text;
-      view = Queue.of(list.where(filter).toList().reversed);
+      view = Queue.of(list.where((it) => searchModel.filter(it, it.response)).toList().reversed);
     }
-
     changeState();
-  }
-
-  bool filter(HttpRequest request) {
-    if (searchText == null || searchText!.isEmpty) {
-      return true;
-    }
-
-    if (request.method.name.toLowerCase() == searchText) {
-      return true;
-    }
-
-    if (request.requestUrl.toLowerCase().contains(searchText!)) {
-      return true;
-    }
-
-    return request.response?.contentType.name.toLowerCase().contains(searchText!) == true;
   }
 
   changeState() {
@@ -239,7 +234,6 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   //显示的域名 最新的在顶部
   List<HostAndPort> list = [];
   HostAndPort? showHostAndPort;
-  bool changing = false;
 
   //搜索关键字
   String? searchText;
@@ -282,15 +276,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     }
 
     this.list = [...container.where(filter)].reversed.toList();
-    //防止频繁刷新
-    if (!changing) {
-      changing = true;
-      Future.delayed(const Duration(milliseconds: 50), () {
-        setState(() {
-          changing = false;
-        });
-      });
-    }
+    setState(() {});
   }
 
   addResponse(HttpResponse response) {
@@ -307,10 +293,19 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     });
   }
 
-  void search(String text) {
+  ///搜索域名
+  void search(String? text) {
+    if (text == null) {
+      setState(() {
+        list = List.of(container.toList().reversed);
+        searchText = null;
+      });
+      return;
+    }
+
     text = text.toLowerCase();
     setState(() {
-      var contains = text.contains(searchText ?? "");
+      var contains = text!.contains(searchText ?? "");
       searchText = text.toLowerCase();
       if (contains) {
         //包含从上次结果过滤
@@ -349,8 +344,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
         visualDensity: const VisualDensity(vertical: -4),
         title: Text(list.elementAt(index).domain, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: const Icon(Icons.chevron_right),
-        subtitle: Text("最后请求时间: $time,  次数: ${value?.length}",
-            maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Text("最后请求时间: $time,  次数: ${value?.length}", maxLines: 1, overflow: TextOverflow.ellipsis),
         onLongPress: () => menu(index),
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {

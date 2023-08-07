@@ -138,27 +138,33 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
     panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 18), proxyServer: proxyServer);
 
     if (widget.configuration.guide) {
-      //首次引导
-      showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) {
-            return AlertDialog(
-                actions: [
-                  TextButton(
-                      onPressed: () {
-                        widget.configuration.guide = false;
-                        widget.configuration.flushConfig();
-                        Navigator.pop(context);
-                      },
-                      child: const Text('关闭'))
-                ],
-                title: const Text('提示', style: TextStyle(fontSize: 18)),
-                content: const Text('默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
-                    '点击的HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。'));
-          });
-
-      return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        //首次引导
+        showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) {
+              return AlertDialog(
+                  actions: [
+                    TextButton(
+                        onPressed: () {
+                          widget.configuration.guide = false;
+                          widget.configuration.flushConfig();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('关闭'))
+                  ],
+                  title: const Text('提示', style: TextStyle(fontSize: 18)),
+                  content: const Text(
+                      '默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
+                      '点击的HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
+                      '新增更新:\n'
+                      '1. 增加高级搜索，点击搜索Icon触发。\n'
+                      '2. 显示SSL握手异常、建立连接异常、未知异常等请求。\n'
+                      '3.响应体大时异步加载json，请求重写增加域名，修复手机扫码连接未开启代理时不转发问题',
+                      style: TextStyle(fontSize: 14)));
+            });
+      });
     }
   }
 

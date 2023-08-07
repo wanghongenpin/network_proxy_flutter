@@ -20,7 +20,6 @@ import 'dart:typed_data';
 import 'package:network_proxy/network/http/body_reader.dart';
 
 import '../../utils/compress.dart';
-import '../util/logger.dart';
 import 'http.dart';
 import 'http_headers.dart';
 

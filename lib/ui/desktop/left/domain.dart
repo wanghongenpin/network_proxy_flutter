@@ -10,7 +10,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/component/transition.dart';
-import 'package:network_proxy/ui/desktop/left/model/search.dart';
+import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/desktop/left/path.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/search.dart';
@@ -92,7 +92,7 @@ class DomainWidgetState extends State<DomainWidget> {
       headerBody.addBody(channel.id, listURI);
 
       //搜索视图
-      if (searchModel?.isNotEmpty == true && headerBody.filter(listURI, searchModel!)) {
+      if (searchModel?.isNotEmpty == true && searchModel?.filter(request, null) == true) {
         searchView[hostAndPort]?.addBody(channel.id, listURI);
       }
       return;
@@ -122,7 +122,7 @@ class DomainWidgetState extends State<DomainWidget> {
     }
 
     //搜索视图
-    if (searchModel?.isNotEmpty == true && headerBody?.filter(pathRow, searchModel!) == true) {
+    if (searchModel?.isNotEmpty == true && searchModel?.filter(pathRow.request, response) == true) {
       var header = searchView[hostAndPort];
       if (header?.getBody(channel.id) == null) {
         header?.addBody(channel.id, pathRow);
@@ -175,7 +175,7 @@ class HeaderBody extends StatefulWidget {
 
   ///根据文本过滤
   Iterable<PathRow> search(SearchModel searchModel) {
-    return _body.where((element) => filter(element, searchModel));
+    return _body.where((element) => searchModel.filter(element.request, element.response.get()));
   }
 
   ///复制
@@ -202,68 +202,6 @@ class HeaderBody extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return _HeaderBodyState();
-  }
-
-  bool filter(PathRow element, SearchModel searchModel) {
-    var request = element.request;
-    var response = element.response.get();
-
-    if (searchModel.requestMethod != null && searchModel.requestMethod != request.method) {
-      return false;
-    }
-    if (searchModel.requestContentType != null && request.contentType != searchModel.requestContentType) {
-      return false;
-    }
-
-    if (searchModel.responseContentType != null && response?.contentType != searchModel.responseContentType) {
-      return false;
-    }
-    if (searchModel.statusCode != null && response?.status.code != searchModel.statusCode) {
-      return false;
-    }
-
-    if (searchModel.keyword == null || searchModel.keyword?.isEmpty == true || searchModel.searchOptions.isEmpty) {
-      return true;
-    }
-
-    for (var option in searchModel.searchOptions) {
-      if (keywordFilter(searchModel.keyword!, option, request, response)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  bool keywordFilter(String keyword, Option option, HttpRequest request, HttpResponse? response) {
-    if (option == Option.url && request.uri.toString().toLowerCase().contains(keyword.toLowerCase())) {
-      return true;
-    }
-
-    if (option == Option.requestBody && request.bodyAsString.contains(keyword) == true) {
-      return true;
-    }
-    if (option == Option.responseBody && response?.bodyAsString.contains(keyword) == true) {
-      return true;
-    }
-    if (option == Option.method && request.method.name.toLowerCase() == keyword.toLowerCase()) {
-      return true;
-    }
-    if (option == Option.responseContentType && response?.headers.contentType.contains(keyword) == true) {
-      return true;
-    }
-
-    if (option == Option.requestHeader || option == Option.responseHeader) {
-      print(response?.headers.entries);
-      var entries = option == Option.requestHeader ? request.headers.entries : response?.headers.entries ?? [];
-
-      for (var entry in entries) {
-        if (entry.value.any((element) => element.contains(keyword))) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 }
 

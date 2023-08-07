@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/ui/desktop/left/model/search.dart';
+import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/desktop/left/search_condition.dart';
 
 class Search extends StatefulWidget {
@@ -33,9 +33,6 @@ class _SearchState extends State<Search> {
         cursorHeight: 22,
         controller: keywordController,
         onChanged: (val) async {
-          if (searchModel.keyword == val) {
-            return;
-          }
           searchModel.keyword = val;
 
           if (!changing) {
@@ -71,34 +68,27 @@ class _SearchState extends State<Search> {
     if (!searched) {
       searchModel.searchOptions = {Option.url};
     }
-    showMenu(
-        context: context,
-        position: RelativeRect.fromLTRB(
-          details.globalPosition.dx,
-          details.globalPosition.dy - 380,
-          details.globalPosition.dx,
-          details.globalPosition.dy - 380,
-        ),
-        items: [
-          PopupMenuItem(
-              padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
-              enabled: false,
-              child: DefaultTextStyle.merge(
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  child: SizedBox(
-                      width: 500,
-                      height: 350,
-                      child: SearchConditions(
-                          searchModel: searchModel,
-                          onSearch: (val) {
-                            setState(() {
-                              searchModel = val;
-                              searched = searchModel.isNotEmpty;
-                              keywordController.text = searchModel.keyword ?? '';
-                              widget.onSearch?.call(searchModel);
-                            });
-                          }))))
-        ]);
+    var height = MediaQuery.of(context).size.height;
+    showMenu(context: context, position: RelativeRect.fromLTRB(10, height - 410, 10, height - 410), items: [
+      PopupMenuItem(
+          padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
+          enabled: false,
+          child: DefaultTextStyle.merge(
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
+              child: SizedBox(
+                  width: 500,
+                  height: 350,
+                  child: SearchConditions(
+                      searchModel: searchModel,
+                      onSearch: (val) {
+                        setState(() {
+                          searchModel = val;
+                          searched = searchModel.isNotEmpty;
+                          keywordController.text = searchModel.keyword ?? '';
+                          widget.onSearch?.call(searchModel);
+                        });
+                      }))))
+    ]);
   }
 }
 
