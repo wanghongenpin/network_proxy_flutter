@@ -1,5 +1,6 @@
 package com.network.proxy
 
+import ProxyVpnRunnable
 import android.content.Intent
 import android.net.ProxyInfo
 import android.net.VpnService
@@ -42,22 +43,36 @@ class ProxyVpnService : VpnService() {
         vpnInterface = createVpnInterface(proxyHost, proxyPort)
         if (vpnInterface == null) {
             val alertDialog = Intent(applicationContext, VpnAlertDialog::class.java)
+                .setAction("com.network.proxy.ProxyVpnService")
             alertDialog.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(alertDialog)
+            return
         }
+
+        var vpnRunnable = ProxyVpnRunnable(
+            vpnInterface!!,
+            proxyConfig.ip,
+            proxyConfig.port,
+            interceptedPorts.toIntArray()
+        )
     }
 
     private fun createVpnInterface(proxyHost: String, proxyPort: Int): ParcelFileDescriptor? {
         return Builder()
+            .setMtu(1500)
             .addAddress("10.0.0.2", 32)
             .addRoute("0.0.0.0", 0)
+            .addDnsServer("114.114.114.114")
+            .addDnsServer("8.8.8.8")
             .setSession(baseContext.applicationInfo.name)
-            .also {
+            .allowBypass()
+            .apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    it.addDisallowedApplication(baseContext.packageName)
-                        .setHttpProxy(ProxyInfo.buildDirectProxy(proxyHost, proxyPort))
+                    addDisallowedApplication(baseContext.packageName)
+                    setHttpProxy(ProxyInfo.buildDirectProxy(proxyHost, proxyPort))
                 }
             }
+            .setBlocking(true) // We use a blocking loop to read in ProxyVpnRunnable
             .establish()
     }
 

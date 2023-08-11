@@ -118,6 +118,8 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
+    log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+
     //获取远程连接
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
 

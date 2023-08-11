@@ -25,13 +25,13 @@ HostAndPort getHostAndPort(HttpRequest request) {
     requestUri = request.headers.get(HttpHeaders.HOST)!;
   }
 
-  return HostAndPort.of(requestUri, ssl: request.method == HttpMethod.connect ? true : null);
+  return HostAndPort.of(requestUri);
 }
 
 class HostAndPort {
   static const String httpScheme = "http://";
   static const String httpsScheme = "https://";
-  final String scheme;
+  String scheme;
   String host;
   final int port;
 

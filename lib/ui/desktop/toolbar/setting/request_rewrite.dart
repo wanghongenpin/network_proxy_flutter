@@ -130,7 +130,7 @@ class RuleAddDialog extends StatelessWidget {
     String? responseBody = rule?.responseBody;
 
     return AlertDialog(
-        title: const Text("添加请求重写规则", style: TextStyle(fontSize: 16)),
+        title: const Text("添加请求重写规则", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         scrollable: true,
         content: Form(
             key: formKey,
@@ -267,7 +267,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                       cells: [
                         DataCell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
                         DataCell(ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 60,maxWidth: 280),
+                            constraints: const BoxConstraints(minWidth: 60, maxWidth: 280),
                             child: Text(
                                 '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'))),
                         DataCell(Container(

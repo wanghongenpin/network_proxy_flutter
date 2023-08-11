@@ -67,7 +67,11 @@ class Network {
     }
 
     //ssl握手
-    if (hostAndPort?.isSsl() == true) {
+    if (hostAndPort?.isSsl() == true || (data.length > 3 && data.first == 0x16 && data[1] == 0x03 && data[2] == 0x01)) {
+      if (hostAndPort?.scheme == HostAndPort.httpScheme) {
+        hostAndPort?.scheme = HostAndPort.httpsScheme;
+      }
+
       ssl(channel, hostAndPort!, data);
       return;
     }

@@ -74,7 +74,7 @@ class _PhoneConnectState extends State<PhoneConnect> {
                       })
                 ]),
                 const SizedBox(height: 10),
-                const Text("请使用手机版扫描二维码"),
+                const Text("请使用手机版扫描二维码", style: TextStyle(fontSize: 17)),
               ],
             )));
   }
