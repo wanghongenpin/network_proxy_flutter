@@ -42,7 +42,7 @@
             android:name=".VpnAlertDialog"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.network.proxy.ProxyVpnService" />
+                <action android:name="ProxyVpnService" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
