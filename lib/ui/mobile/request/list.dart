@@ -43,7 +43,8 @@ class RequestListState extends State<RequestListWidget> {
           appBar: AppBar(title: TabBar(tabs: tabs)),
           body: TabBarView(
             children: [
-              RequestSequence(key: requestSequenceKey, list: container, proxyServer: widget.proxyServer),
+              RequestSequence(
+                  key: requestSequenceKey, list: container, proxyServer: widget.proxyServer, onRemove: remove),
               DomainList(key: domainListKey, list: container, proxyServer: widget.proxyServer, onRemove: remove),
             ],
           ),
@@ -89,8 +90,10 @@ class RequestSequence extends StatefulWidget {
   final List<HttpRequest> list;
   final ProxyServer proxyServer;
   final bool displayDomain;
+  final Function(List<HttpRequest>)? onRemove;
 
-  const RequestSequence({super.key, required this.list, required this.proxyServer, this.displayDomain = true});
+  const RequestSequence(
+      {super.key, required this.list, required this.proxyServer, this.displayDomain = true, this.onRemove});
 
   @override
   State<StatefulWidget> createState() {
@@ -141,14 +144,14 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
       return;
     }
 
-    print("object ${searchModel?.filter(response.request!, response) } ${state == null}");
+    print("object ${searchModel?.filter(response.request!, response)} ${state == null}");
     //搜索视图
     if (searchModel?.filter(response.request!, response) == true && state == null) {
       print("contains ${view.contains(response.request)}");
 
       if (!view.contains(response.request)) {
-          view.addFirst(response.request!);
-          changeState();
+        view.addFirst(response.request!);
+        changeState();
       }
     }
   }
@@ -176,7 +179,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
     //防止频繁刷新
     if (!changing) {
       changing = true;
-      Future.delayed(const Duration(milliseconds: 100), () {
+      Future.delayed(const Duration(milliseconds: 50), () {
         setState(() {
           changing = false;
         });
@@ -202,7 +205,14 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
               key: key,
               request: view.elementAt(index),
               proxyServer: widget.proxyServer,
-              displayDomain: widget.displayDomain);
+              displayDomain: widget.displayDomain,
+              onRemove: (request) {
+                widget.onRemove?.call([request]);
+                setState(() {
+                  list.remove(request);
+                  view.remove(request);
+                });
+              });
         });
   }
 }
@@ -332,7 +342,6 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     return ListView.separated(
         padding: EdgeInsets.zero,
         separatorBuilder: (context, index) => Divider(thickness: 0.2, color: Theme.of(context).dividerColor),
-        cacheExtent: 1000,
         itemCount: list.length,
         itemBuilder: (ctx, index) => title(index));
   }
@@ -355,6 +364,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
                     key: requestSequenceKey,
                     displayDomain: false,
                     list: containerMap[list.elementAt(index)]!,
+                    onRemove: widget.onRemove,
                     proxyServer: widget.proxyServer));
           }));
         });

@@ -91,7 +91,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
               proxyServer: proxyServer,
               startup: false,
               size: 38,
-              onStart: () => Vpn.startVpn("127.0.0.1", proxyServer.port),
+              onStart: () => Vpn.startVpn("127.0.0.1", proxyServer.port, proxyServer.configuration.appWhitelist),
               onStop: () => Vpn.stopVpn())),
       body: ValueListenableBuilder(
           valueListenable: desktop,

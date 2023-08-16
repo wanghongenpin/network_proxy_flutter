@@ -10,6 +10,7 @@ import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
+import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
 import 'package:network_proxy/ui/mobile/setting/filter.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
@@ -40,6 +41,10 @@ class DrawerWidget extends StatelessWidget {
             trailing: const Icon(Icons.arrow_right),
             onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
         const ThemeSetting(),
+        ListTile(
+            title: const Text("应用白名单"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(context, AppWhitelist(proxyServer: proxyServer))),
         ListTile(
             title: const Text("域名白名单"),
             trailing: const Icon(Icons.arrow_right),

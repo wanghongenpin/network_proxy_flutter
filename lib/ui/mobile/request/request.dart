@@ -15,8 +15,10 @@ class RequestRow extends StatefulWidget {
   final HttpRequest request;
   final ProxyServer proxyServer;
   final bool displayDomain;
+  final Function(HttpRequest)? onRemove;
 
-  const RequestRow({super.key, required this.request, required this.proxyServer, this.displayDomain = true});
+  const RequestRow(
+      {super.key, required this.request, required this.proxyServer, this.displayDomain = true, this.onRemove});
 
   @override
   State<StatefulWidget> createState() {
@@ -43,18 +45,19 @@ class RequestRowState extends State<RequestRow> {
 
   @override
   Widget build(BuildContext context) {
-    var title = '${request.method.name} ${widget.displayDomain ? request.requestUrl : request.path()}';
+    var title = '${request.method.name} ${request.path() ?? '/'} ';
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
     var subTitle =
-        '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''}';
+        '${request.hostAndPort?.domain} \n$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''}';
 
     return ListTile(
-        textColor: (response?.status.code ?? 0) < 0 ? Colors.red : null,
         visualDensity: const VisualDensity(vertical: -4),
-        leading: widget.displayDomain ? null : getIcon(response),
+        leading: getIcon(response),
         title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1, style: const TextStyle(fontSize: 14)),
-        subtitle: Text(subTitle, maxLines: 1, style: const TextStyle(fontSize: 12)),
+        subtitle: Text(subTitle, maxLines: 2, style: const TextStyle(fontSize: 12)),
         trailing: const Icon(Icons.chevron_right),
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
         onLongPress: () => menu(menuPosition(context)),
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {
@@ -100,6 +103,14 @@ class RequestRowState extends State<RequestRow> {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) =>
                         MobileRequestEditor(request: widget.request, proxyServer: widget.proxyServer)));
+              }),
+          const Divider(thickness: 0.5),
+          TextButton(
+              child: const SizedBox(width: double.infinity, child: Text("删除请求", textAlign: TextAlign.center)),
+              onPressed: () {
+                widget.onRemove?.call(request);
+                FlutterToastr.show("删除成功", context);
+                Navigator.of(context).pop();
               }),
           Container(
             color: Theme.of(context).hoverColor,

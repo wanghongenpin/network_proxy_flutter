@@ -15,4 +15,8 @@
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
+
+    <string name="vpn_active_notification_title">ProxyPin Active</string>
+    <string name="vpn_active_notification_content">抓包正在运行</string>
+
 </resources>

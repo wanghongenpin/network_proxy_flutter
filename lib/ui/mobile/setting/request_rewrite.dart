@@ -268,9 +268,11 @@ class _RequestRuleListState extends State<RequestRuleList> {
                                 constraints: const BoxConstraints(minWidth: 60),
                                 child: Text(
                                     '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'))),
-                            DataCell(SelectableText.rich(
-                                TextSpan(text: widget.requestRewrites.rules[index].requestBody),
-                                style: const TextStyle(fontSize: 12))),
+                            DataCell(Container(
+                                constraints: const BoxConstraints(maxWidth: 180),
+                                child: SelectableText.rich(
+                                    TextSpan(text: widget.requestRewrites.rules[index].requestBody),
+                                    style: const TextStyle(fontSize: 12)))),
                             DataCell(Container(
                               constraints: const BoxConstraints(maxWidth: 300),
                               padding: const EdgeInsetsDirectional.all(10),

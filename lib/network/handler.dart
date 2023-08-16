@@ -55,7 +55,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     }
 
     //请求本服务
-    if ((await localIps()).contains(msg.hostAndPort?.host)) {
+    if ((await localIps()).contains(msg.hostAndPort?.host) && msg.hostAndPort?.port == channel.socket.port) {
       localRequest(msg, channel);
       return;
     }
@@ -118,12 +118,14 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
+    // log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+
     //获取远程连接
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
-      // log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+      log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
 
       var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.hostAndPort?.host, httpRequest.path());
       if (replaceBody?.isNotEmpty == true) {

@@ -44,6 +44,10 @@ class Configuration {
 
   //外部代理
   ProxyInfo? externalProxy;
+
+  //白名单应用
+  List<String> appWhitelist = [];
+
   //远程连接 不持久化保存
   String? remoteHost;
 
@@ -119,6 +123,7 @@ class Configuration {
     if (config['externalProxy'] != null) {
       externalProxy = ProxyInfo.fromJson(config['externalProxy']);
     }
+    appWhitelist = List<String>.from(config['appWhitelist'] ?? []);
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
 
@@ -161,6 +166,7 @@ class Configuration {
       'enableSsl': enableSsl,
       'enableSystemProxy': enableSystemProxy,
       'externalProxy': externalProxy?.toJson(),
+      'appWhitelist': appWhitelist,
       'whitelist': HostFilter.whitelist.toJson(),
       'blacklist': HostFilter.blacklist.toJson(),
     };
