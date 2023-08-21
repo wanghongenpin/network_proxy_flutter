@@ -87,8 +87,8 @@ class DomainWidgetState extends State<DomainWidget> {
     HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
     //按照域名分类
     HeaderBody? headerBody = containerMap[hostAndPort];
-    var listURI = PathRow(request, widget.panel, proxyServer: widget.proxyServer);
     if (headerBody != null) {
+      var listURI = PathRow(request, widget.panel, proxyServer: widget.proxyServer, remove: (it) => headerBody!.remove(it));
       headerBody.addBody(channel.id, listURI);
 
       //搜索视图
@@ -99,6 +99,7 @@ class DomainWidgetState extends State<DomainWidget> {
     }
 
     headerBody = HeaderBody(hostAndPort, proxyServer: widget.proxyServer, onRemove: () => remove(hostAndPort));
+    var listURI = PathRow(request, widget.panel, proxyServer: widget.proxyServer, remove: (it) => headerBody!.remove(it));
     headerBody.addBody(channel.id, listURI);
     setState(() {
       containerMap[hostAndPort] = headerBody!;
@@ -173,6 +174,12 @@ class HeaderBody extends StatefulWidget {
     return channelIdPathMap[key];
   }
 
+  remove(PathRow pathRow) {
+    if (_body.remove(pathRow)) {
+      changeState();
+    }
+  }
+
   ///根据文本过滤
   Iterable<PathRow> search(SearchModel searchModel) {
     return _body.where((element) => searchModel.filter(element.request, element.response.get()));
@@ -235,7 +242,7 @@ class _HeaderBodyState extends State<HeaderBody> {
         onSecondaryLongPressDown: menu,
         child: ListTile(
             minLeadingWidth: 25,
-            leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 16),
+            leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 18),
             dense: true,
             horizontalTitleGap: 0,
             visualDensity: const VisualDensity(vertical: -3.6),
@@ -300,4 +307,5 @@ class _HeaderBodyState extends State<HeaderBody> {
     widget._body.clear();
     widget.onRemove?.call();
   }
+
 }

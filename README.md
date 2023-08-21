@@ -3,9 +3,9 @@
 
 **Mac首次打开会提示已损坏，需要到系统偏好设置-安全性与隐私-允许任何来源。**
 
-国内下载地址：https://gitee.com/wanghongenpin/network-proxy-flutter/releases
+国内下载地址： https://gitee.com/wanghongenpin/network-proxy-flutter/releases
 
-iOS美版香港AppStore下载地址或直接搜ProxyPin(推荐)：https://apps.apple.com/app/proxypin/id6450932949
+iOS美版香港AppStore下载地址或直接搜ProxyPin(推荐)： https://apps.apple.com/app/proxypin/id6450932949
 
 iOS国内下载地址(有1万名额限制，满了会清理不使用的用户)： https://testflight.apple.com/join/gURGH6B4
 

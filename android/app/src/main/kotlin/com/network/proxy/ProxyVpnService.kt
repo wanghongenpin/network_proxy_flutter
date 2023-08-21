@@ -46,8 +46,8 @@ class ProxyVpnService : VpnService(), IProtectSocket {
             START_NOT_STICKY
         } else {
             connect(
-                    intent?.getStringExtra(ProxyHost)!!, intent.getIntExtra(ProxyPort, 0),
-                    intent.getStringArrayListExtra(AllowApps)
+                intent?.getStringExtra(ProxyHost)!!, intent.getIntExtra(ProxyPort, 0),
+                intent.getStringArrayListExtra(AllowApps)
             )
             START_STICKY
         }
@@ -65,7 +65,7 @@ class ProxyVpnService : VpnService(), IProtectSocket {
         vpnInterface = createVpnInterface(proxyHost, proxyPort, allowPackages)
         if (vpnInterface == null) {
             val alertDialog = Intent(applicationContext, VpnAlertDialog::class.java)
-                    .setAction("com.network.proxy.ProxyVpnService")
+                .setAction("com.network.proxy.ProxyVpnService")
             alertDialog.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(alertDialog)
             return
@@ -77,25 +77,25 @@ class ProxyVpnService : VpnService(), IProtectSocket {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val notificationChannel = NotificationChannel(
-                    VPN_NOTIFICATION_CHANNEL_ID,
-                    "VPN Status",
-                    NotificationManager.IMPORTANCE_LOW
+                VPN_NOTIFICATION_CHANNEL_ID,
+                "VPN Status",
+                NotificationManager.IMPORTANCE_LOW
             )
             notificationManager.createNotificationChannel(notificationChannel)
         }
 
         val pendingActivityIntent: PendingIntent =
-                Intent(this, MainActivity::class.java).let { notificationIntent ->
-                    PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
-                }
+            Intent(this, MainActivity::class.java).let { notificationIntent ->
+                PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+            }
 
         val notification: Notification =
-                NotificationCompat.Builder(this, VPN_NOTIFICATION_CHANNEL_ID)
-                        .setContentIntent(pendingActivityIntent)
-                        .setContentTitle(getString(R.string.vpn_active_notification_title))
-                        .setContentText(getString(R.string.vpn_active_notification_content))
-                        .setOngoing(true)
-                        .build()
+            NotificationCompat.Builder(this, VPN_NOTIFICATION_CHANNEL_ID)
+                .setContentIntent(pendingActivityIntent)
+                .setContentTitle(getString(R.string.vpn_active_notification_title))
+                .setContentText(getString(R.string.vpn_active_notification_content))
+                .setOngoing(true)
+                .build()
 
         startForeground(NOTIFICATION_ID, notification)
     }
@@ -104,15 +104,15 @@ class ProxyVpnService : VpnService(), IProtectSocket {
     private fun createVpnInterface(proxyHost: String, proxyPort: Int, allowPackages: List<String>?):
             ParcelFileDescriptor? {
         val build = Builder()
-                .setMtu(MAX_PACKET_LEN)
-                .addAddress("10.0.0.2", 32)
-                .addRoute("0.0.0.0", 0)
-                .setSession(baseContext.applicationInfo.name)
+            .setMtu(MAX_PACKET_LEN)
+            .addAddress("10.0.0.2", 32)
+            .addRoute("0.0.0.0", 0)
+            .setSession(baseContext.applicationInfo.name)
 
-        if (allowPackages?.isNotEmpty() == true) {
-            allowPackages.forEach {
-                if (it != baseContext.packageName)
-                    build.addAllowedApplication(it)
+        val packages = allowPackages?.filter { it != baseContext.packageName }
+        if (packages?.isNotEmpty() == true) {
+            packages.forEach {
+                build.addAllowedApplication(it)
             }
         } else {
             build.addDisallowedApplication(baseContext.packageName)

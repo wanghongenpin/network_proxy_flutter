@@ -146,6 +146,8 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   late Encoder _encoder;
   late ChannelHandler handler;
 
+  final ByteBuf buffer = ByteBuf();
+
   handle(Decoder decoder, Encoder encoder, ChannelHandler handler) {
     _encoder = encoder;
     _decoder = decoder;
@@ -153,6 +155,8 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   }
 
   void listen(Channel channel) {
+    buffer.clear();
+
     channel.socket.listen((data) => channel.pipeline.channelRead(channel, data),
         onError: (error, trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
         onDone: () => channel.pipeline.channelInactive(channel));
@@ -170,6 +174,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
     remoteChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(clientChannel));
   }
 
+
   @override
   void channelRead(Channel channel, Uint8List msg) {
     try {
@@ -180,10 +185,21 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
         return;
       }
 
-      var data = _decoder.decode(msg);
+      buffer.add(msg);
+      //大body 不解析直接转发
+      if (buffer.length > Codec.maxBodyLength) {
+        relay(channel, channel.getAttribute(channel.id));
+        handler.channelRead(channel, buffer.buffer);
+        buffer.clear();
+        return;
+      }
+
+      var data = _decoder.decode(buffer);
       if (data == null) {
         return;
       }
+
+      buffer.clear();
 
       if (data is HttpRequest) {
         data.hostAndPort = channel.getAttribute(AttributeKeys.host) ?? getHostAndPort(data);
@@ -204,6 +220,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       }
       handler.channelRead(channel, data!);
     } catch (error, trace) {
+      buffer.clear();
       exceptionCaught(channel, error, trace: trace);
     }
   }
@@ -221,8 +238,8 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
 
 class RawCodec extends Codec<Object> {
   @override
-  Object? decode(Uint8List data) {
-    return data;
+  Object? decode(ByteBuf data) {
+    return data.readBytes(data.readableBytes());
   }
 
   @override

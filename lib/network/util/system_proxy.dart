@@ -14,6 +14,12 @@ class SystemProxy {
       await _setProxyServerMacOS(port, sslSetting);
     } else if (Platform.isWindows) {
       await _setProxyServerWindows(port);
+    } else {
+      ProxyManager manager = ProxyManager();
+      manager.setAsSystemProxy(ProxyTypes.http, "127.0.0.1", port);
+      if (sslSetting) {
+        await manager.setAsSystemProxy(ProxyTypes.https, "127.0.0.1", port);
+      }
     }
   }
 
@@ -29,6 +35,9 @@ class SystemProxy {
       await setProxyEnableMacOS(enable, sslSetting);
     } else if (Platform.isWindows) {
       await setProxyEnableWindows(enable);
+    } else {
+      ProxyManager manager = ProxyManager();
+      await manager.cleanSystemProxy();
     }
   }
 

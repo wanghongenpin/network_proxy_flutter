@@ -122,6 +122,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     //获取远程连接
     var remoteChannel = await _getRemoteChannel(channel, httpRequest);
+    remoteChannel.putAttribute(remoteChannel.id, channel);
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {

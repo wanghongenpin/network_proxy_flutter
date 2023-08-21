@@ -45,16 +45,16 @@ class RequestRowState extends State<RequestRow> {
 
   @override
   Widget build(BuildContext context) {
-    var title = '${request.method.name} ${request.path() ?? '/'} ';
+    var title = '${request.method.name} ${widget.displayDomain ? request.requestUrl : request.path()}';
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
     var subTitle =
-        '${request.hostAndPort?.domain} \n$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''}';
+        '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''}';
 
     return ListTile(
         visualDensity: const VisualDensity(vertical: -4),
         leading: getIcon(response),
-        title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1, style: const TextStyle(fontSize: 14)),
-        subtitle: Text(subTitle, maxLines: 2, style: const TextStyle(fontSize: 12)),
+        title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2, style: const TextStyle(fontSize: 14)),
+        subtitle: Text(subTitle, maxLines: 1, style: const TextStyle(fontSize: 12)),
         trailing: const Icon(Icons.chevron_right),
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -106,7 +106,7 @@ class RequestRowState extends State<RequestRow> {
               }),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("删除请求", textAlign: TextAlign.center)),
+              child: const SizedBox(width: double.infinity, child: Text("删除", textAlign: TextAlign.center)),
               onPressed: () {
                 widget.onRemove?.call(request);
                 FlutterToastr.show("删除成功", context);

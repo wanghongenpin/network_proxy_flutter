@@ -41,6 +41,7 @@ class DrawerWidget extends StatelessWidget {
             trailing: const Icon(Icons.arrow_right),
             onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
         const ThemeSetting(),
+        Platform.isIOS ? const SizedBox() :
         ListTile(
             title: const Text("应用白名单"),
             trailing: const Icon(Icons.arrow_right),

@@ -24,8 +24,9 @@ class PathRow extends StatefulWidget {
 
   final NetworkTabController panel;
   final ProxyServer proxyServer;
+  final Function(PathRow)? remove;
 
-  PathRow(this.request, this.panel, {Key? key, this.color = Colors.green, required this.proxyServer})
+  PathRow(this.request, this.panel, {Key? key, this.color = Colors.green, required this.proxyServer, this.remove})
       : super(key: GlobalKey<_PathRowState>());
 
   @override
@@ -122,6 +123,12 @@ class _PathRowState extends State<PathRow> {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 requestEdit();
               });
+            }),
+        PopupMenuItem(
+            height: 38,
+            child: const Text("删除", style: TextStyle(fontSize: 14)),
+            onTap: () {
+              widget.remove?.call(widget);
             }),
       ],
     );

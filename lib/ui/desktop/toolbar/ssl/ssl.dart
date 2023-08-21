@@ -108,7 +108,7 @@ class _SslState extends State<SslWidget> {
               ]),
               alignment: Alignment.center,
               children: [
-                Text(" 安装证书到本系统，${Platform.isMacOS ? "“安装完选择“始终信任此证书”。 如安装打开失败，请下载证书拖拽到系统根证书里" : "选择“受信任的根证书颁发机构”"}"),
+                Text(" 安装证书到本系统，${Platform.isMacOS ? "“安装完双击选择“始终信任此证书”。 如安装打开失败，请下载证书拖拽到系统证书里" : "选择“受信任的根证书颁发机构”"}"),
                 const SizedBox(height: 10),
                 FilledButton(onPressed: _installCert, child: const Text("安装证书")),
                 const SizedBox(height: 10),

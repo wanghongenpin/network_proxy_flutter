@@ -18,6 +18,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:network_proxy/network/http/body_reader.dart';
+import 'package:network_proxy/network/http/http_parser.dart';
 
 import '../../utils/compress.dart';
 import 'http.dart';
@@ -56,10 +57,63 @@ enum State {
   done,
 }
 
+///类似于netty ByteBuf
+class ByteBuf {
+  final BytesBuilder _buffer = BytesBuilder();
+
+  int _readerIndex = 0;
+
+  Uint8List get buffer => _buffer.toBytes();
+
+  int get length => _buffer.length;
+
+  ///添加
+  void add(List<int> bytes) {
+    _buffer.add(bytes);
+  }
+
+  ///清空
+  clear() {
+    _buffer.clear();
+    _readerIndex = 0;
+  }
+
+  ///读取索引
+  int get readerIndex => _readerIndex;
+
+  bool isReadable() => _readerIndex < _buffer.length;
+
+  ///可读字节数
+  int readableBytes() {
+    return _buffer.length - _readerIndex;
+  }
+
+  ///读取字节
+  Uint8List readBytes(int length) {
+    Uint8List bytes = buffer.sublist(_readerIndex, _readerIndex + length);
+    _readerIndex += length;
+    return bytes;
+  }
+
+  ///跳过
+  skipBytes(int length) {
+    _readerIndex += length;
+  }
+
+  ///读取字节
+  int read() {
+    return buffer[_readerIndex++];
+  }
+
+  int get(int index) {
+    return buffer[index];
+  }
+}
+
 /// 解码
 abstract interface class Decoder<T> {
   /// 解码 如果返回null说明数据不完整
-  T? decode(Uint8List data);
+  T? decode(ByteBuf byteBuf);
 }
 
 /// 编码
@@ -69,7 +123,7 @@ abstract interface class Encoder<T> {
 
 /// 编解码器
 abstract class Codec<T> implements Decoder<T>, Encoder<T> {
-  static const int defaultMaxInitialLineLength = 10240;
+  static const int defaultMaxInitialLineLength = 409600;
   static const int maxBodyLength = 4096000;
 }
 
@@ -85,9 +139,7 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
   T createMessage(List<String> reqLine);
 
   @override
-  T? decode(Uint8List data) {
-    _httpParse.index = 0;
-
+  T? decode(ByteBuf data) {
     //请求行
     if (_state == State.readInitial) {
       init();
@@ -97,30 +149,34 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     }
 
     //请求头
-    if (_state == State.readHeader) {
-      _readHeader(data, message);
-    }
-
-    //请求体
-    if (_state == State.body) {
-      var result = bodyReader!.readBody(data.sublist(_httpParse.index));
-      if (result.isDone) {
-        _state = State.done;
-        message.body = result.body;
+    try {
+      if (_state == State.readHeader) {
+        _readHeader(data, message);
       }
-    }
 
-    if (_state == State.done) {
-      message.body = _convertBody(message.body);
+      //请求体
+      if (_state == State.body) {
+        var result = bodyReader!.readBody(data.readBytes(data.readableBytes()));
+        if (result.isDone) {
+          _state = State.done;
+          message.body = result.body;
+        }
+      }
+
+      if (_state == State.done) {
+        message.body = _convertBody(message.body);
+        _state = State.readInitial;
+        return message;
+      }
+    } catch (e) {
       _state = State.readInitial;
-      return message;
+      rethrow;
     }
 
     return null;
   }
 
   void init() {
-    _httpParse.reset();
     bodyReader = null;
   }
 
@@ -162,14 +218,14 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
   }
 
   //读取起始行
-  List<String> _readInitialLine(Uint8List data) {
-    int maxSize = min(data.length, Codec.defaultMaxInitialLineLength);
+  List<String> _readInitialLine(ByteBuf data) {
+    int maxSize = min(data.readableBytes(), Codec.defaultMaxInitialLineLength);
     return _httpParse.parseInitialLine(data, maxSize);
   }
 
   //读取请求头
-  void _readHeader(Uint8List data, T message) {
-    if (_httpParse.parseHeader(data, message.headers)) {
+  void _readHeader(ByteBuf data, T message) {
+    if (_httpParse.parseHeaders(data, message.headers)) {
       message.contentLength = message.headers.contentLength;
       _state = State.body;
       bodyReader = BodyReader(message);
@@ -228,117 +284,5 @@ class HttpResponseCodec extends HttpCodec<HttpResponse> {
     buffer.add(message.status.reasonPhrase.codeUnits);
     buffer.addByte(HttpConstants.cr);
     buffer.addByte(HttpConstants.lf);
-  }
-}
-
-/// http解析器
-class HttpParse {
-  int index = 0;
-  BytesBuilder inBytes = BytesBuilder();
-
-  /// 解析请求行
-  List<String> parseInitialLine(Uint8List data, int size) {
-    List<String> initialLine = [];
-    for (int i = index; i < size; i++) {
-      if (_isLineEnd(data, i)) {
-        //请求行结束
-        Uint8List requestLine = data.sublist(index, i - 1);
-        initialLine = _splitLine(requestLine);
-        index = i + 1;
-        break;
-      }
-    }
-    if (initialLine.length != 3) {
-      throw ParserException("parseLine error", String.fromCharCodes(data));
-    }
-
-    return initialLine;
-  }
-
-  /// 解析请求头
-  bool parseHeader(Uint8List data, HttpHeaders headers) {
-    if (inBytes.length > Codec.defaultMaxInitialLineLength) {
-      inBytes.clear();
-      throw Exception("header too long");
-    }
-
-    while (true) {
-      Uint8List line = Uint8List(0);
-      for (int i = index; i < data.length; i++) {
-        if (_isLineEnd(data, i)) {
-          line = data.sublist(index, i - 1);
-          index = i + 1;
-          break;
-        }
-        if (i == data.length - 1) {
-          inBytes.add(data.sublist(index, i + 1));
-          index = i + 1;
-          return false;
-        }
-      }
-
-      if (line.isEmpty) {
-        break;
-      }
-
-      if (inBytes.isNotEmpty) {
-        inBytes.add(line);
-        line = inBytes.toBytes();
-        inBytes.clear();
-      }
-      var header = _splitHeader(line);
-      headers.add(header[0], header[1]);
-    }
-    return true;
-  }
-
-  Uint8List parseLine(Uint8List data) {
-    for (int i = index; i < data.length; i++) {
-      if (_isLineEnd(data, i)) {
-        var line = data.sublist(index, i - 1);
-        index = i + 1;
-        return line;
-      }
-    }
-    return Uint8List(0);
-  }
-
-  void reset() {
-    index = 0;
-  }
-
-  //是否行结束
-  bool _isLineEnd(List<int> data, int index) {
-    return index >= 1 && data[index] == HttpConstants.lf && data[index - 1] == HttpConstants.cr;
-  }
-
-  //分割行
-  List<String> _splitLine(Uint8List data) {
-    List<String> lines = [];
-    int start = 0;
-    for (int i = 0; i < data.length; i++) {
-      if (data[i] == HttpConstants.sp) {
-        lines.add(String.fromCharCodes(data.sublist(start, i)));
-        start = i + 1;
-        if (lines.length == 2) {
-          break;
-        }
-      }
-    }
-    lines.add(String.fromCharCodes(data.sublist(start)));
-    return lines;
-  }
-
-  //分割头
-  List<String> _splitHeader(List<int> data) {
-    List<String> headers = [];
-    for (int i = 0; i < data.length; i++) {
-      if (data[i] == HttpConstants.colon && data[i + 1] == HttpConstants.sp) {
-        headers.add(String.fromCharCodes(data.sublist(0, i)));
-        headers.add(String.fromCharCodes(data.sublist(i + 2)));
-        break;
-      }
-    }
-    return headers;
   }
 }
