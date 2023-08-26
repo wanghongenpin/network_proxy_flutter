@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,71 +8,91 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/storage/favorites.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/utils/curl.dart';
-import 'package:network_proxy/utils/lang.dart';
 import 'package:window_manager/window_manager.dart';
 
-///请求 URI
-class PathRow extends StatefulWidget {
-  final Color? color;
-  final HttpRequest request;
-  final ValueWrap<HttpResponse> response = ValueWrap();
-
+class Favorites extends StatefulWidget {
   final NetworkTabController panel;
-  final ProxyServer proxyServer;
-  final Function(PathRow)? remove;
 
-  PathRow(this.request, this.panel, {Key? key, this.color = Colors.green, required this.proxyServer, this.remove})
-      : super(key: GlobalKey<_PathRowState>());
+  const Favorites({Key? key, required this.panel}) : super(key: key);
 
   @override
-  State<PathRow> createState() => _PathRowState();
-
-  void add(HttpResponse response) {
-    this.response.set(response);
-    var state = key as GlobalKey<_PathRowState>;
-    state.currentState?.changeState();
+  State<StatefulWidget> createState() {
+    return _FavoritesState();
   }
 }
 
-class _PathRowState extends State<PathRow> {
+class _FavoritesState extends State<Favorites> {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: FavoriteStorage.favorites,
+        builder: (BuildContext context, AsyncSnapshot<Queue<HttpRequest>> snapshot) {
+          if (snapshot.hasData) {
+            var favorites = snapshot.data ?? Queue();
+            return ListView.separated(
+              itemCount: favorites.length,
+              itemBuilder: (_, index) {
+                var request = favorites.elementAt(index);
+                return _FavoriteItem(
+                  request,
+                  panel: widget.panel,
+                  onRemove: (HttpRequest request) {
+                    FavoriteStorage.removeFavorite(request);
+                    FlutterToastr.show('已删除收藏', context);
+                    setState(() {});
+                  },
+                );
+              },
+              separatorBuilder: (_, __) => const Divider(height: 2, thickness: 0.5),
+            );
+          } else {
+            return const SizedBox();
+          }
+        });
+  }
+}
+
+class _FavoriteItem extends StatefulWidget {
+  final HttpRequest request;
+  final NetworkTabController panel;
+  final Function(HttpRequest request)? onRemove;
+
+  const _FavoriteItem(this.request, {Key? key, required this.panel, required this.onRemove}) : super(key: key);
+
+  @override
+  State<_FavoriteItem> createState() => _FavoriteItemState();
+}
+
+class _FavoriteItemState extends State<_FavoriteItem> {
   //选择的节点
-  static _PathRowState? selectedState;
+  static _FavoriteItemState? selectedState;
 
   bool selected = false;
 
   @override
   Widget build(BuildContext context) {
     var request = widget.request;
-    var response = widget.response.get() ?? request.response;
-    String title = '${request.method.name} ${request.uri}';
-    try {
-      title = '${request.method.name} ${Uri.parse(request.uri).path}';
-    } catch (_) {}
-    var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
+    var response = request.response;
+    var title = '${request.method.name} ${request.requestUrl}';
+    var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
     return GestureDetector(
         onSecondaryLongPressDown: menu,
         child: ListTile(
             minLeadingWidth: 25,
-            leading: getIcon(widget.response.get()),
-            title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
+            leading: getIcon(response),
+            title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2),
             subtitle: Text(
                 '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
                 maxLines: 1),
             selected: selected,
             dense: true,
-            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 42.0),
             onTap: onClick));
-  }
-
-  void changeState() {
-    setState(() {});
   }
 
   ///右键菜单
@@ -90,7 +111,7 @@ class _PathRowState extends State<PathRow> {
           Clipboard.setData(ClipboardData(text: requestUrl)).then((value) => FlutterToastr.show('已复制到剪切板', context));
         }),
         popupItem("复制请求和响应", onTap: () {
-          Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))
+          Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.request.response)))
               .then((value) => FlutterToastr.show('已复制到剪切板', context));
         }),
         popupItem("复制 cURL 请求", onTap: () {
@@ -108,13 +129,9 @@ class _PathRowState extends State<PathRow> {
             requestEdit();
           });
         }),
-        popupItem("收藏请求", onTap: () {
-          FavoriteStorage.addFavorite(widget.request);
-          FlutterToastr.show('收藏成功', context);
-        }),
-        popupItem("删除", onTap: () {
-          widget.remove?.call(widget);
-        }),
+        popupItem("删除收藏", onTap: () {
+          widget.onRemove?.call(widget.request);
+        })
       ],
     );
   }
@@ -132,7 +149,7 @@ class _PathRowState extends State<PathRow> {
     }
 
     final window = await DesktopMultiWindow.createWindow(jsonEncode(
-      {'name': 'RequestEditor', 'request': widget.request, 'proxyPort': widget.proxyServer.port},
+      {'name': 'RequestEditor', 'request': widget.request},
     ));
     window.setTitle('请求编辑');
     window
@@ -157,6 +174,6 @@ class _PathRowState extends State<PathRow> {
       });
     }
     selectedState = this;
-    widget.panel.change(widget.request, widget.response.get());
+    widget.panel.change(widget.request, widget.request.response);
   }
 }

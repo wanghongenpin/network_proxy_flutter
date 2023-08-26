@@ -178,7 +178,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
     Widget headerWidget = ExpansionTile(
         tilePadding: const EdgeInsets.only(left: 0),
-        title: Text("$type Headers", style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text("$type Headers", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
         initiallyExpanded: true,
         shape: const Border(),
         children: headers);
@@ -188,7 +188,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
   Widget expansionTile(String title, List<Widget> content) {
     return ExpansionTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
         tilePadding: const EdgeInsets.only(left: 0),
         expandedAlignment: Alignment.topLeft,
         initiallyExpanded: true,

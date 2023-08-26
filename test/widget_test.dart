@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:network_proxy/main.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
+import 'package:network_proxy/ui/desktop/desktop.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {

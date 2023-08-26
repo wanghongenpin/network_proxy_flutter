@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/component/utils.dart';
@@ -91,7 +92,8 @@ class RequestRowState extends State<RequestRow> {
                   FlutterToastr.show('代理服务未启动', context);
                   return;
                 }
-                HttpClients.proxyRequest("127.0.0.1", widget.proxyServer.port, request);
+
+                HttpClients.proxyRequest(proxyInfo: ProxyInfo.of("127.0.0.1", widget.proxyServer.port), request);
                 FlutterToastr.show('已重新发送请求', context);
                 Navigator.of(context).pop();
               }),

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -7,13 +8,13 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/ui/component/split_view.dart';
 
 class RequestEditor extends StatefulWidget {
   final WindowController? windowController;
   final HttpRequest? request;
-  final int proxyPort;
 
-  const RequestEditor({super.key, this.request, this.windowController, required this.proxyPort});
+  const RequestEditor({super.key, this.request, this.windowController});
 
   @override
   State<StatefulWidget> createState() {
@@ -23,15 +24,14 @@ class RequestEditor extends StatefulWidget {
 
 class RequestEditorState extends State<RequestEditor> {
   final requestLineKey = GlobalKey<_RequestLineState>();
-  final headerKey = GlobalKey<HeadersState>();
-
-  String requestBody = "";
+  final requestKey = GlobalKey<_HttpState>();
+  ValueNotifier responseChange = ValueNotifier<bool>(false);
+  HttpResponse? response;
 
   @override
   void initState() {
     super.initState();
     RawKeyboard.instance.addListener(onKeyEvent);
-    requestBody = widget.request?.bodyAsString ?? '';
   }
 
   void onKeyEvent(RawKeyEvent event) {
@@ -52,45 +52,139 @@ class RequestEditorState extends State<RequestEditor> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("请求编辑", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          title: const Text("发起请求", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           toolbarHeight: Platform.isWindows ? 36 : null,
           centerTitle: true,
           actions: [
-            TextButton.icon(onPressed: () async => sendRequest(), icon: const Icon(Icons.send), label: const Text("发送"))
+            TextButton.icon(
+                onPressed: () async => sendRequest(), icon: const Icon(Icons.send), label: const Text("发送")),
+            const SizedBox(width: 10)
           ],
         ),
-        body: SingleChildScrollView(
-            padding: const EdgeInsets.all(15),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              _RequestLine(request: widget.request, key: requestLineKey), // 请求行
-              Headers(headers: widget.request?.headers, key: headerKey), // 请求头
-              const Text("Body", style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue)),
-              body() // 请求体
-            ])));
+        body: Column(children: [
+          _RequestLine(key: requestLineKey, request: widget.request),
+          Expanded(
+              child: VerticalSplitView(
+            ratio: 0.53,
+            left: _HttpWidget(
+                key: requestKey,
+                title: const Text("Request", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                message: widget.request),
+            right: ValueListenableBuilder(
+                valueListenable: responseChange,
+                builder: (_, value, __) => _HttpWidget(
+                    title: Row(children: [
+                      const Text("Response", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      const Spacer(),
+                      Text(response?.status.toString() ?? '', style: const TextStyle(fontSize: 14))
+                    ]),
+                    message: response,
+                    readOnly: true)),
+          )),
+        ]));
   }
 
   ///发送请求
   sendRequest() async {
     var currentState = requestLineKey.currentState!;
-    HttpRequest request = HttpRequest(HttpMethod.valueOf(currentState.requestMethod), currentState.requestUrl);
-    var headers = headerKey.currentState?.getHeaders();
-    request.headers.addAll(headers);
-    request.body = requestBody.codeUnits;
-    HttpClients.proxyRequest("127.0.0.1", widget.proxyPort, request);
+    var headers = requestKey.currentState?.getHeaders();
+    var requestBody = requestKey.currentState?.getBody();
 
-    FlutterToastr.show('已重新发送请求', context);
-    RawKeyboard.instance.removeListener(onKeyEvent);
-    await Future.delayed(const Duration(milliseconds: 500), () => widget.windowController?.close());
+    HttpRequest request = HttpRequest(HttpMethod.valueOf(currentState.requestMethod), currentState.requestUrl);
+    request.headers.addAll(headers);
+    request.body = requestBody?.codeUnits;
+
+    HttpClients.proxyRequest(request).then((response) {
+      this.response = response;
+      responseChange.value = !responseChange.value;
+    });
+
+    if (context.mounted) {
+      FlutterToastr.show('已发送请求', context);
+    }
+  }
+}
+
+class _HttpWidget extends StatefulWidget {
+  final HttpMessage? message;
+  final bool readOnly;
+  final Widget title;
+
+  const _HttpWidget({this.message, this.readOnly = false, super.key, required this.title});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _HttpState();
+  }
+}
+
+class _HttpState extends State<_HttpWidget> {
+  final tabs = ['Header', 'Body'];
+  final headerKey = GlobalKey<HeadersState>();
+  String? body;
+
+  @override
+  void initState() {
+    super.initState();
   }
 
-  Widget body() {
+  String? getBody() {
+    return body;
+  }
+
+  HttpHeaders? getHeaders() {
+    return headerKey.currentState?.getHeaders();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    body = widget.message?.bodyAsString;
+    headerKey.currentState?.refreshHeader(widget.message?.headers);
+
+    if (widget.message == null && widget.readOnly) {
+      return Scaffold(appBar: AppBar(title: widget.title), body: const Center(child: Text("无数据")));
+    }
+
+    return SingleChildScrollView(
+        child: SizedBox(
+            height: MediaQuery.of(context).size.height - 120,
+            child: DefaultTabController(
+                length: tabs.length,
+                child: Scaffold(
+                  primary: false,
+                  appBar: PreferredSize(
+                      preferredSize: const Size.fromHeight(70),
+                      child: AppBar(
+                        title: widget.title,
+                        bottom: TabBar(tabs: tabs.map((e) => Tab(text: e, height: 35)).toList()),
+                      )),
+                  body: Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: TabBarView(
+                        children: [
+                          Headers(key: headerKey, headers: widget.message?.headers, readOnly: widget.readOnly),
+                          _body()
+                        ],
+                      )),
+                ))));
+  }
+
+  Widget _body() {
+    if (body != null && widget.readOnly && widget.message?.contentType == ContentType.json) {
+      try {
+        body = const JsonEncoder.withIndent('  ').convert(const JsonDecoder().convert(body!));
+      } catch (_) {}
+    }
+
     return TextField(
-        controller: TextEditingController(text: requestBody),
+        autofocus: true,
+        controller: TextEditingController(text: body),
+        readOnly: widget.readOnly,
         onChanged: (value) {
-          requestBody = value;
+          body = value;
         },
-        minLines: 3,
-        maxLines: 10);
+        minLines: 20,
+        maxLines: 20);
   }
 }
 
@@ -116,6 +210,7 @@ class _RequestLineState extends State<_RequestLine> {
     if (widget.request == null) {
       return;
     }
+
     var request = widget.request!;
     requestUrl = request.requestUrl;
     requestMethod = request.method.name;
@@ -151,8 +246,9 @@ class _RequestLineState extends State<_RequestLine> {
 ///请求头
 class Headers extends StatefulWidget {
   final HttpHeaders? headers;
+  final bool readOnly; //只读
 
-  const Headers({super.key, this.headers});
+  const Headers({super.key, this.headers, this.readOnly = false});
 
   @override
   State<StatefulWidget> createState() {
@@ -160,8 +256,11 @@ class Headers extends StatefulWidget {
   }
 }
 
-class HeadersState extends State<Headers> {
-  Map<TextEditingController, List<TextEditingController>> headers = {};
+class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
+  final Map<TextEditingController, List<TextEditingController>> _headers = {};
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -170,14 +269,24 @@ class HeadersState extends State<Headers> {
       return;
     }
     widget.headers?.forEach((name, values) {
-      headers[TextEditingController(text: name)] = values.map((it) => TextEditingController(text: it)).toList();
+      _headers[TextEditingController(text: name)] = values.map((it) => TextEditingController(text: it)).toList();
+    });
+  }
+
+  //刷新header
+  refreshHeader(HttpHeaders? headers) {
+    _headers.clear();
+    setState(() {
+      headers?.forEach((name, values) {
+        _headers[TextEditingController(text: name)] = values.map((it) => TextEditingController(text: it)).toList();
+      });
     });
   }
 
   ///获取所有请求头
   HttpHeaders getHeaders() {
     var headers = HttpHeaders();
-    this.headers.forEach((name, values) {
+    _headers.forEach((name, values) {
       if (name.text.isEmpty) {
         return;
       }
@@ -192,66 +301,71 @@ class HeadersState extends State<Headers> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        padding: const EdgeInsets.only(top: 15),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const SizedBox(
-              width: double.infinity,
-              child: Text("Headers", style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue))),
-          const SizedBox(height: 10),
-          DataTable(
-              dataRowMaxHeight: 38,
-              dataRowMinHeight: 38,
-              dividerThickness: 0.2,
-              border: TableBorder.all(color: Theme.of(context).highlightColor),
-              columns: const [
-                DataColumn(label: Text('Key')),
-                DataColumn(label: Text('Value')),
-                DataColumn(label: Text(''))
-              ],
-              rows: buildRows()),
-          const SizedBox(height: 10),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            TextButton(
-                onPressed: () {
-                  setState(() {
-                    headers[TextEditingController()] = [TextEditingController()];
-                  });
-                },
-                child: const Text("添加Header", textAlign: TextAlign.center))
-          ]),
-        ]));
+    super.build(context);
+
+    var list = [
+      _row(const Text('Key'), const Text('Value'), const Text('')),
+      ..._buildRows(),
+    ];
+
+    if (!widget.readOnly) {
+      list.add(TextButton(
+        child: const Text("添加Header", textAlign: TextAlign.center),
+        onPressed: () {
+          setState(() {
+            _headers[TextEditingController()] = [TextEditingController()];
+          });
+        },
+      ));
+    }
+    return Scaffold(
+        body: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: ListView.separated(
+                separatorBuilder: (context, index) =>
+                    index == list.length ? const SizedBox() : const Divider(thickness: 0.2),
+                itemBuilder: (context, index) => list[index],
+                itemCount: list.length)));
   }
 
-  List<DataRow> buildRows() {
-    var width = MediaQuery.of(context).size.width;
-    List<DataRow> list = [];
+  List<Widget> _buildRows() {
+    List<Widget> list = [];
 
-    headers.forEach((key, values) {
+    _headers.forEach((key, values) {
       for (var val in values) {
-        list.add(DataRow(cells: [
-          cell(key, width: 200, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-          cell(val, width: width - 410),
-          DataCell(InkWell(
-              onTap: () {
-                setState(() {
-                  headers.remove(key);
-                });
-              },
-              child: const Icon(Icons.remove_circle, size: 16)))
-        ]));
+        list.add(_row(
+            _cell(key, isKey: true),
+            _cell(val),
+            widget.readOnly
+                ? null
+                : Padding(
+                    padding: const EdgeInsets.only(right: 15),
+                    child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _headers.remove(key);
+                          });
+                        },
+                        child: const Icon(Icons.remove_circle, size: 16)))));
       }
     });
 
     return list;
   }
 
-  DataCell cell(TextEditingController val, {TextStyle? style = const TextStyle(fontSize: 14), double? width}) {
-    return DataCell(SizedBox(
-        width: width,
+  Widget _cell(TextEditingController val, {bool isKey = false}) {
+    return Container(
+        padding: const EdgeInsets.only(right: 5),
         child: TextFormField(
-            style: style,
+            readOnly: widget.readOnly,
+            style: TextStyle(fontSize: 12, fontWeight: isKey ? FontWeight.w500 : null),
             controller: val,
-            decoration: const InputDecoration(isDense: true, border: InputBorder.none, hintText: "Header"))));
+            minLines: 1,
+            maxLines: 3,
+            decoration: InputDecoration(isDense: true, border: InputBorder.none, hintText: isKey ? "Key" : "Value")));
+  }
+
+  Widget _row(Widget key, Widget val, Widget? op) {
+    return Row(children: [Expanded(flex: 4, child: key), Expanded(flex: 6, child: val), op ?? const SizedBox()]);
   }
 }

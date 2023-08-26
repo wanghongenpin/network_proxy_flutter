@@ -77,7 +77,11 @@ class HttpBodyState extends State<HttpBodyWidget> {
           }),
       Padding(
           padding: const EdgeInsets.all(10),
-          child: _Body(key: bodyKey, message: widget.httpMessage, viewType: tabs.list[tabIndex], scrollController:widget.scrollController)) //body
+          child: _Body(
+              key: bodyKey,
+              message: widget.httpMessage,
+              viewType: tabs.list[tabIndex],
+              scrollController: widget.scrollController)) //body
     ];
 
     var tabController = DefaultTabController(
@@ -101,7 +105,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
     return Row(
       mainAxisAlignment: widget.inNewWindow ? MainAxisAlignment.center : MainAxisAlignment.start,
       children: [
-        Text('$type Body', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Text('$type Body', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
         const SizedBox(width: 15),
         IconButton(
             icon: const Icon(Icons.copy),
@@ -208,7 +212,10 @@ class _BodyState extends State<_Body> {
     try {
       if (type == ViewType.jsonText) {
         var jsonObject = json.decode(message!.bodyAsString);
-        return JsonText(json: jsonObject, colorTheme: ColorTheme.of(Theme.of(context).brightness), scrollController: widget.scrollController);
+        return JsonText(
+            json: jsonObject,
+            colorTheme: ColorTheme.of(Theme.of(context).brightness),
+            scrollController: widget.scrollController);
       }
 
       if (type == ViewType.json) {

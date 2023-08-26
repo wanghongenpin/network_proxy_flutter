@@ -57,7 +57,7 @@ class _VerticalSplitViewState extends State<VerticalSplitView> {
                     height: double.infinity,
                     child: (_ratio <= 0 || _ratio >= 1)
                         ? const Icon(Icons.drag_handle, size: 16)
-                        : const VerticalDivider(thickness: 2),
+                        : const VerticalDivider(thickness: 1),
                   )),
               onPanUpdate: (DragUpdateDetails details) {
                 setState(() {

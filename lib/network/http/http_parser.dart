@@ -5,7 +5,7 @@ import 'package:network_proxy/network/http/http_headers.dart';
 
 /// http解析器
 class HttpParse {
-  final _HeaderParse __headerParse = _HeaderParse();
+  static const int defaultMaxLength = 40960;
 
   /// 解析请求行
   List<String> parseInitialLine(ByteBuf data, int size) {
@@ -28,10 +28,6 @@ class HttpParse {
     return initialLine;
   }
 
-  bool parseHeaders(ByteBuf data, HttpHeaders headers) {
-    return __headerParse.parseHeader(data, headers);
-  }
-
   //分割行
   List<String> _splitLine(Uint8List data) {
     List<String> lines = [];
@@ -48,18 +44,10 @@ class HttpParse {
     lines.add(String.fromCharCodes(data.sublist(start)));
     return lines;
   }
-}
 
-//是否行结束
-bool _isLineEnd(ByteBuf data, int index) {
-  return index + 1 < data.length && data.get(index) == HttpConstants.cr && data.get(index + 1) == HttpConstants.lf;
-}
-
-class _HeaderParse {
-  static const int defaultMaxLength = 40960;
 
   /// 解析请求头
-  bool parseHeader(ByteBuf data, HttpHeaders headers) {
+  bool parseHeaders(ByteBuf data, HttpHeaders headers) {
     if (!data.isReadable()) {
       return false;
     }
@@ -84,6 +72,11 @@ class _HeaderParse {
     return _isLineEnd(data, data.readerIndex - 4) && _isLineEnd(data, data.readerIndex - 2);
   }
 
+  //是否行结束
+  bool _isLineEnd(ByteBuf data, int index) {
+    return index + 1 < data.length && data.get(index) == HttpConstants.cr && data.get(index + 1) == HttpConstants.lf;
+  }
+
   //分割头
   List<String> _splitHeader(List<int> data) {
     List<String> headers = [];
@@ -97,3 +90,4 @@ class _HeaderParse {
     return headers;
   }
 }
+

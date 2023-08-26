@@ -196,7 +196,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
     return ListView.separated(
         cacheExtent: 1000,
-        separatorBuilder: (context, index) => Divider(thickness: 0.2, color: Theme.of(context).dividerColor),
+        separatorBuilder: (context, index) => Divider(thickness: 0.2, height: 0, color: Theme.of(context).dividerColor),
         itemCount: view.length,
         itemBuilder: (context, index) {
           GlobalKey<RequestRowState> key = GlobalKey();
@@ -341,7 +341,8 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     super.build(context);
     return ListView.separated(
         padding: EdgeInsets.zero,
-        separatorBuilder: (context, index) => Divider(thickness: 0.2, color: Theme.of(context).dividerColor),
+        separatorBuilder: (context, index) =>
+            Divider(thickness: 0.2, height: 0.5, color: Theme.of(context).dividerColor),
         itemCount: list.length,
         itemBuilder: (ctx, index) => title(index));
   }

@@ -59,31 +59,44 @@ class _ToolbarState extends State<Toolbar> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 80 : 30)),
-        SocketLaunch(proxyServer: widget.proxyServer),
-        const Padding(padding: EdgeInsets.only(left: 20)),
-        IconButton(
-            tooltip: "清理",
-            icon: const Icon(Icons.cleaning_services_outlined),
-            onPressed: () {
-              widget.domainStateKey.currentState?.clean();
-            }),
-        const Padding(padding: EdgeInsets.only(left: 20)),
-        SslWidget(proxyServer: widget.proxyServer),
-        const Padding(padding: EdgeInsets.only(left: 20)),
-        Setting(proxyServer: widget.proxyServer),
-        const Padding(padding: EdgeInsets.only(left: 20)),
-        IconButton(
-            tooltip: "手机连接",
-            icon: const Icon(Icons.phone_iphone),
-            onPressed: () async {
-              final ips = await localIps();
-              phoneConnect(ips, widget.proxyServer.port);
-            }),
-      ],
-    );
+    return Container(
+        decoration: BoxDecoration(
+            border: Border(
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 0.1),
+        )),
+        child: Row(
+          children: [
+            Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 80 : 30)),
+            SocketLaunch(proxyServer: widget.proxyServer),
+            const Padding(padding: EdgeInsets.only(left: 20)),
+            IconButton(
+                tooltip: "清理",
+                icon: const Icon(Icons.cleaning_services_outlined),
+                onPressed: () {
+                  widget.domainStateKey.currentState?.clean();
+                }),
+            const Padding(padding: EdgeInsets.only(left: 20)),
+            SslWidget(proxyServer: widget.proxyServer),
+            const Padding(padding: EdgeInsets.only(left: 20)),
+            Setting(proxyServer: widget.proxyServer),
+            const Padding(padding: EdgeInsets.only(left: 20)),
+            IconButton(
+                tooltip: "手机连接",
+                icon: const Icon(Icons.phone_iphone),
+                onPressed: () async {
+                  final ips = await localIps();
+                  phoneConnect(ips, widget.proxyServer.port);
+                }),
+            const Expanded(child: SizedBox()), //自动扩展挤压
+            IconButton(
+              icon: const Icon(Icons.space_dashboard, size: 20, color: Colors.blueGrey),
+              onPressed: () {
+
+              },
+            ), //右对齐
+            const Padding(padding: EdgeInsets.only(left: 30)),
+          ],
+        ));
   }
 
   phoneConnect(List<String> hosts, int port) {

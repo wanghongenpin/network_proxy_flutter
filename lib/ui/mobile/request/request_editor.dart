@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/http_client.dart';
@@ -63,7 +64,7 @@ class RequestEditorState extends State<MobileRequestEditor> {
     var headers = headerKey.currentState?.getHeaders();
     request.headers.addAll(headers);
     request.body = requestBody.codeUnits;
-    HttpClients.proxyRequest("127.0.0.1", widget.proxyServer.port, request);
+    HttpClients.proxyRequest(proxyInfo: ProxyInfo.of("127.0.0.1", widget.proxyServer.port), request);
     FlutterToastr.show('已重新发送请求', context);
     Navigator.pop(context, request);
   }

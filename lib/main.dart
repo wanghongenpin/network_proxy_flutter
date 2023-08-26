@@ -4,20 +4,14 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
-import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/chinese_font.dart';
-import 'package:network_proxy/ui/component/split_view.dart';
 import 'package:network_proxy/ui/content/body.dart';
-import 'package:network_proxy/ui/content/panel.dart';
-import 'package:network_proxy/ui/desktop/left/domain.dart';
+import 'package:network_proxy/ui/desktop/desktop.dart';
 import 'package:network_proxy/ui/desktop/left/request_editor.dart';
-import 'package:network_proxy/ui/desktop/toolbar/toolbar.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
-import 'network/channel.dart';
-import 'network/handler.dart';
 import 'network/http/http.dart';
 
 void main(List<String> args) async {
@@ -40,8 +34,8 @@ void main(List<String> args) async {
   await windowManager.ensureInitialized();
   //设置窗口大小
   WindowOptions windowOptions = WindowOptions(
-      minimumSize: const Size(980, 600),
-      size: Platform.isMacOS ? const Size(1200, 750) : const Size(1080, 650),
+      minimumSize: const Size(1000, 600),
+      size: Platform.isMacOS ? const Size(1230, 750) : const Size(1100, 650),
       center: true,
       titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -56,9 +50,7 @@ void main(List<String> args) async {
 Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
   if (argument['name'] == 'RequestEditor') {
     return RequestEditor(
-        windowController: WindowController.fromWindowId(windowId),
-        request: HttpRequest.fromJson(argument['request']),
-        proxyPort: argument['proxyPort']);
+        windowController: WindowController.fromWindowId(windowId), request: HttpRequest.fromJson(argument['request']));
   }
 
   if (argument['name'] == 'HttpBodyWidget') {
@@ -84,8 +76,26 @@ class FluentApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var lightTheme = ThemeData.light(useMaterial3: true);
+    var lightTheme = ThemeData.light(useMaterial3: !Platforms.isDesktop());
     var darkTheme = ThemeData.dark(useMaterial3: !Platforms.isDesktop());
+
+    if (!lightTheme.useMaterial3) {
+      lightTheme = lightTheme.copyWith(
+          expansionTileTheme: lightTheme.expansionTileTheme.copyWith(
+            textColor: lightTheme.textTheme.titleMedium?.color,
+          ),
+          appBarTheme: lightTheme.appBarTheme.copyWith(
+            color: Colors.transparent,
+            elevation: 0,
+            titleTextStyle: lightTheme.textTheme.titleMedium,
+            iconTheme: lightTheme.iconTheme,
+          ),
+          tabBarTheme: lightTheme.tabBarTheme.copyWith(
+            labelColor: lightTheme.indicatorColor,
+            unselectedLabelColor: lightTheme.textTheme.titleMedium?.color,
+          ));
+    }
+
     if (Platform.isWindows) {
       lightTheme = lightTheme.useSystemChineseFont();
       darkTheme = darkTheme.useSystemChineseFont();
@@ -103,79 +113,5 @@ class FluentApp extends StatelessWidget {
             home: home,
           );
         });
-  }
-}
-
-class DesktopHomePage extends StatefulWidget {
-  final Configuration configuration;
-
-  const DesktopHomePage({super.key, required this.configuration});
-
-  @override
-  State<DesktopHomePage> createState() => _DesktopHomePagePageState();
-}
-
-class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventListener {
-  final domainStateKey = GlobalKey<DomainWidgetState>();
-
-  late ProxyServer proxyServer;
-  late NetworkTabController panel;
-
-  @override
-  void onRequest(Channel channel, HttpRequest request) {
-    domainStateKey.currentState!.add(channel, request);
-  }
-
-  @override
-  void onResponse(Channel channel, HttpResponse response) {
-    domainStateKey.currentState!.addResponse(channel, response);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    proxyServer = ProxyServer(widget.configuration, listener: this);
-    panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 18), proxyServer: proxyServer);
-
-    if (widget.configuration.guide) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        //首次引导
-        showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) {
-              return AlertDialog(
-                  actions: [
-                    TextButton(
-                        onPressed: () {
-                          widget.configuration.guide = false;
-                          widget.configuration.flushConfig();
-                          Navigator.pop(context);
-                        },
-                        child: const Text('关闭'))
-                  ],
-                  title: const Text('提示', style: TextStyle(fontSize: 18)),
-                  content: const Text(
-                      '默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
-                      '点击的HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
-                      '新增更新:\n'
-                      '1. 增加高级搜索，点击搜索Icon触发。\n'
-                      '2. 显示SSL握手异常、建立连接异常、未知异常等请求。\n'
-                      '3.响应体大时异步加载json，请求重写增加域名，修复手机扫码连接未开启代理时不转发问题',
-                      style: TextStyle(fontSize: 14)));
-            });
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final domainWidget = DomainWidget(key: domainStateKey, proxyServer: proxyServer, panel: panel);
-
-    return Scaffold(
-        appBar: Tab(
-          child: Toolbar(proxyServer, domainStateKey),
-        ),
-        body: VerticalSplitView(ratio: 0.3, minRatio: 0.15, maxRatio: 0.9, left: domainWidget, right: panel));
   }
 }

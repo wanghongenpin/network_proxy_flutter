@@ -71,8 +71,11 @@ class Configuration {
     await _loadConfig();
   }
 
+  String? userHome;
   Future<File> homeDir() async {
-    String? userHome;
+    if (userHome != null) {
+      return File("${userHome!}${Platform.pathSeparator}.proxypin");
+    }
     if (Platforms.isDesktop()) {
       userHome = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
     } else {

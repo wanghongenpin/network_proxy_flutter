@@ -20,6 +20,8 @@ import 'dart:io';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/network.dart';
+import 'package:network_proxy/network/util/system_proxy.dart';
+import 'package:proxy_manager/proxy_manager.dart';
 
 import 'channel.dart';
 import 'http/codec.dart';
@@ -98,13 +100,18 @@ class HttpClients {
   }
 
   /// 发送代理请求
-  static Future<HttpResponse> proxyRequest(String proxyHost, int port, HttpRequest request,
-      {Duration timeout = const Duration(seconds: 3)}) async {
+  static Future<HttpResponse> proxyRequest(HttpRequest request,
+      {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 3)}) async {
+    if (proxyInfo == null) {
+      var proxyTypes = request.uri.startsWith("https://") ? ProxyTypes.https : ProxyTypes.http;
+      proxyInfo = await SystemProxy.getSystemProxy(proxyTypes);
+    }
+    print(proxyInfo);
     var httpResponseHandler = HttpResponseHandler();
 
     HostAndPort hostPort = HostAndPort.of(request.uri);
 
-    Channel channel = await proxyConnect(proxyInfo: ProxyInfo.of(proxyHost, port), hostPort, httpResponseHandler);
+    Channel channel = await proxyConnect(proxyInfo: proxyInfo, hostPort, httpResponseHandler);
 
     if (hostPort.isSsl()) {
       channel.secureSocket = await SecureSocket.secure(channel.socket, onBadCertificate: (certificate) => true);

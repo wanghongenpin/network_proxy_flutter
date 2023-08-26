@@ -28,7 +28,7 @@ class DomainWidget extends StatefulWidget {
   }
 }
 
-class DomainWidgetState extends State<DomainWidget> {
+class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClientMixin{
   LinkedHashMap<HostAndPort, HeaderBody> containerMap = LinkedHashMap<HostAndPort, HeaderBody>();
   LinkedHashMap<HostAndPort, HeaderBody> searchView = LinkedHashMap<HostAndPort, HeaderBody>();
 
@@ -48,7 +48,11 @@ class DomainWidgetState extends State<DomainWidget> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     var list = containerMap.values;
 
     //根究搜素文本过滤
