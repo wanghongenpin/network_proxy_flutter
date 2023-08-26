@@ -203,8 +203,8 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
 
       if (data is HttpRequest) {
         data.hostAndPort = channel.getAttribute(AttributeKeys.host) ?? getHostAndPort(data);
-        if (data.headers.host() != null && data.headers.host()?.contains(":") == false) {
-          data.hostAndPort?.host = data.headers.host()!;
+        if (data.headers.host != null && data.headers.host?.contains(":") == false) {
+          data.hostAndPort?.host = data.headers.host!;
         }
 
         //websocket协议

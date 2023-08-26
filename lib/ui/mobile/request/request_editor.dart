@@ -1,16 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/utils/curl.dart';
 
 class MobileRequestEditor extends StatefulWidget {
   final HttpRequest? request;
-  final ProxyServer proxyServer;
+  final ProxyServer? proxyServer;
 
   const MobileRequestEditor({super.key, this.request, required this.proxyServer});
 
@@ -33,6 +35,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
 
   late TabController tabController;
 
+  HttpRequest? request;
   HttpResponse? response;
 
   @override
@@ -46,13 +49,49 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
   void initState() {
     super.initState();
     tabController = TabController(length: tabs.length, vsync: this);
+    request = widget.request;
+    if (widget.request == null) {
+      curlParse();
+    }
+  }
+
+  curlParse() async {
+    //获取剪切板内容
+    var data = await Clipboard.getData('text/plain');
+    if (data == null || data.text == null) {
+      return;
+    }
+    var text = data.text;
+    if (text?.trimLeft().startsWith('curl') == true && context.mounted) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(title: const Text('提示'), content: const Text('识别到剪切板内容是curl格式，是否转换为HTTP请求？'), actions: [
+            TextButton(child: const Text('取消'), onPressed: () => Navigator.of(context).pop()),
+            TextButton(
+                child: const Text('确定'),
+                onPressed: () {
+                  try {
+                    setState(() {
+                      request = parseCurl(text!);
+                      requestLineKey.currentState?.change(request?.uri, request?.method.name);
+                    });
+                  } catch (e) {
+                    FlutterToastr.show('转换失败', context);
+                  }
+                  Navigator.of(context).pop();
+                }),
+          ]);
+        },
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-            title: const Text("编辑请求", style: TextStyle(fontSize: 16)),
+            title: const Text("发起请求", style: TextStyle(fontSize: 16)),
             centerTitle: true,
             leading: TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -62,15 +101,13 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
         body: TabBarView(
           controller: tabController,
           children: [
-            _HttpWidget(
-                title: _RequestLine(request: widget.request, key: requestLineKey),
-                message: widget.request,
-                key: requestKey),
+            _HttpWidget(title: _RequestLine(request: request, key: requestLineKey), message: request, key: requestKey),
             ValueListenableBuilder(
                 valueListenable: responseChange,
                 builder: (_, value, __) => _HttpWidget(
                     title: Row(children: [
                       const Text('状态码：', style: TextStyle(fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 10),
                       Text(response?.status.toString() ?? "", style: const TextStyle(color: Colors.blue))
                     ]),
                     readOnly: true,
@@ -89,18 +126,15 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     request.headers.addAll(headers);
     request.body = requestBody?.codeUnits;
 
-    HttpClients.proxyRequest(
-            proxyInfo: widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null,
-            request)
-        .then((response) {
+    var proxyInfo = widget.proxyServer?.isRunning == true ? ProxyInfo.of("127.0.0.1", widget.proxyServer!.port) : null;
+    HttpClients.proxyRequest(proxyInfo: proxyInfo, request).then((response) {
+      FlutterToastr.show('请求成功', context);
       this.response = response;
       tabController.animateTo(1);
       responseChange.value = !responseChange.value;
+    }).catchError((e) {
+      FlutterToastr.show('请求失败', context);
     });
-
-    if (context.mounted) {
-      FlutterToastr.show('已发送请求', context);
-    }
   }
 }
 
@@ -194,11 +228,17 @@ class _RequestLineState extends State<_RequestLine> {
   void initState() {
     super.initState();
     if (widget.request == null) {
+      requestUrl = 'https://';
       return;
     }
     var request = widget.request!;
     requestUrl = request.requestUrl;
     requestMethod = request.method.name;
+  }
+
+  change(String? requestUrl, String? requestMethod) {
+    this.requestUrl = requestUrl ?? this.requestUrl;
+    this.requestMethod = requestMethod ?? this.requestMethod;
   }
 
   @override
@@ -252,7 +292,9 @@ class HeadersState extends State<Headers> {
   @override
   void initState() {
     super.initState();
-    if (widget.headers == null) {
+    if (widget.headers == null && !widget.readOnly) {
+      headers["User-Agent"] = ["ProxyPin/1.0.2"];
+      headers["Accept"] = ["*/*"];
       return;
     }
     widget.headers?.forEach((name, values) {

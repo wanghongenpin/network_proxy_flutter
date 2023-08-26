@@ -107,12 +107,13 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   showUpgradeNotice() {
     String content = '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
         '新增更新:\n'
-        '1.请求编辑发送可直接查看响应体，发送请求无需开启代理；\n'
-        '2. 详情增加快速请求重写, 复制cURL格式可直接导入Postman；\n'
-        '3. 增加请求收藏功能；\n'
-        '4. 主题增加Material3切换；\n'
-        '5. 请求删除&大响应体直接转发；\n'
-        '6. 安卓应用白名单，调整请求展示列表；';
+        '1. 增加工具箱，提供常用编解码，增加HTTP请求,可粘贴cURL格式解析发起请求；\n'
+        '2. 请求编辑发送可直接查看响应体，发送请求无需开启代理；\n'
+        '3. 详情增加快速请求重写, 复制cURL格式可直接导入Postman；\n'
+        '4. 增加请求收藏功能；\n'
+        '5. 主题增加Material3切换；\n'
+        '6. 请求删除&大响应体直接转发；\n'
+        '7. 安卓应用白名单，调整请求展示列表；';
     showAlertDialog('更新内容V1.0.2', content, () {
       widget.configuration.upgradeNoticeV2 = false;
       widget.configuration.flushConfig();

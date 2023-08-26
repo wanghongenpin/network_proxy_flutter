@@ -5,6 +5,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/ui/component/chinese_font.dart';
+import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/ui/desktop/desktop.dart';
 import 'package:network_proxy/ui/desktop/left/request_editor.dart';
@@ -54,7 +55,8 @@ void main(List<String> args) async {
 Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
   if (argument['name'] == 'RequestEditor') {
     return RequestEditor(
-        windowController: WindowController.fromWindowId(windowId), request: HttpRequest.fromJson(argument['request']));
+        windowController: WindowController.fromWindowId(windowId),
+        request: argument['request'] == null ? null : HttpRequest.fromJson(argument['request']));
   }
 
   if (argument['name'] == 'HttpBodyWidget') {
@@ -62,6 +64,11 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
         windowController: WindowController.fromWindowId(windowId),
         httpMessage: HttpMessage.fromJson(argument['httpMessage']),
         inNewWindow: true);
+  }
+
+  if (argument['name'] == 'EncoderWidget') {
+    return EncoderWidget(
+        type: EncoderType.nameOf(argument['type']), windowController: WindowController.fromWindowId(windowId));
   }
 
   return const SizedBox();

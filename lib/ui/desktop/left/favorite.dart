@@ -128,7 +128,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
           FlutterToastr.show('已重新发送请求', context);
         }),
-        popupItem("编辑请求", onTap: () {
+        popupItem("编辑请求重放", onTap: () {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             requestEdit();
           });

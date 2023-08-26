@@ -90,7 +90,16 @@ class HttpRequest extends HttpMessage {
 
   HttpRequest(this.method, this.uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
 
-  String? remoteDomain() => hostAndPort?.domain;
+  String? remoteDomain()  {
+    if (hostAndPort == null) {
+      try {
+         return Uri.parse(uri).host;
+      } catch (e) {
+        return null;
+      }
+    }
+    return hostAndPort?.domain;
+  }
 
   String get requestUrl => uri.startsWith("/") ? '${remoteDomain()}$uri' : uri;
 

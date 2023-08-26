@@ -106,6 +106,13 @@ class HttpClients {
       var proxyTypes = request.uri.startsWith("https://") ? ProxyTypes.https : ProxyTypes.http;
       proxyInfo = await SystemProxy.getSystemProxy(proxyTypes);
     }
+
+    if (request.headers.host == null || request.headers.host?.trim().isEmpty == true) {
+      try {
+        request.headers.host = Uri.parse(request.uri).host;
+      } catch (_) {}
+    }
+
     var httpResponseHandler = HttpResponseHandler();
 
     HostAndPort hostPort = HostAndPort.of(request.uri);

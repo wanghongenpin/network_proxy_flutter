@@ -9,6 +9,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/component/split_view.dart';
+import 'package:network_proxy/utils/curl.dart';
 
 class RequestEditor extends StatefulWidget {
   final WindowController? windowController;
@@ -26,18 +27,35 @@ class RequestEditorState extends State<RequestEditor> {
   final requestLineKey = GlobalKey<_RequestLineState>();
   final requestKey = GlobalKey<_HttpState>();
   ValueNotifier responseChange = ValueNotifier<bool>(false);
+  HttpRequest? request;
   HttpResponse? response;
+
+  bool showCURLDialog = false;
 
   @override
   void initState() {
     super.initState();
+    request = widget.request;
     RawKeyboard.instance.addListener(onKeyEvent);
+    if (widget.request == null) {
+      curlParse();
+    }
   }
 
   void onKeyEvent(RawKeyEvent event) {
-    if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyW)) {
+    //cmd+w 关闭窗口
+    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
+        event.isKeyPressed(LogicalKeyboardKey.keyW)) {
       RawKeyboard.instance.removeListener(onKeyEvent);
+      responseChange.dispose();
       widget.windowController?.close();
+      return;
+    }
+
+    //粘贴
+    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
+        event.data.logicalKey == LogicalKeyboardKey.keyV) {
+      curlParse();
       return;
     }
   }
@@ -63,14 +81,14 @@ class RequestEditorState extends State<RequestEditor> {
           ],
         ),
         body: Column(children: [
-          _RequestLine(key: requestLineKey, request: widget.request),
+          _RequestLine(key: requestLineKey, request: request),
           Expanded(
               child: VerticalSplitView(
             ratio: 0.53,
             left: _HttpWidget(
                 key: requestKey,
                 title: const Text("Request", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                message: widget.request),
+                message: request),
             right: ValueListenableBuilder(
                 valueListenable: responseChange,
                 builder: (_, value, __) => _HttpWidget(
@@ -96,12 +114,44 @@ class RequestEditorState extends State<RequestEditor> {
     request.body = requestBody?.codeUnits;
 
     HttpClients.proxyRequest(request).then((response) {
+      FlutterToastr.show('请求成功', context);
       this.response = response;
       responseChange.value = !responseChange.value;
+    }).catchError((e) {
+      FlutterToastr.show('请求失败$e', context);
     });
+  }
 
-    if (context.mounted) {
-      FlutterToastr.show('已发送请求', context);
+  curlParse() async {
+    var data = await Clipboard.getData('text/plain');
+    if (data == null || data.text == null) {
+      return;
+    }
+
+    var text = data.text;
+    if (text?.trimLeft().startsWith('curl') == true && context.mounted && !showCURLDialog) {
+      showCURLDialog = true;
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(title: const Text('提示'), content: const Text('识别到curl格式，是否转换为HTTP请求？'), actions: [
+            TextButton(child: const Text('取消'), onPressed: () => Navigator.of(context).pop()),
+            TextButton(
+                child: const Text('确定'),
+                onPressed: () {
+                  try {
+                    setState(() {
+                      request = parseCurl(text!);
+                      requestLineKey.currentState?.change(request?.requestUrl, request?.method.name);
+                    });
+                  } catch (e) {
+                    FlutterToastr.show('转换失败', context);
+                  }
+                  Navigator.of(context).pop();
+                }),
+          ]);
+        },
+      ).then((value) => showCURLDialog = false);
     }
   }
 }
@@ -207,12 +257,18 @@ class _RequestLineState extends State<_RequestLine> {
   void initState() {
     super.initState();
     if (widget.request == null) {
+      requestUrl = 'https://';
       return;
     }
 
     var request = widget.request!;
     requestUrl = request.requestUrl;
     requestMethod = request.method.name;
+  }
+
+  change(String? requestUrl, String? requestMethod) {
+    this.requestUrl = requestUrl ?? this.requestUrl;
+    this.requestMethod = requestMethod ?? this.requestMethod;
   }
 
   @override
@@ -264,7 +320,9 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-    if (widget.headers == null) {
+    if (widget.headers == null && !widget.readOnly) {
+      _headers[TextEditingController(text: "User-Agent")] = [TextEditingController(text: "ProxyPin/1.0.2")];
+      _headers[TextEditingController(text: "Accept")] = [TextEditingController(text: "*/*")];
       return;
     }
     widget.headers?.forEach((name, values) {

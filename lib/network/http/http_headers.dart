@@ -120,7 +120,13 @@ class HttpHeaders {
 
   String get contentType => get(CONTENT_TYPE) ?? "";
 
-  String? host() => get(HOST);
+  String? get host => get(HOST);
+
+  set host(String? host) {
+    if (host != null) {
+      set(HOST, host);
+    }
+  }
 
   String headerLines() {
     StringBuffer sb = StringBuffer();

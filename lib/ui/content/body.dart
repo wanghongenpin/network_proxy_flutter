@@ -46,7 +46,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
   /// 按键事件
   void onKeyEvent(RawKeyEvent event) {
-    if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyW)) {
+    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
+        event.isKeyPressed(LogicalKeyboardKey.keyW)) {
       RawKeyboard.instance.removeListener(onKeyEvent);
       widget.windowController?.close();
       return;
@@ -153,7 +154,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
                   builder: (BuildContext context) => RuleAddDialog(rule: rule)).then((value) {
                 if (value != null) {
                   Configuration.instance.then((it) => it.flushRequestRewriteConfig());
-                  FlutterToastr.show("添加请求重写规则成功", context);
+                  FlutterToastr.show("保存请求重写规则成功", context);
                 }
               });
             }

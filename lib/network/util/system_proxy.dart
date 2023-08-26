@@ -86,10 +86,14 @@ class SystemProxy {
     _hardwarePort = await hardwarePort();
     var result = await Process.run('bash', [
       '-c',
-      'networksetup ${proxyTypes == ProxyTypes.http ? '-getwebproxy' : '-getsecurewebproxy'} $_hardwarePort',
+      'networksetup ${proxyTypes == ProxyTypes.http ? '-getwebproxy' : '-getsecurewebproxy'} $_hardwarePort'
     ]).then((results) => results.stdout.toString().split('\n'));
 
     var proxyEnable = result.firstWhere((item) => item.contains('Enabled')).trim().split(": ")[1];
+    if (proxyEnable == 'No') {
+      return null;
+    }
+
     var proxyServer = result.firstWhere((item) => item.contains('Server')).trim().split(": ")[1];
     var proxyPort = result.firstWhere((item) => item.contains('Port')).trim().split(": ")[1];
     if (proxyEnable == 'Yes' && proxyServer.isNotEmpty) {
@@ -107,7 +111,7 @@ class SystemProxy {
       '-c',
       _concatCommands([
         'networksetup -setwebproxystate $_hardwarePort $proxyMode',
-        sslSetting ? 'networksetup -setsecurewebproxystate $_hardwarePort $proxyMode' : '',
+        sslSetting ? 'networksetup -setsecurewebproxystate $_hardwarePort $proxyMode' : ''
       ])
     ]);
     return results.exitCode == 0;
@@ -120,7 +124,7 @@ class SystemProxy {
       '-c',
       proxyEnable
           ? 'networksetup -setsecurewebproxy $name 127.0.0.1 $port'
-          : 'networksetup -setsecurewebproxystate $name off',
+          : 'networksetup -setsecurewebproxystate $name off'
     ]);
     return results.exitCode == 0;
   }
@@ -129,76 +133,69 @@ class SystemProxy {
     var name = await networkName();
     var results = await Process.run('bash', [
       '-c',
-      _concatCommands([
-        'networksetup -listnetworkserviceorder |grep "Device: $name" -A 1 |grep "Hardware Port" |awk -F ": " \'{print \$2}\'',
-      ])
+      'networksetup -listnetworkserviceorder |grep "Device: $name" -A 1 |grep "Hardware Port" |awk -F ": " \'{print \$2}\''
     ]);
     return results.stdout.toString().split(", ")[0];
   }
 
-  static Future<bool> _setProxyServerWindows(int proxyPort) async {
-    print("setSystemProxy $proxyPort");
-
+  static Future<void> _setProxyServerWindows(int proxyPort) async {
     ProxyManager manager = ProxyManager();
     await manager.setAsSystemProxy(ProxyTypes.https, "127.0.0.1", proxyPort);
-    print("setSystemProxy end");
-    var results = await Process.run('reg', [
-      'add',
-      'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-      '/v',
+    var results = await _internetSettings('add', [
       'ProxyOverride',
       '/t',
       'REG_SZ',
       '/d',
       '192.168.0.*;10.0.0.*;172.16.0.*;127.0.0.1;localhost;*.local;<local>',
-      '/f',
+      '/f'
     ]);
 
-    print('set proxyServer $proxyPort, exitCode: ${results.exitCode}, stdout: ${results.stderr}');
-    return results.exitCode == 0;
+    print('set proxyServer $proxyPort, result: $results');
   }
 
-  static Future<bool> setProxyEnableWindows(bool proxyEnable) async {
-    var results = await Process.run('reg', [
-      'add',
-      'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-      '/v',
-      'ProxyEnable',
-      '/t',
-      'REG_DWORD',
-      '/f',
-      '/d',
-      proxyEnable ? '1' : '0',
-    ]);
-    return results.exitCode == 0;
+  static Future<void> setProxyEnableWindows(bool proxyEnable) async {
+    await _internetSettings('add', ['ProxyEnable', '/t', 'REG_DWORD', '/f', '/d', proxyEnable ? '1' : '0']);
   }
 
   /// 获取系统代理
   static Future<ProxyInfo?> _getSystemProxyWindows() async {
-    var results = await Process.run('reg', [
-      'query',
-      'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-      '/v',
-      'ProxyEnable',
-    ]).then((it) => it.stdout.toString());
+    var results = await _internetSettings('query', ['ProxyEnable']);
 
-    var proxyEnableLine = results.split('\r\n').where((item) => item.contains('ProxyEnable')).first;
+    var proxyEnableLine = results.split('\r\n').where((item) => item.contains('ProxyEnable')).first.trim();
     if (proxyEnableLine.substring(proxyEnableLine.length - 1) != '1') {
       return null;
     }
 
-    return Process.run('reg', [
-      'query',
-      'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-      '/v',
-      'ProxyServer',
-    ]).then((results) {
-      var proxyServerLine =
-          (results.stdout as String).split('\r\n').where((item) => item.contains('ProxyServer')).first;
-      var proxyServerLineSplits = proxyServerLine.split(RegExp(r"\s+"));
-      proxyServerLineSplits[proxyServerLineSplits.length - 1];
+    return _internetSettings('query', ['ProxyServer']).then((results) {
+      var proxyServerLine = results.split('\r\n').where((item) => item.contains('ProxyServer')).firstOrNull;
+      var proxyServerLineSplits = proxyServerLine?.split(RegExp(r"\s+"));
+
+      if (proxyServerLineSplits == null || proxyServerLineSplits.length < 2) {
+        return null;
+      }
+
+      var proxyLine = proxyServerLineSplits[proxyServerLineSplits.length - 1];
+      if (proxyLine.startsWith("http://") || proxyLine.startsWith("https:///")) {
+        proxyLine = proxyLine.replaceFirst("http://", "").replaceFirst("https:///", "");
+      }
+
+      var proxyServer = proxyLine.split(":")[0];
+      var proxyPort = proxyLine.split(":")[1];
+      print("$proxyServer:$proxyPort");
+      return ProxyInfo.of(proxyServer, int.parse(proxyPort));
+    }).catchError((e) {
+      print(e);
       return null;
     });
+  }
+
+  static Future<String> _internetSettings(String cmd, List<String> args) async {
+    return Process.run('reg', [
+      cmd,
+      'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
+      '/v',
+      ...args,
+    ]).then((results) => results.stdout.toString());
   }
 
   static _concatCommands(List<String> commands) {

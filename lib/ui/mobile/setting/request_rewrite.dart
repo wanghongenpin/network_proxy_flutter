@@ -41,7 +41,8 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
         appBar: AppBar(title: const Text("请求重写")),
         body: Container(
             padding: const EdgeInsets.all(10),
-            child: ListView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
                     child: ValueListenableBuilder(
@@ -88,6 +89,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
                       })
                 ]),
                 const SizedBox(height: 10),
+                const Text("选择框只是用来操作编辑和删除，规则启用状态在编辑页切换", style: TextStyle(fontSize: 12)),
                 Expanded(child: requestRuleList),
               ],
             )));
@@ -101,11 +103,6 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
       if (rule != null) {
         changed = true;
         setState(() {
-          if (currentIndex == -1) {
-            widget.configuration.requestRewrites.addRule(rule);
-          } else {
-            widget.configuration.requestRewrites.rules[currentIndex] = rule;
-          }
           requestRuleList.changeState();
         });
       }
@@ -190,12 +187,12 @@ class RewriteRule extends StatelessWidget {
                     initialValue: requestBody,
                     decoration: const InputDecoration(labelText: '请求体替换为:'),
                     minLines: 1,
-                    maxLines: 3,
+                    maxLines: 10,
                     onSaved: (val) => requestBody = val),
                 TextFormField(
                     initialValue: responseBody,
                     minLines: 3,
-                    maxLines: 10,
+                    maxLines: 15,
                     decoration: const InputDecoration(labelText: '响应体替换为:', hintText: '{"code":"200","data":{}}'),
                     onSaved: (val) => responseBody = val)
               ]))),
@@ -255,38 +252,34 @@ class _RequestRuleListState extends State<RequestRuleList> {
                   widget.requestRewrites.rules.length,
                   (index) => DataRow(
                         cells: [
-                          cell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否"), index),
-                          cell(
-                              ConstrainedBox(
-                                  constraints: const BoxConstraints(minWidth: 60, maxWidth: 150),
-                                  child: Text(
-                                      '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}')),
-                              index),
-                          cell(
-                              Container(
-                                  constraints: const BoxConstraints(maxWidth: 150),
-                                  child: Text(widget.requestRewrites.rules[index].requestBody ?? '',
-                                      maxLines: 3, style: const TextStyle(fontSize: 12))),
-                              index),
-                          cell(
-                              Container(
-                                constraints: const BoxConstraints(maxWidth: 200),
-                                padding: const EdgeInsetsDirectional.all(10),
-                                child: Text(widget.requestRewrites.rules[index].responseBody ?? '',
-                                    maxLines: 5, style: const TextStyle(fontSize: 12)),
-                              ),
-                              index)
+                          cell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
+                          cell(ConstrainedBox(
+                              constraints: const BoxConstraints(minWidth: 60, maxWidth: 150),
+                              child: Text(
+                                  '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'))),
+                          cell(Container(
+                              constraints: const BoxConstraints(maxWidth: 150),
+                              child: SelectableText.rich(
+                                  TextSpan(text: widget.requestRewrites.rules[index].requestBody),
+                                  style: const TextStyle(fontSize: 12)))),
+                          cell(Container(
+                            constraints: const BoxConstraints(maxWidth: 200),
+                            padding: const EdgeInsetsDirectional.all(10),
+                            child: SelectableText.rich(TextSpan(text: widget.requestRewrites.rules[index].responseBody),
+                                style: const TextStyle(fontSize: 12)),
+                          ))
                         ],
                         selected: selected == index,
+                        onSelectChanged: (value) {
+                          setState(() {
+                            selected = value == true ? index : -1;
+                          });
+                        },
                       )),
             )));
   }
 
-  DataCell cell(Widget child, int index) {
-    return DataCell(child, onTap: () {
-      setState(() {
-        selected = index;
-      });
-    });
+  DataCell cell(Widget child) {
+    return DataCell(child);
   }
 }

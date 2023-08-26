@@ -1,3 +1,6 @@
+
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
@@ -49,7 +52,8 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
     await widget.proxyServer.stop();
     print("onWindowClose");
     started = false;
-    windowManager.destroy();
+    await windowManager.destroy();
+    exit(0);
   }
 
   @override

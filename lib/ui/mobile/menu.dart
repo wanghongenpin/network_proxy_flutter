@@ -7,6 +7,7 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
@@ -41,6 +42,15 @@ class DrawerWidget extends StatelessWidget {
             title: const Text("收藏"),
             trailing: const Icon(Icons.arrow_right),
             onTap: () => navigator(context, MobileFavorites(proxyServer: proxyServer))),
+        ListTile(
+            leading: const Icon(Icons.construction),
+            title: const Text("工具箱"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(
+                context,
+                Scaffold(
+                    appBar: AppBar(title: const Text("工具箱", style: TextStyle(fontSize: 16)), centerTitle: true),
+                    body: const Toolbox()))),
         const Divider(thickness: 0.3),
         PortWidget(proxyServer: proxyServer),
         ListTile(
@@ -147,6 +157,20 @@ class MoreEnum extends StatelessWidget {
                   }
                 },
               )),
+          PopupMenuItem(
+              padding: const EdgeInsets.only(left: 0),
+              child: ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.construction),
+                  title: const Text("工具箱"),
+                  onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (BuildContext context) {
+                          return Scaffold(
+                              appBar:
+                                  AppBar(title: const Text("工具箱", style: TextStyle(fontSize: 16)), centerTitle: true),
+                              body: const Toolbox());
+                        }),
+                      ))),
         ];
       },
     );

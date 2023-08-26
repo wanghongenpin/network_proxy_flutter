@@ -86,6 +86,7 @@ class _RequestRewriteState extends State<RequestRewrite> {
               })
         ]),
         const SizedBox(height: 10),
+        const Text("选择框只是用来操作编辑和删除，规则启用状态在编辑页切换", style: TextStyle(fontSize: 12)),
         requestRuleList,
       ],
     );
@@ -160,6 +161,8 @@ class RuleAddDialog extends StatelessWidget {
                   TextFormField(
                       initialValue: requestBody,
                       decoration: const InputDecoration(labelText: '请求体替换为:'),
+                      minLines: 1,
+                      maxLines: 5,
                       onSaved: (val) => requestBody = val),
                   TextFormField(
                       initialValue: responseBody,
@@ -272,9 +275,10 @@ class _RequestRuleListState extends State<RequestRuleList> {
                       selected: currentSelectedIndex == index,
                       onSelectChanged: (value) {
                         setState(() {
-                          currentSelectedIndex = index;
+                          currentSelectedIndex = value == true ? index : -1;
                         });
-                      })),
+                      },
+              )),
         )));
   }
 }
