@@ -105,7 +105,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
     return Row(
       mainAxisAlignment: widget.inNewWindow ? MainAxisAlignment.center : MainAxisAlignment.start,
       children: [
-        Text('$type Body', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        Text('$type Body', style: const TextStyle(fontWeight: FontWeight.w500)),
         const SizedBox(width: 15),
         IconButton(
             icon: const Icon(Icons.copy),

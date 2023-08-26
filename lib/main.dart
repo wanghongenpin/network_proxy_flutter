@@ -9,25 +9,27 @@ import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/ui/desktop/desktop.dart';
 import 'package:network_proxy/ui/desktop/left/request_editor.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
+import 'package:network_proxy/ui/ui_configuration.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'network/http/http.dart';
 
 void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  var instance = UIConfiguration.instance;
   //多窗口
   if (args.firstOrNull == 'multi_window') {
     final windowId = int.parse(args[1]);
     final argument = args[2].isEmpty ? const {} : jsonDecode(args[2]) as Map<String, dynamic>;
-    runApp(FluentApp(multiWindow(windowId, argument)));
+    runApp(FluentApp(multiWindow(windowId, argument), uiConfiguration: (await instance)));
     return;
   }
 
-  WidgetsFlutterBinding.ensureInitialized();
-
   var configuration = Configuration.instance;
   if (Platforms.isMobile()) {
-    runApp(FluentApp(MobileHomePage(configuration: (await configuration))));
+    var uiConfiguration = await instance;
+    runApp(FluentApp(MobileHomePage(configuration: (await configuration)), uiConfiguration: uiConfiguration));
     return;
   }
 
@@ -38,12 +40,14 @@ void main(List<String> args) async {
       size: Platform.isMacOS ? const Size(1230, 750) : const Size(1100, 650),
       center: true,
       titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
+
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
   });
 
-  runApp(FluentApp(DesktopHomePage(configuration: (await configuration))));
+  var uiConfiguration = await instance;
+  runApp(FluentApp(DesktopHomePage(configuration: await configuration), uiConfiguration: uiConfiguration));
 }
 
 ///多窗口
@@ -63,55 +67,82 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
   return const SizedBox();
 }
 
+class ThemeModel {
+  ThemeMode mode;
+  bool useMaterial3;
+
+  ThemeModel({this.mode = ThemeMode.system, this.useMaterial3 = true});
+
+  ThemeModel copy({ThemeMode? mode, bool? useMaterial3}) => ThemeModel(
+        mode: mode ?? this.mode,
+        useMaterial3: useMaterial3 ?? this.useMaterial3,
+      );
+}
+
 /// 主题
-final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
+late ValueNotifier<ThemeModel> themeNotifier;
 
 class FluentApp extends StatelessWidget {
   final Widget home;
+  final UIConfiguration uiConfiguration;
 
   const FluentApp(
     this.home, {
     super.key,
+    required this.uiConfiguration,
   });
 
   @override
   Widget build(BuildContext context) {
-    var lightTheme = ThemeData.light(useMaterial3: !Platforms.isDesktop());
-    var darkTheme = ThemeData.dark(useMaterial3: !Platforms.isDesktop());
+    themeNotifier = ValueNotifier(uiConfiguration.theme);
 
-    if (!lightTheme.useMaterial3) {
-      lightTheme = lightTheme.copyWith(
-          expansionTileTheme: lightTheme.expansionTileTheme.copyWith(
-            textColor: lightTheme.textTheme.titleMedium?.color,
-          ),
-          appBarTheme: lightTheme.appBarTheme.copyWith(
-            color: Colors.transparent,
-            elevation: 0,
-            titleTextStyle: lightTheme.textTheme.titleMedium,
-            iconTheme: lightTheme.iconTheme,
-          ),
-          tabBarTheme: lightTheme.tabBarTheme.copyWith(
-            labelColor: lightTheme.indicatorColor,
-            unselectedLabelColor: lightTheme.textTheme.titleMedium?.color,
-          ));
-    }
+    var light = lightTheme();
+    var darkTheme = ThemeData.dark(useMaterial3: false);
+
+    var material3Light = ThemeData.light(useMaterial3: true);
+    var material3Dark = ThemeData.dark(useMaterial3: true);
 
     if (Platform.isWindows) {
-      lightTheme = lightTheme.useSystemChineseFont();
+      material3Light = material3Light.useSystemChineseFont();
+      material3Dark = material3Dark.useSystemChineseFont();
+      light = light.useSystemChineseFont();
       darkTheme = darkTheme.useSystemChineseFont();
     }
 
-    return ValueListenableBuilder<ThemeMode>(
+    return ValueListenableBuilder<ThemeModel>(
         valueListenable: themeNotifier,
-        builder: (_, ThemeMode currentMode, __) {
+        builder: (_, current, __) {
+          uiConfiguration.theme = current;
+          uiConfiguration.flushConfig();
+        print(current.mode.name);
           return MaterialApp(
             title: 'ProxyPin',
             debugShowCheckedModeBanner: false,
-            theme: lightTheme,
-            darkTheme: darkTheme,
-            themeMode: currentMode,
+            theme: current.useMaterial3 ? material3Light : light,
+            darkTheme: current.useMaterial3 ? material3Dark : darkTheme,
+            themeMode: current.mode,
             home: home,
           );
         });
+  }
+
+  ThemeData lightTheme() {
+    var theme = ThemeData.light(useMaterial3: false);
+    theme = theme.copyWith(
+        expansionTileTheme: theme.expansionTileTheme.copyWith(
+          textColor: theme.textTheme.titleMedium?.color,
+        ),
+        appBarTheme: theme.appBarTheme.copyWith(
+          color: Colors.transparent,
+          elevation: 0,
+          titleTextStyle: theme.textTheme.titleMedium,
+          iconTheme: theme.iconTheme,
+        ),
+        tabBarTheme: theme.tabBarTheme.copyWith(
+          labelColor: theme.indicatorColor,
+          unselectedLabelColor: theme.textTheme.titleMedium?.color,
+        ));
+
+    return theme;
   }
 }

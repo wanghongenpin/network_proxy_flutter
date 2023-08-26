@@ -49,7 +49,7 @@ class _FavoritesState extends State<Favorites> {
                   },
                 );
               },
-              separatorBuilder: (_, __) => const Divider(height: 2, thickness: 0.5),
+              separatorBuilder: (_, __) => const Divider(height: 1, thickness: 0.3),
             );
           } else {
             return const SizedBox();

@@ -29,9 +29,15 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   late NetworkTabController panel;
 
   final List<NavigationRailDestination> destinations = const [
-    NavigationRailDestination(icon: Icon(Icons.workspaces), label: Text("抓包", style: TextStyle(fontSize: 12))),
+    NavigationRailDestination(
+      icon: Icon(Icons.workspaces),
+      label: Text("抓包", style: TextStyle(fontSize: 12)),
+    ),
     // NavigationRailDestination(icon: Icon(Icons.history), label: Text("历史", style: TextStyle(fontSize: 12))),
-    NavigationRailDestination(icon: Icon(Icons.favorite), label: Text("收藏", style: TextStyle(fontSize: 12))),
+    NavigationRailDestination(
+      icon: Icon(Icons.favorite),
+      label: Text("收藏", style: TextStyle(fontSize: 12)),
+    ),
     // NavigationRailDestination(icon: Icon(Icons.construction), label: Text("工具箱", style: TextStyle(fontSize: 12))),
   ];
 
@@ -63,21 +69,29 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
     final domainWidget = DomainWidget(key: domainStateKey, proxyServer: proxyServer, panel: panel);
 
     return Scaffold(
-        appBar: Tab(
-          child: Toolbar(proxyServer, domainStateKey),
-        ),
+        appBar: Tab(child: Toolbar(proxyServer, domainStateKey, sideNotifier: _selectIndex)),
         body: Row(
           children: [
-            ValueListenableBuilder(valueListenable: _selectIndex, builder: (_, index, __) => leftNavigation(index)),
-            const VerticalDivider(thickness: 0.3),
+            ValueListenableBuilder(
+                valueListenable: _selectIndex,
+                builder: (_, index, __) {
+                  if (_selectIndex.value == -1) {
+                    return const SizedBox();
+                  }
+                  return Container(
+                      decoration: BoxDecoration(
+                          border: Border(
+                        right: BorderSide(color: Theme.of(context).dividerColor, width: 0.3),
+                      )),
+                      width: 45,
+                      child: leftNavigation(index));
+                }),
             Expanded(
               child: VerticalSplitView(
                   ratio: 0.3,
                   minRatio: 0.15,
                   maxRatio: 0.9,
-                  left: PageView(
-                      controller: pageController,
-                      children: [domainWidget, Favorites(panel: panel)]),
+                  left: PageView(controller: pageController, children: [domainWidget, Favorites(panel: panel)]),
                   right: panel),
             )
           ],
@@ -86,8 +100,9 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
 
   Widget leftNavigation(int index) {
     return NavigationRail(
-        minWidth: 35,
+        minWidth: 45,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        selectedIconTheme: IconThemeData(color: Theme.of(context).colorScheme.primary),
         labelType: NavigationRailLabelType.all,
         destinations: destinations,
         selectedIndex: index,
