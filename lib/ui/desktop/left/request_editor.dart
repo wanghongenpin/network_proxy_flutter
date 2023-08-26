@@ -45,6 +45,7 @@ class RequestEditorState extends State<RequestEditor> {
   @override
   void dispose() {
     RawKeyboard.instance.removeListener(onKeyEvent);
+    responseChange.dispose();
     super.dispose();
   }
 
@@ -123,11 +124,6 @@ class _HttpState extends State<_HttpWidget> {
   final headerKey = GlobalKey<HeadersState>();
   String? body;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
   String? getBody() {
     return body;
   }
@@ -174,6 +170,9 @@ class _HttpState extends State<_HttpWidget> {
       try {
         body = const JsonEncoder.withIndent('  ').convert(const JsonDecoder().convert(body!));
       } catch (_) {}
+    }
+    if (widget.readOnly) {
+      return SelectableText(body ?? '');
     }
 
     return TextField(

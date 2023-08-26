@@ -10,6 +10,7 @@ import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
+import 'package:network_proxy/ui/mobile/request/favorite.dart';
 import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
 import 'package:network_proxy/ui/mobile/setting/filter.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
@@ -33,19 +34,26 @@ class DrawerWidget extends StatelessWidget {
       children: [
         DrawerHeader(
           decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
-          child: const Text('设置'),
+          child: const Text(''),
         ),
+        ListTile(
+            leading: const Icon(Icons.favorite),
+            title: const Text("收藏"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(context, MobileFavorites(proxyServer: proxyServer))),
+        const Divider(thickness: 0.3),
         PortWidget(proxyServer: proxyServer),
         ListTile(
             title: const Text("HTTPS抓包"),
             trailing: const Icon(Icons.arrow_right),
             onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
         const ThemeSetting(),
-        Platform.isIOS ? const SizedBox() :
-        ListTile(
-            title: const Text("应用白名单"),
-            trailing: const Icon(Icons.arrow_right),
-            onTap: () => navigator(context, AppWhitelist(proxyServer: proxyServer))),
+        Platform.isIOS
+            ? const SizedBox()
+            : ListTile(
+                title: const Text("应用白名单"),
+                trailing: const Icon(Icons.arrow_right),
+                onTap: () => navigator(context, AppWhitelist(proxyServer: proxyServer))),
         ListTile(
             title: const Text("域名白名单"),
             trailing: const Icon(Icons.arrow_right),

@@ -54,12 +54,11 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
     });
 
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.configuration.upgradeNotice) {
+    if (widget.configuration.upgradeNoticeV2) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
-      }
-    });
+      });
+    }
   }
 
   @override
@@ -106,11 +105,16 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   }
 
   showUpgradeNotice() {
-    String content = '1. 增加高级搜索，点击搜索icon触发。\n'
-        '2. 显示SSL握手异常、建立连接异常、未知异常等请求。\n'
-        '3.响应体大时异步加载json，请求重写增加域名，修复手机扫码连接未开启代理时不转发问题';
-    showAlertDialog('更新内容', content, () {
-      widget.configuration.upgradeNotice = false;
+    String content = '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
+        '新增更新:\n'
+        '1.请求编辑发送可直接查看响应体，发送请求无需开启代理；\n'
+        '2. 详情增加快速请求重写, 复制cURL格式可直接导入Postman；\n'
+        '3. 增加请求收藏功能；\n'
+        '4. 主题增加Material3切换；\n'
+        '5. 请求删除&大响应体直接转发；\n'
+        '6. 安卓应用白名单，调整请求展示列表；';
+    showAlertDialog('更新内容V1.0.2', content, () {
+      widget.configuration.upgradeNoticeV2 = false;
       widget.configuration.flushConfig();
     });
   }
@@ -134,14 +138,18 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
         context: context,
         barrierDismissible: false,
         builder: (_) {
-          return AlertDialog(actions: [
-            TextButton(
-                onPressed: () {
-                  onClose.call();
-                  Navigator.pop(context);
-                },
-                child: const Text('关闭'))
-          ], title: Text(title, style: const TextStyle(fontSize: 18)), content: Text(content));
+          return AlertDialog(
+              scrollable: true,
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      onClose.call();
+                      Navigator.pop(context);
+                    },
+                    child: const Text('关闭'))
+              ],
+              title: Text(title, style: const TextStyle(fontSize: 18)),
+              content: Text(content));
         });
   }
 

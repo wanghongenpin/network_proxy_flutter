@@ -35,6 +35,10 @@ class _FavoritesState extends State<Favorites> {
         builder: (BuildContext context, AsyncSnapshot<Queue<HttpRequest>> snapshot) {
           if (snapshot.hasData) {
             var favorites = snapshot.data ?? Queue();
+            if (favorites.isEmpty) {
+              return const Center(child: Text("暂无收藏"));
+            }
+
             return ListView.separated(
               itemCount: favorites.length,
               itemBuilder: (_, index) {

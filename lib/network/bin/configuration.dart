@@ -33,11 +33,8 @@ class Configuration {
   //是否设置系统代理
   bool enableSystemProxy = true;
 
-  //是否引导
-  bool guide = false;
-
   //是否显示更新内容公告
-  bool upgradeNotice = true;
+  bool upgradeNoticeV2 = true;
 
   //请求重写
   RequestRewrites requestRewrites = RequestRewrites.instance;
@@ -112,7 +109,6 @@ class Configuration {
     var file = await configFile();
     var exits = await file.exists();
     if (!exits) {
-      guide = true;
       return;
     }
 
@@ -121,8 +117,7 @@ class Configuration {
     port = config['port'] ?? port;
     enableSsl = config['enableSsl'] == true;
     enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
-    guide = config['guide'] ?? false;
-    upgradeNotice = config['upgradeNotice'] ?? true;
+    upgradeNoticeV2 = config['upgradeNoticeV2'] ?? true;
     if (config['externalProxy'] != null) {
       externalProxy = ProxyInfo.fromJson(config['externalProxy']);
     }
@@ -163,8 +158,7 @@ class Configuration {
 
   Map<String, dynamic> toJson() {
     return {
-      'guide': guide,
-      'upgradeNotice': upgradeNotice,
+      'upgradeNoticeV2': upgradeNoticeV2,
       'port': port,
       'enableSsl': enableSsl,
       'enableSystemProxy': enableSystemProxy,

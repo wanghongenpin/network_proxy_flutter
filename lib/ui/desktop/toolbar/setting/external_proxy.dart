@@ -98,26 +98,29 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
         socket.destroy();
       } on SocketException catch (_) {
         setting = false;
-
-        await showDialog(
-            context: context,
-            builder: (_) => AlertDialog(
-                  title: const Text("外部代理连接失败"),
-                  content: const Text('网络不通所有接口将会访问失败，是否继续设置外部代理。', style: TextStyle(fontSize: 12)),
-                  actions: [
-                    TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text("取消")),
-                    TextButton(
-                        onPressed: () {
-                          setting = true;
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text("确定"))
-                  ],
-                ));
+        if (context.mounted) {
+          await showDialog(
+              context: context,
+              builder: (_) =>
+                  AlertDialog(
+                    title: const Text("外部代理连接失败"),
+                    content: const Text(
+                        '网络不通所有接口将会访问失败，是否继续设置外部代理。', style: TextStyle(fontSize: 12)),
+                    actions: [
+                      TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text("取消")),
+                      TextButton(
+                          onPressed: () {
+                            setting = true;
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text("确定"))
+                    ],
+                  ));
+        }
       }
     }
 

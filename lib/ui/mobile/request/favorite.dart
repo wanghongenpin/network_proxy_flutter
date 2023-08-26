@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,67 +14,85 @@ import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/curl.dart';
 
-///请求行
-class RequestRow extends StatefulWidget {
-  final HttpRequest request;
+class MobileFavorites extends StatefulWidget {
   final ProxyServer proxyServer;
-  final bool displayDomain;
-  final Function(HttpRequest)? onRemove;
 
-  const RequestRow(
-      {super.key, required this.request, required this.proxyServer, this.displayDomain = true, this.onRemove});
+  const MobileFavorites({Key? key, required this.proxyServer}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return RequestRowState();
+    return _FavoritesState();
   }
 }
 
-class RequestRowState extends State<RequestRow> {
-  late HttpRequest request;
-  HttpResponse? response;
-
-  change(HttpResponse response) {
-    setState(() {
-      this.response = response;
-    });
-  }
-
-  @override
-  void initState() {
-    request = widget.request;
-    response = request.response;
-    super.initState();
-  }
-
+class _FavoritesState extends State<MobileFavorites> {
   @override
   Widget build(BuildContext context) {
-    var title = '${request.method.name} ${widget.displayDomain ? request.requestUrl : request.path()}';
-    var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
-    var subTitle =
-        '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''}';
+    return Scaffold(
+        appBar: AppBar(title: const Text("收藏请求", style: TextStyle(fontSize: 16)), centerTitle: true),
+        body: FutureBuilder(
+            future: FavoriteStorage.favorites,
+            builder: (BuildContext context, AsyncSnapshot<Queue<HttpRequest>> snapshot) {
+              if (snapshot.hasData) {
+                var favorites = snapshot.data ?? Queue();
+                if (favorites.isEmpty) {
+                  return const Center(child: Text("暂无收藏"));
+                }
 
+                return ListView.separated(
+                  itemCount: favorites.length,
+                  itemBuilder: (_, index) {
+                    var request = favorites.elementAt(index);
+                    return _FavoriteItem(
+                      request,
+                      onRemove: (HttpRequest request) {
+                        FavoriteStorage.removeFavorite(request);
+                        FlutterToastr.show('已删除收藏', context);
+                        setState(() {});
+                      },
+                      proxyServer: widget.proxyServer,
+                    );
+                  },
+                  separatorBuilder: (_, __) => const Divider(height: 1, thickness: 0.3),
+                );
+              } else {
+                return const SizedBox();
+              }
+            }));
+  }
+}
+
+class _FavoriteItem extends StatefulWidget {
+  final ProxyServer proxyServer;
+  final HttpRequest request;
+  final Function(HttpRequest request)? onRemove;
+
+  const _FavoriteItem(this.request, {Key? key, required this.onRemove, required this.proxyServer}) : super(key: key);
+
+  @override
+  State<_FavoriteItem> createState() => _FavoriteItemState();
+}
+
+class _FavoriteItemState extends State<_FavoriteItem> {
+  @override
+  Widget build(BuildContext context) {
+    var request = widget.request;
+    var response = request.response;
+    var title = '${request.method.name} ${request.requestUrl}';
+    var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
     return ListTile(
-        visualDensity: const VisualDensity(vertical: -4),
-        leading: getIcon(response),
-        title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2, style: const TextStyle(fontSize: 14)),
-        subtitle: Text(subTitle, maxLines: 1, style: const TextStyle(fontSize: 12)),
-        trailing: const Icon(Icons.chevron_right),
-        dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
         onLongPress: menu,
-        onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            return NetworkTabController(
-                proxyServer: widget.proxyServer,
-                httpRequest: request,
-                httpResponse: response,
-                title: const Text("抓包详情", style: TextStyle(fontSize: 16)));
-          }));
-        });
+        minLeadingWidth: 25,
+        leading: getIcon(response),
+        title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2),
+        subtitle: Text(
+            '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
+            maxLines: 1),
+        dense: true,
+        onTap: onClick);
   }
 
-  ///菜单
+  ///右键菜单
   menu() {
     showModalBottomSheet(
       context: context,
@@ -80,6 +100,8 @@ class RequestRowState extends State<RequestRow> {
       builder: (ctx) {
         return Wrap(alignment: WrapAlignment.center, children: [
           menuItem("复制请求链接", () => widget.request.requestUrl),
+          const Divider(thickness: 0.5),
+          menuItem("复制请求和响应", () => copyRequest(widget.request, widget.request.response)),
           const Divider(thickness: 0.5),
           menuItem("复制 cURL 请求", () => curlRequest(widget.request)),
           const Divider(thickness: 0.5),
@@ -105,18 +127,9 @@ class RequestRowState extends State<RequestRow> {
               }),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("收藏请求", textAlign: TextAlign.center)),
+              child: const SizedBox(width: double.infinity, child: Text("删除收藏", textAlign: TextAlign.center)),
               onPressed: () {
-                FavoriteStorage.addFavorite(widget.request);
-                FlutterToastr.show('收藏成功', context);
-                Navigator.of(context).pop();
-              }),
-          const Divider(thickness: 0.5),
-          TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("删除", textAlign: TextAlign.center)),
-              onPressed: () {
-                widget.onRemove?.call(request);
-                FlutterToastr.show("删除成功", context);
+                widget.onRemove?.call(widget.request);
                 Navigator.of(context).pop();
               }),
           Container(
@@ -147,5 +160,16 @@ class RequestRowState extends State<RequestRow> {
             Navigator.of(context).pop();
           });
         });
+  }
+
+  //点击事件
+  void onClick() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return NetworkTabController(
+          proxyServer: widget.proxyServer,
+          httpRequest: widget.request,
+          httpResponse: widget.request.response,
+          title: const Text("抓包详情", style: TextStyle(fontSize: 16)));
+    }));
   }
 }

@@ -265,19 +265,15 @@ class _RequestRuleListState extends State<RequestRuleList> {
                           cell(
                               Container(
                                   constraints: const BoxConstraints(maxWidth: 150),
-                                  child: SelectableText.rich(
-                                      maxLines: 3,
-                                      TextSpan(text: widget.requestRewrites.rules[index].requestBody),
-                                      style: const TextStyle(fontSize: 12))),
+                                  child: Text(widget.requestRewrites.rules[index].requestBody ?? '',
+                                      maxLines: 3, style: const TextStyle(fontSize: 12))),
                               index),
                           cell(
                               Container(
                                 constraints: const BoxConstraints(maxWidth: 200),
                                 padding: const EdgeInsetsDirectional.all(10),
-                                child: SelectableText.rich(
-                                    maxLines: 5,
-                                    TextSpan(text: widget.requestRewrites.rules[index].responseBody),
-                                    style: const TextStyle(fontSize: 12)),
+                                child: Text(widget.requestRewrites.rules[index].responseBody ?? '',
+                                    maxLines: 5, style: const TextStyle(fontSize: 12)),
                               ),
                               index)
                         ],
