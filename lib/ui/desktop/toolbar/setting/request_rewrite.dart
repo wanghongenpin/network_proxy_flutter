@@ -97,33 +97,29 @@ class _RequestRewriteState extends State<RequestRewrite> {
         barrierDismissible: false,
         builder: (BuildContext context) {
           return RuleAddDialog(
-              requestRewrites: widget.configuration.requestRewrites,
               currentIndex: currentIndex,
-              onChange: () {
-                changed = true;
-                requestRuleList.changeState();
-              });
-        });
+              rule: currentIndex >= 0 ? widget.configuration.requestRewrites.rules[currentIndex] : null);
+        }).then((value) {
+      if (value != null) {
+        changed = true;
+        requestRuleList.changeState();
+      }
+    });
   }
 }
 
 ///请求重写规则添加对话框
 class RuleAddDialog extends StatelessWidget {
-  final RequestRewrites requestRewrites;
   final int currentIndex;
-  final Function onChange;
+  final RequestRewriteRule? rule;
 
-  const RuleAddDialog({super.key, required this.currentIndex, required this.onChange, required this.requestRewrites});
+  const RuleAddDialog({super.key, this.currentIndex = -1, this.rule});
 
   @override
   Widget build(BuildContext context) {
     GlobalKey formKey = GlobalKey<FormState>();
-    RequestRewriteRule? rule;
-    if (currentIndex >= 0) {
-      rule = requestRewrites.rules[currentIndex];
-    }
 
-    ValueNotifier<bool> enableNotifier = ValueNotifier(rule == null || rule.enabled);
+    ValueNotifier<bool> enableNotifier = ValueNotifier(rule == null || rule?.enabled == true);
     String? domain = rule?.domain;
     String? path = rule?.path;
     String? requestBody = rule?.requestBody;
@@ -179,17 +175,18 @@ class RuleAddDialog extends StatelessWidget {
                 if ((formKey.currentState as FormState).validate()) {
                   (formKey.currentState as FormState).save();
 
+                  var rule = RequestRewriteRule(
+                      enableNotifier.value, path!, domain?.trim().isEmpty == true ? null : domain?.trim(),
+                      requestBody: requestBody, responseBody: responseBody);
+
                   if (currentIndex >= 0) {
-                    requestRewrites.rules[currentIndex] = RequestRewriteRule(enableNotifier.value, path!, domain,
-                        requestBody: requestBody, responseBody: responseBody);
+                    RequestRewrites.instance.rules[currentIndex] = rule;
                   } else {
-                    requestRewrites.addRule(RequestRewriteRule(enableNotifier.value, path!, domain,
-                        requestBody: requestBody, responseBody: responseBody));
+                    RequestRewrites.instance.addRule(rule);
                   }
 
                   enableNotifier.dispose();
-                  onChange.call();
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(rule);
                 }
               }),
           ElevatedButton(
@@ -210,19 +207,10 @@ class RequestRuleList extends StatefulWidget {
   State<RequestRuleList> createState() => _RequestRuleListState();
 
   List<int> removeSelected() {
+    var index = currentSelectedIndex();
     var state = (key as GlobalKey<_RequestRuleListState>).currentState;
-    List<int> list = [];
-    var selectedIndex = state?.currentSelectedIndex;
-    state?.selected.forEach((key, value) {
-      if (value == true) {
-        list.add(key);
-        if (selectedIndex == key) {
-          state.currentSelectedIndex = -1;
-        }
-      }
-    });
-    state?.selected.clear();
-    return list;
+    state?.currentSelectedIndex = -1;
+    return index >= 0 ? [index] : [];
   }
 
   int currentSelectedIndex() {
@@ -237,7 +225,6 @@ class RequestRuleList extends StatefulWidget {
 }
 
 class _RequestRuleListState extends State<RequestRuleList> {
-  final Map<int, bool> selected = {};
   int currentSelectedIndex = -1;
 
   changeState() {
@@ -248,8 +235,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
   Widget build(BuildContext context) {
     return Container(
         padding: const EdgeInsets.only(top: 10),
-        height: 300,
-        constraints: const BoxConstraints(minWidth: 500),
+        constraints: const BoxConstraints(minWidth: 500, minHeight: 300),
         child: SingleChildScrollView(
             child: DataTable(
           columnSpacing: 36,
@@ -283,10 +269,9 @@ class _RequestRuleListState extends State<RequestRuleList> {
                               style: const TextStyle(fontSize: 12)),
                         ))
                       ],
-                      selected: selected[index] == true,
+                      selected: currentSelectedIndex == index,
                       onSelectChanged: (value) {
                         setState(() {
-                          selected[index] = value!;
                           currentSelectedIndex = index;
                         });
                       })),

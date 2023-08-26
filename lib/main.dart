@@ -114,7 +114,7 @@ class FluentApp extends StatelessWidget {
         builder: (_, current, __) {
           uiConfiguration.theme = current;
           uiConfiguration.flushConfig();
-        print(current.mode.name);
+
           return MaterialApp(
             title: 'ProxyPin',
             debugShowCheckedModeBanner: false,

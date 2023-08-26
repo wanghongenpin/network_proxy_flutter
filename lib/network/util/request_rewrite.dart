@@ -1,9 +1,15 @@
-
 /// @author wanghongen
 /// 2023/7/26
 class RequestRewrites {
   bool enabled = true;
   final List<RequestRewriteRule> rules = [];
+
+  RequestRewrites._();
+
+  //单例
+  static final RequestRewrites _instance = RequestRewrites._();
+
+  static RequestRewrites get instance => _instance;
 
   load(Map<String, dynamic>? map) {
     if (map == null) {
@@ -47,7 +53,8 @@ class RequestRewrites {
     return null;
   }
 
-  addRule(RequestRewriteRule rule) {
+  void addRule(RequestRewriteRule rule) {
+    rules.removeWhere((it) => it.path == rule.path && it.domain == rule.domain);
     rules.add(rule);
   }
 

@@ -40,7 +40,7 @@ class Configuration {
   bool upgradeNotice = true;
 
   //请求重写
-  RequestRewrites requestRewrites = RequestRewrites();
+  RequestRewrites requestRewrites = RequestRewrites.instance;
 
   //外部代理
   ProxyInfo? externalProxy;

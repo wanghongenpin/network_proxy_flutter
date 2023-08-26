@@ -86,17 +86,17 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
           ]),
       drawer: DrawerWidget(proxyServer: proxyServer),
       floatingActionButton: FloatingActionButton(
-          onPressed: () {},
-          child: SocketLaunch(
-              proxyServer: proxyServer,
-              startup: false,
-              size: 38,
-              onStart: () => Vpn.startVpn("127.0.0.1", proxyServer.port, proxyServer.configuration.appWhitelist),
-              onStop: () => Vpn.stopVpn())),
+          onPressed: null,
+          child: Center(
+              child: SocketLaunch(
+                  proxyServer: proxyServer,
+                  size: 36,
+                  startup: false,
+                  onStart: () => Vpn.startVpn("127.0.0.1", proxyServer.port, proxyServer.configuration.appWhitelist),
+                  onStop: () => Vpn.stopVpn()))),
       body: ValueListenableBuilder(
           valueListenable: desktop,
           builder: (context, value, _) {
-
             return Column(children: [
               value.connect ? remoteConnect(value) : const SizedBox(),
               Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))

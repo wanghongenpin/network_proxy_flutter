@@ -13,6 +13,6 @@ String curlRequest(HttpRequest request) {
   if (request.bodyAsString.isNotEmpty) {
     body = "  --data '${request.bodyAsString}' \\\n";
   }
-  return "curl '${request.requestUrl}' \\\n"
+  return "curl -X ${request.method.name} '${request.requestUrl}' \\\n"
       "${headers.join('\\\n')} $body \\\n --compressed";
 }

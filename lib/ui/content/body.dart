@@ -5,10 +5,14 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/ui/component/json/json_viewer.dart';
 import 'package:network_proxy/ui/component/json/theme.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
+import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/utils/num.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
@@ -99,30 +103,71 @@ class HttpBodyState extends State<HttpBodyWidget> {
     return tabController;
   }
 
+  /// 标题
   Widget titleWidget({inNewWindow = false}) {
     var type = widget.httpMessage is HttpRequest ? "Request" : "Response";
 
+    var list = [
+      Text('$type Body', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      const SizedBox(width: 15),
+      IconButton(
+          icon: const Icon(Icons.copy),
+          tooltip: '复制',
+          onPressed: () {
+            var body = bodyKey.currentState?.body;
+            if (body == null) {
+              return;
+            }
+            Clipboard.setData(ClipboardData(text: body)).then((value) => FlutterToastr.show("已复制到剪切板", context));
+          }),
+    ];
+
+    if (!inNewWindow || Platforms.isMobile()) {
+      list.add(const SizedBox(width: 5));
+      list.add(IconButton(
+          icon: const Icon(Icons.edit_document),
+          tooltip: '请求重写',
+          onPressed: () {
+            HttpRequest? request;
+            if (widget.httpMessage is HttpRequest) {
+              request = widget.httpMessage as HttpRequest;
+            } else {
+              request = (widget.httpMessage as HttpResponse).request;
+            }
+
+            var body = bodyKey.currentState?.body;
+            var rule = RequestRewriteRule(true, request?.path() ?? '', request?.remoteDomain(),
+                requestBody: widget.httpMessage is HttpRequest ? body : null,
+                responseBody: widget.httpMessage is HttpResponse ? body : null);
+
+            if (Platforms.isMobile()) {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule))).then((value) {
+                if (value is RequestRewriteRule) {
+                  Configuration.instance.then((it) => it.flushRequestRewriteConfig());
+                }
+              });
+            } else {
+              showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) => RuleAddDialog(rule: rule)).then((value) {
+                if (value != null) {
+                  Configuration.instance.then((it) => it.flushRequestRewriteConfig());
+                  FlutterToastr.show("添加请求重写规则成功", context);
+                }
+              });
+            }
+          }));
+    }
+
+    if (!inNewWindow) {
+      list.add(const SizedBox(width: 5));
+      list.add(IconButton(icon: const Icon(Icons.open_in_new), tooltip: '新窗口打开', onPressed: () => openNew()));
+    }
+
     return Row(
       mainAxisAlignment: widget.inNewWindow ? MainAxisAlignment.center : MainAxisAlignment.start,
-      children: [
-        Text('$type Body', style: const TextStyle(fontWeight: FontWeight.w500)),
-        const SizedBox(width: 15),
-        IconButton(
-            icon: const Icon(Icons.copy),
-            tooltip: '复制',
-            onPressed: () {
-              var body = bodyKey.currentState?.body;
-              if (body == null) {
-                return;
-              }
-
-              Clipboard.setData(ClipboardData(text: body)).then((value) => FlutterToastr.show("已复制到剪切板", context));
-            }),
-        const SizedBox(width: 5),
-        inNewWindow
-            ? const SizedBox()
-            : IconButton(icon: const Icon(Icons.open_in_new), tooltip: '新窗口打开', onPressed: () => openNew())
-      ],
+      children: list,
     );
   }
 
@@ -193,14 +238,16 @@ class _BodyState extends State<_Body> {
     if (viewType == ViewType.hex) {
       return message!.body!.map(intToHex).join(" ");
     }
-    if (viewType == ViewType.formUrl) {
-      return Uri.decodeFull(message!.bodyAsString);
-    }
-    if (viewType == ViewType.jsonText || viewType == ViewType.json) {
-      //json格式化
-      var jsonObject = json.decode(message!.bodyAsString);
-      return const JsonEncoder.withIndent("  ").convert(jsonObject);
-    }
+    try {
+      if (viewType == ViewType.formUrl) {
+        return Uri.decodeFull(message!.bodyAsString);
+      }
+      if (viewType == ViewType.jsonText || viewType == ViewType.json) {
+        //json格式化
+        var jsonObject = json.decode(message!.bodyAsString);
+        return const JsonEncoder.withIndent("  ").convert(jsonObject);
+      }
+    } catch (_) {}
     return message!.bodyAsString;
   }
 

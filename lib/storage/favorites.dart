@@ -69,6 +69,7 @@ class _Item {
   _Item(this.request, [this.response]) {
     response ??= request.response;
     request.response = response;
+    response?.request = request;
   }
 
   factory _Item.fromJson(Map<String, dynamic> json) {
