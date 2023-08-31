@@ -103,11 +103,15 @@ class HttpRequest extends HttpMessage {
 
   String get requestUrl => uri.startsWith("/") ? '${remoteDomain()}$uri' : uri;
 
-  String? path() {
-    if (hostAndPort?.isSsl() == true && uri.startsWith("/")) {
-      return uri;
+  Uri? get requestUri {
+    try {
+      return Uri.parse(requestUrl);
+    } catch (e) {
+      return null;
     }
+  }
 
+  String? path() {
     try {
       var requestPath = Uri.parse(requestUrl).path;
       return requestPath.isEmpty ? "/" : requestPath;

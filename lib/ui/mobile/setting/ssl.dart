@@ -98,7 +98,7 @@ class _MobileSslState extends State<MobileSslWidget> {
           builder: (context) {
             return AlertDialog(
               title: const Text("提示"),
-              content: const Text("请先启动代理服务"),
+              content: const Text("请先从首页点击开启图标启动代理服务"),
               actions: [
                 TextButton(
                     onPressed: () {

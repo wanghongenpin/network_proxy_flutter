@@ -50,7 +50,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   void initState() {
     super.initState();
     proxyServer = ProxyServer(widget.configuration, listener: this);
-    panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 18), proxyServer: proxyServer);
+    panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 16), proxyServer: proxyServer);
 
     if (widget.configuration.upgradeNoticeV2) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -76,7 +76,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   return Container(
                       decoration: BoxDecoration(
                           border: Border(
-                        right: BorderSide(color: Theme.of(context).dividerColor, width: 0.3),
+                        right: BorderSide(color: Theme.of(context).dividerColor, width: 0.2),
                       )),
                       width: 55,
                       child: leftNavigation(index));

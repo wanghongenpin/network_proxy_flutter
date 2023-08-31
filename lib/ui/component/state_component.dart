@@ -1,26 +1,30 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
-class StateComponent extends StatefulWidget {
+class KeepAliveWrapper extends StatefulWidget {
+  const KeepAliveWrapper({Key? key, this.keepAlive = true, required this.child}) : super(key: key);
+  final bool keepAlive;
   final Widget child;
-  final Function? onChange;
-
-  const StateComponent(this.child, {Key? key, this.onChange }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() {
-    return _StateComponentState();
-  }
+  State<KeepAliveWrapper> createState() => _KeepAliveWrapperState();
 }
 
-class _StateComponentState extends State<StateComponent> {
-  void changeState() {
-    setState(() {});
-    if (widget.onChange != null) {
-      widget.onChange!();
-    }
-  }
+class _KeepAliveWrapperState extends State<KeepAliveWrapper> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return widget.child;
   }
+
+  @override
+  void didUpdateWidget(covariant KeepAliveWrapper oldWidget) {
+    if (oldWidget.keepAlive != widget.keepAlive) {
+      // keepAlive 状态需要更新，实现在 AutomaticKeepAliveClientMixin 中
+      updateKeepAlive();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  bool get wantKeepAlive => widget.keepAlive;
 }

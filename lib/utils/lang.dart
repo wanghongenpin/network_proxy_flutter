@@ -17,6 +17,13 @@ class Strings {
 
     return null;
   }
+
+  static String trimWrap(String str, String wrap) {
+    if (str.startsWith(wrap) && str.endsWith(wrap)) {
+      return str.substring(1, str.length - 1);
+    }
+    return str;
+  }
 }
 
 class Pair<K, V> {

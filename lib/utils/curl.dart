@@ -39,14 +39,12 @@ HttpRequest parseCurl(String curl) {
     if (it.endsWith("\\")) {
       it = it.substring(0, it.length - 1);
     }
+
     //header
     if (it.startsWith(_h) || it.startsWith(_header)) {
       int index = it.startsWith(_h) ? _h.length : _header.length;
       var line = it.substring(index).trim();
-      if (line.startsWith("'") && line.endsWith("'")) {
-        line = line.substring(1, line.length - 1);
-      }
-
+      line = Strings.trimWrap(line, "'");
       var pair = _split(line, ":");
       if (pair != null) {
         headers.add(pair.key, pair.value);
@@ -60,18 +58,12 @@ HttpRequest parseCurl(String curl) {
         value = it.substring(_data.length).trim();
       }
       value = value.startsWith('\$') ? value.substring(1) : value;
-      if (value.startsWith("'") && value.endsWith("'")) {
-        value = value.substring(1, value.length - 1);
-      }
-      body = value;
+      body = Strings.trimWrap(value, "'");
     } else if (it.startsWith(_x) || it.startsWith(_request)) {
       //method
       int index = it.startsWith(_x) ? _x.length : _request.length;
       var value = it.substring(index).trim();
-      if (value.startsWith("'") && value.endsWith("'")) {
-        value = value.substring(1, value.length - 1);
-      }
-      method = HttpMethod.valueOf(value);
+      method = HttpMethod.valueOf(Strings.trimWrap(value, "'"));
     } else if (it.trim().startsWith("'http") || it.startsWith('curl') && it.contains("'http")) {
       var index = it.indexOf("'");
       var value = it.substring(index + 1).trim();

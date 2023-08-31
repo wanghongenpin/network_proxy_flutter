@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/utils/ip.dart';
+import 'package:network_proxy/utils/lang.dart';
 import 'package:proxy_manager/proxy_manager.dart';
 
 /// @author wanghongen
@@ -10,11 +11,13 @@ class SystemProxy {
   static String? _hardwarePort;
 
   ///获取系统代理
-  static Future<ProxyInfo?> getSystemProxy(ProxyTypes proxyTypes) async {
+  static Future<ProxyInfo?> getSystemProxy(ProxyTypes types) async {
     if (Platform.isWindows) {
       return await _getSystemProxyWindows();
     } else if (Platform.isMacOS) {
-      return await _getSystemProxyMacOS(proxyTypes);
+      return await _getSystemProxyMacOS(types);
+    } else if (Platform.isLinux) {
+      return await _getLinuxProxyServer(types);
     } else {
       return null;
     }
@@ -196,6 +199,29 @@ class SystemProxy {
       '/v',
       ...args,
     ]).then((results) => results.stdout.toString());
+  }
+
+  static Future<ProxyInfo?> _getLinuxProxyServer(ProxyTypes types) async {
+    ///linux 获取代理
+    var mode = await Process.run("gsettings", ["get", "org.gnome.system.proxy", "mode"])
+        .then((value) => value.stdout.toString().trim());
+    if (mode.contains("manual")) {
+      var hostFuture = Process.run("gsettings", ["get", "org.gnome.system.proxy.${types.name}", "host"])
+          .then((value) => value.stdout.toString().trim());
+      var portFuture = Process.run("gsettings", ["get", "org.gnome.system.proxy.${types.name}", "port"])
+          .then((value) => value.stdout.toString().trim());
+
+      return Future.wait([hostFuture, portFuture]).then((value) {
+        print(value);
+        var host = Strings.trimWrap(value[0], "'");
+        var port = Strings.trimWrap(value[1], "'");
+        if (host.isNotEmpty && port.isNotEmpty) {
+          return ProxyInfo.of(host, int.parse(port));
+        }
+        return null;
+      });
+    }
+    return null;
   }
 
   static _concatCommands(List<String> commands) {

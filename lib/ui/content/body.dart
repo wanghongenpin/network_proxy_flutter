@@ -8,8 +8,10 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
+import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/json/json_viewer.dart';
 import 'package:network_proxy/ui/component/json/theme.dart';
+import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
@@ -24,9 +26,15 @@ class HttpBodyWidget extends StatefulWidget {
   final bool inNewWindow; //是否在新窗口打开
   final WindowController? windowController;
   final ScrollController? scrollController;
+  final bool hideRequestRewrite; //是否隐藏请求重写
 
   const HttpBodyWidget(
-      {super.key, required this.httpMessage, this.inNewWindow = false, this.windowController, this.scrollController});
+      {super.key,
+      required this.httpMessage,
+      this.inNewWindow = false,
+      this.windowController,
+      this.scrollController,
+      this.hideRequestRewrite = false});
 
   @override
   State<StatefulWidget> createState() {
@@ -73,13 +81,14 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
     List<Widget> list = [
       widget.inNewWindow ? const SizedBox() : titleWidget(),
-      TabBar(
-          labelPadding: const EdgeInsets.symmetric(horizontal: 2.0),
-          tabs: tabs.tabList(),
-          onTap: (index) {
-            tabIndex = index;
-            bodyKey.currentState?.changeState(widget.httpMessage, tabs.list[tabIndex]);
-          }),
+      SizedBox(
+          height: 36,
+          child: TabBar(
+              tabs: tabs.tabList(),
+              onTap: (index) {
+                tabIndex = index;
+                bodyKey.currentState?.changeState(widget.httpMessage, tabs.list[tabIndex]);
+              })),
       Padding(
           padding: const EdgeInsets.all(10),
           child: _Body(
@@ -109,10 +118,10 @@ class HttpBodyState extends State<HttpBodyWidget> {
     var type = widget.httpMessage is HttpRequest ? "Request" : "Response";
 
     var list = [
-      Text('$type Body', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      Text('$type Body', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
       const SizedBox(width: 15),
       IconButton(
-          icon: const Icon(Icons.copy),
+          icon: const Icon(Icons.copy, size: 20),
           tooltip: '复制',
           onPressed: () {
             var body = bodyKey.currentState?.body;
@@ -123,10 +132,10 @@ class HttpBodyState extends State<HttpBodyWidget> {
           }),
     ];
 
-    if (!inNewWindow || Platforms.isMobile()) {
+    if (!widget.hideRequestRewrite) {
       list.add(const SizedBox(width: 5));
       list.add(IconButton(
-          icon: const Icon(Icons.edit_document),
+          icon: const Icon(Icons.edit_document, size: 20),
           tooltip: '请求重写',
           onPressed: () {
             HttpRequest? request;
@@ -137,7 +146,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
             }
 
             var body = bodyKey.currentState?.body;
-            var rule = RequestRewriteRule(true, request?.path() ?? '', request?.remoteDomain(),
+            var rule = RequestRewriteRule(true, request?.path() ?? '', request?.requestUri?.host,
                 requestBody: widget.httpMessage is HttpRequest ? body : null,
                 responseBody: widget.httpMessage is HttpResponse ? body : null);
 
@@ -161,9 +170,16 @@ class HttpBodyState extends State<HttpBodyWidget> {
           }));
     }
 
+    list.add(const SizedBox(width: 5));
+    list.add(IconButton(
+        icon: const Icon(Icons.abc, size: 25),
+        tooltip: '编码',
+        onPressed: () {
+          encodeWindow(EncoderType.base64, context, bodyKey.currentState?.body);
+        }));
     if (!inNewWindow) {
       list.add(const SizedBox(width: 5));
-      list.add(IconButton(icon: const Icon(Icons.open_in_new), tooltip: '新窗口打开', onPressed: () => openNew()));
+      list.add(IconButton(icon: const Icon(Icons.open_in_new, size: 20), tooltip: '新窗口打开', onPressed: () => openNew()));
     }
 
     return Row(
@@ -315,7 +331,7 @@ class Tabs {
   }
 
   List<Tab> tabList() {
-    return list.map((e) => Tab(child: Text(e.title))).toList();
+    return list.map((e) => Tab(child: Text(e.title, style: const TextStyle(fontSize: 14)))).toList();
   }
 }
 

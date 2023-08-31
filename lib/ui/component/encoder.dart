@@ -24,8 +24,9 @@ enum EncoderType {
 class EncoderWidget extends StatefulWidget {
   final EncoderType type;
   final WindowController? windowController;
+  final String? text;
 
-  const EncoderWidget({super.key, required this.type, this.windowController});
+  const EncoderWidget({super.key, required this.type, this.windowController, this.text});
 
   @override
   State<EncoderWidget> createState() => _EncoderState();
@@ -47,6 +48,8 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     type = widget.type;
+    inputText = widget.text ?? '';
+
     tabController = TabController(initialIndex: type.index, length: tabs.length, vsync: this);
     RawKeyboard.instance.addListener(onKeyEvent);
   }
@@ -71,7 +74,7 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
           title: Text('${type.name.toUpperCase()}编码', style: const TextStyle(fontSize: 16)),
           centerTitle: true,
@@ -91,7 +94,8 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
           children: <Widget>[
             const Text('输入要转换的内容'),
             const SizedBox(height: 5),
-            TextField(
+            TextFormField(
+                initialValue: inputText,
                 minLines: 5,
                 maxLines: 10,
                 onChanged: (text) => inputText = text,
@@ -107,7 +111,15 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
                 const SizedBox(width: 50),
                 type == EncoderType.md5
                     ? const SizedBox()
-                    : OutlinedButton(onPressed: decode, child: Text('${type.name.toUpperCase()}解码')),
+                    : FilledButton(onPressed: decode, child: Text('${type.name.toUpperCase()}解码')),
+                const SizedBox(width: 50),
+                OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        outputTextController.clear();
+                      });
+                    },
+                    child: const Text('清空结果')),
               ],
             ),
             const Text('转换结果'),

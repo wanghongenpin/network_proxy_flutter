@@ -5,7 +5,7 @@ import 'package:network_proxy/network/http/http_headers.dart';
 
 /// http解析器
 class HttpParse {
-  static const int defaultMaxLength = 40960;
+  static const int defaultMaxLength = 102400;
 
   /// 解析请求行
   List<String> parseInitialLine(ByteBuf data, int size) {

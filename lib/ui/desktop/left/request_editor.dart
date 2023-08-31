@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -9,6 +8,8 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/component/split_view.dart';
+import 'package:network_proxy/ui/component/state_component.dart';
+import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/utils/curl.dart';
 
 class RequestEditor extends StatefulWidget {
@@ -216,13 +217,9 @@ class _HttpState extends State<_HttpWidget> {
   }
 
   Widget _body() {
-    if (body != null && widget.readOnly && widget.message?.contentType == ContentType.json) {
-      try {
-        body = const JsonEncoder.withIndent('  ').convert(const JsonDecoder().convert(body!));
-      } catch (_) {}
-    }
     if (widget.readOnly) {
-      return SelectableText(body ?? '');
+      return KeepAliveWrapper(
+          child: SingleChildScrollView(child: HttpBodyWidget(httpMessage: widget.message, hideRequestRewrite: true)));
     }
 
     return TextField(

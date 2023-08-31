@@ -89,6 +89,40 @@ class _SslState extends State<SslWidget> {
   }
 
   void pcCer() async {
+    List<Widget> list = [];
+    if (Platform.isMacOS || Platform.isWindows) {
+      list = [
+        Text(" 安装证书到本系统，${Platform.isMacOS ? "“安装完双击选择“始终信任此证书”。 如安装打开失败，请下载证书拖拽到系统证书里" : "选择“受信任的根证书颁发机构”"}"),
+        const SizedBox(height: 10),
+        FilledButton(onPressed: _installCert, child: const Text("安装证书")),
+        const SizedBox(height: 10),
+        Platform.isMacOS
+            ? Image.network("https://foruda.gitee.com/images/1689323260158189316/c2d881a4_1073801.png",
+            width: 800, height: 500)
+            : Row(children: [
+          Image.network("https://foruda.gitee.com/images/1689335589122168223/c904a543_1073801.png",
+              width: 400, height: 400),
+          const SizedBox(width: 10),
+          Image.network("https://foruda.gitee.com/images/1689335334688878324/f6aa3a3a_1073801.png",
+              width: 400, height: 400)
+        ])
+      ];
+    } else {
+      list.add(const Text("安装证书到本系统，以Ubuntu为例 下载证书：\n"
+          "先把证书复制到 /usr/local/share/ca-certificates/，然后执行 update-ca-certificates 即可。\n"
+          "其他系统请网上搜索安装根证书"));
+      list.add(const SizedBox(height: 5));
+      list.add(const Text("提示：FireFox有自己的信任证书库，所以要手动在设置中导入需要导入的证书。", style: TextStyle(fontSize: 12)));
+      list.add(const SizedBox(height: 10));
+      list.add(const SelectableText.rich(
+          textAlign: TextAlign.justify,
+          TextSpan(style: TextStyle(color: Color(0xff6a8759)), children: [
+            TextSpan(text: "  sudo cp ProxyPinCA.crt /usr/local/share/ca-certificates/ \n"),
+            TextSpan(text: "  sudo update-ca-certificates")
+          ])));
+      list.add(const SizedBox(height: 10));
+    }
+
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -107,22 +141,7 @@ class _SslState extends State<SslWidget> {
                             })))
               ]),
               alignment: Alignment.center,
-              children: [
-                Text(" 安装证书到本系统，${Platform.isMacOS ? "“安装完双击选择“始终信任此证书”。 如安装打开失败，请下载证书拖拽到系统证书里" : "选择“受信任的根证书颁发机构”"}"),
-                const SizedBox(height: 10),
-                FilledButton(onPressed: _installCert, child: const Text("安装证书")),
-                const SizedBox(height: 10),
-                Platform.isMacOS
-                    ? Image.network("https://foruda.gitee.com/images/1689323260158189316/c2d881a4_1073801.png",
-                        width: 800, height: 500)
-                    : Row(children: [
-                        Image.network("https://foruda.gitee.com/images/1689335589122168223/c904a543_1073801.png",
-                            width: 400, height: 400),
-                        const SizedBox(width: 10),
-                        Image.network("https://foruda.gitee.com/images/1689335334688878324/f6aa3a3a_1073801.png",
-                            width: 400, height: 400)
-                      ])
-              ]);
+              children: list);
         });
   }
 

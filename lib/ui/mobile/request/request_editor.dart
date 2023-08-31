@@ -8,6 +8,7 @@ import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/utils/curl.dart';
 
 class MobileRequestEditor extends StatefulWidget {
@@ -130,6 +131,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     HttpClients.proxyRequest(proxyInfo: proxyInfo, request).then((response) {
       FlutterToastr.show('请求成功', context);
       this.response = response;
+      this.response?.request = request;
       tabController.animateTo(1);
       responseChange.value = !responseChange.value;
     }).catchError((e) {
@@ -183,19 +185,14 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
           Headers(headers: widget.message?.headers, key: headerKey, readOnly: widget.readOnly), // 请求头
           const SizedBox(height: 10),
           const Text("Body", style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue)),
-          _body()
+          _body(),
+          const SizedBox(height: 10),
         ]));
   }
 
   Widget _body() {
-    if (body != null && widget.readOnly && widget.message?.contentType == ContentType.json) {
-      try {
-        body = const JsonEncoder.withIndent('  ').convert(const JsonDecoder().convert(body!));
-      } catch (_) {}
-    }
-
     if (widget.readOnly) {
-      return SelectableText(body ?? '');
+      return SingleChildScrollView(child: HttpBodyWidget(httpMessage: widget.message));
     }
 
     return TextField(

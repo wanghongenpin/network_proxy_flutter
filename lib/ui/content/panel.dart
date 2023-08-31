@@ -42,6 +42,7 @@ class NetworkTabController extends StatefulWidget {
 }
 
 class NetworkTabState extends State<NetworkTabController> with SingleTickerProviderStateMixin {
+  final TextStyle textStyle = const TextStyle(fontSize: 14);
   late TabController _tabController;
 
   void changeState() {
@@ -128,11 +129,13 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     if (widget.request.get() == null) {
       return const SizedBox();
     }
-    var scrollController = ScrollController();
+
+    var scrollController = ScrollController(); //处理body也有滚动条问题
     var path = widget.request.get()?.path() ?? '';
     try {
       path = Uri.decodeFull(widget.request.get()?.path() ?? '');
     } catch (_) {}
+
     return ListView(
         controller: scrollController,
         children: [rowWidget("URI", path), ...message(widget.request.get(), "Request", scrollController)]);
@@ -167,8 +170,9 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       for (var v in values) {
         headers.add(Row(children: [
           SelectableText('$name: ',
-              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent)),
-          Expanded(child: SelectableText(v, contextMenuBuilder: contextMenu, maxLines: 8, minLines: 1)),
+              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent, fontSize: 14)),
+          Expanded(
+              child: SelectableText(v, style: textStyle, contextMenuBuilder: contextMenu, maxLines: 8, minLines: 1)),
         ]));
         headers.add(const Divider(thickness: 0.1));
       }
@@ -178,7 +182,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
     Widget headerWidget = ExpansionTile(
         tilePadding: const EdgeInsets.only(left: 0),
-        title: Text("$type Headers", style: const TextStyle(fontWeight: FontWeight.w500)),
+        title: Text("$type Headers", style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
         initiallyExpanded: true,
         shape: const Border(),
         children: headers);
@@ -188,7 +192,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
   Widget expansionTile(String title, List<Widget> content) {
     return ExpansionTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
         tilePadding: const EdgeInsets.only(left: 0),
         expandedAlignment: Alignment.topLeft,
         initiallyExpanded: true,
@@ -206,10 +210,11 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
   Widget rowWidget(final String name, String? value) {
     return Row(children: [
-      Expanded(flex: 2, child: SelectableText(name, style: const TextStyle(fontWeight: FontWeight.w500))),
+      Expanded(flex: 2, child: SelectableText(name, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14))),
       Expanded(
           flex: 4,
           child: SelectableText(
+            style: textStyle,
             value ?? '',
             contextMenuBuilder: contextMenu,
           ))

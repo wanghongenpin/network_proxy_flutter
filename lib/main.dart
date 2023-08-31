@@ -63,12 +63,15 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
     return HttpBodyWidget(
         windowController: WindowController.fromWindowId(windowId),
         httpMessage: HttpMessage.fromJson(argument['httpMessage']),
-        inNewWindow: true);
+        inNewWindow: true,
+        hideRequestRewrite: true);
   }
 
   if (argument['name'] == 'EncoderWidget') {
     return EncoderWidget(
-        type: EncoderType.nameOf(argument['type']), windowController: WindowController.fromWindowId(windowId));
+        type: EncoderType.nameOf(argument['type']),
+        text: argument['text'],
+        windowController: WindowController.fromWindowId(windowId));
   }
 
   return const SizedBox();
