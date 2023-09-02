@@ -16,7 +16,10 @@ dependencies:
   logger: ^2.0.1
   date_format: ^2.0.7
   window_manager: ^0.3.6
-  desktop_multi_window: ^0.2.0
+  desktop_multi_window:
+    git:
+      url: https://gitee.com/wanghongenpin/flutter-plugins.git
+      path: packages/desktop_multi_window
   path_provider: ^2.1.1
   url_launcher: ^6.1.12
   proxy_manager: ^0.0.3
@@ -40,3 +43,4 @@ flutter:
   assets:
     - assets/certs/ca.crt
     - assets/certs/ca_private.der
+    - assets/icon.png

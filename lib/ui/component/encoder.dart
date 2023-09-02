@@ -104,22 +104,14 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
                   hintText: '请输入要转换的内容',
                 )),
             const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
               children: [
                 FilledButton(onPressed: encode, child: Text('${type.name.toUpperCase()}编码')),
                 const SizedBox(width: 50),
                 type == EncoderType.md5
                     ? const SizedBox()
-                    : FilledButton(onPressed: decode, child: Text('${type.name.toUpperCase()}解码')),
-                const SizedBox(width: 50),
-                OutlinedButton(
-                    onPressed: () {
-                      setState(() {
-                        outputTextController.clear();
-                      });
-                    },
-                    child: const Text('清空结果')),
+                    : OutlinedButton(onPressed: decode, child: Text('${type.name.toUpperCase()}解码')),
               ],
             ),
             const Text('转换结果'),

@@ -212,9 +212,9 @@ class SystemProxy {
           .then((value) => value.stdout.toString().trim());
 
       return Future.wait([hostFuture, portFuture]).then((value) {
-        print(value);
         var host = Strings.trimWrap(value[0], "'");
         var port = Strings.trimWrap(value[1], "'");
+        print("$host:$port");
         if (host.isNotEmpty && port.isNotEmpty) {
           return ProxyInfo.of(host, int.parse(port));
         }

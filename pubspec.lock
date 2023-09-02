@@ -100,10 +100,11 @@ packages:
   desktop_multi_window:
     dependency: "direct main"
     description:
-      name: desktop_multi_window
-      sha256: "29971186ae0790e32b156f127f9c22c5ee77bdb94b14f7cea23f2356d0c76cfc"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
+      path: "packages/desktop_multi_window"
+      ref: HEAD
+      resolved-ref: d9a33eb7bcf71989d5188b84671c69b46308243d
+      url: "https://gitee.com/wanghongenpin/flutter-plugins.git"
+    source: git
     version: "0.2.0"
   easy_permission:
     dependency: "direct main"

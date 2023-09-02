@@ -182,8 +182,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
       list.add(IconButton(icon: const Icon(Icons.open_in_new, size: 20), tooltip: '新窗口打开', onPressed: () => openNew()));
     }
 
-    return Row(
-      mainAxisAlignment: widget.inNewWindow ? MainAxisAlignment.center : MainAxisAlignment.start,
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: list,
     );
   }

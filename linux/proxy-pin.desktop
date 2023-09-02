@@ -1,8 +1,8 @@
-﻿[Desktop Entry]
+[Desktop Entry]
 Name=ProxyPin
+GenericName=ProxyPin
 Exec=/opt/proxypin/ProxyPin
 Icon=/opt/proxypin/data/flutter_assets/assets/icon.png
 Terminal=false
 Type=Application
-Categories=Development
-Keywords=proxypin;
+Categories=Development;

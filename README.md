@@ -1,4 +1,4 @@
-## [免费开源抓包工具](https://github.com/wanghongenpin/network_proxy_flutter)，支持Windows、Mac、Android、IOS 全平台系统
+## [免费开源抓包工具](https://github.com/wanghongenpin/network_proxy_flutter)，支持Windows、Mac、Android、IOS、Linux 全平台系统
 支持手机扫码连接，不用手动配置Wifi代理，包括配置同步。所有终端都可以互相扫码连接转发流量。
 
 **Mac首次打开会提示已损坏，需要到系统偏好设置-安全性与隐私-允许任何来源。**
