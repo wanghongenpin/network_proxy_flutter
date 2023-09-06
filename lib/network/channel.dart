@@ -31,17 +31,20 @@ import 'handler.dart';
 abstract class ChannelHandler<T> {
   var log = logger;
 
+  ///连接建立
   void channelActive(Channel channel) {}
 
+  ///读取数据事件
   void channelRead(Channel channel, T msg) {}
 
+  ///连接断开
   void channelInactive(Channel channel) {
     // log.i("close $channel");
   }
 
   void exceptionCaught(Channel channel, dynamic error, {StackTrace? trace}) {
     HostAndPort? attribute = channel.getAttribute(AttributeKeys.host);
-    log.e("error $attribute $channel", error: error, stackTrace: trace);
+    log.e("[${channel.id}] error $attribute $channel", error: error, stackTrace: trace);
     channel.close();
   }
 }
@@ -63,6 +66,8 @@ class Channel {
   //是否写入中
   bool isWriting = false;
 
+  Object? error; //异常
+
   Channel(this._socket)
       : _id = DateTime.now().millisecondsSinceEpoch + Random().nextInt(999999),
         remoteAddress = _socket.remoteAddress,
@@ -80,7 +85,7 @@ class Channel {
 
   Future<void> write(Object obj) async {
     if (isClosed) {
-      logger.w("channel is closed $obj");
+      logger.w("[$id] channel is closed $obj");
       return;
     }
 
@@ -154,6 +159,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
     this.handler = handler;
   }
 
+  /// 监听
   void listen(Channel channel) {
     buffer.clear();
 
@@ -174,10 +180,10 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
     remoteChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(clientChannel));
   }
 
-
   @override
   void channelRead(Channel channel, Uint8List msg) {
     try {
+      //手机扫码连接转发远程
       HostAndPort? remote = channel.getAttribute(AttributeKeys.remote);
       if (remote != null && channel.getAttribute(channel.id) != null) {
         relay(channel, channel.getAttribute(channel.id));

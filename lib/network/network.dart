@@ -48,11 +48,12 @@ class Network {
   }
 
   _onEvent(Uint8List data, Channel channel) async {
+    //手机扫码转发远程地址
     if (configuration?.remoteHost != null) {
       channel.putAttribute(AttributeKeys.remote, HostAndPort.of(configuration!.remoteHost!));
     }
 
-    //代理信息
+    //外部代理信息
     if (configuration?.externalProxy?.enabled == true) {
       channel.putAttribute(AttributeKeys.proxyInfo, configuration!.externalProxy!);
     }
@@ -79,12 +80,14 @@ class Network {
     channel.pipeline.channelRead(channel, data);
   }
 
+  /// ssl握手
   void ssl(Channel channel, HostAndPort hostAndPort, Uint8List data) async {
     try {
-      Channel remoteChannel = channel.getAttribute(channel.id);
-
-      remoteChannel.secureSocket = await SecureSocket.secure(remoteChannel.socket,
-          host: hostAndPort.host, onBadCertificate: (certificate) => true);
+      Channel? remoteChannel = channel.getAttribute(channel.id);
+      if (remoteChannel != null) {
+        remoteChannel.secureSocket = await SecureSocket.secure(remoteChannel.socket,
+            host: hostAndPort.host, onBadCertificate: (certificate) => true);
+      }
 
       //ssl自签证书
       var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
@@ -139,7 +142,7 @@ class Client extends Network {
       host = host.substring(host.lastIndexOf(":") + 1, host.length - 1);
     }
 
-    return Socket.connect(host, hostAndPort.port).then((socket) {
+    return Socket.connect(host, hostAndPort.port, timeout: const Duration(seconds: 3)).then((socket) {
       if (socket.address.type != InternetAddressType.unix) {
         socket.setOption(SocketOption.tcpNoDelay, true);
       }
