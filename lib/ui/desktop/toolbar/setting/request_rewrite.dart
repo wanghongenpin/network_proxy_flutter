@@ -110,67 +110,92 @@ class _RequestRewriteState extends State<RequestRewrite> {
 }
 
 ///请求重写规则添加对话框
-class RuleAddDialog extends StatelessWidget {
+class RuleAddDialog extends StatefulWidget {
   final int currentIndex;
   final RequestRewriteRule? rule;
 
   const RuleAddDialog({super.key, this.currentIndex = -1, this.rule});
 
   @override
+  State<StatefulWidget> createState() {
+    return _RuleAddDialogState();
+  }
+}
+
+class _RuleAddDialogState extends State<RuleAddDialog> {
+  late ValueNotifier<bool> enableNotifier;
+  late RequestRewriteRule rule;
+
+  @override
+  void initState() {
+    super.initState();
+    rule = widget.rule ?? RequestRewriteRule(true, "", null);
+    enableNotifier = ValueNotifier(rule.enabled == true);
+  }
+
+  @override
+  void dispose() {
+    enableNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     GlobalKey formKey = GlobalKey<FormState>();
-
-    ValueNotifier<bool> enableNotifier = ValueNotifier(rule == null || rule?.enabled == true);
-    String? domain = rule?.domain;
-    String? path = rule?.path;
-    String? requestBody = rule?.requestBody;
-    String? responseBody = rule?.responseBody;
 
     return AlertDialog(
         title: const Text("添加请求重写规则", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         scrollable: true,
-        content: Form(
-            key: formKey,
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  ValueListenableBuilder(
-                      valueListenable: enableNotifier,
-                      builder: (_, bool enable, __) {
-                        return SwitchListTile(
-                            contentPadding: const EdgeInsets.only(left: 0),
-                            title: const Text('是否启用', textAlign: TextAlign.start),
-                            value: enable,
-                            onChanged: (value) => enableNotifier.value = value);
-                      }),
-                  TextFormField(
-                      decoration: const InputDecoration(labelText: '域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
-                      initialValue: domain,
-                      onSaved: (val) => domain = val),
-                  TextFormField(
-                      decoration: const InputDecoration(labelText: 'Path', hintText: '/api/v1/*'),
-                      validator: (val) {
-                        if (val == null || val.isEmpty) {
-                          return 'Path不能为空';
-                        }
-                        return null;
-                      },
-                      initialValue: path,
-                      onSaved: (val) => path = val),
-                  TextFormField(
-                      initialValue: requestBody,
-                      decoration: const InputDecoration(labelText: '请求体替换为:'),
-                      minLines: 1,
-                      maxLines: 5,
-                      onSaved: (val) => requestBody = val),
-                  TextFormField(
-                      initialValue: responseBody,
-                      minLines: 3,
-                      maxLines: 15,
-                      decoration: const InputDecoration(labelText: '响应体替换为:', hintText: '{"code":"200","data":{}}'),
-                      onSaved: (val) => responseBody = val)
-                ])),
+        content: Container(
+            constraints: const BoxConstraints(minWidth: 320),
+            child: Form(
+                key: formKey,
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      ValueListenableBuilder(
+                          valueListenable: enableNotifier,
+                          builder: (_, bool enable, __) {
+                            return SwitchListTile(
+                                contentPadding: const EdgeInsets.only(left: 0),
+                                title: const Text('是否启用', textAlign: TextAlign.start),
+                                value: enable,
+                                onChanged: (value) => enableNotifier.value = value);
+                          }),
+                      TextFormField(
+                        decoration: const InputDecoration(labelText: '名称'),
+                        initialValue: rule.name,
+                        onSaved: (val) => rule.name = val,
+                      ),
+                      TextFormField(
+                          decoration: const InputDecoration(labelText: '域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
+                          initialValue: rule.domain,
+                          onSaved: (val) => rule.domain = val?.trim()),
+                      TextFormField(
+                          decoration: const InputDecoration(labelText: 'Path', hintText: '/api/v1/*'),
+                          validator: (val) {
+                            if (val == null || val.isEmpty) {
+                              return 'Path不能为空';
+                            }
+                            return null;
+                          },
+                          initialValue: rule.path,
+                          onSaved: (val) => rule.path = val!.trim()),
+                      DropdownButtonFormField<RuleType>(
+                          decoration: const InputDecoration(labelText: '行为'),
+                          value: rule.type,
+                          items: RuleType.values
+                              .map((e) =>
+                                  DropdownMenuItem(value: e, child: Text(e.name, style: const TextStyle(fontSize: 14))))
+                              .toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              rule.type = val!;
+                            });
+                          }),
+                      ...rewriteWidgets()
+                    ]))),
         actions: [
           FilledButton(
               child: const Text("保存"),
@@ -178,12 +203,9 @@ class RuleAddDialog extends StatelessWidget {
                 if ((formKey.currentState as FormState).validate()) {
                   (formKey.currentState as FormState).save();
 
-                  var rule = RequestRewriteRule(
-                      enableNotifier.value, path!, domain?.trim().isEmpty == true ? null : domain?.trim(),
-                      requestBody: requestBody, responseBody: responseBody);
-
-                  if (currentIndex >= 0) {
-                    RequestRewrites.instance.rules[currentIndex] = rule;
+                  rule.updatePathReg();
+                  if (widget.currentIndex >= 0) {
+                    RequestRewrites.instance.rules[widget.currentIndex] = rule;
                   } else {
                     RequestRewrites.instance.addRule(rule);
                   }
@@ -198,6 +220,43 @@ class RuleAddDialog extends StatelessWidget {
                 Navigator.of(context).pop();
               })
         ]);
+  }
+
+  List<Widget> rewriteWidgets() {
+    if (rule.type == RuleType.redirect) {
+      return [
+        TextFormField(
+            decoration: const InputDecoration(labelText: '重定向到:', hintText: 'http://www.example.com/api'),
+            initialValue: rule.redirectUrl,
+            onSaved: (val) => rule.redirectUrl = val,
+            validator: (val) {
+              if (val == null || val.trim().isEmpty) {
+                return '重定向URL不能为空';
+              }
+              return null;
+            }),
+      ];
+    }
+
+    return [
+      TextFormField(
+          initialValue: rule.queryParam,
+          decoration: const InputDecoration(labelText: 'URL参数替换为:'),
+          maxLines: 1,
+          onSaved: (val) => rule.queryParam = val),
+      TextFormField(
+          initialValue: rule.requestBody,
+          decoration: const InputDecoration(labelText: '请求体替换为:'),
+          minLines: 1,
+          maxLines: 5,
+          onSaved: (val) => rule.requestBody = val),
+      TextFormField(
+          initialValue: rule.responseBody,
+          minLines: 3,
+          maxLines: 15,
+          decoration: const InputDecoration(labelText: '响应体替换为:', hintText: '{"code":"200","data":{}}'),
+          onSaved: (val) => rule.responseBody = val)
+    ];
   }
 }
 
@@ -245,40 +304,31 @@ class _RequestRuleListState extends State<RequestRuleList> {
           dataRowMaxHeight: 100,
           border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
           columns: const <DataColumn>[
+            DataColumn(label: Text('名称')),
             DataColumn(label: Text('启用')),
             DataColumn(label: Text('URL')),
-            DataColumn(label: Text('请求体')),
-            DataColumn(label: Text('响应体')),
+            DataColumn(label: Text('行为')),
           ],
           rows: List.generate(
               widget.requestRewrites.rules.length,
               (index) => DataRow(
-                      cells: [
-                        DataCell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
-                        DataCell(ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 60, maxWidth: 280),
-                            child: Text(
-                                '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'))),
-                        DataCell(Container(
-                          constraints: const BoxConstraints(maxWidth: 120),
-                          padding: const EdgeInsetsDirectional.all(10),
-                          child: SelectableText.rich(TextSpan(text: widget.requestRewrites.rules[index].requestBody),
-                              style: const TextStyle(fontSize: 12)),
-                        )),
-                        DataCell(Container(
-                          constraints: const BoxConstraints(maxWidth: 300),
-                          padding: const EdgeInsetsDirectional.all(10),
-                          child: SelectableText.rich(TextSpan(text: widget.requestRewrites.rules[index].responseBody),
-                              style: const TextStyle(fontSize: 12)),
-                        ))
-                      ],
-                      selected: currentSelectedIndex == index,
-                      onSelectChanged: (value) {
-                        setState(() {
-                          currentSelectedIndex = value == true ? index : -1;
-                        });
-                      },
-              )),
+                    cells: [
+                      DataCell(Text(widget.requestRewrites.rules[index].name ?? "")),
+                      DataCell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
+                      DataCell(ConstrainedBox(
+                        constraints: const BoxConstraints(minWidth: 60, maxWidth: 280),
+                        child: Text(
+                            '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'),
+                      )),
+                      DataCell(Text(widget.requestRewrites.rules[index].type.name)),
+                    ],
+                    selected: currentSelectedIndex == index,
+                    onSelectChanged: (value) {
+                      setState(() {
+                        currentSelectedIndex = value == true ? index : -1;
+                      });
+                    },
+                  )),
         )));
   }
 }

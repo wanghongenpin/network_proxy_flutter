@@ -40,6 +40,11 @@ class HttpClients {
     var client = Client()
       ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
 
+    if (proxyInfo == null) {
+      var proxyTypes = hostAndPort.isSsl() ? ProxyTypes.https : ProxyTypes.http;
+      proxyInfo = await SystemProxy.getSystemProxy(proxyTypes);
+    }
+
     HostAndPort connectHost = proxyInfo == null ? hostAndPort : HostAndPort.host(proxyInfo.host, proxyInfo.port!);
     var channel = await client.connect(connectHost);
 
@@ -102,11 +107,6 @@ class HttpClients {
   /// 发送代理请求
   static Future<HttpResponse> proxyRequest(HttpRequest request,
       {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 3)}) async {
-    if (proxyInfo == null) {
-      var proxyTypes = request.uri.startsWith("https://") ? ProxyTypes.https : ProxyTypes.http;
-      proxyInfo = await SystemProxy.getSystemProxy(proxyTypes);
-    }
-
     if (request.headers.host == null || request.headers.host?.trim().isEmpty == true) {
       try {
         request.headers.host = Uri.parse(request.uri).host;

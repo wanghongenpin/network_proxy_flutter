@@ -81,7 +81,7 @@ abstract class HttpMessage {
 
 ///HTTP请求。
 class HttpRequest extends HttpMessage {
-  final String uri;
+  String uri;
   late HttpMethod method;
 
   HostAndPort? hostAndPort;
@@ -90,10 +90,10 @@ class HttpRequest extends HttpMessage {
 
   HttpRequest(this.method, this.uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
 
-  String? remoteDomain()  {
+  String? remoteDomain() {
     if (hostAndPort == null) {
       try {
-         return Uri.parse(uri).host;
+        return Uri.parse(uri).host;
       } catch (e) {
         return null;
       }

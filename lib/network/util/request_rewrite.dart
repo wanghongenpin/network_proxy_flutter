@@ -23,16 +23,17 @@ class RequestRewrites {
     });
   }
 
-  String? findRequestReplaceWith(String? domain, String? url) {
+  RequestRewriteRule? findRequestRewrite(String? domain, String? url, RuleType type) {
     if (!enabled || url == null) {
       return null;
     }
+
     for (var rule in rules) {
-      if (rule.enabled && rule.urlReg.hasMatch(url)) {
+      if (rule.enabled && rule.urlReg.hasMatch(url) && type == rule.type) {
         if (rule.domain?.isNotEmpty == true && rule.domain != domain) {
           continue;
         }
-        return rule.requestBody;
+        return rule;
       }
     }
     return null;
@@ -72,29 +73,68 @@ class RequestRewrites {
   }
 }
 
+enum RuleType {
+  body("重写消息体"),
+  // header("重写Header"),
+  redirect("重定向");
+
+  //名称
+  final String name;
+
+  const RuleType(this.name);
+
+  static RuleType fromName(String name) {
+    return values.firstWhere((element) => element.name == name);
+  }
+}
+
 class RequestRewriteRule {
   bool enabled = false;
-  final String path;
-  final String? domain;
-  final RegExp urlReg;
+  String path;
+  String? domain;
+  RuleType type;
+
+  String? name;
+
+  //消息体
+  String? queryParam;
   String? requestBody;
   String? responseBody;
 
-  RequestRewriteRule(this.enabled, this.path, this.domain, {this.requestBody, this.responseBody})
+  //重定向
+  String? redirectUrl;
+
+  RegExp urlReg;
+
+  RequestRewriteRule(this.enabled, this.path, this.domain,
+      {this.name, this.type = RuleType.body, this.queryParam, this.requestBody, this.responseBody, this.redirectUrl})
       : urlReg = RegExp(path.replaceAll("*", ".*"));
 
   factory RequestRewriteRule.formJson(Map<String, dynamic> map) {
-    return RequestRewriteRule(map['enabled'] == true, map['path'] ?? map['url'], map['domain'],
-        requestBody: map['requestBody'], responseBody: map['responseBody']);
+    return RequestRewriteRule(map['enabled'] == true, map['path'], map['domain'],
+        name: map['name'],
+        type: RuleType.fromName(map['type']),
+        queryParam: map['queryParam'],
+        requestBody: map['requestBody'],
+        responseBody: map['responseBody'],
+        redirectUrl: map['redirectUrl']);
+  }
+
+  void updatePathReg() {
+    urlReg = RegExp(path.replaceAll("*", ".*"));
   }
 
   toJson() {
     return {
+      'name': name,
       'enabled': enabled,
       'domain': domain,
       'path': path,
+      'type': type.name,
+      'queryParam': queryParam,
       'requestBody': requestBody,
       'responseBody': responseBody,
+      'redirectUrl': redirectUrl,
     };
   }
 }

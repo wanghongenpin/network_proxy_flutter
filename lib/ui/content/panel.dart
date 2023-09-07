@@ -158,9 +158,9 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
     var responseCookie = widget.response.get()?.headers.getList("Set-Cookie")?.expand((e) => _cookieWidget(e)!);
     return ListView(children: [
-      expansionTile("Request Cookies", requestCookie?.toList() ?? []),
+      requestCookie == null ? const SizedBox() : expansionTile("Request Cookies", requestCookie.toList()),
       const SizedBox(height: 20),
-      expansionTile("Response Cookies", responseCookie?.toList() ?? []),
+      responseCookie == null ? const SizedBox() : expansionTile("Response Cookies", responseCookie.toList()),
     ]);
   }
 

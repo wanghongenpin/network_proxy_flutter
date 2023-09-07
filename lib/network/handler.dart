@@ -115,7 +115,6 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       remoteChannel = await _getRemoteChannel(channel, httpRequest);
       remoteChannel.putAttribute(remoteChannel.id, channel);
     } catch (error) {
-
       channel.error = error; //记录异常
       //https代理新建连接请求
       if (httpRequest.method == HttpMethod.connect) {
@@ -129,15 +128,38 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     if (httpRequest.method != HttpMethod.connect) {
       log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
 
-      var replaceBody = requestRewrites?.findRequestReplaceWith(httpRequest.hostAndPort?.host, httpRequest.path());
-      if (replaceBody?.isNotEmpty == true) {
-        httpRequest.body = utf8.encode(replaceBody!);
-      }
+      //替换请求体
+      _rewriteBody(httpRequest);
 
       if (!HostFilter.filter(httpRequest.hostAndPort?.host)) {
         listener?.onRequest(channel, httpRequest);
       }
+
+      //重定向
+      var redirectRewrite =
+          requestRewrites?.findRequestRewrite(httpRequest.hostAndPort?.host, httpRequest.path(), RuleType.redirect);
+      if (redirectRewrite?.redirectUrl?.isNotEmpty == true) {
+        var proxyHandler = HttpResponseProxyHandler(channel, listener: listener, requestRewrites: requestRewrites);
+        httpRequest.uri = redirectRewrite!.redirectUrl!;
+        httpRequest.headers.host = Uri.parse(redirectRewrite.redirectUrl!).host;
+        var redirectChannel = await HttpClients.connect(Uri.parse(redirectRewrite.redirectUrl!), proxyHandler);
+        await redirectChannel.write(httpRequest);
+        return;
+      }
+
       await remoteChannel.write(httpRequest);
+    }
+  }
+
+  //替换请求体
+  _rewriteBody(HttpRequest httpRequest) {
+    var rewrite = requestRewrites?.findRequestRewrite(httpRequest.hostAndPort?.host, httpRequest.path(), RuleType.body);
+
+    if (rewrite?.requestBody?.isNotEmpty == true) {
+      httpRequest.body = utf8.encode(rewrite!.requestBody!);
+    }
+    if (rewrite?.queryParam?.isNotEmpty == true) {
+      httpRequest.uri = httpRequest.requestUri?.replace(query: rewrite!.queryParam!).toString() ?? httpRequest.uri;
     }
   }
 
