@@ -113,7 +113,7 @@ class RequestRewriteRule {
   factory RequestRewriteRule.formJson(Map<String, dynamic> map) {
     return RequestRewriteRule(map['enabled'] == true, map['path'], map['domain'],
         name: map['name'],
-        type: RuleType.fromName(map['type']),
+        type: map['type'] == null ? RuleType.body : RuleType.fromName(map['type']),
         queryParam: map['queryParam'],
         requestBody: map['requestBody'],
         responseBody: map['responseBody'],

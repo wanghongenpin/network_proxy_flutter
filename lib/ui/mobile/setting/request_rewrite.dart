@@ -111,21 +111,38 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
 }
 
 ///请求重写规则添加对话框
-class RewriteRule extends StatelessWidget {
+class RewriteRule extends StatefulWidget {
   final int currentIndex;
   final RequestRewriteRule? rule;
 
   const RewriteRule({super.key, required this.rule, this.currentIndex = -1});
 
   @override
+  State<StatefulWidget> createState() {
+    return _RewriteRuleState();
+  }
+}
+
+class _RewriteRuleState extends State<RewriteRule> {
+  late ValueNotifier<bool> enableNotifier;
+  late RequestRewriteRule rule;
+
+  @override
+  void initState() {
+    super.initState();
+    rule = widget.rule ?? RequestRewriteRule(true, "", null);
+    enableNotifier = ValueNotifier(rule.enabled == true);
+  }
+
+  @override
+  void dispose() {
+    enableNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     GlobalKey formKey = GlobalKey<FormState>();
-
-    ValueNotifier<bool> enableNotifier = ValueNotifier(rule == null || rule!.enabled);
-    String? domain = rule?.domain;
-    String? path = rule?.path;
-    String? requestBody = rule?.requestBody;
-    String? responseBody = rule?.responseBody;
 
     return Scaffold(
       appBar: AppBar(
@@ -136,19 +153,15 @@ class RewriteRule extends StatelessWidget {
               onPressed: () {
                 if ((formKey.currentState as FormState).validate()) {
                   (formKey.currentState as FormState).save();
-                  enableNotifier.dispose();
-                  var requestRewriteRule = RequestRewriteRule(
-                      enableNotifier.value, path!, domain?.trim().isEmpty == true ? null : domain?.trim(),
-                      requestBody: requestBody, responseBody: responseBody);
-
-                  if (currentIndex >= 0) {
-                    RequestRewrites.instance.rules[currentIndex] = requestRewriteRule;
+                  rule.updatePathReg();
+                  if (widget.currentIndex >= 0) {
+                    RequestRewrites.instance.rules[widget.currentIndex] = rule;
                   } else {
-                    RequestRewrites.instance.addRule(requestRewriteRule);
+                    RequestRewrites.instance.addRule(rule);
                   }
 
                   FlutterToastr.show("添加请求重写规则成功", context);
-                  Navigator.of(context).pop(requestRewriteRule);
+                  Navigator.of(context).pop(rule);
                 }
               })
         ],
@@ -168,9 +181,14 @@ class RewriteRule extends StatelessWidget {
                           onChanged: (value) => enableNotifier.value = value);
                     }),
                 TextFormField(
+                  decoration: const InputDecoration(labelText: '名称'),
+                  initialValue: rule.name,
+                  onSaved: (val) => rule.name = val,
+                ),
+                TextFormField(
                     decoration: const InputDecoration(labelText: '域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
-                    initialValue: domain,
-                    onSaved: (val) => domain = val),
+                    initialValue: rule.domain,
+                    onSaved: (val) => rule.domain = val?.trim()),
                 TextFormField(
                     decoration: const InputDecoration(labelText: 'Path', hintText: '/api/v1/*'),
                     validator: (val) {
@@ -179,27 +197,64 @@ class RewriteRule extends StatelessWidget {
                       }
                       return null;
                     },
-                    minLines: 1,
-                    maxLines: 3,
-                    initialValue: path,
-                    onSaved: (val) => path = val),
-                TextFormField(
-                    initialValue: requestBody,
-                    decoration: const InputDecoration(labelText: '请求体替换为:'),
-                    minLines: 1,
-                    maxLines: 10,
-                    onSaved: (val) => requestBody = val),
-                TextFormField(
-                    initialValue: responseBody,
-                    minLines: 3,
-                    maxLines: 15,
-                    decoration: const InputDecoration(labelText: '响应体替换为:', hintText: '{"code":"200","data":{}}'),
-                    onSaved: (val) => responseBody = val)
+                    initialValue: rule.path,
+                    onSaved: (val) => rule.path = val!.trim()),
+                DropdownButtonFormField<RuleType>(
+                    decoration: const InputDecoration(labelText: '行为'),
+                    value: rule.type,
+                    items: RuleType.values
+                        .map((e) =>
+                            DropdownMenuItem(value: e, child: Text(e.name, style: const TextStyle(fontSize: 14))))
+                        .toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        rule.type = val!;
+                      });
+                    }),
+                ...rewriteWidgets()
               ]))),
     );
   }
+
+  List<Widget> rewriteWidgets() {
+    if (rule.type == RuleType.redirect) {
+      return [
+        TextFormField(
+            decoration: const InputDecoration(labelText: '重定向到:', hintText: 'http://www.example.com/api'),
+            initialValue: rule.redirectUrl,
+            onSaved: (val) => rule.redirectUrl = val,
+            validator: (val) {
+              if (val == null || val.trim().isEmpty) {
+                return '重定向URL不能为空';
+              }
+              return null;
+            }),
+      ];
+    }
+
+    return [
+      TextFormField(
+          initialValue: rule.queryParam,
+          decoration: const InputDecoration(labelText: 'URL参数替换为:'),
+          maxLines: 1,
+          onSaved: (val) => rule.queryParam = val),
+      TextFormField(
+          initialValue: rule.requestBody,
+          decoration: const InputDecoration(labelText: '请求体替换为:'),
+          minLines: 1,
+          maxLines: 10,
+          onSaved: (val) => rule.requestBody = val),
+      TextFormField(
+          initialValue: rule.responseBody,
+          minLines: 3,
+          maxLines: 15,
+          decoration: const InputDecoration(labelText: '响应体替换为:', hintText: '{"code":"200","data":{}}'),
+          onSaved: (val) => rule.responseBody = val)
+    ];
+  }
 }
 
+///请求重写规则列表
 class RequestRuleList extends StatefulWidget {
   final RequestRewrites requestRewrites;
 
@@ -243,31 +298,22 @@ class _RequestRuleListState extends State<RequestRuleList> {
               dataRowMaxHeight: 100,
               border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
               columns: const <DataColumn>[
+                DataColumn(label: Text('名称')),
                 DataColumn(label: Text('启用')),
                 DataColumn(label: Text('URL')),
-                DataColumn(label: Text('请求体')),
-                DataColumn(label: Text('响应体')),
+                DataColumn(label: Text('行为')),
               ],
               rows: List.generate(
                   widget.requestRewrites.rules.length,
                   (index) => DataRow(
                         cells: [
+                          cell(Text(widget.requestRewrites.rules[index].name ?? "")),
                           cell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
                           cell(ConstrainedBox(
                               constraints: const BoxConstraints(minWidth: 60, maxWidth: 150),
                               child: Text(
                                   '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'))),
-                          cell(Container(
-                              constraints: const BoxConstraints(maxWidth: 150),
-                              child: SelectableText.rich(
-                                  TextSpan(text: widget.requestRewrites.rules[index].requestBody),
-                                  style: const TextStyle(fontSize: 12)))),
-                          cell(Container(
-                            constraints: const BoxConstraints(maxWidth: 200),
-                            padding: const EdgeInsetsDirectional.all(10),
-                            child: SelectableText.rich(TextSpan(text: widget.requestRewrites.rules[index].responseBody),
-                                style: const TextStyle(fontSize: 12)),
-                          ))
+                          cell(Text(widget.requestRewrites.rules[index].type.name)),
                         ],
                         selected: selected == index,
                         onSelectChanged: (value) {
