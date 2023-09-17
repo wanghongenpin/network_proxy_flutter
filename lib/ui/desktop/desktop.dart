@@ -4,10 +4,12 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/ui/component/state_component.dart';
+import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/domain.dart';
 import 'package:network_proxy/ui/desktop/left/favorite.dart';
-import 'package:network_proxy/ui/component/toolbox.dart';
+import 'package:network_proxy/ui/desktop/left/history.dart';
 import 'package:network_proxy/ui/desktop/toolbar/toolbar.dart';
 
 import '../component/split_view.dart';
@@ -26,13 +28,13 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   final PageController pageController = PageController();
   final ValueNotifier<int> _selectIndex = ValueNotifier(0);
 
-  late ProxyServer proxyServer;
+  late ProxyServer proxyServer = ProxyServer(widget.configuration);
   late NetworkTabController panel;
 
   final List<NavigationRailDestination> destinations = const [
     NavigationRailDestination(icon: Icon(Icons.workspaces), label: Text("抓包", style: TextStyle(fontSize: 12))),
-    // NavigationRailDestination(icon: Icon(Icons.history), label: Text("历史", style: TextStyle(fontSize: 12))),
     NavigationRailDestination(icon: Icon(Icons.favorite), label: Text("收藏", style: TextStyle(fontSize: 12))),
+    NavigationRailDestination(icon: Icon(Icons.history), label: Text("历史", style: TextStyle(fontSize: 12))),
     NavigationRailDestination(icon: Icon(Icons.construction), label: Text("工具箱", style: TextStyle(fontSize: 12))),
   ];
 
@@ -49,7 +51,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   @override
   void initState() {
     super.initState();
-    proxyServer = ProxyServer(widget.configuration, listener: this);
+    proxyServer.addListener(this);
     panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 16), proxyServer: proxyServer);
 
     if (widget.configuration.upgradeNoticeV2) {
@@ -62,7 +64,6 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   @override
   Widget build(BuildContext context) {
     final domainWidget = DomainWidget(key: domainStateKey, proxyServer: proxyServer, panel: panel);
-
     return Scaffold(
         appBar: Tab(child: Toolbar(proxyServer, domainStateKey, sideNotifier: _selectIndex)),
         body: Row(
@@ -86,8 +87,14 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   ratio: 0.3,
                   minRatio: 0.15,
                   maxRatio: 0.9,
-                  left: PageView(
-                      controller: pageController, children: [domainWidget, Favorites(panel: panel), const Toolbox()]),
+                  left: PageView(controller: pageController, physics: const NeverScrollableScrollPhysics(), children: [
+                    domainWidget,
+                    Favorites(panel: panel),
+                    KeepAliveWrapper(
+                        child: HistoryPageWidget(
+                            proxyServer: proxyServer, domainWidgetState: domainStateKey, panel: panel)),
+                    const Toolbox()
+                  ]),
                   right: panel),
             )
           ],
@@ -130,12 +137,11 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                   '点击的HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
                   '新增更新:\n'
-                  '1. 增加工具箱，提供常用编解码，增加HTTP请求,可粘贴cURL格式解析发起请求；\n'
-                  '2. 请求编辑发送可直接查看响应体，发送请求无需开启代理；\n'
-                  '3. 详情增加快速请求重写, 复制cURL格式可直接导入Postman；\n'
-                  '4. 增加请求收藏功能；\n'
-                  '5. 主题增加Material3切换；\n'
-                  '6. 请求删除&大响应体直接转发;',
+                  '1. 增加历史记录功能；\n'
+                  '2. 请求重写增加名称&URL参数重写；\n'
+                  '3. 请求重写增加重定向；\n'
+                  '4. 建立连接异常显示请求体；\n'
+                  '5. 请求编辑重发响应体查看增加多种格式，详情Body体增加快速解码入口；',
                   style: TextStyle(fontSize: 14)));
         });
   }

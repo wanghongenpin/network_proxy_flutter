@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
@@ -135,7 +133,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
       tabController.animateTo(1);
       responseChange.value = !responseChange.value;
     }).catchError((e) {
-      FlutterToastr.show('请求失败', context);
+      FlutterToastr.show('请求失败$e', context);
     });
   }
 }

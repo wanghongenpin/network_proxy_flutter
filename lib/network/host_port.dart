@@ -63,7 +63,7 @@ class HostAndPort {
     List<String> hostAndPort = domain.split(":");
     if (hostAndPort.length == 2) {
       bool isSsl = ssl ?? hostAndPort[1] == "443";
-      scheme = isSsl ? httpsScheme : httpScheme;
+      scheme ??= isSsl ? httpsScheme : httpScheme;
       return HostAndPort(scheme, hostAndPort[0], int.parse(hostAndPort[1]));
     }
     scheme ??= (ssl == true ? httpsScheme : httpScheme);

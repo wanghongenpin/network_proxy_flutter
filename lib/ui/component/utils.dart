@@ -96,3 +96,32 @@ void unSelect(EditableTextState editableTextState) {
     SelectionChangedCause.tap,
   );
 }
+
+Widget futureWidget<T>(Future<T> future, Widget Function(T data) toWidget) {
+  return FutureBuilder<T>(
+    future: future,
+    builder: (BuildContext context, AsyncSnapshot<T> snapshot) {
+      if (snapshot.connectionState == ConnectionState.done) {
+        if (snapshot.hasError) {
+          print(snapshot.error);
+        }
+        return toWidget(snapshot.requireData);
+      }
+      return const SizedBox();
+    },
+  );
+}
+
+showContextMenu(BuildContext context, Offset offset, {required List<PopupMenuEntry> items}) {
+  showMenu(
+      context: context,
+      surfaceTintColor:
+          Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.primaryContainer,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy - 50,
+        offset.dx,
+        offset.dy - 50,
+      ),
+      items: items);
+}

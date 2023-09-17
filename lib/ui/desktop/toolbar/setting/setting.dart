@@ -46,15 +46,13 @@ class _SettingState extends State<Setting> {
       itemBuilder: (context) {
         return [
           PopupMenuItem<String>(
-              padding: const EdgeInsets.all(0),
               child: PortWidget(proxyServer: widget.proxyServer, textStyle: const TextStyle(fontSize: 13))),
           PopupMenuItem<String>(
-              padding: const EdgeInsets.all(0),
               child: ValueListenableBuilder(
-                valueListenable: enableDesktopListenable,
-                builder: (_, val, __) => setSystemProxy(),
-              )),
-          const PopupMenuItem(padding: EdgeInsets.all(0), child: ThemeSetting(dense: true)),
+            valueListenable: enableDesktopListenable,
+            builder: (_, val, __) => setSystemProxy(),
+          )),
+          const PopupMenuItem(child: ThemeSetting(dense: true)),
           menuItem("域名过滤", onTap: hostFilter),
           menuItem("请求重写", onTap: requestRewrite),
           menuItem("外部代理设置", onTap: setExternalProxy),
@@ -71,7 +69,6 @@ class _SettingState extends State<Setting> {
 
   PopupMenuItem<String> menuItem(String title, {GestureTapCallback? onTap}) {
     return PopupMenuItem<String>(
-        padding: const EdgeInsets.all(0),
         child: ListTile(
           title: Text(title),
           dense: true,
@@ -185,7 +182,6 @@ class _PortState extends State<PortWidget> {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      const Padding(padding: EdgeInsets.only(left: 16)),
       Text("端口号：", style: widget.textStyle),
       SizedBox(
           width: 80,

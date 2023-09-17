@@ -167,7 +167,7 @@ class _RewriteRuleState extends State<RewriteRule> {
         ],
       ),
       body: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(15),
           child: Form(
               key: formKey,
               child: ListView(children: <Widget>[
@@ -181,16 +181,16 @@ class _RewriteRuleState extends State<RewriteRule> {
                           onChanged: (value) => enableNotifier.value = value);
                     }),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: '名称'),
+                  decoration: decoration('名称'),
                   initialValue: rule.name,
                   onSaved: (val) => rule.name = val,
                 ),
                 TextFormField(
-                    decoration: const InputDecoration(labelText: '域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
+                    decoration: decoration('域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
                     initialValue: rule.domain,
                     onSaved: (val) => rule.domain = val?.trim()),
                 TextFormField(
-                    decoration: const InputDecoration(labelText: 'Path', hintText: '/api/v1/*'),
+                    decoration: decoration('Path', hintText: '/api/v1/*'),
                     validator: (val) {
                       if (val == null || val.isEmpty) {
                         return 'Path不能为空';
@@ -200,7 +200,7 @@ class _RewriteRuleState extends State<RewriteRule> {
                     initialValue: rule.path,
                     onSaved: (val) => rule.path = val!.trim()),
                 DropdownButtonFormField<RuleType>(
-                    decoration: const InputDecoration(labelText: '行为'),
+                    decoration: decoration('行为'),
                     value: rule.type,
                     items: RuleType.values
                         .map((e) =>
@@ -216,11 +216,24 @@ class _RewriteRuleState extends State<RewriteRule> {
     );
   }
 
+  InputDecoration decoration(String label, {String? hintText}) {
+    Color color = Theme.of(context).colorScheme.primary;
+    // Color color = Colors.blueAccent;
+
+    return InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        isDense: true,
+        border: UnderlineInputBorder(borderSide: BorderSide(width: 0.3, color: color)),
+        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(width: 0.3, color: color)),
+        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(width: 1.5, color: color)));
+  }
+
   List<Widget> rewriteWidgets() {
     if (rule.type == RuleType.redirect) {
       return [
         TextFormField(
-            decoration: const InputDecoration(labelText: '重定向到:', hintText: 'http://www.example.com/api'),
+            decoration: decoration('重定向到:', hintText: 'http://www.example.com/api'),
             initialValue: rule.redirectUrl,
             onSaved: (val) => rule.redirectUrl = val,
             validator: (val) {
@@ -235,12 +248,12 @@ class _RewriteRuleState extends State<RewriteRule> {
     return [
       TextFormField(
           initialValue: rule.queryParam,
-          decoration: const InputDecoration(labelText: 'URL参数替换为:'),
+          decoration: decoration('URL参数替换为:'),
           maxLines: 1,
           onSaved: (val) => rule.queryParam = val),
       TextFormField(
           initialValue: rule.requestBody,
-          decoration: const InputDecoration(labelText: '请求体替换为:'),
+          decoration: decoration('请求体替换为:'),
           minLines: 1,
           maxLines: 10,
           onSaved: (val) => rule.requestBody = val),
@@ -248,7 +261,7 @@ class _RewriteRuleState extends State<RewriteRule> {
           initialValue: rule.responseBody,
           minLines: 3,
           maxLines: 15,
-          decoration: const InputDecoration(labelText: '响应体替换为:', hintText: '{"code":"200","data":{}}'),
+          decoration: decoration('响应体替换为:', hintText: '{"code":"200","data":{}}'),
           onSaved: (val) => rule.responseBody = val)
     ];
   }

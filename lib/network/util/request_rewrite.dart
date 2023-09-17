@@ -1,5 +1,6 @@
 /// @author wanghongen
 /// 2023/7/26
+/// 请求重写
 class RequestRewrites {
   bool enabled = true;
   final List<RequestRewriteRule> rules = [];
@@ -11,6 +12,7 @@ class RequestRewrites {
 
   static RequestRewrites get instance => _instance;
 
+  //加载配置
   load(Map<String, dynamic>? map) {
     if (map == null) {
       return;
@@ -23,6 +25,7 @@ class RequestRewrites {
     });
   }
 
+  ///
   RequestRewriteRule? findRequestRewrite(String? domain, String? url, RuleType type) {
     if (!enabled || url == null) {
       return null;
@@ -54,6 +57,7 @@ class RequestRewrites {
     return null;
   }
 
+  //
   void addRule(RequestRewriteRule rule) {
     rules.removeWhere((it) => it.path == rule.path && it.domain == rule.domain);
     rules.add(rule);
@@ -110,6 +114,7 @@ class RequestRewriteRule {
       {this.name, this.type = RuleType.body, this.queryParam, this.requestBody, this.responseBody, this.redirectUrl})
       : urlReg = RegExp(path.replaceAll("*", ".*"));
 
+  ///
   factory RequestRewriteRule.formJson(Map<String, dynamic> map) {
     return RequestRewriteRule(map['enabled'] == true, map['path'], map['domain'],
         name: map['name'],

@@ -109,7 +109,7 @@ class HttpClients {
       {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 3)}) async {
     if (request.headers.host == null || request.headers.host?.trim().isEmpty == true) {
       try {
-        request.headers.host = Uri.parse(request.uri).host;
+        request.headers.host = '${Uri.parse(request.uri).host}:${Uri.parse(request.uri).port}';
       } catch (_) {}
     }
 

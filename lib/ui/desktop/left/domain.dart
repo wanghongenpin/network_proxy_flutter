@@ -1,6 +1,5 @@
 import 'dart:collection';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
@@ -10,17 +9,21 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/component/transition.dart';
+import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
+import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/desktop/left/path.dart';
-import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/search.dart';
 
 ///左侧域名
 class DomainWidget extends StatefulWidget {
   final NetworkTabController panel;
   final ProxyServer proxyServer;
+  final List<HttpRequest>? list;
+  final bool shrinkWrap;
 
-  const DomainWidget({super.key, required this.panel, required this.proxyServer});
+  const DomainWidget({super.key, required this.panel, required this.proxyServer, this.list, this.shrinkWrap = true});
 
   @override
   State<StatefulWidget> createState() {
@@ -28,7 +31,8 @@ class DomainWidget extends StatefulWidget {
   }
 }
 
-class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClientMixin{
+class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClientMixin {
+  List<HttpRequest> container = [];
   LinkedHashMap<HostAndPort, HeaderBody> containerMap = LinkedHashMap<HostAndPort, HeaderBody>();
   LinkedHashMap<HostAndPort, HeaderBody> searchView = LinkedHashMap<HostAndPort, HeaderBody>();
 
@@ -48,6 +52,22 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
   }
 
   @override
+  void initState() {
+    super.initState();
+    widget.list?.forEach((request) {
+      var host = HostAndPort.of(request.requestUrl);
+      HeaderBody? headerBody = containerMap[host];
+      if (headerBody == null) {
+        headerBody = HeaderBody(host, proxyServer: widget.panel.proxyServer, onRemove: () => remove(host));
+        containerMap[host] = headerBody;
+      }
+      var listURI =
+          PathRow(request, widget.panel, proxyServer: widget.panel.proxyServer, remove: (it) => headerBody!.remove(it));
+      headerBody.addBody(null, listURI);
+    });
+  }
+
+  @override
   bool get wantKeepAlive => true;
 
   @override
@@ -63,8 +83,11 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
       searchView.clear();
     }
 
+    Widget body = widget.shrinkWrap
+        ? SingleChildScrollView(child: Column(children: list.toList()))
+        : ListView.builder(itemCount: list.length, cacheExtent: 1000, itemBuilder: (_, index) => list.elementAt(index));
     return Scaffold(
-        body: SingleChildScrollView(child: Column(children: list.toList())),
+        body: body,
         bottomNavigationBar: Search(onSearch: (val) {
           setState(() {
             searchModel = val;
@@ -88,11 +111,13 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
 
   ///添加请求
   add(Channel channel, HttpRequest request) {
+    container.add(request);
     HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
     //按照域名分类
     HeaderBody? headerBody = containerMap[hostAndPort];
     if (headerBody != null) {
-      var listURI = PathRow(request, widget.panel, proxyServer: widget.proxyServer, remove: (it) => headerBody!.remove(it));
+      var listURI =
+          PathRow(request, widget.panel, proxyServer: widget.proxyServer, remove: (it) => headerBody!.remove(it));
       headerBody.addBody(channel.id, listURI);
 
       //搜索视图
@@ -103,7 +128,8 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
     }
 
     headerBody = HeaderBody(hostAndPort, proxyServer: widget.proxyServer, onRemove: () => remove(hostAndPort));
-    var listURI = PathRow(request, widget.panel, proxyServer: widget.proxyServer, remove: (it) => headerBody!.remove(it));
+    var listURI =
+        PathRow(request, widget.panel, proxyServer: widget.proxyServer, remove: (it) => headerBody!.remove(it));
     headerBody.addBody(channel.id, listURI);
     setState(() {
       containerMap[hostAndPort] = headerBody!;
@@ -113,6 +139,7 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
   remove(HostAndPort hostAndPort) {
     setState(() {
       containerMap.remove(hostAndPort);
+      container.removeWhere((element) => element.hostAndPort == hostAndPort);
     });
   }
 
@@ -140,6 +167,7 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
   clean() {
     widget.panel.change(null, null);
     setState(() {
+      container.clear();
       containerMap.clear();
     });
   }
@@ -156,7 +184,7 @@ class HeaderBody extends StatefulWidget {
   final ProxyServer proxyServer;
 
   //请求列表
-  final Queue<PathRow> _body = Queue();
+  final Queue<PathRow> body = Queue();
 
   //是否选中
   final bool selected;
@@ -168,8 +196,11 @@ class HeaderBody extends StatefulWidget {
       : super(key: GlobalKey<_HeaderBodyState>());
 
   ///添加请求
-  void addBody(String key, PathRow widget) {
-    _body.addFirst(widget);
+  void addBody(String? key, PathRow widget) {
+    body.addFirst(widget);
+    if (key == null) {
+      return;
+    }
     channelIdPathMap[key] = widget;
     changeState();
   }
@@ -179,14 +210,15 @@ class HeaderBody extends StatefulWidget {
   }
 
   remove(PathRow pathRow) {
-    if (_body.remove(pathRow)) {
+    if (body.remove(pathRow)) {
       changeState();
     }
   }
 
   ///根据文本过滤
   Iterable<PathRow> search(SearchModel searchModel) {
-    return _body.where((element) => searchModel.filter(element.request, element.response.get()));
+    return body
+        .where((element) => searchModel.filter(element.request, element.response.get() ?? element.request.response));
   }
 
   ///复制
@@ -195,7 +227,7 @@ class HeaderBody extends StatefulWidget {
     var headerBody = HeaderBody(header,
         selected: selected ?? state.currentState?.selected == true, onRemove: onRemove, proxyServer: proxyServer);
     if (body != null) {
-      headerBody._body.addAll(body);
+      headerBody.body.addAll(body);
     }
     return headerBody;
   }
@@ -237,13 +269,13 @@ class _HeaderBodyState extends State<HeaderBody> {
   Widget build(BuildContext context) {
     return Column(children: [
       _hostWidget(widget.header.domain),
-      Offstage(offstage: !selected, child: Column(children: widget._body.toList()))
+      Offstage(offstage: !selected, child: Column(children: widget.body.toList()))
     ]);
   }
 
   Widget _hostWidget(String title) {
     var host = GestureDetector(
-        onSecondaryLongPressDown: menu,
+        onSecondaryTapDown: menu,
         child: ListTile(
             minLeadingWidth: 25,
             leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 18),
@@ -270,46 +302,42 @@ class _HeaderBodyState extends State<HeaderBody> {
   }
 
   //域名右键菜单
-  menu(LongPressDownDetails details) {
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        details.globalPosition.dx,
-        details.globalPosition.dy,
-        details.globalPosition.dx,
-        details.globalPosition.dy,
-      ),
+  menu(TapDownDetails details) {
+    showContextMenu(
+      context,
+      details.globalPosition,
       items: <PopupMenuEntry>[
-        PopupMenuItem(
-            height: 38,
-            child: const Text("添加黑名单", style: TextStyle(fontSize: 14)),
+        CustomPopupMenuItem(
+            height: 35,
+            child: const Text("添加黑名单", style: TextStyle(fontSize: 13)),
             onTap: () {
               HostFilter.blacklist.add(widget.header.host);
               configuration.flushConfig();
             }),
-        PopupMenuItem(
-            height: 38,
-            child: const Text("添加白名单", style: TextStyle(fontSize: 14)),
+        CustomPopupMenuItem(
+            height: 35,
+            child: const Text("添加白名单", style: TextStyle(fontSize: 13)),
             onTap: () {
               HostFilter.whitelist.add(widget.header.host);
               configuration.flushConfig();
             }),
-        PopupMenuItem(
-            height: 38,
-            child: const Text("删除白名单", style: TextStyle(fontSize: 14)),
+        CustomPopupMenuItem(
+            height: 35,
+            child: const Text("删除白名单", style: TextStyle(fontSize: 13)),
             onTap: () {
               HostFilter.whitelist.remove(widget.header.host);
               configuration.flushConfig();
             }),
-        PopupMenuItem(height: 38, child: const Text("删除", style: TextStyle(fontSize: 14)), onTap: () => _delete()),
+        const PopupMenuDivider(height: 0.3),
+        CustomPopupMenuItem(
+            height: 35, child: const Text("删除", style: TextStyle(fontSize: 13)), onTap: () => _delete()),
       ],
     );
   }
 
   _delete() {
     widget.channelIdPathMap.clear();
-    widget._body.clear();
+    widget.body.clear();
     widget.onRemove?.call();
   }
-
 }

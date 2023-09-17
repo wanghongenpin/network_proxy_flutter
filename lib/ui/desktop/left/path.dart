@@ -12,6 +12,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/storage/favorites.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
@@ -55,11 +56,12 @@ class _PathRowState extends State<PathRow> {
       title = '${request.method.name} ${Uri.parse(request.uri).path}';
     } catch (_) {}
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
+
     return GestureDetector(
-        onSecondaryLongPressDown: menu,
+        onSecondaryTapDown: menu,
         child: ListTile(
             minLeadingWidth: 25,
-            leading: getIcon(widget.response.get()),
+            leading: getIcon(widget.response.get() ?? widget.request.response),
             title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
             subtitle: Text(
                 '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
@@ -75,15 +77,10 @@ class _PathRowState extends State<PathRow> {
   }
 
   ///右键菜单
-  menu(LongPressDownDetails details) {
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        details.globalPosition.dx,
-        details.globalPosition.dy,
-        details.globalPosition.dx,
-        details.globalPosition.dy,
-      ),
+  menu(TapDownDetails details) {
+    showContextMenu(
+      context,
+      details.globalPosition,
       items: <PopupMenuEntry>[
         popupItem("复制请求链接", onTap: () {
           var requestUrl = widget.request.requestUrl;
@@ -97,6 +94,7 @@ class _PathRowState extends State<PathRow> {
           Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
               .then((value) => FlutterToastr.show('已复制到剪切板', context));
         }),
+        const PopupMenuDivider(height: 0.3),
         popupItem("重放请求", onTap: () {
           var request = widget.request.copy(uri: widget.request.requestUrl);
           HttpClients.proxyRequest(request);
@@ -112,6 +110,7 @@ class _PathRowState extends State<PathRow> {
           FavoriteStorage.addFavorite(widget.request);
           FlutterToastr.show('收藏成功', context);
         }),
+        const PopupMenuDivider(height: 0.3),
         popupItem("删除", onTap: () {
           widget.remove?.call(widget);
         }),
@@ -120,7 +119,7 @@ class _PathRowState extends State<PathRow> {
   }
 
   PopupMenuItem popupItem(String text, {VoidCallback? onTap}) {
-    return PopupMenuItem(height: 38, onTap: onTap, child: Text(text, style: const TextStyle(fontSize: 14)));
+    return CustomPopupMenuItem(height: 32, onTap: onTap, child: Text(text, style: const TextStyle(fontSize: 13)));
   }
 
   ///请求编辑
@@ -157,6 +156,6 @@ class _PathRowState extends State<PathRow> {
       });
     }
     selectedState = this;
-    widget.panel.change(widget.request, widget.response.get());
+    widget.panel.change(widget.request, widget.response.get() ?? widget.request.response);
   }
 }

@@ -43,7 +43,10 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
 
   @override
   void initState() {
-    proxyServer = ProxyServer(widget.configuration, listener: this);
+    proxyServer = ProxyServer(widget.configuration);
+    proxyServer.addListener(this);
+
+    // 远程连接
     desktop.addListener(() {
       if (desktop.value.connect) {
         proxyServer.configuration.remoteHost = "http://${desktop.value.host}:${desktop.value.port}";

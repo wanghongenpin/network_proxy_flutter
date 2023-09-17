@@ -29,10 +29,8 @@ class _SslState extends State<SslWidget> {
       itemBuilder: (context) {
         return [
           PopupMenuItem(
-              padding: const EdgeInsets.all(0),
               child: _Switch(proxyServer: widget.proxyServer, onEnableChange: (val) => setState(() {}))),
           PopupMenuItem(
-              padding: const EdgeInsets.all(0),
               child: ListTile(
                 dense: true,
                 hoverColor: Colors.transparent,
@@ -44,7 +42,6 @@ class _SslState extends State<SslWidget> {
                 },
               )),
           PopupMenuItem<String>(
-            padding: const EdgeInsets.all(0),
             child: ListTile(
                 title: const Text("安装根证书到 iOS"),
                 dense: true,
@@ -56,7 +53,6 @@ class _SslState extends State<SslWidget> {
                 }),
           ),
           PopupMenuItem<String>(
-            padding: const EdgeInsets.all(0),
             child: ListTile(
                 title: const Text("安装根证书到 Android"),
                 dense: true,
@@ -68,7 +64,6 @@ class _SslState extends State<SslWidget> {
                 }),
           ),
           PopupMenuItem<String>(
-            padding: const EdgeInsets.all(0),
             child: ListTile(
                 title: const Text("下载根证书"),
                 dense: true,

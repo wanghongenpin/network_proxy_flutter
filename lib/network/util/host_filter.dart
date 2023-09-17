@@ -29,11 +29,13 @@ class HostFilter {
   }
 }
 
+///
 abstract class HostList {
   /// 列表
   final List<RegExp> list = [];
   bool enabled = false;
 
+  ///加载配置
   void load(Map<String, dynamic>? map) {
     if (map == null) {
       return;
@@ -62,6 +64,7 @@ abstract class HostList {
     }
   }
 
+  // json序列化
   Map<String, dynamic> toJson() {
     return {
       'list': list.map((e) => e.pattern).toList(),
@@ -70,8 +73,10 @@ abstract class HostList {
   }
 }
 
+///白名单
 class Whites extends HostList {}
 
+///黑名单
 class Blacks extends HostList {
   Blacks() {
     enabled = true;

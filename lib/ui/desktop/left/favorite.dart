@@ -12,6 +12,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/storage/favorites.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:window_manager/window_manager.dart';
@@ -101,14 +102,9 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
   ///右键菜单
   menu(LongPressDownDetails details) {
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        details.globalPosition.dx,
-        details.globalPosition.dy,
-        details.globalPosition.dx,
-        details.globalPosition.dy,
-      ),
+    showContextMenu(
+      context,
+      details.globalPosition,
       items: <PopupMenuEntry>[
         popupItem("复制请求链接", onTap: () {
           var requestUrl = widget.request.requestUrl;
@@ -141,7 +137,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   }
 
   PopupMenuItem popupItem(String text, {VoidCallback? onTap}) {
-    return PopupMenuItem(height: 38, onTap: onTap, child: Text(text, style: const TextStyle(fontSize: 14)));
+    return CustomPopupMenuItem(height: 35, onTap: onTap, child: Text(text, style: const TextStyle(fontSize: 13)));
   }
 
   ///请求编辑

@@ -147,7 +147,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
         title: const Text("添加请求重写规则", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         scrollable: true,
         content: Container(
-            constraints: const BoxConstraints(minWidth: 320),
+            constraints: const BoxConstraints(minWidth: 350, minHeight: 460),
             child: Form(
                 key: formKey,
                 child: Column(
@@ -158,22 +158,25 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                           valueListenable: enableNotifier,
                           builder: (_, bool enable, __) {
                             return SwitchListTile(
+                                dense: true,
                                 contentPadding: const EdgeInsets.only(left: 0),
                                 title: const Text('是否启用', textAlign: TextAlign.start),
                                 value: enable,
                                 onChanged: (value) => enableNotifier.value = value);
                           }),
                       TextFormField(
-                        decoration: const InputDecoration(labelText: '名称'),
+                        decoration: decoration('名称'),
                         initialValue: rule.name,
                         onSaved: (val) => rule.name = val,
                       ),
+                      const SizedBox(height: 5),
                       TextFormField(
-                          decoration: const InputDecoration(labelText: '域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
+                          decoration: decoration('域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
                           initialValue: rule.domain,
                           onSaved: (val) => rule.domain = val?.trim()),
+                      const SizedBox(height: 5),
                       TextFormField(
-                          decoration: const InputDecoration(labelText: 'Path', hintText: '/api/v1/*'),
+                          decoration: decoration('Path', hintText: '/api/v1/*'),
                           validator: (val) {
                             if (val == null || val.isEmpty) {
                               return 'Path不能为空';
@@ -182,9 +185,11 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                           },
                           initialValue: rule.path,
                           onSaved: (val) => rule.path = val!.trim()),
+                      const SizedBox(height: 5),
                       DropdownButtonFormField<RuleType>(
-                          decoration: const InputDecoration(labelText: '行为'),
                           value: rule.type,
+                          isDense: true,
+                          decoration: decoration('行为'),
                           items: RuleType.values
                               .map((e) =>
                                   DropdownMenuItem(value: e, child: Text(e.name, style: const TextStyle(fontSize: 14))))
@@ -194,6 +199,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                               rule.type = val!;
                             });
                           }),
+                      const SizedBox(height: 5),
                       ...rewriteWidgets()
                     ]))),
         actions: [
@@ -222,11 +228,25 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
         ]);
   }
 
+  InputDecoration decoration(String label, {String? hintText}) {
+    Color color = Theme.of(context).colorScheme.primary;
+    // Color color = Colors.blueAccent;
+
+    return InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        isDense: true,
+        border: UnderlineInputBorder(borderSide: BorderSide(width: 0.3, color: color)),
+        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(width: 0.3, color: color)),
+        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(width: 1.5, color: color)));
+  }
+
   List<Widget> rewriteWidgets() {
     if (rule.type == RuleType.redirect) {
       return [
         TextFormField(
-            decoration: const InputDecoration(labelText: '重定向到:', hintText: 'http://www.example.com/api'),
+            decoration: decoration('重定向到:', hintText: 'http://www.example.com/api'),
+            maxLines: 3,
             initialValue: rule.redirectUrl,
             onSaved: (val) => rule.redirectUrl = val,
             validator: (val) {
@@ -241,20 +261,22 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
     return [
       TextFormField(
           initialValue: rule.queryParam,
-          decoration: const InputDecoration(labelText: 'URL参数替换为:'),
+          decoration: decoration('URL参数替换为:'),
           maxLines: 1,
           onSaved: (val) => rule.queryParam = val),
+      const SizedBox(height: 5),
       TextFormField(
           initialValue: rule.requestBody,
-          decoration: const InputDecoration(labelText: '请求体替换为:'),
+          decoration: decoration('请求体替换为:'),
           minLines: 1,
           maxLines: 5,
           onSaved: (val) => rule.requestBody = val),
+      const SizedBox(height: 5),
       TextFormField(
           initialValue: rule.responseBody,
           minLines: 3,
-          maxLines: 15,
-          decoration: const InputDecoration(labelText: '响应体替换为:', hintText: '{"code":"200","data":{}}'),
+          maxLines: 10,
+          decoration: decoration('响应体替换为:', hintText: '{"code":"200","data":{}}'),
           onSaved: (val) => rule.responseBody = val)
     ];
   }

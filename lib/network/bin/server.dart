@@ -18,6 +18,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:network_proxy/network/bin/configuration.dart';
+import 'package:network_proxy/network/channel.dart';
+import 'package:network_proxy/network/http/http.dart';
 
 import '../handler.dart';
 import '../http/codec.dart';
@@ -36,12 +38,12 @@ class ProxyServer {
   Server? server;
 
   //请求事件监听
-  EventListener? listener;
+  List<EventListener> listeners = [];
 
   //配置
   final Configuration configuration;
 
-  ProxyServer(this.configuration, {this.listener});
+  ProxyServer(this.configuration);
 
   //是否启动
   bool get isRunning => server?.isRunning ?? false;
@@ -67,8 +69,11 @@ class ProxyServer {
     Server server = Server(configuration);
 
     server.initChannel((channel) {
-      channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(),
-          HttpChannelHandler(listener: listener, requestRewrites: configuration.requestRewrites));
+      channel.pipeline.handle(
+          HttpRequestCodec(),
+          HttpResponseCodec(),
+          HttpChannelHandler(
+              listener: CombinedEventListener(listeners), requestRewrites: configuration.requestRewrites));
     });
 
     return server.bind(port).then((serverSocket) {
@@ -105,5 +110,30 @@ class ProxyServer {
   /// 重启代理服务
   restart() {
     stop().then((value) => start());
+  }
+
+  ///添加监听器
+  addListener(EventListener listener) {
+    listeners.add(listener);
+  }
+}
+
+class CombinedEventListener extends EventListener {
+  final List<EventListener> listeners;
+
+  CombinedEventListener(this.listeners);
+
+  @override
+  void onRequest(Channel channel, HttpRequest request) {
+    for (var element in listeners) {
+      element.onRequest(channel, request);
+    }
+  }
+
+  @override
+  void onResponse(Channel channel, HttpResponse response) {
+    for (var element in listeners) {
+      element.onResponse(channel, response);
+    }
   }
 }
