@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
@@ -314,6 +315,7 @@ class _HeaderBodyState extends State<HeaderBody> {
             onTap: () {
               HostFilter.blacklist.add(widget.header.host);
               configuration.flushConfig();
+              FlutterToastr.show('添加成功', context);
             }),
         CustomPopupMenuItem(
             height: 35,
@@ -321,6 +323,7 @@ class _HeaderBodyState extends State<HeaderBody> {
             onTap: () {
               HostFilter.whitelist.add(widget.header.host);
               configuration.flushConfig();
+              FlutterToastr.show('添加成功', context);
             }),
         CustomPopupMenuItem(
             height: 35,
@@ -328,6 +331,7 @@ class _HeaderBodyState extends State<HeaderBody> {
             onTap: () {
               HostFilter.whitelist.remove(widget.header.host);
               configuration.flushConfig();
+              FlutterToastr.show('删除成功', context);
             }),
         const PopupMenuDivider(height: 0.3),
         CustomPopupMenuItem(
@@ -340,5 +344,6 @@ class _HeaderBodyState extends State<HeaderBody> {
     widget.channelIdPathMap.clear();
     widget.body.clear();
     widget.onRemove?.call();
+    FlutterToastr.show('删除成功', context);
   }
 }

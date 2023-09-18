@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
@@ -74,7 +75,7 @@ class _HistoryWidget extends StatefulWidget {
   }
 }
 
-class _HistoryState extends State<_HistoryWidget> implements EventListener {
+class _HistoryState extends State<_HistoryWidget> {
   ///是否保存会话
   static bool _sessionSaved = false;
   static WriteTask? writeTask;
@@ -149,8 +150,10 @@ class _HistoryState extends State<_HistoryWidget> implements EventListener {
                         if (name == writeTask?.name) {
                           writeTask?.timer?.cancel();
                           writeTask?.open.close();
+                          writeTask = null;
                         }
                         storage.removeHistory(name);
+                        FlutterToastr.show('删除成功', context);
                       });
                     })
               ])
@@ -171,28 +174,19 @@ class _HistoryState extends State<_HistoryWidget> implements EventListener {
     var file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
     print(file);
     RandomAccessFile open = await file.open(mode: FileMode.append);
-    storage.addHistory(name, file, 0);
+    await storage.addHistory(name, file, 0);
 
     writeTask = WriteTask(name, open, storage, callback: () => setState(() {}));
     writeTask?.writeList.addAll(container);
+    proxyServer.addListener(writeTask!);
+    await writeTask?.writeTask();
+
     writeTask?.startTask();
-
-    proxyServer.addListener(this);
-  }
-
-  @override
-  void onRequest(Channel channel, HttpRequest request) {}
-
-  @override
-  void onResponse(Channel channel, HttpResponse response) async {
-    if (response.request == null) {
-      return;
-    }
-    writeTask?.writeList.add(response.request!);
+    setState(() {});
   }
 }
 
-class WriteTask {
+class WriteTask implements EventListener {
   final HistoryStorage historyStorage;
   final RandomAccessFile open;
   Queue writeList = Queue();
@@ -201,6 +195,17 @@ class WriteTask {
   final String name;
 
   WriteTask(this.name, this.open, this.historyStorage, {this.callback});
+
+  @override
+  void onRequest(Channel channel, HttpRequest request) {}
+
+  @override
+  void onResponse(Channel channel, HttpResponse response) {
+    if (response.request == null) {
+      return;
+    }
+    writeList.add(response.request!);
+  }
 
   //写入任务
   startTask() {

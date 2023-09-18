@@ -26,7 +26,7 @@ class MobileHomePage extends StatefulWidget {
 }
 
 class MobileHomeState extends State<MobileHomePage> implements EventListener {
-  final requestStateKey = GlobalKey<RequestListState>();
+  final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
 
   late ProxyServer proxyServer;
   ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
@@ -57,7 +57,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
     });
 
     super.initState();
-    if (widget.configuration.upgradeNoticeV2) {
+    if (widget.configuration.upgradeNoticeV3) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -86,7 +86,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
             MoreEnum(proxyServer: proxyServer, desktop: desktop),
             const SizedBox(width: 10)
           ]),
-      drawer: DrawerWidget(proxyServer: proxyServer),
+      drawer: DrawerWidget(proxyServer: proxyServer, requestStateKey: requestStateKey),
       floatingActionButton: FloatingActionButton(
           onPressed: null,
           child: Center(
@@ -110,15 +110,13 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   showUpgradeNotice() {
     String content = '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
         '新增更新:\n'
-        '1. 增加工具箱，提供常用编解码，增加HTTP请求,可粘贴cURL格式解析发起请求；\n'
-        '2. 请求编辑发送可直接查看响应体，发送请求无需开启代理；\n'
-        '3. 详情增加快速请求重写, 复制cURL格式可直接导入Postman；\n'
-        '4. 增加请求收藏功能；\n'
-        '5. 主题增加Material3切换；\n'
-        '6. 请求删除&大响应体直接转发；\n'
-        '7. 安卓应用白名单，调整请求展示列表；';
-    showAlertDialog('更新内容V1.0.2', content, () {
-      widget.configuration.upgradeNoticeV2 = false;
+        '1. 增加历史记录功能,默认不会保存,需要去历史页点击保存；\n'
+        '2. 请求重写增加名称&URL参数重写；\n'
+        '3. 请求重写增加重定向；\n'
+        '4. 建立连接异常显示请求体；\n'
+        '5. 请求编辑重发响应体查看增加多种格式，详情Body体增加快速解码入口；';
+    showAlertDialog('更新内容V1.0.3', content, () {
+      widget.configuration.upgradeNoticeV3 = false;
       widget.configuration.flushConfig();
     });
   }

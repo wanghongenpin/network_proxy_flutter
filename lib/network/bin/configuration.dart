@@ -34,7 +34,7 @@ class Configuration {
   bool enableSystemProxy = true;
 
   //是否显示更新内容公告
-  bool upgradeNoticeV2 = true;
+  bool upgradeNoticeV3 = true;
 
   //请求重写
   RequestRewrites requestRewrites = RequestRewrites.instance;
@@ -117,7 +117,7 @@ class Configuration {
     port = config['port'] ?? port;
     enableSsl = config['enableSsl'] == true;
     enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
-    upgradeNoticeV2 = config['upgradeNoticeV2'] ?? true;
+    upgradeNoticeV3 = config['upgradeNoticeV3'] ?? true;
     if (config['externalProxy'] != null) {
       externalProxy = ProxyInfo.fromJson(config['externalProxy']);
     }
@@ -158,7 +158,7 @@ class Configuration {
 
   Map<String, dynamic> toJson() {
     return {
-      'upgradeNoticeV2': upgradeNoticeV2,
+      'upgradeNoticeV3': upgradeNoticeV3,
       'port': port,
       'enableSsl': enableSsl,
       'enableSystemProxy': enableSystemProxy,

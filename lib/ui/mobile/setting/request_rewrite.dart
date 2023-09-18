@@ -38,7 +38,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("请求重写")),
+        appBar: AppBar(title: const Text("请求重写", style: TextStyle(fontSize: 16))),
         body: Container(
             padding: const EdgeInsets.all(10),
             child: Column(
@@ -59,22 +59,22 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
                 const SizedBox(height: 10),
                 Row(children: [
                   FilledButton.icon(
-                      icon: const Icon(Icons.add),
+                      icon: const Icon(Icons.add, size: 18),
                       onPressed: () {
                         add();
                       },
-                      label: const Text("增加")),
+                      label: const Text("增加", style: TextStyle(fontSize: 14))),
                   const SizedBox(width: 10),
                   OutlinedButton.icon(
                       onPressed: () {
                         var selectedIndex = requestRuleList.currentSelectedIndex();
                         add(selectedIndex);
                       },
-                      icon: const Icon(Icons.edit),
-                      label: const Text("编辑")),
+                      icon: const Icon(Icons.edit, size: 18),
+                      label: const Text("编辑", style: TextStyle(fontSize: 14))),
                   TextButton.icon(
-                      icon: const Icon(Icons.remove),
-                      label: const Text("删除"),
+                      icon: const Icon(Icons.remove, size: 18),
+                      label: const Text("删除", style: TextStyle(fontSize: 14)),
                       onPressed: () {
                         var removeSelected = requestRuleList.removeSelected();
                         if (removeSelected.isEmpty) {
@@ -308,7 +308,9 @@ class _RequestRuleListState extends State<RequestRuleList> {
         child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              dataRowMaxHeight: 100,
+              dataRowMinHeight: 30,
+              dataRowMaxHeight: 60,
+              columnSpacing: 10,
               border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
               columns: const <DataColumn>[
                 DataColumn(label: Text('名称')),

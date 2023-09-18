@@ -14,8 +14,9 @@ import 'package:network_proxy/ui/mobile/request/request.dart';
 
 class RequestListWidget extends StatefulWidget {
   final ProxyServer proxyServer;
+  final List<HttpRequest>? list;
 
-  const RequestListWidget({super.key, required this.proxyServer});
+  const RequestListWidget({super.key, required this.proxyServer, this.list});
 
   @override
   State<StatefulWidget> createState() {
@@ -29,18 +30,32 @@ class RequestListState extends State<RequestListWidget> {
     const Tab(child: Text('域名列表')),
   ];
 
-  GlobalKey<RequestSequenceState> requestSequenceKey = GlobalKey<RequestSequenceState>();
-  GlobalKey<DomainListState> domainListKey = GlobalKey<DomainListState>();
+  final GlobalKey<RequestSequenceState> requestSequenceKey = GlobalKey<RequestSequenceState>();
+  final GlobalKey<DomainListState> domainListKey = GlobalKey<DomainListState>();
 
   //请求列表容器
-  static List<HttpRequest> container = [];
+  List<HttpRequest> container = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.list != null) {
+      container.addAll(widget.list!);
+    }
+    print(domainListKey);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
         length: tabs.length,
         child: Scaffold(
-          appBar: AppBar(title: TabBar(tabs: tabs)),
+          appBar: AppBar(title: TabBar(tabs: tabs), automaticallyImplyLeading: false),
           body: TabBarView(
             children: [
               RequestSequence(
@@ -144,10 +159,8 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
       return;
     }
 
-    print("object ${searchModel?.filter(response.request!, response)} ${state == null}");
     //搜索视图
     if (searchModel?.filter(response.request!, response) == true && state == null) {
-      print("contains ${view.contains(response.request)}");
 
       if (!view.contains(response.request)) {
         view.addFirst(response.request!);

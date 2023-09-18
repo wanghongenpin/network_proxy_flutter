@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/utils/platform.dart';
 
 Icon getIcon(HttpResponse? response) {
   var map = {
@@ -57,36 +58,46 @@ RelativeRect menuPosition(BuildContext context) {
 }
 
 Widget contextMenu(BuildContext context, EditableTextState editableTextState) {
+  List<ContextMenuButtonItem> list = [
+    ContextMenuButtonItem(
+      onPressed: () {
+        editableTextState.copySelection(SelectionChangedCause.tap);
+        FlutterToastr.show("已复制到剪切板", context);
+        unSelect(editableTextState);
+        editableTextState.hideToolbar();
+      },
+      type: ContextMenuButtonType.copy,
+    ),
+    ContextMenuButtonItem(
+      label: 'Copy Value',
+      onPressed: () {
+        unSelect(editableTextState);
+        Clipboard.setData(ClipboardData(text: editableTextState.textEditingValue.text)).then((value) {
+          FlutterToastr.show("已复制到剪切板", context);
+          editableTextState.hideToolbar();
+        });
+      },
+      type: ContextMenuButtonType.custom,
+    ),
+    ContextMenuButtonItem(
+      onPressed: () {
+        editableTextState.selectAll(SelectionChangedCause.tap);
+      },
+      type: ContextMenuButtonType.selectAll,
+    )
+  ];
+  if (Platforms.isDesktop()) {
+    list.add(ContextMenuButtonItem(
+      onPressed: () async {
+        editableTextState.shareSelection(SelectionChangedCause.toolbar);
+      },
+      type: ContextMenuButtonType.share,
+    ));
+  }
+
   return AdaptiveTextSelectionToolbar.buttonItems(
     anchors: editableTextState.contextMenuAnchors,
-    buttonItems: <ContextMenuButtonItem>[
-      ContextMenuButtonItem(
-        onPressed: () {
-          editableTextState.copySelection(SelectionChangedCause.tap);
-          FlutterToastr.show("已复制到剪切板", context);
-          unSelect(editableTextState);
-          editableTextState.hideToolbar();
-        },
-        type: ContextMenuButtonType.copy,
-      ),
-      ContextMenuButtonItem(
-        label: 'Copy Value',
-        onPressed: () {
-          unSelect(editableTextState);
-          Clipboard.setData(ClipboardData(text: editableTextState.textEditingValue.text)).then((value) {
-            FlutterToastr.show("已复制到剪切板", context);
-            editableTextState.hideToolbar();
-          });
-        },
-        type: ContextMenuButtonType.custom,
-      ),
-      ContextMenuButtonItem(
-        onPressed: () {
-          editableTextState.selectAll(SelectionChangedCause.tap);
-        },
-        type: ContextMenuButtonType.selectAll,
-      ),
-    ],
+    buttonItems: list,
   );
 }
 

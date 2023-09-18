@@ -63,7 +63,7 @@ class HistoryStorage {
   }
 
   /// 添加历史记录
-  void addHistory(String name, File file, int requestLength) async {
+  Future<void> addHistory(String name, File file, int requestLength) async {
     var size = await file.length();
     _histories[name] = HistoryItem(file.path, requestLength, size);
     (await _path).writeAsString(jsonEncode(_histories));

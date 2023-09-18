@@ -30,13 +30,13 @@ class _MobileSslState extends State<MobileSslWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("HTTPS代理"),
+          title: const Text("HTTPS代理", style: TextStyle(fontSize: 16)),
           centerTitle: true,
         ),
         body: ListView(children: [
           SwitchListTile(
               hoverColor: Colors.transparent,
-              title: const Text("启用HTTPS代理", style: TextStyle(fontSize: 16)),
+              title: const Text("启用HTTPS代理"),
               value: widget.proxyServer.enableSsl,
               onChanged: (val) {
                 widget.proxyServer.enableSsl = val;
