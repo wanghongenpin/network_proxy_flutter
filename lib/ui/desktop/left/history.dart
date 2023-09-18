@@ -54,8 +54,9 @@ class HistoryPageWidget extends StatelessWidget {
               title: Text(arguments['title'], style: const TextStyle(fontSize: 14)),
             )),
         body: futureWidget(HistoryStorage.instance.then((value) => value.getRequests(arguments['name'])), (data) {
+          print("START ${DateTime.now()}");
           return DomainWidget(panel: panel, proxyServer: proxyServer, list: data, shrinkWrap: false);
-        }));
+        }, loading: true));
   }
 }
 
@@ -132,7 +133,7 @@ class _HistoryState extends State<_HistoryWidget> implements EventListener {
             });
           },
         ),
-        onTap: () => ContextMenuController.removeAny());
+        onTap: () {});
   }
 
   //构建历史记录
@@ -159,10 +160,9 @@ class _HistoryState extends State<_HistoryWidget> implements EventListener {
             title: Text(name),
             subtitle: Text("记录数 ${item.requestLength}  文件 ${item.size}"),
             onTap: () {
-              ContextMenuController.removeAny();
               Navigator.pushNamed(context, '/domain',
                       arguments: {'title': '$name 记录数 ${item.requestLength}', 'name': name})
-                  .then((value) => Future.delayed(const Duration(seconds: 60), () => storage.removeCache(name)));
+                  .whenComplete(() => Future.delayed(const Duration(seconds: 60), () => storage.removeCache(name)));
             }));
   }
 

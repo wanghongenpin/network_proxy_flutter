@@ -52,7 +52,7 @@ class DrawerWidget extends StatelessWidget {
                     appBar: AppBar(title: const Text("工具箱", style: TextStyle(fontSize: 16)), centerTitle: true),
                     body: const Toolbox()))),
         const Divider(thickness: 0.3),
-        PortWidget(proxyServer: proxyServer),
+        Padding(padding: const EdgeInsets.only(left: 15), child: PortWidget(proxyServer: proxyServer)),
         ListTile(
             title: const Text("HTTPS抓包"),
             trailing: const Icon(Icons.arrow_right),
@@ -65,6 +65,7 @@ class DrawerWidget extends StatelessWidget {
                 trailing: const Icon(Icons.arrow_right),
                 onTap: () => navigator(context, AppWhitelist(proxyServer: proxyServer))),
         ListTile(
+          dense: true,
             title: const Text("域名白名单"),
             trailing: const Icon(Icons.arrow_right),
             onTap: () => navigator(

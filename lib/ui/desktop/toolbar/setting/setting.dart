@@ -114,13 +114,13 @@ class _SettingState extends State<Setting> {
           return AlertDialog(
             scrollable: true,
             title: Row(children: [
-              const Text("请求重写"),
+              const Text("请求重写", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
               Expanded(
                   child: Align(
                       alignment: Alignment.topRight,
                       child: ElevatedButton.icon(
                           icon: const Icon(Icons.close, size: 15),
-                          label: const Text("关闭"),
+                          label: const Text("关闭", style: TextStyle(fontSize: 14)),
                           onPressed: () => Navigator.of(context).pop())))
             ]),
             content: RequestRewrite(configuration: configuration),

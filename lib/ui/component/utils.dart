@@ -97,7 +97,8 @@ void unSelect(EditableTextState editableTextState) {
   );
 }
 
-Widget futureWidget<T>(Future<T> future, Widget Function(T data) toWidget) {
+///Future
+Widget futureWidget<T>(Future<T> future, Widget Function(T data) toWidget, {bool loading = false}) {
   return FutureBuilder<T>(
     future: future,
     builder: (BuildContext context, AsyncSnapshot<T> snapshot) {
@@ -107,7 +108,8 @@ Widget futureWidget<T>(Future<T> future, Widget Function(T data) toWidget) {
         }
         return toWidget(snapshot.requireData);
       }
-      return const SizedBox();
+      //加载效果
+      return loading ? const Center(child: CircularProgressIndicator()) : const SizedBox();
     },
   );
 }
@@ -118,9 +120,9 @@ showContextMenu(BuildContext context, Offset offset, {required List<PopupMenuEnt
       surfaceTintColor:
           Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.primaryContainer,
       position: RelativeRect.fromLTRB(
-        offset.dx,
+        offset.dx + 10,
         offset.dy - 50,
-        offset.dx,
+        offset.dx + 10,
         offset.dy - 50,
       ),
       items: items);

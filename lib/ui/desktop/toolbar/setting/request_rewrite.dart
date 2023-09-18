@@ -56,22 +56,22 @@ class _RequestRewriteState extends State<RequestRewrite> {
         const SizedBox(height: 10),
         Row(children: [
           FilledButton.icon(
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add, size: 18),
               onPressed: () {
                 add();
               },
-              label: const Text("增加")),
+              label: const Text("增加", style: TextStyle(fontSize: 12))),
           const SizedBox(width: 10),
           OutlinedButton.icon(
               onPressed: () {
                 var selectedIndex = requestRuleList.currentSelectedIndex();
                 add(selectedIndex);
               },
-              icon: const Icon(Icons.edit),
-              label: const Text("编辑")),
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text("编辑", style: TextStyle(fontSize: 12))),
           TextButton.icon(
-              icon: const Icon(Icons.remove),
-              label: const Text("删除"),
+              icon: const Icon(Icons.remove, size: 18),
+              label: const Text("删除", style: TextStyle(fontSize: 12)),
               onPressed: () {
                 var removeSelected = requestRuleList.removeSelected();
                 if (removeSelected.isEmpty) {
@@ -86,7 +86,7 @@ class _RequestRewriteState extends State<RequestRewrite> {
               })
         ]),
         const SizedBox(height: 10),
-        const Text("选择框只是用来操作编辑和删除，规则启用状态在编辑页切换", style: TextStyle(fontSize: 12)),
+        const Text("选择框只是用来操作编辑和删除，规则启用状态在编辑页切换", style: TextStyle(fontSize: 11)),
         requestRuleList,
       ],
     );
@@ -144,7 +144,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
     GlobalKey formKey = GlobalKey<FormState>();
 
     return AlertDialog(
-        title: const Text("添加请求重写规则", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        title: const Text("添加请求重写规则", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
         scrollable: true,
         content: Container(
             constraints: const BoxConstraints(minWidth: 350, minHeight: 460),
@@ -235,6 +235,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
     return InputDecoration(
         labelText: label,
         hintText: hintText,
+        labelStyle: const TextStyle(fontSize: 14),
         isDense: true,
         border: UnderlineInputBorder(borderSide: BorderSide(width: 0.3, color: color)),
         enabledBorder: UnderlineInputBorder(borderSide: BorderSide(width: 0.3, color: color)),
@@ -323,7 +324,6 @@ class _RequestRuleListState extends State<RequestRuleList> {
         child: SingleChildScrollView(
             child: DataTable(
           columnSpacing: 36,
-          dataRowMaxHeight: 100,
           border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
           columns: const <DataColumn>[
             DataColumn(label: Text('名称')),
@@ -335,14 +335,18 @@ class _RequestRuleListState extends State<RequestRuleList> {
               widget.requestRewrites.rules.length,
               (index) => DataRow(
                     cells: [
-                      DataCell(Text(widget.requestRewrites.rules[index].name ?? "")),
-                      DataCell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
+                      DataCell(
+                          Text(widget.requestRewrites.rules[index].name ?? "", style: const TextStyle(fontSize: 14))),
+                      DataCell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否",
+                          style: const TextStyle(fontSize: 14))),
                       DataCell(ConstrainedBox(
                         constraints: const BoxConstraints(minWidth: 60, maxWidth: 280),
                         child: Text(
-                            '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'),
+                            '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}',
+                            style: const TextStyle(fontSize: 14)),
                       )),
-                      DataCell(Text(widget.requestRewrites.rules[index].type.name)),
+                      DataCell(
+                          Text(widget.requestRewrites.rules[index].type.name, style: const TextStyle(fontSize: 14))),
                     ],
                     selected: currentSelectedIndex == index,
                     onSelectChanged: (value) {
