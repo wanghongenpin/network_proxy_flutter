@@ -86,7 +86,7 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
 
     Widget body = widget.shrinkWrap
         ? SingleChildScrollView(child: Column(children: list.toList()))
-        : ListView.builder(itemCount: list.length, itemBuilder: (_, index) => list.elementAt(index));
+        : ListView.builder(itemCount: list.length, cacheExtent: 1000, itemBuilder: (_, index) => list.elementAt(index));
 
     return Scaffold(
         body: body,

@@ -6,6 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import desktop_multi_window
+import file_selector_macos
 import path_provider_foundation
 import proxy_manager
 import screen_retriever
@@ -15,6 +16,7 @@ import window_manager
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FlutterMultiWindowPlugin.register(with: registry.registrar(forPlugin: "FlutterMultiWindowPlugin"))
+  FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
   PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
   ProxyManagerPlugin.register(with: registry.registrar(forPlugin: "ProxyManagerPlugin"))
   ScreenRetrieverPlugin.register(with: registry.registrar(forPlugin: "ScreenRetrieverPlugin"))

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:date_format/date_format.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
@@ -144,6 +145,19 @@ class _HistoryState extends State<_HistoryWidget> {
               showContextMenu(context, details.globalPosition, items: [
                 CustomPopupMenuItem(
                     height: 35,
+                    child: const Text('导出', style: TextStyle(fontSize: 13)),
+                    onTap: () async {
+                      String fileName = 'ProxyPin$name.har'.replaceAll(" ", "_").replaceAll(":", "_");
+                      final FileSaveLocation? result = await getSaveLocation(suggestedName: fileName);
+                      if (result == null) {
+                        return;
+                      }
+                      List<HttpRequest> requests = await storage.getRequests(name);
+                      var file = await File(result.path).create();
+                      Har.writeFile(requests, file, title: name);
+                    }),
+                CustomPopupMenuItem(
+                    height: 35,
                     child: const Text('删除', style: TextStyle(fontSize: 13)),
                     onTap: () {
                       setState(() {
@@ -155,7 +169,7 @@ class _HistoryState extends State<_HistoryWidget> {
                         storage.removeHistory(name);
                         FlutterToastr.show('删除成功', context);
                       });
-                    })
+                    }),
               ])
             },
         child: ListTile(

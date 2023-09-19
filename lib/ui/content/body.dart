@@ -119,9 +119,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
     var list = [
       Text('$type Body', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-      const SizedBox(width: 15),
+      const SizedBox(width: 10),
       IconButton(
-          icon: const Icon(Icons.copy, size: 20),
+          icon: const Icon(Icons.copy, size: 18),
           tooltip: '复制',
           onPressed: () {
             var body = bodyKey.currentState?.body;
@@ -133,9 +133,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
     ];
 
     if (!widget.hideRequestRewrite) {
-      list.add(const SizedBox(width: 5));
+      list.add(const SizedBox(width: 3));
       list.add(IconButton(
-          icon: const Icon(Icons.edit_document, size: 20),
+          icon: const Icon(Icons.edit_document, size: 18),
           tooltip: '请求重写',
           onPressed: () {
             HttpRequest? request;
@@ -170,16 +170,16 @@ class HttpBodyState extends State<HttpBodyWidget> {
           }));
     }
 
-    list.add(const SizedBox(width: 5));
+    list.add(const SizedBox(width: 3));
     list.add(IconButton(
-        icon: const Icon(Icons.abc, size: 25),
+        icon: const Icon(Icons.abc, size: 20),
         tooltip: '编码',
         onPressed: () {
           encodeWindow(EncoderType.base64, context, bodyKey.currentState?.body);
         }));
     if (!inNewWindow) {
-      list.add(const SizedBox(width: 5));
-      list.add(IconButton(icon: const Icon(Icons.open_in_new, size: 20), tooltip: '新窗口打开', onPressed: () => openNew()));
+      list.add(const SizedBox(width: 3));
+      list.add(IconButton(icon: const Icon(Icons.open_in_new, size: 18), tooltip: '新窗口打开', onPressed: () => openNew()));
     }
 
     return Wrap(

@@ -85,7 +85,7 @@ class HttpRequest extends HttpMessage {
   late HttpMethod method;
 
   HostAndPort? hostAndPort;
-  final DateTime requestTime = DateTime.now();
+  DateTime requestTime = DateTime.now(); //请求时间
   HttpResponse? response;
 
   HttpRequest(this.method, this.uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
@@ -137,6 +137,7 @@ class HttpRequest extends HttpMessage {
       'method': method.name,
       'headers': headers.toJson(),
       'body': body == null ? null : String.fromCharCodes(body!),
+      'requestTime': requestTime.millisecondsSinceEpoch,
     };
   }
 
@@ -144,6 +145,9 @@ class HttpRequest extends HttpMessage {
     var request = HttpRequest(HttpMethod.valueOf(json['method']), json['uri']);
     request.headers.addAll(HttpHeaders.fromJson(json['headers']));
     request.body = json['body']?.toString().codeUnits;
+    if (json['requestTime'] != null) {
+      request.requestTime = DateTime.fromMillisecondsSinceEpoch(json['requestTime']);
+    }
     return request;
   }
 
@@ -173,7 +177,7 @@ enum ContentType {
 ///HTTP响应。
 class HttpResponse extends HttpMessage {
   final HttpStatus status;
-  final DateTime responseTime = DateTime.now();
+  DateTime responseTime = DateTime.now();
   HttpRequest? request;
 
   HttpResponse(this.status, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
@@ -185,11 +189,16 @@ class HttpResponse extends HttpMessage {
     return '${responseTime.difference(request!.requestTime).inMilliseconds}ms';
   }
 
+  //json序列化
   factory HttpResponse.fromJson(Map<String, dynamic> json) {
-    return HttpResponse(HttpStatus(json['status']['code'], json['status']['reasonPhrase']),
+    var httpResponse = HttpResponse(HttpStatus(json['status']['code'], json['status']['reasonPhrase']),
         protocolVersion: json['protocolVersion'])
       ..headers.addAll(HttpHeaders.fromJson(json['headers']))
       ..body = json['body']?.toString().codeUnits;
+    if (json['responseTime'] != null) {
+      httpResponse.responseTime = DateTime.fromMillisecondsSinceEpoch(json['responseTime']);
+    }
+    return httpResponse;
   }
 
   @override
@@ -203,6 +212,7 @@ class HttpResponse extends HttpMessage {
       },
       'headers': headers.toJson(),
       'body': body == null ? null : String.fromCharCodes(body!),
+      'responseTime': responseTime.millisecondsSinceEpoch,
     };
   }
 

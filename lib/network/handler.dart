@@ -236,7 +236,9 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       ..body = message.codeUnits
       ..hostAndPort = hostAndPort;
 
-    request.response = HttpResponse(status)..body = message.codeUnits;
+    request.response = HttpResponse(status)
+      ..headers.contentType = 'text/plain'
+      ..body = message.codeUnits;
     listener?.onRequest(channel, request);
     listener?.onResponse(channel, request.response!);
   }
@@ -263,7 +265,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
       msg.body = utf8.encode(replaceBody!);
     }
 
-    if (!HostFilter.filter(msg.request?.hostAndPort?.host)) {
+    if (!HostFilter.filter(msg.request?.hostAndPort?.host) &&  msg.request?.method != HttpMethod.connect) {
       listener?.onResponse(clientChannel, msg);
     }
 
