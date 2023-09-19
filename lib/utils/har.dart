@@ -8,7 +8,7 @@ class Har {
   static int maxBodyLength = 1024 * 1024 * 4;
 
   static List<Map> _entries(List<HttpRequest> list) {
-    return list.where((element) => element.response != null).map((e) => toHar(e)).toList();
+    return list.map((e) => toHar(e)).toList();
   }
 
   static Map toHar(HttpRequest request) {
@@ -50,7 +50,7 @@ class Har {
       },
       "redirectURL": '', // 重定向地址
       "headersSize": -1, // 响应头大小
-      "bodySize": request.response?.body?.length ?? -1, // 响应体大小
+      "bodySize": isImage ? -1 : request.response?.body?.length ?? -1, // 响应体大小
     };
     return har;
   }
@@ -58,12 +58,13 @@ class Har {
   static Future<File> writeFile(List<HttpRequest> list, File file, {String title = ''}) async {
     var entries = _entries(list);
     Map har = {};
+    title = title.contains("ProxyPin") ? title : "[ProxyPin]$title";
     har["log"] = {
       "version": "1.2",
       "creator": {"name": "ProxyPin", "version": "1.0.3"},
       "pages": [
         {
-          "title": "[ProxyPin]$title",
+          "title": title,
           "id": "ProxyPin",
           "startedDateTime": list.firstOrNull?.requestTime.toUtc().toIso8601String(),
           "pageTimings": {"onContentLoad": -1, "onLoad": -1}
@@ -82,7 +83,7 @@ class Har {
 
     for (var value in lines) {
       var har = jsonDecode(value.substring(0, value.length - 1));
-      var request = _toRequest(har);
+      var request = toRequest(har);
       list.add(request);
     }
     return list;
@@ -98,13 +99,14 @@ class Har {
     return headers;
   }
 
-  static HttpRequest _toRequest(Map har) {
+  /// har to request
+  static HttpRequest toRequest(Map har) {
     var request = har['request'];
     var method = request['method'];
     List headers = request['headers'];
 
     var httpRequest = HttpRequest(HttpMethod.valueOf(method), request['url'], protocolVersion: request['httpVersion']);
-    httpRequest.body = request['postData']['text']?.toString().codeUnits;
+    httpRequest.body = request['postData']?['text']?.toString().codeUnits;
     for (var element in headers) {
       httpRequest.headers.add(element['name'], element['value']);
     }
@@ -128,7 +130,8 @@ class Har {
       httpRequest.requestTime = DateTime.parse(har['startedDateTime']).toLocal();
     }
     if (har['time'] != null) {
-      httpRequest.response?.responseTime = httpRequest.requestTime.add(Duration(milliseconds: har['time']));
+      httpRequest.response?.responseTime =
+          httpRequest.requestTime.add(Duration(milliseconds: double.parse(har['time'].toString()).toInt()));
     }
     return httpRequest;
   }

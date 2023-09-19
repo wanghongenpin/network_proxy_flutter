@@ -44,10 +44,10 @@ class _MobileHistoryState extends State<MobileHistory> {
         children.add(buildSaveSession(data, container!));
       }
 
-      var entries = data.histories.entries;
-      for (int i = entries.length - 1; i >= 0; i--) {
-        var entry = entries.elementAt(i);
-        children.add(buildItem(data, entry.key, entry.value));
+      var histories = data.histories;
+      for (int i = histories.length - 1; i >= 0; i--) {
+        var entry = histories.elementAt(i);
+        children.add(buildItem(data, i, entry));
       }
 
       if (children.isEmpty) {
@@ -87,9 +87,9 @@ class _MobileHistoryState extends State<MobileHistory> {
     var file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
     print(file);
     RandomAccessFile open = await file.open(mode: FileMode.append);
-    await storage.addHistory(name, file, 0);
+    HistoryItem history = await storage.addHistory(name, file, 0);
 
-    writeTask = WriteTask(name, open, storage);
+    writeTask = WriteTask(history, open, storage);
     writeTask?.writeList.addAll(container);
     widget.proxyServer.addListener(writeTask!);
     await writeTask?.writeTask();
@@ -98,26 +98,27 @@ class _MobileHistoryState extends State<MobileHistory> {
   }
 
   //构建历史记录
-  Widget buildItem(HistoryStorage storage, String name, HistoryItem item) {
+  Widget buildItem(HistoryStorage storage, int index, HistoryItem item) {
     return ListTile(
         dense: true,
-        title: Text(name),
+        title: Text(item.name),
         subtitle: Text("记录数 ${item.requestLength}  文件 ${item.size}"),
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
             return Scaffold(
-                appBar: AppBar(title: Text('$name 记录数 ${item.requestLength}',style: const TextStyle(fontSize: 16))),
+                appBar:
+                    AppBar(title: Text('${item.name} 记录数 ${item.requestLength}', style: const TextStyle(fontSize: 16))),
                 body: futureWidget(
                     loading: true,
-                    storage.getRequests(name),
+                    storage.getRequests(item),
                     (data) => RequestListWidget(proxyServer: widget.proxyServer, list: data)));
-          })).then((value) => Future.delayed(const Duration(seconds: 60), () => storage.removeCache(name)));
+          })).then((value) => Future.delayed(const Duration(seconds: 60), () => item.requests = null));
         },
-        onLongPress: () => deleteHistory(storage, name));
+        onLongPress: () => deleteHistory(storage, index));
   }
 
   //删除
-  deleteHistory(HistoryStorage storage, String name) {
+  deleteHistory(HistoryStorage storage, int index) {
     showDialog(
         context: context,
         builder: (ctx) {
@@ -132,12 +133,12 @@ class _MobileHistoryState extends State<MobileHistory> {
               TextButton(
                   onPressed: () {
                     setState(() {
-                      if (name == writeTask?.name) {
+                      if (storage.getHistory(index) == writeTask?.history) {
                         writeTask?.timer?.cancel();
                         writeTask?.open.close();
                         writeTask = null;
                       }
-                      storage.removeHistory(name);
+                      storage.removeHistory(index);
                     });
                     FlutterToastr.show('删除成功', context);
                     Navigator.pop(context);
@@ -154,9 +155,9 @@ class WriteTask implements EventListener {
   final RandomAccessFile open;
   Queue writeList = Queue();
   Timer? timer;
-  final String name;
+  final HistoryItem history;
 
-  WriteTask(this.name, this.open, this.historyStorage);
+  WriteTask(this.history, this.open, this.historyStorage);
 
   //写入任务
   startTask() {
@@ -179,7 +180,6 @@ class WriteTask implements EventListener {
     if (writeList.isEmpty) {
       return;
     }
-    var history = historyStorage.getHistory(name);
     int length = history.requestLength;
 
     while (writeList.isNotEmpty) {
@@ -195,6 +195,6 @@ class WriteTask implements EventListener {
 
     history.requestLength = length;
     history.fileSize = await open.length();
-    historyStorage.updateHistory(name, history);
+    await historyStorage.refresh();
   }
 }

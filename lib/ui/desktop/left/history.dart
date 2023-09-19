@@ -47,15 +47,16 @@ class HistoryPageWidget extends StatelessWidget {
   }
 
   Widget domainWidget(Map arguments) {
+    HistoryItem item = arguments['item'];
     return Scaffold(
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(40),
             child: AppBar(
               leading: BackButton(style: ButtonStyle(iconSize: MaterialStateProperty.all(15))),
               centerTitle: false,
-              title: Text(arguments['title'], style: const TextStyle(fontSize: 14)),
+              title: Text('${item.name} 记录数 ${item.requestLength}', style: const TextStyle(fontSize: 14)),
             )),
-        body: futureWidget(HistoryStorage.instance.then((value) => value.getRequests(arguments['name'])), (data) {
+        body: futureWidget(HistoryStorage.instance.then((value) => value.getRequests(item)), (data) {
           print("START ${DateTime.now()}");
           return DomainWidget(panel: panel, proxyServer: proxyServer, list: data, shrinkWrap: false);
         }, loading: true));
@@ -104,17 +105,51 @@ class _HistoryState extends State<_HistoryWidget> {
       children.add(buildSaveSession(container));
     }
 
-    var entries = storage.histories.entries;
-    for (int i = entries.length - 1; i >= 0; i--) {
-      var entry = entries.elementAt(i);
-      children.add(buildItem(context, entry.key, entry.value));
+    var histories = storage.histories;
+    for (int i = histories.length - 1; i >= 0; i--) {
+      var entry = histories.elementAt(i);
+      children.add(buildItem(context, i, entry));
     }
 
-    return ListView.separated(
-      itemCount: children.length,
-      itemBuilder: (_, index) => children[index],
-      separatorBuilder: (_, index) => const Divider(thickness: 0.3, height: 0),
+    return Scaffold(
+        appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(30),
+            child: AppBar(
+              title: const Text("历史记录", style: TextStyle(fontSize: 14)),
+              actions: [TextButton(onPressed: import, child: const Text("导入"))],
+            )),
+        body: ListView.separated(
+          itemCount: children.length,
+          itemBuilder: (_, index) => children[index],
+          separatorBuilder: (_, index) => const Divider(thickness: 0.3, height: 0),
+        ));
+  }
+
+  //导入har
+  import() async {
+    const XTypeGroup typeGroup = XTypeGroup(
+      label: 'Har',
+      extensions: <String>['har'],
     );
+    final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+    if (file == null) {
+      return;
+    }
+
+    print(file);
+    try {
+      var historyItem = await storage.addHarFile(file);
+      setState(() {
+        Navigator.pushNamed(context, '/domain', arguments: {'item': historyItem});
+        FlutterToastr.show("导入成功", context);
+      });
+    } catch (e, t) {
+      print(e);
+      print(t);
+      if (context.mounted) {
+        FlutterToastr.show("导入失败 $e", context);
+      }
+    }
   }
 
   //构建保存会话
@@ -139,34 +174,23 @@ class _HistoryState extends State<_HistoryWidget> {
   }
 
   //构建历史记录
-  Widget buildItem(BuildContext context, String name, HistoryItem item) {
+  Widget buildItem(BuildContext context, int index, HistoryItem item) {
     return GestureDetector(
         onSecondaryTapDown: (details) => {
               showContextMenu(context, details.globalPosition, items: [
                 CustomPopupMenuItem(
-                    height: 35,
-                    child: const Text('导出', style: TextStyle(fontSize: 13)),
-                    onTap: () async {
-                      String fileName = 'ProxyPin$name.har'.replaceAll(" ", "_").replaceAll(":", "_");
-                      final FileSaveLocation? result = await getSaveLocation(suggestedName: fileName);
-                      if (result == null) {
-                        return;
-                      }
-                      List<HttpRequest> requests = await storage.getRequests(name);
-                      var file = await File(result.path).create();
-                      Har.writeFile(requests, file, title: name);
-                    }),
+                    height: 35, child: const Text('导出', style: TextStyle(fontSize: 13)), onTap: () => export(item)),
                 CustomPopupMenuItem(
                     height: 35,
                     child: const Text('删除', style: TextStyle(fontSize: 13)),
                     onTap: () {
                       setState(() {
-                        if (name == writeTask?.name) {
+                        if (item == writeTask?.history) {
                           writeTask?.timer?.cancel();
                           writeTask?.open.close();
                           writeTask = null;
                         }
-                        storage.removeHistory(name);
+                        storage.removeHistory(index);
                         FlutterToastr.show('删除成功', context);
                       });
                     }),
@@ -174,13 +198,29 @@ class _HistoryState extends State<_HistoryWidget> {
             },
         child: ListTile(
             dense: true,
-            title: Text(name),
+            title: Text(item.name),
             subtitle: Text("记录数 ${item.requestLength}  文件 ${item.size}"),
             onTap: () {
-              Navigator.pushNamed(context, '/domain',
-                      arguments: {'title': '$name 记录数 ${item.requestLength}', 'name': name})
-                  .whenComplete(() => Future.delayed(const Duration(seconds: 60), () => storage.removeCache(name)));
+              Navigator.pushNamed(context, '/domain', arguments: {'item': item})
+                  .whenComplete(() => Future.delayed(const Duration(seconds: 60), () => item.requests = null));
             }));
+  }
+
+  //导出har
+  export(HistoryItem item) async {
+    //文件名称
+    String fileName =
+        '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'.replaceAll(" ", "_").replaceAll(":", "_");
+    final FileSaveLocation? result = await getSaveLocation(suggestedName: fileName);
+    if (result == null) {
+      return;
+    }
+
+    //获取请求
+    List<HttpRequest> requests = await storage.getRequests(item);
+    var file = await File(result.path).create();
+    Har.writeFile(requests, file, title: item.name);
+    Future.delayed(const Duration(seconds: 30), () => item.requests = null);
   }
 
   //写入文件
@@ -188,9 +228,8 @@ class _HistoryState extends State<_HistoryWidget> {
     var file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
     print(file);
     RandomAccessFile open = await file.open(mode: FileMode.append);
-    await storage.addHistory(name, file, 0);
-
-    writeTask = WriteTask(name, open, storage, callback: () => setState(() {}));
+    HistoryItem item = await storage.addHistory(name, file, 0);
+    writeTask = WriteTask(item, open, storage, callback: () => setState(() {}));
     writeTask?.writeList.addAll(container);
     proxyServer.addListener(writeTask!);
     await writeTask?.writeTask();
@@ -200,15 +239,16 @@ class _HistoryState extends State<_HistoryWidget> {
   }
 }
 
+///写入任务
 class WriteTask implements EventListener {
   final HistoryStorage historyStorage;
   final RandomAccessFile open;
   Queue writeList = Queue();
   Timer? timer;
   final Function? callback;
-  final String name;
+  final HistoryItem history;
 
-  WriteTask(this.name, this.open, this.historyStorage, {this.callback});
+  WriteTask(this.history, this.open, this.historyStorage, {this.callback});
 
   @override
   void onRequest(Channel channel, HttpRequest request) {}
@@ -231,7 +271,7 @@ class WriteTask implements EventListener {
     if (writeList.isEmpty) {
       return;
     }
-    var history = historyStorage.getHistory(name);
+
     int length = history.requestLength;
 
     while (writeList.isNotEmpty) {
@@ -247,7 +287,7 @@ class WriteTask implements EventListener {
 
     history.requestLength = length;
     history.fileSize = await open.length();
-    historyStorage.updateHistory(name, history);
+    await historyStorage.refresh();
     callback?.call();
   }
 }

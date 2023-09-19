@@ -234,10 +234,12 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     }
     request ??= HttpRequest(HttpMethod.connect, hostAndPort.domain)
       ..body = message.codeUnits
+      ..headers.contentLength = message.codeUnits.length
       ..hostAndPort = hostAndPort;
 
     request.response = HttpResponse(status)
       ..headers.contentType = 'text/plain'
+      ..headers.contentLength = message.codeUnits.length
       ..body = message.codeUnits;
     listener?.onRequest(channel, request);
     listener?.onResponse(channel, request.response!);

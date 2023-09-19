@@ -1,7 +1,8 @@
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:date_format/date_format.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/utils/har.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,9 +13,7 @@ class HistoryStorage {
 
   HistoryStorage._internal();
 
-  static final LinkedHashMap<String, HistoryItem> _histories = LinkedHashMap<String, HistoryItem>();
-
-  static final Map<String, List<HttpRequest>> _requests = {};
+  static final List<HistoryItem> _histories = [];
 
   ///单例
   static Future<HistoryStorage> get instance async {
@@ -33,15 +32,19 @@ class HistoryStorage {
       if (content.trim().isEmpty) {
         return;
       }
-      final Map<dynamic, dynamic> data = jsonDecode(content);
-      for (var entry in data.entries) {
-        _histories[entry.key] = HistoryItem.formJson(entry.value);
+      try {
+        var list = jsonDecode(content) as List<dynamic>;
+        for (var entry in list) {
+          _histories[entry.key] = HistoryItem.formJson(entry.value);
+        }
+      } catch (e) {
+        print(e);
       }
     }
   }
 
   /// 获取历史记录
-  Map<String, HistoryItem> get histories {
+  List<HistoryItem> get histories {
     return _histories;
   }
 
@@ -63,29 +66,36 @@ class HistoryStorage {
   }
 
   /// 添加历史记录
-  Future<void> addHistory(String name, File file, int requestLength) async {
+  Future<HistoryItem> addHistory(String name, File file, int requestLength) async {
     var size = await file.length();
-    _histories[name] = HistoryItem(file.path, requestLength, size);
+    var historyItem = HistoryItem(name, file.path, requestLength, size);
+    _histories.add(historyItem);
     (await _path).writeAsString(jsonEncode(_histories));
+    return historyItem;
+  }
+
+  int getIndex(HistoryItem item) {
+    return _histories.indexOf(item);
   }
 
   //更新
-  updateHistory(String name, HistoryItem item) async {
-    _histories[name] = item;
+  updateHistory(int index, HistoryItem item) async {
+    _histories[index] = item;
     (await _path).writeAsString(jsonEncode(_histories));
   }
 
   //获取
-  HistoryItem getHistory(String name) {
-    return _histories[name]!;
+  HistoryItem getHistory(int index) {
+    return _histories[index];
+  }
+
+  Future<void> refresh() async {
+    (await _path).writeAsString(jsonEncode(_histories));
   }
 
   ///删除
-  void removeHistory(String name) async {
-    var history = _histories.remove(name);
-    if (history == null) {
-      return;
-    }
+  void removeHistory(int index) async {
+    var history = _histories.removeAt(index);
     var file = File(history.path);
     if (await file.exists()) {
       await file.delete();
@@ -94,39 +104,62 @@ class HistoryStorage {
   }
 
   //获取请求列表
-  Future<List<HttpRequest>> getRequests(String name) async {
-    var request = _requests[name];
-    if (request == null) {
-      HistoryItem history = _histories[name]!;
+  Future<List<HttpRequest>> getRequests(HistoryItem history) async {
+    if (history.requests == null) {
       var file = File(history.path);
-      _requests[name] = await Har.readFile(file);
-      histories[name]?.requestLength = _requests[name]!.length;
-      file.length().then((size) => histories[name]?.fileSize = size);
+      history.requests = await Har.readFile(file);
+      history.requestLength = history.requests!.length;
+      file.length().then((size) => history.fileSize = size);
     }
-    return _requests[name]!;
+
+    return history.requests!;
   }
 
-  void removeCache(String name) {
-    _requests.remove(name);
+  //添加历史
+  Future<HistoryItem> addHarFile(XFile file) async {
+    var readAsBytes = await file.readAsString();
+    var json = jsonDecode(readAsBytes);
+    var log = json['log'];
+    String name = formatDate(DateTime.now(), [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
+    List? pages = log['pages'] as List;
+    if (pages.isNotEmpty) {
+      name = pages.first['title'];
+    }
+
+    //解析请求
+    List entries = log['entries'];
+    var list = entries.map((e) => Har.toRequest(e)).toList();
+
+    //保存文件
+    var historyFile = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
+    var open = await historyFile.open(mode: FileMode.append);
+    for (var request in list) {
+      await open.writeString(jsonEncode(Har.toHar(request)));
+      await open.writeString(",\n");
+    }
+    return addHistory(name, historyFile, list.length);
   }
 }
 
 /// 历史记录
 class HistoryItem {
+  final String name;
   final String path; // 文件路径
   int requestLength = 0; // 请求数量
   int? fileSize; // 文件大小
+  List<HttpRequest>? requests;
 
-  HistoryItem(this.path, this.requestLength, this.fileSize);
+  HistoryItem(this.name, this.path, this.requestLength, this.fileSize);
 
   //json反序列化
   factory HistoryItem.formJson(Map<String, dynamic> map) {
-    return HistoryItem(map['path'], map['requestLength'], map['fileSize']);
+    return HistoryItem(map['name'], map['path'], map['requestLength'], map['fileSize']);
   }
 
   //json序列化
   Map<String, dynamic> toJson() {
     return {
+      'name': name,
       'path': path,
       'requestLength': requestLength,
       'fileSize': fileSize,
@@ -145,5 +178,10 @@ class HistoryItem {
     }
 
     return "${(fileSize / 1024).toStringAsFixed(1)}KB";
+  }
+
+  @override
+  String toString() {
+    return "$path $requestLength $fileSize";
   }
 }
