@@ -182,6 +182,11 @@ class _HistoryState extends State<_HistoryWidget> {
                     height: 35, child: const Text('导出', style: TextStyle(fontSize: 13)), onTap: () => export(item)),
                 CustomPopupMenuItem(
                     height: 35,
+                    child: const Text("重命名", style: TextStyle(fontSize: 13)),
+                    onTap: () => renameHistory(storage, item)),
+                const PopupMenuDivider(height: 0.3),
+                CustomPopupMenuItem(
+                    height: 35,
                     child: const Text('删除', style: TextStyle(fontSize: 13)),
                     onTap: () {
                       setState(() {
@@ -204,6 +209,39 @@ class _HistoryState extends State<_HistoryWidget> {
               Navigator.pushNamed(context, '/domain', arguments: {'item': item})
                   .whenComplete(() => Future.delayed(const Duration(seconds: 60), () => item.requests = null));
             }));
+  }
+
+  //重命名
+  renameHistory(HistoryStorage storage, HistoryItem item) {
+    String name = item.name;
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: TextFormField(
+              initialValue: name,
+              decoration: const InputDecoration(label: Text("名称")),
+              onChanged: (val) => name = val,
+            ),
+            actions: <Widget>[
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+              TextButton(
+                child: const Text('保存'),
+                onPressed: () {
+                  if (name.isEmpty) {
+                    FlutterToastr.show('名称不能为空', context, position: 2);
+                    return;
+                  }
+                  Navigator.maybePop(context);
+                  setState(() {
+                    item.name = name;
+                    storage.refresh();
+                  });
+                },
+              ),
+            ],
+          );
+        });
   }
 
   //导出har

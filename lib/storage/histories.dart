@@ -35,7 +35,7 @@ class HistoryStorage {
       try {
         var list = jsonDecode(content) as List<dynamic>;
         for (var entry in list) {
-          _histories[entry.key] = HistoryItem.formJson(entry.value);
+          _histories.add(HistoryItem.formJson(entry));
         }
       } catch (e) {
         print(e);
@@ -143,7 +143,7 @@ class HistoryStorage {
 
 /// 历史记录
 class HistoryItem {
-  final String name;
+  String name;
   final String path; // 文件路径
   int requestLength = 0; // 请求数量
   int? fileSize; // 文件大小

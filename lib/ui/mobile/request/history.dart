@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
@@ -55,7 +56,7 @@ class _MobileHistoryState extends State<MobileHistory> {
       }
       return ListView.separated(
         itemCount: children.length,
-        itemBuilder: (_, index) => children[index],
+        itemBuilder: (context, index) => children[index],
         separatorBuilder: (_, index) => const Divider(thickness: 0.3, height: 0),
       );
     });
@@ -97,24 +98,68 @@ class _MobileHistoryState extends State<MobileHistory> {
     setState(() {});
   }
 
+  int selectIndex = -1;
+
   //构建历史记录
   Widget buildItem(HistoryStorage storage, int index, HistoryItem item) {
-    return ListTile(
-        dense: true,
-        title: Text(item.name),
-        subtitle: Text("记录数 ${item.requestLength}  文件 ${item.size}"),
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-            return Scaffold(
-                appBar:
-                    AppBar(title: Text('${item.name} 记录数 ${item.requestLength}', style: const TextStyle(fontSize: 16))),
-                body: futureWidget(
-                    loading: true,
-                    storage.getRequests(item),
-                    (data) => RequestListWidget(proxyServer: widget.proxyServer, list: data)));
-          })).then((value) => Future.delayed(const Duration(seconds: 60), () => item.requests = null));
+    return InkWell(
+        onTapDown: (detail) async {
+          HapticFeedback.heavyImpact();
+          showContextMenu(context, detail.globalPosition.translate(-50, index == 0 ? -100 : 100), items: [
+            PopupMenuItem(child: const Text("重命名"), onTap: () => renameHistory(storage, item)),
+            const PopupMenuDivider(height: 0.3),
+            PopupMenuItem(child: const Text("删除"), onTap: () => deleteHistory(storage, index))
+          ]);
         },
-        onLongPress: () => deleteHistory(storage, index));
+        child: ListTile(
+          dense: true,
+          selected: selectIndex == index,
+          title: Text(item.name),
+          subtitle: Text("记录数 ${item.requestLength}  文件 ${item.size}"),
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
+              return Scaffold(
+                  appBar: AppBar(
+                      title: Text('${item.name} 记录数 ${item.requestLength}', style: const TextStyle(fontSize: 16))),
+                  body: futureWidget(
+                      loading: true,
+                      storage.getRequests(item),
+                      (data) => RequestListWidget(proxyServer: widget.proxyServer, list: data)));
+            })).then((value) => Future.delayed(const Duration(seconds: 60), () => item.requests = null));
+          },
+        ));
+  }
+
+  //重命名
+  renameHistory(HistoryStorage storage, HistoryItem item) {
+    String name = "";
+    showDialog(
+        context: context,
+        builder: (_) {
+          return AlertDialog(
+            content: TextField(
+              decoration: const InputDecoration(label: Text("名称")),
+              onChanged: (val) => name = val,
+            ),
+            actions: <Widget>[
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+              TextButton(
+                child: const Text('保存'),
+                onPressed: () {
+                  if (name.isEmpty) {
+                    FlutterToastr.show('名称不能为空', context, position: 2);
+                    return;
+                  }
+                  Navigator.of(context).pop();
+                  setState(() {
+                    item.name = name;
+                    storage.refresh();
+                  });
+                },
+              ),
+            ],
+          );
+        });
   }
 
   //删除
@@ -125,11 +170,7 @@ class _MobileHistoryState extends State<MobileHistory> {
           return AlertDialog(
             title: const Text("是否删除该历史记录？", style: TextStyle(fontSize: 18)),
             actions: [
-              TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text("取消")),
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
               TextButton(
                   onPressed: () {
                     setState(() {

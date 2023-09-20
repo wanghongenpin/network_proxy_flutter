@@ -1,8 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/utils/platform.dart';
 
 Icon getIcon(HttpResponse? response) {
   var map = {
@@ -86,13 +87,13 @@ Widget contextMenu(BuildContext context, EditableTextState editableTextState) {
       type: ContextMenuButtonType.selectAll,
     )
   ];
-  if (Platforms.isMobile()) {
-    // list.add(ContextMenuButtonItem(
-    //   onPressed: () async {
-    //     editableTextState.shareSelection(SelectionChangedCause.toolbar);
-    //   },
-    //   type: ContextMenuButtonType.share,
-    // ));
+  if (Platform.isIOS) {
+    list.add(ContextMenuButtonItem(
+      onPressed: () async {
+        editableTextState.shareSelection(SelectionChangedCause.toolbar);
+      },
+      type: ContextMenuButtonType.share,
+    ));
   }
 
   return AdaptiveTextSelectionToolbar.buttonItems(
@@ -125,8 +126,8 @@ Widget futureWidget<T>(Future<T> future, Widget Function(T data) toWidget, {bool
   );
 }
 
-showContextMenu(BuildContext context, Offset offset, {required List<PopupMenuEntry> items}) {
-  showMenu(
+Future showContextMenu(BuildContext context, Offset offset, {required List<PopupMenuEntry> items}) {
+  return showMenu(
       context: context,
       surfaceTintColor:
           Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.primaryContainer,
