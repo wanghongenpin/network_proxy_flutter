@@ -127,19 +127,19 @@ class SearchConditionsState extends State<SearchConditions> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: const Text('取消')),
+                    child: const Text('取消', style: TextStyle(fontSize: 14))),
                 TextButton(
                     onPressed: () {
                       widget.onSearch?.call(SearchModel());
                       Navigator.pop(context);
                     },
-                    child: const Text('清除搜索')),
+                    child: const Text('清除搜索', style: TextStyle(fontSize: 14))),
                 TextButton(
                     onPressed: () {
                       widget.onSearch?.call(searchModel);
                       Navigator.pop(context);
                     },
-                    child: const Text('确定')),
+                    child: const Text('确定', style: TextStyle(fontSize: 14))),
               ],
             )
           ],

@@ -88,12 +88,12 @@ Widget contextMenu(BuildContext context, EditableTextState editableTextState) {
     )
   ];
   if (Platform.isIOS) {
-    list.add(ContextMenuButtonItem(
-      onPressed: () async {
-        editableTextState.shareSelection(SelectionChangedCause.toolbar);
-      },
-      type: ContextMenuButtonType.share,
-    ));
+    // list.add(ContextMenuButtonItem(
+    //   onPressed: () async {
+    //     editableTextState.shareSelection(SelectionChangedCause.toolbar);
+    //   },
+    //   type: ContextMenuButtonType.share,
+    // ));
   }
 
   return AdaptiveTextSelectionToolbar.buttonItems(

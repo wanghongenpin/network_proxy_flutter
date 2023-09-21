@@ -38,6 +38,7 @@ class FavoriteStorage {
     return file;
   }
 
+  /// 添加收藏
   static Future<void> addFavorite(HttpRequest request) async {
     var favorites = await FavoriteStorage.favorites;
     if (favorites.contains(request)) {

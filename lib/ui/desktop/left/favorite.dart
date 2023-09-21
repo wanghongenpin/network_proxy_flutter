@@ -129,6 +129,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
             requestEdit();
           });
         }),
+        const PopupMenuDivider(height: 0.3),
         popupItem("删除收藏", onTap: () {
           widget.onRemove?.call(widget.request);
         })

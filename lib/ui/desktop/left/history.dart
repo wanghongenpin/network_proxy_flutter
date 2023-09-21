@@ -257,7 +257,8 @@ class _HistoryState extends State<_HistoryWidget> {
     //获取请求
     List<HttpRequest> requests = await storage.getRequests(item);
     var file = await File(result.path).create();
-    Har.writeFile(requests, file, title: item.name);
+    await Har.writeFile(requests, file, title: item.name);
+    if (context.mounted) FlutterToastr.show("导出成功", context);
     Future.delayed(const Duration(seconds: 30), () => item.requests = null);
   }
 

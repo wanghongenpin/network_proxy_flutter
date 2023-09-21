@@ -87,6 +87,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       body: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
           child: TabBarView(
+            physics: const NeverScrollableScrollPhysics(), //禁止滑动
             controller: _tabController,
             children: [
               general(),

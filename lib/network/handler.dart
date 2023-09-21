@@ -222,7 +222,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   /// 异常处理
   _exceptionHandler(Channel channel, HttpRequest? request, error) {
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
-    hostAndPort ??= HostAndPort.host(channel.remoteAddress.host, channel.remotePort);
+    hostAndPort ??= HostAndPort.host(scheme:HostAndPort.httpScheme, channel.remoteAddress.host, channel.remotePort);
     String message = error.toString();
     HttpStatus status = HttpStatus(-1, message);
     if (error is HandshakeException) {

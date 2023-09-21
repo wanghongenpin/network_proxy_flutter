@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http/http_headers.dart';
 
 class Har {
   static int maxBodyLength = 1024 * 1024 * 4;
@@ -37,6 +38,10 @@ class Har {
       'serverIPAddress': request.response?.remoteAddress
     };
 
+    //body已经解码 删除编码
+    if (request.response?.headers.contentEncoding == 'br') {
+      request.response?.headers.remove(HttpHeaders.CONTENT_ENCODING);
+    }
     har['response'] = {
       "status": request.response?.status.code ?? 0, // 响应状态码
       "statusText": request.response?.status.reasonPhrase ?? '', // 响应状态码描述
@@ -141,7 +146,7 @@ class Har {
       return {
         "mimeType": request.headers.contentType, // 请求体类型
         "text": request.bodyAsString, // 请求体内容
-        "params": request.bodyAsString, // 请求体内容
+        "params": [], // 请求体内容
       };
     }
     return {
