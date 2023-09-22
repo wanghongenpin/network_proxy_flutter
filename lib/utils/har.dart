@@ -60,7 +60,7 @@ class Har {
     return har;
   }
 
-  static Future<File> writeFile(List<HttpRequest> list, File file, {String title = ''}) async {
+  static Future<String> writeJson(List<HttpRequest> list, {String title = ''}) async {
     var entries = _entries(list);
     Map har = {};
     title = title.contains("ProxyPin") ? title : "[ProxyPin]$title";
@@ -77,7 +77,11 @@ class Har {
       ],
       "entries": entries,
     };
-    var json = jsonEncode(har);
+    return jsonEncode(har);
+  }
+
+  static Future<File> writeFile(List<HttpRequest> list, File file, {String title = ''}) async {
+    var json = await writeJson(list, title: title);
     return file.writeAsString(json);
   }
 

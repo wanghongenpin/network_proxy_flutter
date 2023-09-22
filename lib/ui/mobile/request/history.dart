@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:date_format/date_format.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
@@ -14,6 +15,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../utils/har.dart';
 
@@ -51,14 +53,19 @@ class _MobileHistoryState extends State<MobileHistory> {
         children.add(buildItem(data, i, entry));
       }
 
-      if (children.isEmpty) {
-        return const Center(child: Text("暂无历史记录"));
-      }
-      return ListView.separated(
-        itemCount: children.length,
-        itemBuilder: (context, index) => children[index],
-        separatorBuilder: (_, index) => const Divider(thickness: 0.3, height: 0),
-      );
+      return Scaffold(
+          appBar: AppBar(
+            title: const Text("历史记录", style: TextStyle(fontSize: 16)),
+            centerTitle: true,
+            actions: [TextButton(onPressed: () => import(data), child: const Text("导入"))],
+          ),
+          body: children.isEmpty
+              ? const Center(child: Text("暂无历史记录"))
+              : ListView.separated(
+                  itemCount: children.length,
+                  itemBuilder: (context, index) => children[index],
+                  separatorBuilder: (_, index) => const Divider(thickness: 0.3, height: 0),
+                ));
     });
   }
 
@@ -83,9 +90,35 @@ class _MobileHistoryState extends State<MobileHistory> {
         onTap: () {});
   }
 
+  //导入har
+  import(HistoryStorage storage) async {
+    const XTypeGroup typeGroup = XTypeGroup(
+      label: 'Har',
+    );
+    final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+    if (file == null) {
+      return;
+    }
+
+    print(file);
+    try {
+      var historyItem = await storage.addHarFile(file);
+      setState(() {
+        Navigator.pushNamed(context, '/domain', arguments: {'item': historyItem});
+        FlutterToastr.show("导入成功", context);
+      });
+    } catch (e, t) {
+      print(e);
+      print(t);
+      if (context.mounted) {
+        FlutterToastr.show("导入失败 $e", context);
+      }
+    }
+  }
+
   //写入文件
   _writeHarFile(HistoryStorage storage, List<HttpRequest> container, String name) async {
-    var file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
+    var file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch.toRadixString(36)}.txt");
     print(file);
     RandomAccessFile open = await file.open(mode: FileMode.append);
     HistoryItem history = await storage.addHistory(name, file, 0);
@@ -107,6 +140,7 @@ class _MobileHistoryState extends State<MobileHistory> {
           HapticFeedback.heavyImpact();
           showContextMenu(context, detail.globalPosition.translate(-50, index == 0 ? -100 : 100), items: [
             PopupMenuItem(child: const Text("重命名"), onTap: () => renameHistory(storage, item)),
+            PopupMenuItem(child: const Text("分享"), onTap: () => export(storage, item)),
             const PopupMenuDivider(height: 0.3),
             PopupMenuItem(child: const Text("删除"), onTap: () => deleteHistory(storage, index))
           ]);
@@ -128,6 +162,19 @@ class _MobileHistoryState extends State<MobileHistory> {
             })).then((value) => Future.delayed(const Duration(seconds: 60), () => item.requests = null));
           },
         ));
+  }
+
+  //导出har
+  export(HistoryStorage storage, HistoryItem item) async {
+    //文件名称
+    String fileName =
+        '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'.replaceAll(" ", "_").replaceAll(":", "_");
+    //获取请求
+    List<HttpRequest> requests = await storage.getRequests(item);
+    var json = await Har.writeJson(requests, title: item.name);
+    var file = XFile.fromData(Uint8List.fromList(json.codeUnits), name: fileName, mimeType: "har");
+    Share.shareXFiles([file], subject: fileName);
+    Future.delayed(const Duration(seconds: 30), () => item.requests = null);
   }
 
   //重命名

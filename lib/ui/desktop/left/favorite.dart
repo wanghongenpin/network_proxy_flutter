@@ -46,6 +46,7 @@ class _FavoritesState extends State<Favorites> {
                 var request = favorites.elementAt(index);
                 return _FavoriteItem(
                   request,
+                  index: index,
                   panel: widget.panel,
                   onRemove: (HttpRequest request) {
                     FavoriteStorage.removeFavorite(request);
@@ -64,11 +65,12 @@ class _FavoritesState extends State<Favorites> {
 }
 
 class _FavoriteItem extends StatefulWidget {
+  final int index;
   final HttpRequest request;
   final NetworkTabController panel;
   final Function(HttpRequest request)? onRemove;
 
-  const _FavoriteItem(this.request, {Key? key, required this.panel, required this.onRemove}) : super(key: key);
+  const _FavoriteItem(this.request, {Key? key, required this.panel, required this.onRemove, required this.index}) : super(key: key);
 
   @override
   State<_FavoriteItem> createState() => _FavoriteItemState();
@@ -92,9 +94,15 @@ class _FavoriteItemState extends State<_FavoriteItem> {
             minLeadingWidth: 25,
             leading: getIcon(response),
             title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2),
-            subtitle: Text(
-                '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
-                maxLines: 1),
+            subtitle: Text.rich(
+                style: const TextStyle(fontSize: 12),
+                maxLines: 1,
+                TextSpan(children: [
+                  TextSpan(text: '#${widget.index} ', style: const TextStyle( color: Colors.teal)),
+                  TextSpan(
+                      text:
+                          '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} '),
+                ])),
             selected: selected,
             dense: true,
             onTap: onClick));

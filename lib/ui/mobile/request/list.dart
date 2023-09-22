@@ -215,6 +215,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
           GlobalKey<RequestRowState> key = GlobalKey();
           indexes[view.elementAt(index)] = key;
           return RequestRow(
+              index: index,
               key: key,
               request: view.elementAt(index),
               proxyServer: widget.proxyServer,

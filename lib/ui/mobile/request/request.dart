@@ -14,13 +14,14 @@ import 'package:network_proxy/utils/curl.dart';
 
 ///请求行
 class RequestRow extends StatefulWidget {
+  final int index;
   final HttpRequest request;
   final ProxyServer proxyServer;
   final bool displayDomain;
   final Function(HttpRequest)? onRemove;
 
   const RequestRow(
-      {super.key, required this.request, required this.proxyServer, this.displayDomain = true, this.onRemove});
+      {super.key, required this.request, required this.proxyServer, this.displayDomain = true, this.onRemove, required this.index});
 
   @override
   State<StatefulWidget> createState() {
@@ -51,12 +52,16 @@ class RequestRowState extends State<RequestRow> {
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
     var subTitle =
         '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''}';
-
     return ListTile(
         visualDensity: const VisualDensity(vertical: -4),
         leading: getIcon(response),
         title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2, style: const TextStyle(fontSize: 14)),
-        subtitle: Text(subTitle, maxLines: 1, style: const TextStyle(fontSize: 12)),
+        subtitle: Text.rich(
+            maxLines: 1,
+            TextSpan(children: [
+              TextSpan(text: '#${widget.index} ', style: const TextStyle(fontSize: 12, color: Colors.teal)),
+              TextSpan(text: subTitle, style: const TextStyle(fontSize: 12)),
+            ])),
         trailing: const Icon(Icons.chevron_right),
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 8),

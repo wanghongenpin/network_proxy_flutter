@@ -174,10 +174,10 @@ class _HistoryState extends State<_HistoryWidget> {
   }
 
   //构建历史记录
-  Widget buildItem(BuildContext context, int index, HistoryItem item) {
+  Widget buildItem(BuildContext rootContext, int index, HistoryItem item) {
     return GestureDetector(
         onSecondaryTapDown: (details) => {
-              showContextMenu(context, details.globalPosition, items: [
+              showContextMenu(rootContext, details.globalPosition, items: [
                 CustomPopupMenuItem(
                     height: 35, child: const Text('导出', style: TextStyle(fontSize: 13)), onTap: () => export(item)),
                 CustomPopupMenuItem(

@@ -24,17 +24,12 @@ class _FilterDialogState extends State<FilterDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
         scrollable: true,
-        title: Row(children: [
-          const Text("域名过滤", style: TextStyle(fontSize: 18)),
+        title: const Row(children: [
+          Text("域名过滤", style: TextStyle(fontSize: 18)),
           Expanded(
               child: Align(
                   alignment: Alignment.topRight,
-                  child: ElevatedButton.icon(
-                      icon: const Icon(Icons.close, size: 15),
-                      label: const Text("关闭"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      })))
+                  child: CloseButton()))
         ]),
         content: SizedBox(
           width: 680,

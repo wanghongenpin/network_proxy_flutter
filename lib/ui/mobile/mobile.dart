@@ -114,7 +114,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
         '2. 请求重写增加名称&URL参数重写；\n'
         '3. 请求重写增加重定向；\n'
         '4. 建立连接异常显示请求体；\n'
-        '5. 请求编辑重发响应体查看增加多种格式，详情Body体增加快速解码入口；';
+        '5. 请求编辑重发响应体查看增加多种格式，详情Body体增加快速解码入口\n'
+        '6. 请求列表增加编号;';
     showAlertDialog('更新内容V1.0.3', content, () {
       widget.configuration.upgradeNoticeV3 = false;
       widget.configuration.flushConfig();

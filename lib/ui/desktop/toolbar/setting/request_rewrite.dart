@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
 
@@ -73,16 +74,32 @@ class _RequestRewriteState extends State<RequestRewrite> {
               icon: const Icon(Icons.remove, size: 18),
               label: const Text("删除", style: TextStyle(fontSize: 12)),
               onPressed: () {
-                var removeSelected = requestRuleList.removeSelected();
-                if (removeSelected.isEmpty) {
+                var selected = requestRuleList.currentSelectedIndex();
+                if (selected < 0) {
                   return;
                 }
 
-                changed = true;
-                setState(() {
-                  widget.configuration.requestRewrites.removeIndex(removeSelected);
-                  requestRuleList.changeState();
-                });
+                showDialog(
+                    context: context,
+                    builder: (ctx) {
+                      return AlertDialog(
+                        title: const Text("是否删除该请求重写？", style: TextStyle(fontSize: 18)),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+                          TextButton(
+                              onPressed: () {
+                                changed = true;
+                                setState(() {
+                                  widget.configuration.requestRewrites.removeIndex(requestRuleList.removeSelected());
+                                  requestRuleList.changeState();
+                                });
+                                FlutterToastr.show('删除成功', context);
+                                Navigator.pop(context);
+                              },
+                              child: const Text("删除")),
+                        ],
+                      );
+                    });
               })
         ]),
         const SizedBox(height: 10),
@@ -217,7 +234,6 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                     RequestRewrites.instance.addRule(rule);
                   }
 
-                  enableNotifier.dispose();
                   Navigator.of(context).pop(rule);
                 }
               }),

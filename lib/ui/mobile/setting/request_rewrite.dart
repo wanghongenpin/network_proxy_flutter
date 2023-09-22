@@ -76,16 +76,32 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
                       icon: const Icon(Icons.remove, size: 18),
                       label: const Text("删除", style: TextStyle(fontSize: 14)),
                       onPressed: () {
-                        var removeSelected = requestRuleList.removeSelected();
-                        if (removeSelected.isEmpty) {
+                        var selected = requestRuleList.currentSelectedIndex();
+                        if (selected < 0) {
                           return;
                         }
 
-                        changed = true;
-                        setState(() {
-                          widget.configuration.requestRewrites.removeIndex(removeSelected);
-                          requestRuleList.changeState();
-                        });
+                        showDialog(
+                            context: context,
+                            builder: (ctx) {
+                              return AlertDialog(
+                                title: const Text("是否删除该请求重写？", style: TextStyle(fontSize: 18)),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+                                  TextButton(
+                                      onPressed: () {
+                                        changed = true;
+                                        setState(() {
+                                          widget.configuration.requestRewrites.removeIndex(requestRuleList.removeSelected());
+                                          requestRuleList.changeState();
+                                        });
+                                        FlutterToastr.show('删除成功', context);
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text("删除")),
+                                ],
+                              );
+                            });
                       })
                 ]),
                 const SizedBox(height: 10),
@@ -161,7 +177,7 @@ class _RewriteRuleState extends State<RewriteRule> {
                     RequestRewrites.instance.addRule(rule);
                   }
 
-                  FlutterToastr.show("添加请求重写规则成功", context);
+                  FlutterToastr.show("保存请求重写规则成功", context);
                   Navigator.of(context).pop(rule);
                 }
               })

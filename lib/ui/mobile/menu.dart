@@ -49,11 +49,7 @@ class DrawerWidget extends StatelessWidget {
           leading: const Icon(Icons.history),
           title: const Text("历史"),
           trailing: const Icon(Icons.arrow_right),
-          onTap: () => navigator(
-              context,
-              Scaffold(
-                  appBar: AppBar(title: const Text("历史记录", style: TextStyle(fontSize: 16)), centerTitle: true),
-                  body:  MobileHistory(proxyServer: proxyServer, requestStateKey: requestStateKey))),
+          onTap: () => navigator(context, MobileHistory(proxyServer: proxyServer, requestStateKey: requestStateKey)),
         ),
         const Divider(thickness: 0.3),
         Padding(padding: const EdgeInsets.only(left: 15), child: PortWidget(proxyServer: proxyServer)),
@@ -139,25 +135,25 @@ class MoreEnum extends StatelessWidget {
                   })),
           PopupMenuItem(
               child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.qr_code_scanner_outlined),
-                title: const Text("连接终端"),
-                onTap: () {
-                  connectRemote(context);
-                },
-              )),
+            dense: true,
+            leading: const Icon(Icons.qr_code_scanner_outlined),
+            title: const Text("连接终端"),
+            onTap: () {
+              connectRemote(context);
+            },
+          )),
           PopupMenuItem(
               child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.phone_iphone),
-                title: const Text("我的二维码"),
-                onTap: () async {
-                  var ip = await localIp();
-                  if (context.mounted) {
-                    connectQrCode(context, ip, proxyServer.port);
-                  }
-                },
-              )),
+            dense: true,
+            leading: const Icon(Icons.phone_iphone),
+            title: const Text("我的二维码"),
+            onTap: () async {
+              var ip = await localIp();
+              if (context.mounted) {
+                connectQrCode(context, ip, proxyServer.port);
+              }
+            },
+          )),
           PopupMenuItem(
               child: ListTile(
                   dense: true,

@@ -45,6 +45,7 @@ class _FavoritesState extends State<MobileFavorites> {
                     var request = favorites.elementAt(index);
                     return _FavoriteItem(
                       request,
+                      index: index,
                       onRemove: (HttpRequest request) {
                         FavoriteStorage.removeFavorite(request);
                         FlutterToastr.show('已删除收藏', context);
@@ -63,11 +64,13 @@ class _FavoritesState extends State<MobileFavorites> {
 }
 
 class _FavoriteItem extends StatefulWidget {
+  final int index;
   final ProxyServer proxyServer;
   final HttpRequest request;
   final Function(HttpRequest request)? onRemove;
 
-  const _FavoriteItem(this.request, {Key? key, required this.onRemove, required this.proxyServer}) : super(key: key);
+  const _FavoriteItem(this.request, {Key? key, required this.onRemove, required this.proxyServer, required this.index})
+      : super(key: key);
 
   @override
   State<_FavoriteItem> createState() => _FavoriteItemState();
@@ -80,14 +83,19 @@ class _FavoriteItemState extends State<_FavoriteItem> {
     var response = request.response;
     var title = '${request.method.name} ${request.requestUrl}';
     var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
+    String subtitle =
+        '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ';
     return ListTile(
         onLongPress: menu,
         minLeadingWidth: 25,
         leading: getIcon(response),
         title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2),
-        subtitle: Text(
-            '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
-            maxLines: 1),
+        subtitle: Text.rich(
+            maxLines: 1,
+            TextSpan(children: [
+              TextSpan(text: '#${widget.index} ', style: const TextStyle(fontSize: 12, color: Colors.teal)),
+              TextSpan(text: subtitle, style: const TextStyle(fontSize: 12)),
+            ])),
         dense: true,
         onTap: onClick);
   }
@@ -130,6 +138,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
               child: const SizedBox(width: double.infinity, child: Text("删除收藏", textAlign: TextAlign.center)),
               onPressed: () {
                 widget.onRemove?.call(widget.request);
+                FlutterToastr.show('删除成功', context);
                 Navigator.of(context).pop();
               }),
           Container(

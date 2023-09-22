@@ -52,16 +52,13 @@ class _MobileSslState extends State<MobileSslWidget> {
               expandedAlignment: Alignment.topLeft,
               expandedCrossAxisAlignment: CrossAxisAlignment.start,
               shape: const Border(),
-              children: [
-                TextButton(onPressed: () => _downloadCert(), child: const Text("1. 点击下载根证书")),
-                ...(Platform.isIOS ? ios() : android()),
-                const SizedBox(height: 20)
-              ])
+              children: [...(Platform.isIOS ? ios() : android()), const SizedBox(height: 20)])
         ]));
   }
 
   List<Widget> ios() {
     return [
+      TextButton(onPressed: () => _downloadCert(), child: const Text("1. 点击下载根证书")),
       TextButton(onPressed: () {}, child: const Text("2. 安装根证书 -> 信任证书")),
       TextButton(onPressed: () {}, child: const Text("2.1 安装根证书 设置 > 已下载描述文件 > 安装")),
       Padding(
@@ -78,16 +75,40 @@ class _MobileSslState extends State<MobileSslWidget> {
 
   List<Widget> android() {
     return [
-      TextButton(onPressed: () => _downloadCert(), child: const Text("1.1系统根证书将根证书命名成 243f0bfb.0")),
-      TextButton(onPressed: () {}, child: const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书")),
-      ClipRRect(
-          child: Align(
-              alignment: Alignment.topCenter,
-              heightFactor: .7,
-              child: Image.network(
-                "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
-                height: 680,
-              )))
+      ExpansionTile(
+          title: const Text("Root用户:", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          tilePadding: const EdgeInsets.only(left: 0),
+          expandedAlignment: Alignment.topLeft,
+          initiallyExpanded: true,
+          shape: const Border(),
+          children: [
+            const Text("针对安卓Root用户做了个Magisk模块ProxyPinCA系统证书，安装完重启手机即可。"),
+            TextButton(
+                child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"),
+                onPressed: () {
+                  launchUrl(Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"));
+                })
+          ]),
+      const SizedBox(height: 10),
+      ExpansionTile(
+          title: const Text("非Root用户:", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          tilePadding: const EdgeInsets.only(left: 0),
+          expandedAlignment: Alignment.topLeft,
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          initiallyExpanded: true,
+          shape: const Border(),
+          children: [
+            TextButton(onPressed: () => _downloadCert(), child: const Text("1. 点击下载根证书")),
+            TextButton(onPressed: () {}, child: const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书")),
+            ClipRRect(
+                child: Align(
+                    alignment: Alignment.topCenter,
+                    heightFactor: .7,
+                    child: Image.network(
+                      "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
+                      height: 680,
+                    )))
+          ])
     ];
   }
 

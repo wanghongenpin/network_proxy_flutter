@@ -28,19 +28,18 @@ class _SslState extends State<SslWidget> {
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
-          PopupMenuItem(
-              child: _Switch(proxyServer: widget.proxyServer, onEnableChange: (val) => setState(() {}))),
+          PopupMenuItem(child: _Switch(proxyServer: widget.proxyServer, onEnableChange: (val) => setState(() {}))),
           PopupMenuItem(
               child: ListTile(
-                dense: true,
-                hoverColor: Colors.transparent,
-                focusColor: Colors.transparent,
-                title: const Text("安装根证书到本机"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () {
-                  pcCer();
-                },
-              )),
+            dense: true,
+            hoverColor: Colors.transparent,
+            focusColor: Colors.transparent,
+            title: const Text("安装根证书到本机"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () {
+              pcCer();
+            },
+          )),
           PopupMenuItem<String>(
             child: ListTile(
                 title: const Text("安装根证书到 iOS"),
@@ -93,14 +92,14 @@ class _SslState extends State<SslWidget> {
         const SizedBox(height: 10),
         Platform.isMacOS
             ? Image.network("https://foruda.gitee.com/images/1689323260158189316/c2d881a4_1073801.png",
-            width: 800, height: 500)
+                width: 800, height: 500)
             : Row(children: [
-          Image.network("https://foruda.gitee.com/images/1689335589122168223/c904a543_1073801.png",
-              width: 400, height: 400),
-          const SizedBox(width: 10),
-          Image.network("https://foruda.gitee.com/images/1689335334688878324/f6aa3a3a_1073801.png",
-              width: 400, height: 400)
-        ])
+                Image.network("https://foruda.gitee.com/images/1689335589122168223/c904a543_1073801.png",
+                    width: 400, height: 400),
+                const SizedBox(width: 10),
+                Image.network("https://foruda.gitee.com/images/1689335334688878324/f6aa3a3a_1073801.png",
+                    width: 400, height: 400)
+              ])
       ];
     } else {
       list.add(const Text("安装证书到本系统，以Ubuntu为例 下载证书：\n"
@@ -123,17 +122,9 @@ class _SslState extends State<SslWidget> {
         builder: (BuildContext context) {
           return SimpleDialog(
               contentPadding: const EdgeInsets.all(16),
-              title: Row(children: [
-                const Text("电脑HTTPS抓包配置", style: TextStyle(fontSize: 18)),
-                Expanded(
-                    child: Align(
-                        alignment: Alignment.topRight,
-                        child: ElevatedButton.icon(
-                            icon: const Icon(Icons.close, size: 15),
-                            label: const Text("关闭"),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            })))
+              title: const Row(children: [
+                Text("电脑HTTPS抓包配置", style: TextStyle(fontSize: 16)),
+                Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
               ]),
               alignment: Alignment.center,
               children: list);
@@ -146,17 +137,9 @@ class _SslState extends State<SslWidget> {
         builder: (BuildContext context) {
           return SimpleDialog(
               contentPadding: const EdgeInsets.all(16),
-              title: Row(children: [
-                const Text("iOS根证书安装指南", style: TextStyle(fontSize: 18)),
-                Expanded(
-                    child: Align(
-                        alignment: Alignment.topRight,
-                        child: ElevatedButton.icon(
-                            icon: const Icon(Icons.close, size: 15),
-                            label: const Text("关闭"),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            })))
+              title: const Row(children: [
+                Text("iOS根证书安装指南", style: TextStyle(fontSize: 16)),
+                Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
               ]),
               alignment: Alignment.center,
               children: [
@@ -197,40 +180,58 @@ class _SslState extends State<SslWidget> {
         builder: (BuildContext context) {
           return SimpleDialog(
               contentPadding: const EdgeInsets.all(16),
-              title: Row(children: [
-                const Text("Android根证书安装指南", style: TextStyle(fontSize: 18)),
-                Expanded(
-                    child: Align(
-                        alignment: Alignment.topRight,
-                        child: ElevatedButton.icon(
-                            icon: const Icon(Icons.close, size: 15),
-                            label: const Text("关闭"),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            })))
+              title: const Row(children: [
+                Text("Android根证书安装指南", style: TextStyle(fontSize: 16)),
+                Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
               ]),
               alignment: Alignment.center,
               children: [
-                SelectableText.rich(TextSpan(text: "1. 配置手机Wi-Fi代理 Host：$host  Port：${widget.proxyServer.port}")),
+                ExpansionTile(
+                    title: const Text("Root用户:", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                    tilePadding: const EdgeInsets.only(left: 0),
+                    expandedAlignment: Alignment.topLeft,
+                    initiallyExpanded: true,
+                    shape: const Border(),
+                    children: [
+                      const Text("针对安卓Root用户做了个Magisk模块ProxyPinCA系统证书，安装完重启手机即可。"),
+                      TextButton(
+                          child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"),
+                          onPressed: () {
+                            launchUrl(
+                                Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"));
+                          })
+                    ]),
                 const SizedBox(height: 10),
-                const Row(
+                ExpansionTile(
+                  title: const Text("非Root用户:", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  tilePadding: const EdgeInsets.only(left: 0),
+                  expandedAlignment: Alignment.topLeft,
+                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                  initiallyExpanded: true,
+                  shape: const Border(),
                   children: [
-                    Text("2. 在 Android 设备上打开浏览器访问：\t"),
-                    SelectableText.rich(
-                        TextSpan(text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
+                    SelectableText.rich(TextSpan(text: "1. 配置手机Wi-Fi代理 Host：$host  Port：${widget.proxyServer.port}")),
+                    const SizedBox(height: 10),
+                    const Row(
+                      children: [
+                        Text("2. 在 Android 设备上打开浏览器访问：\t"),
+                        SelectableText.rich(TextSpan(
+                            text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书"),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                        child: Align(
+                            alignment: Alignment.topCenter,
+                            heightFactor: .7,
+                            child: Image.network(
+                              "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
+                              height: 550,
+                            )))
                   ],
                 ),
-                const SizedBox(height: 10),
-                const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书"),
-                const SizedBox(height: 10),
-                ClipRRect(
-                    child: Align(
-                        alignment: Alignment.topCenter,
-                        heightFactor: .7,
-                        child: Image.network(
-                          "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
-                          height: 550,
-                        )))
               ]);
         });
   }
