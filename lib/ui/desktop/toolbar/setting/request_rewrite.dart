@@ -210,6 +210,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                   (formKey.currentState as FormState).save();
 
                   rule.updatePathReg();
+                  rule.enabled = enableNotifier.value;
                   if (widget.currentIndex >= 0) {
                     RequestRewrites.instance.rules[widget.currentIndex] = rule;
                   } else {
