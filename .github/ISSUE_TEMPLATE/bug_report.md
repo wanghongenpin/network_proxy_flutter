@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create reports to help us improve
-title: "[系统]xxx"
+title: "[Windows、Mac、Android]xxx"
 labels: bug
 assignees: ''
 
@@ -10,6 +10,6 @@ assignees: ''
 **描述错误**
 
 **To Reproduce**
-重现行为的步骤:
+重现行为的步骤: 如具体应用抓包失败，请说明软件名称以及具体操作页面
 
 **屏幕截图*

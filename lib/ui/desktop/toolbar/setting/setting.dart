@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/util/system_proxy.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/external_proxy.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
@@ -20,63 +21,62 @@ class Setting extends StatefulWidget {
 }
 
 class _SettingState extends State<Setting> {
-  late ValueNotifier<bool> enableDesktopListenable;
   late Configuration configuration;
 
   @override
   void initState() {
     configuration = widget.proxyServer.configuration;
-    enableDesktopListenable = ValueNotifier<bool>(configuration.enableSystemProxy);
     super.initState();
   }
 
-  @override
-  void dispose() {
-    enableDesktopListenable.dispose();
-    super.dispose();
+  Widget item(String text, {VoidCallback? onPressed}) {
+    return MenuItemButton(
+        trailingIcon: const Icon(Icons.arrow_right),
+        onPressed: onPressed,
+        child: Padding(
+            padding: const EdgeInsets.only(left: 10, right: 5),
+            child: Text(text, style: const TextStyle(fontSize: 14))));
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      tooltip: "设置",
-      icon: const Icon(Icons.settings),
-      surfaceTintColor: Colors.white70,
-      offset: const Offset(10, 30),
-      itemBuilder: (context) {
-        return [
-          PopupMenuItem<String>(
-              child: PortWidget(proxyServer: widget.proxyServer, textStyle: const TextStyle(fontSize: 13))),
-          PopupMenuItem<String>(
-              child: ValueListenableBuilder(
-            valueListenable: enableDesktopListenable,
-            builder: (_, val, __) => setSystemProxy(),
-          )),
-          const PopupMenuItem(child: ThemeSetting(dense: true)),
-          menuItem("域名过滤", onTap: hostFilter),
-          menuItem("请求重写", onTap: requestRewrite),
-          menuItem("外部代理设置", onTap: setExternalProxy),
-          menuItem(
-            "Github",
-            onTap: () {
-              launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"));
-            },
-          )
-        ];
+    var surfaceTintColor =
+        Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.background;
+    return MenuAnchor(
+      style: MenuStyle(surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor)),
+      builder: (context, controller, child) {
+        return IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: "设置",
+            onPressed: () {
+              if (controller.isOpen) {
+                controller.close();
+              } else {
+                controller.open();
+              }
+            });
       },
+      menuChildren: [
+        _ProxyMenu(proxyServer: widget.proxyServer),
+        item("域名过滤", onPressed: hostFilter),
+        item("请求重写", onPressed: requestRewrite),
+        const ThemeSetting(),
+        item("外部代理设置", onPressed: setExternalProxy),
+        item("Github", onPressed: () => launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"))),
+      ],
     );
   }
 
   PopupMenuItem<String> menuItem(String title, {GestureTapCallback? onTap}) {
     return PopupMenuItem<String>(
         child: ListTile(
-          title: Text(title),
-          dense: true,
-          hoverColor: Colors.transparent,
-          focusColor: Colors.transparent,
-          trailing: const Icon(Icons.arrow_right),
-          onTap: onTap,
-        ));
+      title: Text(title),
+      dense: true,
+      hoverColor: Colors.transparent,
+      focusColor: Colors.transparent,
+      trailing: const Icon(Icons.arrow_right),
+      onTap: onTap,
+    ));
   }
 
   ///设置外部代理地址
@@ -89,22 +89,6 @@ class _SettingState extends State<Setting> {
         });
   }
 
-  ///设置系统代理
-  Widget setSystemProxy() {
-    return SwitchListTile(
-        hoverColor: Colors.transparent,
-        title: const Text("设置为系统代理"),
-        visualDensity: const VisualDensity(horizontal: -4),
-        dense: true,
-        value: configuration.enableSystemProxy,
-        onChanged: (val) {
-          widget.proxyServer.setSystemProxyEnable(val);
-          configuration.enableSystemProxy = val;
-          enableDesktopListenable.value = !enableDesktopListenable.value;
-          configuration.flushConfig();
-        });
-  }
-
   ///请求重写Dialog
   void requestRewrite() {
     showDialog(
@@ -112,13 +96,12 @@ class _SettingState extends State<Setting> {
         context: context,
         builder: (context) {
           return AlertDialog(
+            titlePadding: const EdgeInsets.only(left: 24, top: 10, right: 15),
+            contentPadding: const EdgeInsets.only(left: 24, right: 20),
             scrollable: true,
             title: const Row(children: [
               Text("请求重写", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              Expanded(
-                  child: Align(
-                      alignment: Alignment.topRight,
-                      child: CloseButton()))
+              Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
             ]),
             content: RequestRewrite(configuration: configuration),
           );
@@ -134,6 +117,116 @@ class _SettingState extends State<Setting> {
         return FilterDialog(configuration: configuration);
       },
     );
+  }
+}
+
+///代理菜单
+class _ProxyMenu extends StatefulWidget {
+  final ProxyServer proxyServer;
+
+  const _ProxyMenu({required this.proxyServer});
+
+  @override
+  State<StatefulWidget> createState() => _ProxyMenuState();
+}
+
+class _ProxyMenuState extends State<_ProxyMenu> {
+  var textEditingController = TextEditingController();
+
+  late Configuration configuration;
+  bool changed = false;
+
+  @override
+  void initState() {
+    configuration = widget.proxyServer.configuration;
+    textEditingController.text = configuration.proxyPassDomains;
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    if (configuration.proxyPassDomains != textEditingController.text) {
+      changed = true;
+      configuration.proxyPassDomains = textEditingController.text;
+      SystemProxy.setProxyPassDomains(configuration.proxyPassDomains);
+    }
+
+    if (changed) {
+      configuration.flushConfig();
+    }
+    textEditingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var surfaceTintColor =
+        Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.background;
+
+    return SubmenuButton(
+      menuStyle: MenuStyle(
+        surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor),
+        padding: const MaterialStatePropertyAll(EdgeInsets.only(top: 10, bottom: 10)),
+      ),
+      menuChildren: [
+        PortWidget(proxyServer: widget.proxyServer, textStyle: const TextStyle(fontSize: 13)),
+        const Divider(thickness: 0.3, height: 8),
+        setSystemProxy(),
+        const Divider(thickness: 0.3, height: 8),
+        const SizedBox(height: 3),
+        Padding(
+            padding: const EdgeInsets.only(left: 15),
+            child: Row(children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("代理忽略域名"),
+                  const SizedBox(height: 3),
+                  Text("多个使用;分割", style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                ],
+              ),
+              Padding(
+                  padding: const EdgeInsets.only(left: 35),
+                  child: TextButton(
+                    child: const Text("重置"),
+                    onPressed: () {
+                      textEditingController.text = SystemProxy.proxyPassDomains;
+                    },
+                  ))
+            ])),
+        const SizedBox(height: 5),
+        Padding(
+            padding: const EdgeInsets.only(left: 15, right: 5),
+            child: TextField(
+                textInputAction: TextInputAction.done,
+                style: const TextStyle(fontSize: 13),
+                controller: textEditingController,
+                decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.all(10),
+                    border: OutlineInputBorder(),
+                    constraints: BoxConstraints(minWidth: 190, maxWidth: 190)),
+                maxLines: 5,
+                minLines: 1)),
+        const SizedBox(height: 10),
+      ],
+      child: const Padding(padding: EdgeInsets.only(left: 10), child: Text("代理")),
+    );
+  }
+
+  ///设置系统代理
+  Widget setSystemProxy() {
+    return SwitchListTile(
+        hoverColor: Colors.transparent,
+        title: const Text("设置为系统代理", maxLines: 1),
+        dense: true,
+        value: configuration.enableSystemProxy,
+        onChanged: (val) {
+          widget.proxyServer.setSystemProxyEnable(val);
+          configuration.enableSystemProxy = val;
+          setState(() {
+            changed = true;
+          });
+        });
   }
 }
 
@@ -179,6 +272,7 @@ class _PortState extends State<PortWidget> {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
+      const Padding(padding: EdgeInsets.only(left: 15)),
       Text("端口号：", style: widget.textStyle),
       SizedBox(
           width: 80,

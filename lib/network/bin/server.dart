@@ -15,7 +15,6 @@
  */
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/channel.dart';
@@ -59,9 +58,7 @@ class ProxyServer {
       return;
     }
 
-    if (Platform.isMacOS) {
-      SystemProxy.setSslProxyEnableMacOS(enableSsl, port);
-    }
+    SystemProxy.setSslProxyEnable(enableSsl, port);
   }
 
   /// 启动代理服务
@@ -100,11 +97,11 @@ class ProxyServer {
   setSystemProxyEnable(bool enable) async {
     //关闭系统代理 恢复成外部代理地址
     if (!enable && configuration.externalProxy?.enabled == true) {
-      await SystemProxy.setSystemProxy(configuration.externalProxy!.port!, enableSsl);
+      await SystemProxy.setSystemProxy(configuration.externalProxy!.port!, enableSsl, configuration.proxyPassDomains);
       return;
     }
 
-    await SystemProxy.setSystemProxyEnable(port, enable, enableSsl);
+    await SystemProxy.setSystemProxyEnable(port, enable, enableSsl, passDomains: configuration.proxyPassDomains);
   }
 
   /// 重启代理服务

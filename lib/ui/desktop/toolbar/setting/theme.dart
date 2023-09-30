@@ -2,52 +2,63 @@ import 'package:flutter/material.dart';
 import 'package:network_proxy/main.dart';
 
 class ThemeSetting extends StatelessWidget {
-  final bool dense;
-
-  const ThemeSetting({Key? key, this.dense = false}) : super(key: key);
+  const ThemeSetting({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton(
-        tooltip: themeNotifier.value.mode.name,
-        surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
-        offset: const Offset(150, 0),
-        itemBuilder: (BuildContext context) {
-          return [
-            PopupMenuItem(
-                child: Tooltip(
-                    preferBelow: false,
-                    message: "Material 3是谷歌开源设计系统的最新版本",
-                    child: SwitchListTile(
-                      value: themeNotifier.value.useMaterial3,
-                      onChanged: (bool value) {
-                        themeNotifier.value = themeNotifier.value.copy(useMaterial3: value);
-                        Navigator.of(context).pop();
-                      },
-                      dense: true,
-                      title: const Text("Material3"),
-                    ))),
-            PopupMenuItem(
-                child: const ListTile(trailing: Icon(Icons.cached), dense: true, title: Text("跟随系统")),
-                onTap: () {
-                  themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.system);
-                }),
-            PopupMenuItem(
-                child: const ListTile(trailing: Icon(Icons.nightlight_outlined), dense: true, title: Text("深色")),
-                onTap: () {
-                  themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.dark);
-                }),
-            PopupMenuItem(
-                child: const ListTile(trailing: Icon(Icons.sunny), dense: true, title: Text("浅色")),
-                onTap: () {
-                  themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.light);
-                }),
-          ];
-        },
-        child: ListTile(
-          title: const Text("主题"),
-          trailing: const Icon(Icons.arrow_right),
-          dense: dense,
-        ));
+    var surfaceTintColor =
+        Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.background;
+
+    return SubmenuButton(
+      menuStyle: MenuStyle(
+        surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor),
+        padding: const MaterialStatePropertyAll(EdgeInsets.only(top: 10, bottom: 10)),
+      ),
+      menuChildren: [
+        SizedBox(
+            width: 180,
+            height: 38,
+            child: Tooltip(
+                preferBelow: false,
+                message: "Material 3是谷歌开源设计系统的最新版本",
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.only(left: 32, right: 5),
+                  value: themeNotifier.value.useMaterial3,
+                  onChanged: (bool value) {
+                    themeNotifier.value = themeNotifier.value.copy(useMaterial3: value);
+                  },
+                  dense: true,
+                  title: const Text("Material3"),
+                ))),
+        MenuItemButton(
+            leadingIcon: themeNotifier.value.mode == ThemeMode.system
+                ? const Icon(Icons.check, size: 15)
+                : const SizedBox(width: 18),
+            trailingIcon: const Icon(Icons.cached),
+            child: const Text("跟随系统"),
+            onPressed: () {
+              themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.system);
+            }),
+        MenuItemButton(
+            leadingIcon: themeNotifier.value.mode == ThemeMode.dark
+                ? const Icon(Icons.check, size: 15)
+                : const SizedBox(width: 15),
+            trailingIcon: const Icon(Icons.nightlight_outlined),
+            child: const Text("深色"),
+            onPressed: () {
+              themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.dark);
+            }),
+        MenuItemButton(
+            leadingIcon: themeNotifier.value.mode == ThemeMode.light
+                ? const Icon(Icons.check, size: 15)
+                : const SizedBox(width: 15),
+            trailingIcon: const Icon(Icons.sunny),
+            child: const Text("浅色"),
+            onPressed: () {
+              themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.light);
+            }),
+      ],
+      child: const Padding(padding: EdgeInsets.only(left: 10), child: Text("主题")),
+    );
   }
 }

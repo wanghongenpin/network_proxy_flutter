@@ -23,13 +23,12 @@ class _FilterDialogState extends State<FilterDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+        titlePadding: const EdgeInsets.only(left: 20, top: 10, right: 15),
+        contentPadding: const EdgeInsets.only(left: 20, right: 20),
         scrollable: true,
         title: const Row(children: [
           Text("域名过滤", style: TextStyle(fontSize: 18)),
-          Expanded(
-              child: Align(
-                  alignment: Alignment.topRight,
-                  child: CloseButton()))
+          Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
         ]),
         content: SizedBox(
           width: 680,

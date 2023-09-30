@@ -21,10 +21,12 @@ import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
+import 'package:network_proxy/network/util/system_proxy.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:path_provider/path_provider.dart';
 
 class Configuration {
+  ///代理相关配置
   int port = 9099;
 
   //是否启用https抓包
@@ -32,6 +34,9 @@ class Configuration {
 
   //是否设置系统代理
   bool enableSystemProxy = true;
+
+  //代理忽略域名
+  String proxyPassDomains = SystemProxy.proxyPassDomains;
 
   //是否显示更新内容公告
   bool upgradeNoticeV3 = true;
@@ -69,6 +74,7 @@ class Configuration {
   }
 
   String? userHome;
+
   Future<File> homeDir() async {
     if (userHome != null) {
       return File("${userHome!}${Platform.pathSeparator}.proxypin");
@@ -117,6 +123,7 @@ class Configuration {
     port = config['port'] ?? port;
     enableSsl = config['enableSsl'] == true;
     enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
+    proxyPassDomains = config['proxyPassDomains'] ?? SystemProxy.proxyPassDomains;
     upgradeNoticeV3 = config['upgradeNoticeV3'] ?? true;
     if (config['externalProxy'] != null) {
       externalProxy = ProxyInfo.fromJson(config['externalProxy']);
@@ -162,6 +169,7 @@ class Configuration {
       'port': port,
       'enableSsl': enableSsl,
       'enableSystemProxy': enableSystemProxy,
+      'proxyPassDomains': proxyPassDomains,
       'externalProxy': externalProxy?.toJson(),
       'appWhitelist': appWhitelist,
       'whitelist': HostFilter.whitelist.toJson(),

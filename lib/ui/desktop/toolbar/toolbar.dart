@@ -60,12 +60,7 @@ class _ToolbarState extends State<Toolbar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        // decoration: BoxDecoration(
-        //     border: Border(
-        //   bottom: BorderSide(color: Theme.of(context).dividerColor, width: 0.1),
-        // )),
-        child: Row(
+    return Row(
       children: [
         Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 80 : 30)),
         SocketLaunch(proxyServer: widget.proxyServer),
@@ -103,7 +98,7 @@ class _ToolbarState extends State<Toolbar> {
                 )), //右对齐
         const Padding(padding: EdgeInsets.only(left: 30)),
       ],
-    ));
+    );
   }
 
   phoneConnect(List<String> hosts, int port) {

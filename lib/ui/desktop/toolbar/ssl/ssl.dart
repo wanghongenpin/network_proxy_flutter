@@ -21,9 +21,12 @@ class SslWidget extends StatefulWidget {
 class _SslState extends State<SslWidget> {
   @override
   Widget build(BuildContext context) {
+    var surfaceTintColor =
+    Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.background;
+
     return PopupMenuButton<String>(
       icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red),
-      surfaceTintColor: Colors.white70,
+      surfaceTintColor: surfaceTintColor,
       tooltip: "HTTPS代理",
       offset: const Offset(10, 30),
       itemBuilder: (context) {

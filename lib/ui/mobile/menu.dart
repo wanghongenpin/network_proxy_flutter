@@ -9,7 +9,6 @@ import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
-import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
 import 'package:network_proxy/ui/mobile/request/history.dart';
@@ -18,6 +17,7 @@ import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
 import 'package:network_proxy/ui/mobile/setting/filter.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
+import 'package:network_proxy/ui/mobile/setting/theme.dart';
 import 'package:network_proxy/utils/ip.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
@@ -52,12 +52,12 @@ class DrawerWidget extends StatelessWidget {
           onTap: () => navigator(context, MobileHistory(proxyServer: proxyServer, requestStateKey: requestStateKey)),
         ),
         const Divider(thickness: 0.3),
-        Padding(padding: const EdgeInsets.only(left: 15), child: PortWidget(proxyServer: proxyServer)),
+        PortWidget(proxyServer: proxyServer),
         ListTile(
             title: const Text("HTTPS抓包"),
             trailing: const Icon(Icons.arrow_right),
             onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
-        const ThemeSetting(),
+        const MobileThemeSetting(),
         Platform.isIOS
             ? const SizedBox()
             : ListTile(
