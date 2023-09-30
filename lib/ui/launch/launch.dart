@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -13,9 +12,16 @@ class SocketLaunch extends StatefulWidget {
   final bool startup;
   final Function? onStart;
   final Function? onStop;
+  final bool serverLaunch;
 
   const SocketLaunch(
-      {super.key, required this.proxyServer, this.size = 25, this.onStart, this.onStop, this.startup = true});
+      {super.key,
+      required this.proxyServer,
+      this.size = 25,
+      this.onStart,
+      this.onStop,
+      this.startup = true,
+      this.serverLaunch = true});
 
   @override
   State<StatefulWidget> createState() {
@@ -75,6 +81,14 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
             color: started ? Colors.red : Colors.green, size: widget.size.toDouble()),
         onPressed: () async {
           if (started) {
+            if (widget.serverLaunch) {
+              setState(() {
+                widget.onStop?.call();
+                started = !started;
+              });
+              return;
+            }
+
             widget.proxyServer.stop().then((value) {
               widget.onStop?.call();
               setState(() {
@@ -87,7 +101,16 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
         });
   }
 
+  ///启动代理服务器
   start() {
+    if (widget.serverLaunch) {
+      setState(() {
+        widget.onStart?.call();
+        started = true;
+      });
+      return;
+    }
+
     widget.proxyServer.start().then((value) {
       setState(() {
         started = true;

@@ -45,8 +45,9 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   void initState() {
     proxyServer = ProxyServer(widget.configuration);
     proxyServer.addListener(this);
+    proxyServer.start();
 
-    // 远程连接
+    //远程连接
     desktop.addListener(() {
       if (desktop.value.connect) {
         proxyServer.configuration.remoteHost = "http://${desktop.value.host}:${desktop.value.port}";
@@ -95,7 +96,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
                   size: 36,
                   startup: false,
                   onStart: () => Vpn.startVpn("127.0.0.1", proxyServer.port, proxyServer.configuration.appWhitelist),
-                  onStop: () => Vpn.stopVpn()))),
+                  onStop: () => Vpn.stopVpn())),
+      ),
       body: ValueListenableBuilder(
           valueListenable: desktop,
           builder: (context, value, _) {

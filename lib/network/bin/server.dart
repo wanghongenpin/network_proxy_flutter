@@ -19,6 +19,7 @@ import 'dart:async';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/utils/platform.dart';
 
 import '../handler.dart';
 import '../http/codec.dart';
@@ -95,6 +96,10 @@ class ProxyServer {
 
   /// 设置系统代理
   setSystemProxyEnable(bool enable) async {
+    if (!Platforms.isDesktop()) {
+      return;
+    }
+
     //关闭系统代理 恢复成外部代理地址
     if (!enable && configuration.externalProxy?.enabled == true) {
       await SystemProxy.setSystemProxy(configuration.externalProxy!.port!, enableSsl, configuration.proxyPassDomains);
@@ -105,8 +110,8 @@ class ProxyServer {
   }
 
   /// 重启代理服务
-  restart() {
-    stop().then((value) => start());
+  Future<void> restart() async {
+    await stop().then((value) => start());
   }
 
   ///添加监听器

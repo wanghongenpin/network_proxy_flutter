@@ -60,7 +60,7 @@ class SystemProxy {
 
   ///设置系统代理
   static Future<void> setSystemProxy(int port, bool sslSetting, String proxyPassDomains) async {
-    instance._setSystemProxy(port, sslSetting, proxyPassDomains);
+    await instance._setSystemProxy(port, sslSetting, proxyPassDomains);
   }
 
   ///设置Https代理启用状态

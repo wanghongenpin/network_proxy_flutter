@@ -45,36 +45,38 @@ class _MobileSslState extends State<MobileSslWidget> {
                 CertificateManager.cleanCache();
                 setState(() {});
               }),
-          ExpansionTile(
-              title: const Text("安装根证书"),
-              initiallyExpanded: true,
-              childrenPadding: const EdgeInsets.only(left: 20),
-              expandedAlignment: Alignment.topLeft,
-              expandedCrossAxisAlignment: CrossAxisAlignment.start,
-              shape: const Border(),
-              children: [...(Platform.isIOS ? ios() : android()), const SizedBox(height: 20)])
+          Platform.isIOS ? ios() : Padding(padding: const EdgeInsets.only(left: 15), child: android()),
+          const SizedBox(height: 20)
         ]));
   }
 
-  List<Widget> ios() {
-    return [
-      TextButton(onPressed: () => _downloadCert(), child: const Text("1. 点击下载根证书")),
-      TextButton(onPressed: () {}, child: const Text("2. 安装根证书 -> 信任证书")),
-      TextButton(onPressed: () {}, child: const Text("2.1 安装根证书 设置 > 已下载描述文件 > 安装")),
-      Padding(
-          padding: const EdgeInsets.only(left: 15),
-          child:
-              Image.network("https://foruda.gitee.com/images/1689346516243774963/c56bc546_1073801.png", height: 400)),
-      TextButton(onPressed: () {}, child: const Text("2.2 信任根证书 设置 > 通用 > 关于本机 -> 证书信任设置")),
-      Padding(
-          padding: const EdgeInsets.only(left: 15),
-          child:
-              Image.network("https://foruda.gitee.com/images/1689346614916658100/fd9b9e41_1073801.png", height: 270)),
-    ];
+  Widget ios() {
+    return ExpansionTile(
+        title: const Text("安装根证书"),
+        initiallyExpanded: true,
+        childrenPadding: const EdgeInsets.only(left: 20),
+        expandedAlignment: Alignment.topLeft,
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        shape: const Border(),
+        children: [
+          TextButton(onPressed: () => _downloadCert(), child: const Text("1. 点击下载根证书")),
+          TextButton(onPressed: () {}, child: const Text("2. 安装根证书 -> 信任证书")),
+          TextButton(onPressed: () {}, child: const Text("2.1 安装根证书 设置 > 已下载描述文件 > 安装")),
+          Padding(
+              padding: const EdgeInsets.only(left: 15),
+              child: Image.network("https://foruda.gitee.com/images/1689346516243774963/c56bc546_1073801.png",
+                  height: 400)),
+          TextButton(onPressed: () {}, child: const Text("2.2 信任根证书 设置 > 通用 > 关于本机 -> 证书信任设置")),
+          Padding(
+              padding: const EdgeInsets.only(left: 15),
+              child: Image.network("https://foruda.gitee.com/images/1689346614916658100/fd9b9e41_1073801.png",
+                  height: 270)),
+        ]);
   }
 
-  List<Widget> android() {
-    return [
+  Widget android() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text("安装根证书"),
       ExpansionTile(
           title: const Text("Root用户:", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
           tilePadding: const EdgeInsets.only(left: 0),
@@ -109,7 +111,7 @@ class _MobileSslState extends State<MobileSslWidget> {
                       height: 680,
                     )))
           ])
-    ];
+    ]);
   }
 
   void _downloadCert() async {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
@@ -254,8 +255,10 @@ class _PortState extends State<PortWidget> {
       //失去焦点
       if (!portFocus.hasFocus && textController.text != widget.proxyServer.port.toString()) {
         widget.proxyServer.configuration.port = int.parse(textController.text);
+
         if (widget.proxyServer.isRunning) {
-          widget.proxyServer.restart();
+          widget.proxyServer.restart().catchError(
+              (e) => FlutterToastr.show("启动失败，请检查端口号${widget.proxyServer.port}是否被占用", context, duration: 3));
         }
         widget.proxyServer.configuration.flushConfig();
       }

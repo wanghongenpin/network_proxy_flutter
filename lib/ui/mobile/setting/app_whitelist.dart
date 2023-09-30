@@ -42,11 +42,9 @@ class _AppWhitelistState extends State<AppWhitelist> {
   Widget build(BuildContext context) {
     var appWhitelist = <Future<AppInfo>>[];
     for (var element in configuration.appWhitelist) {
-      try {
-        appWhitelist.add(InstalledApps.getAppInfo(element));
-      } catch (_) {
-        appWhitelist.add(Future.value(AppInfo.create({"name": "未知应用", "package_name": element})));
-      }
+      appWhitelist.add(InstalledApps.getAppInfo(element).catchError((e) {
+        return AppInfo.create({"name": "未知应用", "package_name": element});
+      }));
     }
 
     return Scaffold(
@@ -77,6 +75,7 @@ class _AppWhitelistState extends State<AppWhitelist> {
       body: FutureBuilder(
           future: Future.wait(appWhitelist),
           builder: (BuildContext context, AsyncSnapshot<List<AppInfo>> snapshot) {
+            print(snapshot.data);
             if (snapshot.hasData) {
               if (snapshot.data!.isEmpty) {
                 return const Center(
@@ -89,7 +88,7 @@ class _AppWhitelistState extends State<AppWhitelist> {
                   itemBuilder: (BuildContext context, int index) {
                     AppInfo appInfo = snapshot.data![index];
                     return ListTile(
-                      leading: Image.memory(appInfo.icon ?? Uint8List(0)),
+                      leading: appInfo.icon == null ? const Icon(Icons.question_mark) : Image.memory(appInfo.icon!),
                       title: Text(appInfo.name ?? ""),
                       subtitle: Text(appInfo.packageName ?? ""),
                       trailing: IconButton(
