@@ -87,7 +87,7 @@ class HttpClients {
   /// 发送get请求
   static Future<HttpResponse> get(String url, {Duration duration = const Duration(seconds: 3)}) async {
     HttpRequest msg = HttpRequest(HttpMethod.get, url);
-    return request(HostAndPort.of(url), msg);
+    return request(HostAndPort.of(url), msg, duration: duration);
   }
 
   /// 发送请求
@@ -106,7 +106,7 @@ class HttpClients {
 
   /// 发送代理请求
   static Future<HttpResponse> proxyRequest(HttpRequest request,
-      {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 3)}) async {
+      {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 10)}) async {
     if (request.headers.host == null || request.headers.host?.trim().isEmpty == true) {
       try {
         request.headers.host = '${Uri.parse(request.uri).host}:${Uri.parse(request.uri).port}';
@@ -114,9 +114,7 @@ class HttpClients {
     }
 
     var httpResponseHandler = HttpResponseHandler();
-
     HostAndPort hostPort = HostAndPort.of(request.uri);
-
     Channel channel = await proxyConnect(proxyInfo: proxyInfo, hostPort, httpResponseHandler);
 
     if (hostPort.isSsl()) {

@@ -28,3 +28,52 @@ class _CustomPopupMenuItemState<T> extends PopupMenuItemState<T, CustomPopupMenu
     );
   }
 }
+
+class SwitchWidget extends StatefulWidget {
+  final String? title;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const SwitchWidget({super.key, this.title, this.subtitle, required this.value, required this.onChanged});
+
+  @override
+  State<StatefulWidget> createState() => _SwitchState();
+}
+
+class _SwitchState extends State<SwitchWidget> {
+  bool value = false;
+
+  @override
+  void initState() {
+    super.initState();
+    value = widget.value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.title == null) {
+      return Switch(
+        value: value,
+        onChanged: (value) {
+          setState(() {
+            this.value = value;
+          });
+          widget.onChanged(value);
+        },
+      );
+    }
+    return SwitchListTile(
+      title: widget.title == null ? null : Text(widget.title!),
+      subtitle: widget.subtitle == null ? null : Text(widget.subtitle!),
+      value: value,
+      dense: true,
+      onChanged: (value) {
+        setState(() {
+          this.value = value;
+        });
+        widget.onChanged(value);
+      },
+    );
+  }
+}

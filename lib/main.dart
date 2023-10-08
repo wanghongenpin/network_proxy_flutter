@@ -1,23 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/ui/component/chinese_font.dart';
-import 'package:network_proxy/ui/component/encoder.dart';
-import 'package:network_proxy/ui/content/body.dart';
+import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/desktop/desktop.dart';
-import 'package:network_proxy/ui/desktop/left/request_editor.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/ui_configuration.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
-import 'network/http/http.dart';
-
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
   var instance = UIConfiguration.instance;
   //多窗口
   if (args.firstOrNull == 'multi_window') {
@@ -28,6 +24,7 @@ void main(List<String> args) async {
   }
 
   var configuration = Configuration.instance;
+  //移动端
   if (Platforms.isMobile()) {
     var uiConfiguration = await instance;
     runApp(FluentApp(MobileHomePage(configuration: (await configuration)), uiConfiguration: uiConfiguration));
@@ -51,32 +48,6 @@ void main(List<String> args) async {
   runApp(FluentApp(DesktopHomePage(configuration: await configuration), uiConfiguration: uiConfiguration));
 }
 
-///多窗口
-Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
-  if (argument['name'] == 'RequestEditor') {
-    return RequestEditor(
-        windowController: WindowController.fromWindowId(windowId),
-        request: argument['request'] == null ? null : HttpRequest.fromJson(argument['request']));
-  }
-
-  if (argument['name'] == 'HttpBodyWidget') {
-    return HttpBodyWidget(
-        windowController: WindowController.fromWindowId(windowId),
-        httpMessage: HttpMessage.fromJson(argument['httpMessage']),
-        inNewWindow: true,
-        hideRequestRewrite: true);
-  }
-
-  if (argument['name'] == 'EncoderWidget') {
-    return EncoderWidget(
-        type: EncoderType.nameOf(argument['type']),
-        text: argument['text'],
-        windowController: WindowController.fromWindowId(windowId));
-  }
-
-  return const SizedBox();
-}
-
 class ThemeModel {
   ThemeMode mode;
   bool useMaterial3;
@@ -89,7 +60,7 @@ class ThemeModel {
       );
 }
 
-/// 主题
+///主题
 late ValueNotifier<ThemeModel> themeNotifier;
 
 class FluentApp extends StatelessWidget {

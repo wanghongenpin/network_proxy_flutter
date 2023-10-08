@@ -87,6 +87,7 @@ class HttpRequest extends HttpMessage {
   HostAndPort? hostAndPort;
   DateTime requestTime = DateTime.now(); //请求时间
   HttpResponse? response;
+  Map<String, dynamic> attributes = {};
 
   HttpRequest(this.method, this.uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
 
@@ -176,7 +177,7 @@ enum ContentType {
 
 ///HTTP响应。
 class HttpResponse extends HttpMessage {
-  final HttpStatus status;
+  HttpStatus status;
   DateTime responseTime = DateTime.now();
   HttpRequest? request;
 
@@ -283,7 +284,7 @@ class HttpStatus {
     return HttpStatus(statusCode, reasonPhrase);
   }
 
-  static HttpStatus? valueOf(int code) {
+  static HttpStatus valueOf(int code) {
     switch (code) {
       case 200:
         return ok;
@@ -304,7 +305,7 @@ class HttpStatus {
       case 504:
         return gatewayTimeout;
     }
-    return null;
+    return HttpStatus(code, "");
   }
 
   final int code;

@@ -58,7 +58,7 @@ class ThemeSetting extends StatelessWidget {
               themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.light);
             }),
       ],
-      child: const Padding(padding: EdgeInsets.only(left: 10), child: Text("主题")),
+      child: const Padding(padding: EdgeInsets.only(left: 10), child: Text("主题",style: TextStyle(fontSize: 14))),
     );
   }
 }

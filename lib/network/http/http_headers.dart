@@ -128,6 +128,12 @@ class HttpHeaders {
     }
   }
 
+  //清空
+  void clean() {
+    _headers.clear();
+    _originalHeaderNames.clear();
+  }
+
   String headerLines() {
     StringBuffer sb = StringBuffer();
     forEach((name, values) {
@@ -144,6 +150,15 @@ class HttpHeaders {
     Map<String, dynamic> json = {};
     forEach((name, values) {
       json[name] = values;
+    });
+    return json;
+  }
+
+  ///转换json
+  Map<String, String> toMap() {
+    Map<String, String> json = {};
+    forEach((name, values) {
+      json[name] = values.join(";");
     });
     return json;
   }

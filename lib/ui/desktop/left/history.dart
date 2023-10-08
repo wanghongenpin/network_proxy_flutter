@@ -11,6 +11,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
@@ -98,7 +99,6 @@ class _HistoryState extends State<_HistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    print("_HistoryState build");
     List<Widget> children = [];
     if (!_sessionSaved) {
       //当前会话未保存，是否保存当前会话
@@ -127,16 +127,12 @@ class _HistoryState extends State<_HistoryWidget> {
 
   //导入har
   import() async {
-    const XTypeGroup typeGroup = XTypeGroup(
-      label: 'Har',
-      extensions: <String>['har'],
-    );
+    const XTypeGroup typeGroup = XTypeGroup(label: 'Har', extensions: <String>['har']);
     final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
     if (file == null) {
       return;
     }
 
-    print(file);
     try {
       var historyItem = await storage.addHarFile(file);
       setState(() {
@@ -144,8 +140,7 @@ class _HistoryState extends State<_HistoryWidget> {
         FlutterToastr.show("导入成功", context);
       });
     } catch (e, t) {
-      print(e);
-      print(t);
+      logger.e('导入失败 $file', error: e, stackTrace: t);
       if (context.mounted) {
         FlutterToastr.show("导入失败 $e", context);
       }

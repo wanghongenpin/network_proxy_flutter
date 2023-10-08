@@ -4,6 +4,7 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
+import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/external_proxy.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
@@ -59,9 +60,10 @@ class _SettingState extends State<Setting> {
       },
       menuChildren: [
         _ProxyMenu(proxyServer: widget.proxyServer),
+        const ThemeSetting(),
         item("域名过滤", onPressed: hostFilter),
         item("请求重写", onPressed: requestRewrite),
-        const ThemeSetting(),
+        item("脚本", onPressed: () => openScriptWindow()),
         item("外部代理设置", onPressed: setExternalProxy),
         item("Github", onPressed: () => launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"))),
       ],
@@ -181,7 +183,7 @@ class _ProxyMenuState extends State<_ProxyMenu> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("代理忽略域名"),
+                  const Text("代理忽略域名", style: TextStyle(fontSize: 14)),
                   const SizedBox(height: 3),
                   Text("多个使用;分割", style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                 ],
@@ -210,7 +212,7 @@ class _ProxyMenuState extends State<_ProxyMenu> {
                 minLines: 1)),
         const SizedBox(height: 10),
       ],
-      child: const Padding(padding: EdgeInsets.only(left: 10), child: Text("代理")),
+      child: const Padding(padding: EdgeInsets.only(left: 10), child: Text("代理",style: TextStyle(fontSize: 14))),
     );
   }
 

@@ -25,6 +25,7 @@ import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/file_read.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
+import 'package:network_proxy/network/util/script_manager.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 import 'channel.dart';
@@ -126,14 +127,19 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
-      log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
-
-      //替换请求体
-      _rewriteBody(httpRequest);
-
-      if (!HostFilter.filter(httpRequest.hostAndPort?.host)) {
-        listener?.onRequest(channel, httpRequest);
+      // log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+      if (HostFilter.filter(httpRequest.hostAndPort?.host)) {
+        await remoteChannel.write(httpRequest);
+        return;
       }
+
+      //脚本替换
+      var scriptManager = await ScriptManager.instance;
+      httpRequest = await scriptManager.runScript(httpRequest);
+      //替换请求体
+      rewriteBody(httpRequest);
+
+      listener?.onRequest(channel, httpRequest);
 
       //重定向
       var redirectRewrite =
@@ -152,7 +158,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   }
 
   //替换请求体
-  _rewriteBody(HttpRequest httpRequest) {
+  rewriteBody(HttpRequest httpRequest) {
     var rewrite = requestRewrites?.findRequestRewrite(httpRequest.hostAndPort?.host, httpRequest.path(), RuleType.body);
 
     if (rewrite?.requestBody?.isNotEmpty == true) {
@@ -222,7 +228,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
   /// 异常处理
   _exceptionHandler(Channel channel, HttpRequest? request, error) {
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
-    hostAndPort ??= HostAndPort.host(scheme:HostAndPort.httpScheme, channel.remoteAddress.host, channel.remotePort);
+    hostAndPort ??= HostAndPort.host(scheme: HostAndPort.httpScheme, channel.remoteAddress.host, channel.remotePort);
     String message = error.toString();
     HttpStatus status = HttpStatus(-1, message);
     if (error is HandshakeException) {
@@ -231,7 +237,10 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       status = HttpStatus(-3, error.message);
     } else if (error is SocketException) {
       status = HttpStatus(-4, error.message);
+    } else if (error is SignalException) {
+      status.reason('执行脚本异常');
     }
+
     request ??= HttpRequest(HttpMethod.connect, hostAndPort.domain)
       ..body = message.codeUnits
       ..headers.contentLength = message.codeUnits.length
@@ -241,6 +250,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       ..headers.contentType = 'text/plain'
       ..headers.contentLength = message.codeUnits.length
       ..body = message.codeUnits;
+
     listener?.onRequest(channel, request);
     listener?.onResponse(channel, request.response!);
   }
@@ -260,17 +270,29 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   void channelRead(Channel channel, HttpResponse msg) async {
     msg.request = clientChannel.getAttribute(AttributeKeys.request);
     msg.request?.response = msg;
-    // log.i("[${clientChannel.id}] Response ${msg}");
+    //域名是否过滤
+    if (HostFilter.filter(msg.request?.hostAndPort?.host) || msg.request?.method == HttpMethod.connect) {
+      await clientChannel.write(msg);
+      return;
+    }
+
+    // log.i("[${clientChannel.id}] Response $msg");
+    //脚本替换
+    var scriptManager = await ScriptManager.instance;
+    try {
+      msg = await scriptManager.runResponseScript(msg);
+    } catch (e, t) {
+      msg.status = HttpStatus(-1, '执行脚本异常');
+      msg.body = "$e\n${msg.bodyAsString}".codeUnits;
+      log.e('[${clientChannel.id}] 执行脚本异常 ', error: e, stackTrace: t);
+    }
 
     var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.hostAndPort?.host, msg.request?.path());
     if (replaceBody?.isNotEmpty == true) {
       msg.body = utf8.encode(replaceBody!);
     }
 
-    if (!HostFilter.filter(msg.request?.hostAndPort?.host) &&  msg.request?.method != HttpMethod.connect) {
-      listener?.onResponse(clientChannel, msg);
-    }
-
+    listener?.onResponse(clientChannel, msg);
     //发送给客户端
     await clientChannel.write(msg);
   }
@@ -287,7 +309,7 @@ class RelayHandler extends ChannelHandler<Object> {
   RelayHandler(this.remoteChannel);
 
   @override
-  void channelRead(Channel channel, Object msg) {
+  void channelRead(Channel channel, Object msg) async {
     //发送给客户端
     remoteChannel.write(msg);
   }

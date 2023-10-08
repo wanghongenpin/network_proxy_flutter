@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 class FavoriteStorage {
   static Queue<HttpRequest>? _requests;
 
+  /// 获取收藏列表
   static Future<Queue<HttpRequest>> get favorites async {
     if (_requests == null) {
       var file = await _path;

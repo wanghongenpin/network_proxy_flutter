@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_multi_window
   file_selector_linux
+  flutter_js
   proxy_manager
   screen_retriever
   url_launcher_linux

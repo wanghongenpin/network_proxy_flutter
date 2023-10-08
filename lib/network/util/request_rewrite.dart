@@ -42,6 +42,7 @@ class RequestRewrites {
     return null;
   }
 
+  ///
   String? findResponseReplaceWith(String? domain, String? path) {
     if (!enabled || path == null) {
       return null;
@@ -57,7 +58,7 @@ class RequestRewrites {
     return null;
   }
 
-  //
+  ///添加规则
   void addRule(RequestRewriteRule rule) {
     rules.removeWhere((it) => it.path == rule.path && it.domain == rule.domain);
     rules.add(rule);

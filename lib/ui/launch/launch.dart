@@ -81,7 +81,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
             color: started ? Colors.red : Colors.green, size: widget.size.toDouble()),
         onPressed: () async {
           if (started) {
-            if (widget.serverLaunch) {
+            if (!widget.serverLaunch) {
               setState(() {
                 widget.onStop?.call();
                 started = !started;
@@ -103,7 +103,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
 
   ///启动代理服务器
   start() {
-    if (widget.serverLaunch) {
+    if (!widget.serverLaunch) {
       setState(() {
         widget.onStart?.call();
         started = true;

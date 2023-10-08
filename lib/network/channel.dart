@@ -85,7 +85,7 @@ class Channel {
 
   Future<void> write(Object obj) async {
     if (isClosed) {
-      logger.w("[$id] channel is closed $obj");
+      logger.w("[$id] channel is closed");
       return;
     }
 
@@ -98,8 +98,14 @@ class Channel {
     isWriting = true;
     try {
       var data = pipeline._encoder.encode(obj);
-      _socket.add(data);
+      if (!isClosed) {
+        _socket.add(data);
+      }
       await _socket.flush();
+    } catch (e, t) {
+      print(getAttribute(id)._attributes);
+      print(e);
+      print(t);
     } finally {
       isWriting = false;
     }
