@@ -199,34 +199,6 @@ class ScriptEdit extends StatefulWidget {
 }
 
 class _ScriptEditState extends State<ScriptEdit> {
-  static String template = """
-// 在请求到达服务器之前,调用此函数,您可以在此处修改请求数据
-// 例如Add/Update/Remove：Queries、Headers、Body
-async function onRequest(context, request) {
-  console.log(request.url);
-  //URL参数
-  //request.queries["name"] = "value";
-  // 更新或添加新标头
-  //request.headers["X-New-Headers"] = "My-Value";
-  
-  // Update Body 使用fetch API请求接口，具体文档可网上搜索fetch API
-  //response.body = await fetch('https://www.baidu.com/').then(response => response.text());
-  return request;
-}
-
-// 在将响应数据发送到客户端之前,调用此函数,您可以在此处修改响应数据
-async function onResponse(context, request, response) {
-  // 更新或添加新标头
-  // response.headers["Name"] = "Value";
-  // response.statusCode = 200;
-
-  //var body = JSON.parse(response.body);
-  //body['key'] = "value";
-  //response.body = JSON.stringify(body);
-  return response;
-}
-  """;
-
   late CodeController script;
   late TextEditingController nameController;
   late TextEditingController urlController;
@@ -234,7 +206,7 @@ async function onResponse(context, request, response) {
   @override
   void initState() {
     super.initState();
-    script = CodeController(language: javascript, text: widget.script ?? template);
+    script = CodeController(language: javascript, text: widget.script ?? ScriptManager.template);
     nameController = TextEditingController(text: widget.scriptItem?.name);
     urlController = TextEditingController(text: widget.scriptItem?.url);
   }
@@ -386,11 +358,15 @@ class _ScriptListState extends State<ScriptList> {
               PopupMenuItem(
                   height: 35,
                   child: const Text("编辑"),
-                  onTap: () {
+                  onTap: () async {
+                    String script = await (await ScriptManager.instance).getScript(list[index]);
+                    if (!context.mounted) {
+                      return;
+                    }
                     showDialog(
                         barrierDismissible: false,
                         context: context,
-                        builder: (_) => ScriptEdit(scriptItem: list[index])).then((value) {
+                        builder: (_) => ScriptEdit(scriptItem: list[index], script: script)).then((value) {
                       if (value != null) {
                         setState(() {});
                       }

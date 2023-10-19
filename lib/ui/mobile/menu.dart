@@ -16,6 +16,7 @@ import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
 import 'package:network_proxy/ui/mobile/setting/filter.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
+import 'package:network_proxy/ui/mobile/setting/script.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
 import 'package:network_proxy/ui/mobile/setting/theme.dart';
 import 'package:network_proxy/utils/ip.dart';
@@ -78,6 +79,10 @@ class DrawerWidget extends StatelessWidget {
             title: const Text("请求重写"),
             trailing: const Icon(Icons.arrow_right),
             onTap: () => navigator(context, MobileRequestRewrite(configuration: proxyServer.configuration))),
+        ListTile(
+            title: const Text("脚本"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(context, const MobileScript())),
         ListTile(
             title: const Text("Github"),
             trailing: const Icon(Icons.arrow_right),
