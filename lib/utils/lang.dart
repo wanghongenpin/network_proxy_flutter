@@ -1,5 +1,12 @@
 class ValueWrap<V> {
   V? _v;
+  ValueWrap();
+
+  factory ValueWrap.of(V v) {
+     var valueWrap = ValueWrap<V>();
+      valueWrap._v = v;
+      return valueWrap;
+  }
 
   void set(V? v) => this._v = v;
 

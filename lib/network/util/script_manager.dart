@@ -109,7 +109,6 @@ class ScriptManager {
   Future<void> removeScript(int index) async {
     var item = list.removeAt(index);
     File(item.scriptPath!).delete();
-    flushConfig();
   }
 
   ///刷新配置
@@ -171,6 +170,7 @@ class ScriptManager {
     return response;
   }
 
+  ///
   static Future<dynamic> jsResultResolve(JsEvalResult jsResult) async {
     if (jsResult.isPromise) {
       jsResult = await flutterJs.handlePromise(jsResult);

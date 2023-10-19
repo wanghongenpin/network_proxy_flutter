@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:network_proxy/utils/lang.dart';
 
 class CustomPopupMenuItem<T> extends PopupMenuItem<T> {
   final Color? color;
@@ -32,32 +33,25 @@ class _CustomPopupMenuItemState<T> extends PopupMenuItemState<T, CustomPopupMenu
 class SwitchWidget extends StatefulWidget {
   final String? title;
   final String? subtitle;
-  final bool value;
+  final ValueWrap<bool> value;
   final ValueChanged<bool> onChanged;
 
-  const SwitchWidget({super.key, this.title, this.subtitle, required this.value, required this.onChanged});
+  SwitchWidget({super.key, this.title, this.subtitle, required bool value, required this.onChanged})
+      : value = ValueWrap.of(value);
 
   @override
   State<StatefulWidget> createState() => _SwitchState();
 }
 
 class _SwitchState extends State<SwitchWidget> {
-  bool value = false;
-
-  @override
-  void initState() {
-    super.initState();
-    value = widget.value;
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.title == null) {
       return Switch(
-        value: value,
+        value: widget.value.get() == true,
         onChanged: (value) {
           setState(() {
-            this.value = value;
+            widget.value.set(value);
           });
           widget.onChanged(value);
         },
@@ -66,11 +60,11 @@ class _SwitchState extends State<SwitchWidget> {
     return SwitchListTile(
       title: widget.title == null ? null : Text(widget.title!),
       subtitle: widget.subtitle == null ? null : Text(widget.subtitle!),
-      value: value,
+      value: widget.value.get() == true,
       dense: true,
       onChanged: (value) {
         setState(() {
-          this.value = value;
+          widget.value.set(value);
         });
         widget.onChanged(value);
       },

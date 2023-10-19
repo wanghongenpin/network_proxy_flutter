@@ -12,6 +12,7 @@ import 'package:network_proxy/ui/desktop/left/request_editor.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/script.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 
 ///多窗口
@@ -75,22 +76,33 @@ void methodHandler() {
   DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
     print('${call.method} ${call.arguments} $fromWindowId');
 
-    if (call.method == 'getApplicationSupportDirectory') {
-      return getApplicationSupportDirectory().then((it) => it.path);
-    }
-    if (call.method == 'getSaveLocation') {
-      return (await getSaveLocation(suggestedName: call.arguments))?.path;
-    }
-    if (call.method == 'openFile') {
-      XTypeGroup typeGroup = XTypeGroup(extensions: <String>[call.arguments]);
-      final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
-      return file?.path;
-    }
     if (call.method == 'refreshScript') {
       await ScriptManager.instance.then((value) {
         return value.reloadScript();
       });
     }
+
+    if (call.method == 'getApplicationSupportDirectory') {
+      return getApplicationSupportDirectory().then((it) => it.path);
+    }
+
+    if (call.method == 'getSaveLocation') {
+      String? path = (await getSaveLocation(suggestedName: call.arguments))?.path;
+      if (Platform.isWindows) windowManager.blur();
+      return path;
+    }
+
+    if (call.method == 'openFile') {
+      XTypeGroup typeGroup = XTypeGroup(extensions: <String>[call.arguments]);
+      final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+      if (Platform.isWindows) windowManager.blur();
+      return file?.path;
+    }
+
+    if (call.method == 'launchUrl') {
+      return launchUrl(Uri.parse(call.arguments));
+    }
+
     return 'done';
   });
 }

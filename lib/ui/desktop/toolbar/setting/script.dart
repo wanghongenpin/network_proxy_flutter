@@ -19,6 +19,7 @@ import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
@@ -153,11 +154,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
 
   //导入js
   import() async {
-    String? file = Platform.isMacOS
-        ? await DesktopMultiWindow.invokeMethod(0, 'openFile', 'json')
-        : await openFile(acceptedTypeGroups: [
-            const XTypeGroup(extensions: ['json'])
-          ]).then((it) => it?.path);
+    String? file = await DesktopMultiWindow.invokeMethod(0, 'openFile', 'json');
     WindowController.fromWindowId(widget.windowId).show();
     if (file == null) {
       return;
@@ -212,9 +209,8 @@ async function onRequest(context, request) {
   // 更新或添加新标头
   //request.headers["X-New-Headers"] = "My-Value";
   
-  //var body = JSON.parse(response.body);
-  //body['key'] = "value";
-  //response.body = JSON.stringify(body);
+  // Update Body 使用fetch API请求接口，具体文档可网上搜索fetch API
+  //response.body = await fetch('https://www.baidu.com/').then(response => response.text());
   return request;
 }
 
@@ -224,8 +220,9 @@ async function onResponse(context, request, response) {
   // response.headers["Name"] = "Value";
   // response.statusCode = 200;
 
-  // Update Body
-  //response.body = await fetch('https://www.baidu.com/').then(response => response.text());
+  //var body = JSON.parse(response.body);
+  //body['key'] = "value";
+  //response.body = JSON.stringify(body);
   return response;
 }
   """;
@@ -256,11 +253,16 @@ async function onResponse(context, request, response) {
     return AlertDialog(
         scrollable: true,
         titlePadding: const EdgeInsets.only(left: 15, top: 5, right: 15),
-        title: const Row(children: [
-          Text("编辑脚本", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          SizedBox(width: 10),
-          Tooltip(message: "使用 JavaScript 修改请求和响应", child: Icon(Icons.help_outline, size: 20)),
-          Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
+        title: Row(children: [
+          const Text("编辑脚本", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          const SizedBox(width: 10),
+          Text.rich(TextSpan(
+              text: '使用文档',
+              style: const TextStyle(color: Colors.blue, fontSize: 14),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => DesktopMultiWindow.invokeMethod(
+                    0, "launchUrl", 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'))),
+          const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
         ]),
         actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
         actions: [
@@ -400,7 +402,6 @@ class _ScriptListState extends State<ScriptList> {
                   child: list[index].enabled ? const Text("禁用") : const Text("启用"),
                   onTap: () {
                     list[index].enabled = !list[index].enabled;
-                    _refreshScript();
                     setState(() {});
                   }),
               const PopupMenuDivider(),
@@ -409,6 +410,7 @@ class _ScriptListState extends State<ScriptList> {
                   child: const Text("删除"),
                   onTap: () async {
                     (await ScriptManager.instance).removeScript(index);
+                    _refreshScript();
                     setState(() {});
                     if (context.mounted) FlutterToastr.show('删除成功', context);
                   }),
@@ -446,9 +448,7 @@ class _ScriptListState extends State<ScriptList> {
   export(ScriptItem item) async {
     //文件名称
     String fileName = '${item.name}.json';
-    String? saveLocation = Platform.isMacOS
-        ? await DesktopMultiWindow.invokeMethod(0, 'getSaveLocation', fileName)
-        : (await getSaveLocation(suggestedName: fileName))?.path;
+    String? saveLocation = await DesktopMultiWindow.invokeMethod(0, 'getSaveLocation', fileName);
     WindowController.fromWindowId(widget.windowId).show();
     if (saveLocation == null) {
       return;
