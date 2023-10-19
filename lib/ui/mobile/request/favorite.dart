@@ -46,8 +46,8 @@ class _FavoritesState extends State<MobileFavorites> {
                     return _FavoriteItem(
                       favorite,
                       index: index,
-                      onRemove: (HttpRequest request) {
-                        FavoriteStorage.removeFavorite(request);
+                      onRemove: (Favorite favorite) {
+                        FavoriteStorage.removeFavorite(favorite);
                         FlutterToastr.show('已删除收藏', context);
                         setState(() {});
                       },
@@ -67,7 +67,7 @@ class _FavoriteItem extends StatefulWidget {
   final int index;
   final Favorite favorite;
   final ProxyServer proxyServer;
-  final Function(HttpRequest request)? onRemove;
+  final Function(Favorite favorite)? onRemove;
 
   const _FavoriteItem(this.favorite, {Key? key, required this.onRemove, required this.proxyServer, required this.index})
       : super(key: key);
@@ -121,8 +121,8 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           TextButton(
               child: const SizedBox(width: double.infinity, child: Text("重命名", textAlign: TextAlign.center)),
               onPressed: () {
-                rename(widget.favorite);
                 Navigator.of(context).pop();
+                rename(widget.favorite);
               }),
           const Divider(thickness: 0.5),
           TextButton(
@@ -148,7 +148,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           TextButton(
               child: const SizedBox(width: double.infinity, child: Text("删除收藏", textAlign: TextAlign.center)),
               onPressed: () {
-                widget.onRemove?.call(request);
+                widget.onRemove?.call(widget.favorite);
                 FlutterToastr.show('删除成功', context);
                 Navigator.of(context).pop();
               }),

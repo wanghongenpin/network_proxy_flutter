@@ -21,7 +21,7 @@ async function onRequest(context, request) {
   //request.headers["X-New-Headers"] = "My-Value";
   
   // Update Body 使用fetch API请求接口，具体文档可网上搜索fetch API
-  //response.body = await fetch('https://www.baidu.com/').then(response => response.text());
+  //request.body = await fetch('https://www.baidu.com/').then(response => response.text());
   return request;
 }
 
@@ -163,10 +163,10 @@ async function onResponse(context, request, response) {
         var context = jsonEncode(scriptContext(item));
         var jsRequest = jsonEncode(convertJsRequest(request));
         String script = await getScript(item);
-
         var jsResult = await flutterJs.evaluateAsync(
             """var request = $jsRequest, context = $context;  request['context'] = context; $script\n  onRequest(context, request)""");
         var result = await jsResultResolve(jsResult);
+
         request.attributes['scriptContext'] = result['context'];
         return convertHttpRequest(request, result);
       }
@@ -187,11 +187,10 @@ async function onResponse(context, request, response) {
         var context = jsonEncode(request.attributes['scriptContext'] ?? scriptContext(item));
         var jsRequest = jsonEncode(convertJsRequest(request));
         var jsResponse = jsonEncode(convertJsResponse(response));
-        print(context);
         String script = await getScript(item);
         var jsResult = await flutterJs.evaluateAsync("""$script\n  onResponse($context, $jsRequest,$jsResponse);""");
+        // print("response: ${jsResult.isPromise} ${jsResult.isError} ${jsResult.rawResult}");
         var result = await jsResultResolve(jsResult);
-        // print("response: ${jsResult.isPromise} ${jsResult.isError} $result");
         return convertHttpResponse(response, result);
       }
     }
@@ -204,10 +203,11 @@ async function onResponse(context, request, response) {
       jsResult = await flutterJs.handlePromise(jsResult);
     }
     var result = jsResult.rawResult;
-    if (Platform.isMacOS) {
+    if (Platform.isMacOS || Platform.isIOS) {
       result = flutterJs.convertValue(jsResult);
     }
     if (result is Future) {
+      flutterJs.executePendingJob();
       result = await (jsResult.rawResult as Future);
     }
     if (result is String) {

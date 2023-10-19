@@ -50,9 +50,9 @@ class FavoriteStorage {
     flushConfig();
   }
 
-  static Future<void> removeFavorite(HttpRequest request) async {
+  static Future<void> removeFavorite(Favorite favorite) async {
     var list = await favorites;
-    list.remove(request);
+    list.remove(favorite);
 
     flushConfig();
   }

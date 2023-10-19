@@ -64,26 +64,25 @@ class _MobileScriptState extends State<MobileScript> {
                                     _refreshScript();
                                   },
                                 )),
-                            Expanded(
-                                child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                const SizedBox(width: 10),
-                                FilledButton(
-                                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
-                                  onPressed: scriptEdit,
-                                  child: const Text("添加"),
-                                ),
-                                const SizedBox(width: 10),
-                                OutlinedButton(
-                                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
-                                  onPressed: import,
-                                  child: const Text("导入"),
-                                )
-                              ],
-                            )),
-                            const SizedBox(width: 15)
                           ]),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              const SizedBox(width: 10),
+                              FilledButton(
+                                style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
+                                onPressed: scriptEdit,
+                                child: const Text("添加"),
+                              ),
+                              const SizedBox(width: 10),
+                              OutlinedButton(
+                                style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
+                                onPressed: import,
+                                child: const Text("导入"),
+                              ),
+                              const SizedBox(width: 15),
+                            ],
+                          ),
                           const SizedBox(height: 5),
                           Container(
                               padding: const EdgeInsets.only(top: 10),
@@ -98,7 +97,7 @@ class _MobileScriptState extends State<MobileScript> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     Container(
-                                        width: 200, padding: const EdgeInsets.only(left: 10), child: const Text("名称")),
+                                        width: 100, padding: const EdgeInsets.only(left: 10), child: const Text("名称")),
                                     const SizedBox(width: 50, child: Text("启用", textAlign: TextAlign.center)),
                                     const VerticalDivider(),
                                     const Expanded(child: Text("URL")),
@@ -228,11 +227,11 @@ class _ScriptEditState extends State<ScriptEdit> {
                     const Text("脚本:"),
                     const SizedBox(height: 5),
                     SizedBox(
-                        height: 400,
+                        height: 520,
                         child: CodeTheme(
                             data: CodeThemeData(styles: monokaiSublimeTheme),
                             child: SingleChildScrollView(
-                                child: CodeField(textStyle: const TextStyle(fontSize: 13), controller: script))))
+                                child: CodeField(textStyle: const TextStyle(fontSize: 14), controller: script))))
                   ],
                 ))));
   }
@@ -247,10 +246,10 @@ class _ScriptEditState extends State<ScriptEdit> {
         keyboardType: keyboardType,
         decoration: InputDecoration(
             hintText: hint,
+            contentPadding: const EdgeInsets.all(10),
             errorStyle: const TextStyle(height: 0, fontSize: 0),
             focusedBorder: focusedBorder(),
             isDense: true,
-            constraints: const BoxConstraints(maxHeight: 38),
             border: const OutlineInputBorder()),
       ))
     ]);
@@ -279,81 +278,83 @@ class _ScriptListState extends State<ScriptList> {
 
   List<Widget> rows(List<ScriptItem> list) {
     return List.generate(list.length, (index) {
-      return Ink(
-          child: GestureDetector(
-              onDoubleTap: () async {
-                String script = await (await ScriptManager.instance).getScript(list[index]);
-                if (!context.mounted) {
-                  return;
-                }
-                Navigator.of(context)
-                    .push(MaterialPageRoute(builder: (context) => ScriptEdit(scriptItem: list[index], script: script)))
-                    .then((value) {
-                  if (value != null) {
+      return InkWell(
+          onDoubleTap: () async {
+            String script = await (await ScriptManager.instance).getScript(list[index]);
+            if (!context.mounted) {
+              return;
+            }
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => ScriptEdit(scriptItem: list[index], script: script)))
+                .then((value) {
+              if (value != null) {
+                setState(() {});
+              }
+            });
+          },
+          onTapDown: (details) {
+            showContextMenu(context, details.globalPosition, items: [
+              PopupMenuItem(
+                  height: 35,
+                  child: const Text("编辑"),
+                  onTap: () async {
+                    String script = await (await ScriptManager.instance).getScript(list[index]);
+                    if (!context.mounted) {
+                      return;
+                    }
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(
+                            builder: (context) => ScriptEdit(scriptItem: list[index], script: script)))
+                        .then((value) {
+                      if (value != null) {
+                        setState(() {});
+                      }
+                    });
+                  }),
+              PopupMenuItem(height: 35, child: const Text("分享"), onTap: () => export(list[index])),
+              PopupMenuItem(
+                  height: 35,
+                  child: list[index].enabled ? const Text("禁用") : const Text("启用"),
+                  onTap: () {
+                    list[index].enabled = !list[index].enabled;
                     setState(() {});
-                  }
-                });
-              },
-              onLongPressDown: (details) {
-                showContextMenu(context, details.globalPosition, items: [
-                  PopupMenuItem(
-                      height: 35,
-                      child: const Text("编辑"),
-                      onTap: () async {
-                        String script = await (await ScriptManager.instance).getScript(list[index]);
-                        if (!context.mounted) {
-                          return;
-                        }
-                        Navigator.of(context)
-                            .push(MaterialPageRoute(
-                                builder: (context) => ScriptEdit(scriptItem: list[index], script: script)))
-                            .then((value) {
-                          if (value != null) {
-                            setState(() {});
-                          }
-                        });
-                      }),
-                  PopupMenuItem(height: 35, child: const Text("分享"), onTap: () => export(list[index])),
-                  PopupMenuItem(
-                      height: 35,
-                      child: list[index].enabled ? const Text("禁用") : const Text("启用"),
-                      onTap: () {
-                        list[index].enabled = !list[index].enabled;
-                        setState(() {});
-                      }),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                      height: 35,
-                      child: const Text("删除"),
-                      onTap: () async {
-                        (await ScriptManager.instance).removeScript(index);
-                        _refreshScript();
-                        setState(() {});
-                        if (context.mounted) FlutterToastr.show('删除成功', context);
-                      }),
-                ]);
-              },
-              child: Container(
-                  color: index.isEven ? Colors.grey.withOpacity(0.1) : null,
-                  height: 30,
-                  padding: const EdgeInsets.all(5),
-                  child: Row(
-                    children: [
-                      SizedBox(width: 200, child: Text(list[index].name!, style: const TextStyle(fontSize: 13))),
-                      SizedBox(
-                          width: 40,
-                          child: Transform.scale(
-                              scale: 0.65,
-                              child: SwitchWidget(
-                                  value: list[index].enabled,
-                                  onChanged: (val) {
-                                    list[index].enabled = val;
-                                    _refreshScript();
-                                  }))),
-                      const SizedBox(width: 20),
-                      Expanded(child: Text(list[index].url, style: const TextStyle(fontSize: 13))),
-                    ],
-                  ))));
+                  }),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                  height: 35,
+                  child: const Text("删除"),
+                  onTap: () async {
+                    (await ScriptManager.instance).removeScript(index);
+                    _refreshScript();
+                    setState(() {});
+                    if (context.mounted) FlutterToastr.show('删除成功', context);
+                  }),
+            ]);
+          },
+          child: Container(
+              color: index.isEven ? Colors.grey.withOpacity(0.1) : null,
+              height: 45,
+              padding: const EdgeInsets.all(5),
+              child: Row(
+                children: [
+                  SizedBox(
+                      width: 100,
+                      child: Text(list[index].name!,
+                          style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis)),
+                  SizedBox(
+                      width: 50,
+                      child: Transform.scale(
+                          scale: 0.8,
+                          child: SwitchWidget(
+                              value: list[index].enabled,
+                              onChanged: (val) {
+                                list[index].enabled = val;
+                                _refreshScript();
+                              }))),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(list[index].url, style: const TextStyle(fontSize: 13))),
+                ],
+              )));
     });
   }
 

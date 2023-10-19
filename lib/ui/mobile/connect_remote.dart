@@ -5,6 +5,7 @@ import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/network/util/script_manager.dart';
 
 class RemoteModel {
   final bool connect;
@@ -102,16 +103,18 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
   bool syncWhiteList = true;
   bool syncBlackList = true;
   bool syncRewrite = true;
+  bool syncScript = true;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('同步配置', style: TextStyle(fontSize: 16)),
       content: SizedBox(
-          height: 230,
+          height: 260,
           child: Column(
             children: [
               SwitchListTile(
+                  dense: true,
                   subtitle: const Text("同步白名单过滤"),
                   value: syncWhiteList,
                   onChanged: (val) {
@@ -120,6 +123,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
                     });
                   }),
               SwitchListTile(
+                  dense: true,
                   subtitle: const Text("同步黑名单过滤"),
                   value: syncBlackList,
                   onChanged: (val) {
@@ -128,11 +132,21 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
                     });
                   }),
               SwitchListTile(
+                  dense: true,
                   subtitle: const Text("同步请求重写"),
                   value: syncRewrite,
                   onChanged: (val) {
                     setState(() {
                       syncRewrite = val;
+                    });
+                  }),
+              SwitchListTile(
+                  dense: true,
+                  subtitle: const Text("同步脚本"),
+                  value: syncScript,
+                  onChanged: (val) {
+                    setState(() {
+                      syncScript = val;
                     });
                   }),
             ],
@@ -145,7 +159,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
             }),
         TextButton(
             child: const Text('开始同步'),
-            onPressed: () {
+            onPressed: () async {
               if (syncWhiteList) {
                 HostFilter.whitelist.load(widget.config['whitelist']);
               }
@@ -156,9 +170,18 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
                 widget.configuration.requestRewrites.load(widget.config['requestRewrites']);
                 widget.configuration.flushRequestRewriteConfig();
               }
+              if (syncScript) {
+                await ScriptManager.instance.then((script) async {
+                  script.list.clear();
+                  widget.config['scripts'].forEach((it) => script.addScript(ScriptItem.fromJson(it), it['script']));
+                  await script.flushConfig();
+                });
+              }
               widget.configuration.flushConfig();
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('同步成功')));
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('同步成功')));
+              }
             }),
       ],
     );

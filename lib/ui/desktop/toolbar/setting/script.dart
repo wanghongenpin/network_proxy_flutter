@@ -294,10 +294,10 @@ class _ScriptEditState extends State<ScriptEdit> {
         keyboardType: keyboardType,
         decoration: InputDecoration(
             hintText: hint,
+            contentPadding: const EdgeInsets.all(10),
             errorStyle: const TextStyle(height: 0, fontSize: 0),
             focusedBorder: focusedBorder(),
             isDense: true,
-            constraints: const BoxConstraints(maxHeight: 35),
             border: const OutlineInputBorder()),
       ))
     ]);

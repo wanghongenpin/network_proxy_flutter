@@ -48,8 +48,8 @@ class _FavoritesState extends State<Favorites> {
                   request,
                   index: index,
                   panel: widget.panel,
-                  onRemove: (HttpRequest request) {
-                    FavoriteStorage.removeFavorite(request);
+                  onRemove: (Favorite favorite) {
+                    FavoriteStorage.removeFavorite(favorite);
                     FlutterToastr.show('已删除收藏', context);
                     setState(() {});
                   },
@@ -68,7 +68,7 @@ class _FavoriteItem extends StatefulWidget {
   final int index;
   final Favorite favorite;
   final NetworkTabController panel;
-  final Function(HttpRequest request)? onRemove;
+  final Function(Favorite favorite)? onRemove;
 
   const _FavoriteItem(this.favorite, {Key? key, required this.panel, required this.onRemove, required this.index})
       : super(key: key);
@@ -148,7 +148,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         }),
         const PopupMenuDivider(height: 0.3),
         popupItem("删除收藏", onTap: () {
-          widget.onRemove?.call(request);
+          widget.onRemove?.call(widget.favorite);
         })
       ],
     );
