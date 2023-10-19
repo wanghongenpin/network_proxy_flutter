@@ -161,7 +161,6 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
     //搜索视图
     if (searchModel?.filter(response.request!, response) == true && state == null) {
-
       if (!view.contains(response.request)) {
         view.addFirst(response.request!);
         changeState();
@@ -215,7 +214,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
           GlobalKey<RequestRowState> key = GlobalKey();
           indexes[view.elementAt(index)] = key;
           return RequestRow(
-              index: index,
+              index: view.length - index,
               key: key,
               request: view.elementAt(index),
               proxyServer: widget.proxyServer,

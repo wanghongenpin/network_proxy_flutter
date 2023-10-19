@@ -32,7 +32,7 @@ class _FavoritesState extends State<MobileFavorites> {
         appBar: AppBar(title: const Text("收藏请求", style: TextStyle(fontSize: 16)), centerTitle: true),
         body: FutureBuilder(
             future: FavoriteStorage.favorites,
-            builder: (BuildContext context, AsyncSnapshot<Queue<HttpRequest>> snapshot) {
+            builder: (BuildContext context, AsyncSnapshot<Queue<Favorite>> snapshot) {
               if (snapshot.hasData) {
                 var favorites = snapshot.data ?? Queue();
                 if (favorites.isEmpty) {
@@ -42,9 +42,9 @@ class _FavoritesState extends State<MobileFavorites> {
                 return ListView.separated(
                   itemCount: favorites.length,
                   itemBuilder: (_, index) {
-                    var request = favorites.elementAt(index);
+                    var favorite = favorites.elementAt(index);
                     return _FavoriteItem(
-                      request,
+                      favorite,
                       index: index,
                       onRemove: (HttpRequest request) {
                         FavoriteStorage.removeFavorite(request);
@@ -65,11 +65,11 @@ class _FavoritesState extends State<MobileFavorites> {
 
 class _FavoriteItem extends StatefulWidget {
   final int index;
+  final Favorite favorite;
   final ProxyServer proxyServer;
-  final HttpRequest request;
   final Function(HttpRequest request)? onRemove;
 
-  const _FavoriteItem(this.request, {Key? key, required this.onRemove, required this.proxyServer, required this.index})
+  const _FavoriteItem(this.favorite, {Key? key, required this.onRemove, required this.proxyServer, required this.index})
       : super(key: key);
 
   @override
@@ -77,9 +77,16 @@ class _FavoriteItem extends StatefulWidget {
 }
 
 class _FavoriteItemState extends State<_FavoriteItem> {
+  late HttpRequest request;
+
+  @override
+  void initState() {
+    super.initState();
+    request = widget.favorite.request;
+  }
+
   @override
   Widget build(BuildContext context) {
-    var request = widget.request;
     var response = request.response;
     var title = '${request.method.name} ${request.requestUrl}';
     var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
@@ -89,7 +96,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         onLongPress: menu,
         minLeadingWidth: 25,
         leading: getIcon(response),
-        title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2),
+        title: Text(widget.favorite.name ?? title, overflow: TextOverflow.ellipsis, maxLines: 2),
         subtitle: Text.rich(
             maxLines: 1,
             TextSpan(children: [
@@ -104,22 +111,27 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   menu() {
     showModalBottomSheet(
       context: context,
-      enableDrag: true,
+      isScrollControlled: true,
       builder: (ctx) {
         return Wrap(alignment: WrapAlignment.center, children: [
-          menuItem("复制请求链接", () => widget.request.requestUrl),
+          menuItem("复制请求链接", () => request.requestUrl),
           const Divider(thickness: 0.5),
-          menuItem("复制请求和响应", () => copyRequest(widget.request, widget.request.response)),
+          menuItem("复制 cURL 请求", () => curlRequest(request)),
           const Divider(thickness: 0.5),
-          menuItem("复制 cURL 请求", () => curlRequest(widget.request)),
+          TextButton(
+              child: const SizedBox(width: double.infinity, child: Text("重命名", textAlign: TextAlign.center)),
+              onPressed: () {
+                rename(widget.favorite);
+                Navigator.of(context).pop();
+              }),
           const Divider(thickness: 0.5),
           TextButton(
               child: const SizedBox(width: double.infinity, child: Text("请求重放", textAlign: TextAlign.center)),
               onPressed: () {
-                var request = widget.request.copy(uri: widget.request.requestUrl);
+                var httpRequest = request.copy(uri: request.requestUrl);
                 HttpClients.proxyRequest(
                     proxyInfo: widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null,
-                    request);
+                    httpRequest);
 
                 FlutterToastr.show('已重新发送请求', context);
                 Navigator.of(context).pop();
@@ -130,24 +142,20 @@ class _FavoriteItemState extends State<_FavoriteItem> {
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        MobileRequestEditor(request: widget.request, proxyServer: widget.proxyServer)));
+                    builder: (context) => MobileRequestEditor(request: request, proxyServer: widget.proxyServer)));
               }),
           const Divider(thickness: 0.5),
           TextButton(
               child: const SizedBox(width: double.infinity, child: Text("删除收藏", textAlign: TextAlign.center)),
               onPressed: () {
-                widget.onRemove?.call(widget.request);
+                widget.onRemove?.call(request);
                 FlutterToastr.show('删除成功', context);
                 Navigator.of(context).pop();
               }),
-          Container(
-            color: Theme.of(context).hoverColor,
-            height: 8,
-          ),
+          Container(color: Theme.of(context).hoverColor, height: 8),
           TextButton(
             child: Container(
-                height: 60,
+                height: 40,
                 width: double.infinity,
                 padding: const EdgeInsets.only(top: 10),
                 child: const Text("取消", textAlign: TextAlign.center)),
@@ -171,13 +179,42 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         });
   }
 
+  //重命名
+  rename(Favorite item) {
+    String? name = item.name;
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: TextFormField(
+              initialValue: name,
+              decoration: const InputDecoration(label: Text("名称")),
+              onChanged: (val) => name = val,
+            ),
+            actions: <Widget>[
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+              TextButton(
+                child: const Text('保存'),
+                onPressed: () {
+                  Navigator.maybePop(context);
+                  setState(() {
+                    item.name = name?.isEmpty == true ? null : name;
+                    FavoriteStorage.flushConfig();
+                  });
+                },
+              ),
+            ],
+          );
+        });
+  }
+
   //点击事件
   void onClick() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return NetworkTabController(
           proxyServer: widget.proxyServer,
-          httpRequest: widget.request,
-          httpResponse: widget.request.response,
+          httpRequest: request,
+          httpResponse: request.response,
           title: const Text("抓包详情", style: TextStyle(fontSize: 16)));
     }));
   }

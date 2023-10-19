@@ -89,6 +89,12 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
         "requestRewrites": requestRewrites?.toJson(),
         'whitelist': HostFilter.whitelist.toJson(),
         'blacklist': HostFilter.blacklist.toJson(),
+        'scripts': await ScriptManager.instance.then((script) {
+          var list = script.list.map((e) async {
+            return {'name': e.name, 'enabled': e.enabled, 'url': e.url, 'script': await script.getScript(e)};
+          });
+          return Future.wait(list);
+        }),
       };
       response.body = utf8.encode(json.encode(body));
       channel.writeAndClose(response);

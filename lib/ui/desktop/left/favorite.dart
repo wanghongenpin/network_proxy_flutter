@@ -33,7 +33,7 @@ class _FavoritesState extends State<Favorites> {
   Widget build(BuildContext context) {
     return FutureBuilder(
         future: FavoriteStorage.favorites,
-        builder: (BuildContext context, AsyncSnapshot<Queue<HttpRequest>> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<Queue<Favorite>> snapshot) {
           if (snapshot.hasData) {
             var favorites = snapshot.data ?? Queue();
             if (favorites.isEmpty) {
@@ -66,11 +66,12 @@ class _FavoritesState extends State<Favorites> {
 
 class _FavoriteItem extends StatefulWidget {
   final int index;
-  final HttpRequest request;
+  final Favorite favorite;
   final NetworkTabController panel;
   final Function(HttpRequest request)? onRemove;
 
-  const _FavoriteItem(this.request, {Key? key, required this.panel, required this.onRemove, required this.index}) : super(key: key);
+  const _FavoriteItem(this.favorite, {Key? key, required this.panel, required this.onRemove, required this.index})
+      : super(key: key);
 
   @override
   State<_FavoriteItem> createState() => _FavoriteItemState();
@@ -81,11 +82,17 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   static _FavoriteItemState? selectedState;
 
   bool selected = false;
+  late HttpRequest request;
+
+  @override
+  void initState() {
+    super.initState();
+    request = widget.favorite.request;
+  }
 
   @override
   Widget build(BuildContext context) {
-    var request = widget.request;
-    var response = request.response;
+    var response = widget.favorite.response;
     var title = '${request.method.name} ${request.requestUrl}';
     var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
     return GestureDetector(
@@ -93,12 +100,12 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         child: ListTile(
             minLeadingWidth: 25,
             leading: getIcon(response),
-            title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2),
+            title: Text(widget.favorite.name ?? title, overflow: TextOverflow.ellipsis, maxLines: 2),
             subtitle: Text.rich(
                 style: const TextStyle(fontSize: 12),
                 maxLines: 1,
                 TextSpan(children: [
-                  TextSpan(text: '#${widget.index} ', style: const TextStyle( color: Colors.teal)),
+                  TextSpan(text: '#${widget.index} ', style: const TextStyle(color: Colors.teal)),
                   TextSpan(
                       text:
                           '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} '),
@@ -115,20 +122,22 @@ class _FavoriteItemState extends State<_FavoriteItem> {
       details.globalPosition,
       items: <PopupMenuEntry>[
         popupItem("复制请求链接", onTap: () {
-          var requestUrl = widget.request.requestUrl;
+          var requestUrl = request.requestUrl;
           Clipboard.setData(ClipboardData(text: requestUrl)).then((value) => FlutterToastr.show('已复制到剪切板', context));
         }),
         popupItem("复制请求和响应", onTap: () {
-          Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.request.response)))
+          Clipboard.setData(ClipboardData(text: copyRequest(request, request.response)))
               .then((value) => FlutterToastr.show('已复制到剪切板', context));
         }),
         popupItem("复制 cURL 请求", onTap: () {
-          Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
+          Clipboard.setData(ClipboardData(text: curlRequest(request)))
               .then((value) => FlutterToastr.show('已复制到剪切板', context));
         }),
+        const PopupMenuDivider(height: 0.3),
+        popupItem("重命名", onTap: () => rename(widget.favorite)),
         popupItem("重放请求", onTap: () {
-          var request = widget.request.copy(uri: widget.request.requestUrl);
-          HttpClients.proxyRequest(request);
+          var httpRequest = request.copy(uri: request.requestUrl);
+          HttpClients.proxyRequest(httpRequest);
 
           FlutterToastr.show('已重新发送请求', context);
         }),
@@ -139,7 +148,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         }),
         const PopupMenuDivider(height: 0.3),
         popupItem("删除收藏", onTap: () {
-          widget.onRemove?.call(widget.request);
+          widget.onRemove?.call(request);
         })
       ],
     );
@@ -147,6 +156,35 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
   PopupMenuItem popupItem(String text, {VoidCallback? onTap}) {
     return CustomPopupMenuItem(height: 35, onTap: onTap, child: Text(text, style: const TextStyle(fontSize: 13)));
+  }
+
+  //重命名
+  rename(Favorite item) {
+    String? name = item.name;
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: TextFormField(
+              initialValue: name,
+              decoration: const InputDecoration(label: Text("名称")),
+              onChanged: (val) => name = val,
+            ),
+            actions: <Widget>[
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+              TextButton(
+                child: const Text('保存'),
+                onPressed: () {
+                  Navigator.maybePop(context);
+                  setState(() {
+                    item.name = name?.isEmpty == true ? null : name;
+                    FavoriteStorage.flushConfig();
+                  });
+                },
+              ),
+            ],
+          );
+        });
   }
 
   ///请求编辑
@@ -158,7 +196,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
     }
 
     final window = await DesktopMultiWindow.createWindow(jsonEncode(
-      {'name': 'RequestEditor', 'request': widget.request},
+      {'name': 'RequestEditor', 'request': request},
     ));
     window.setTitle('请求编辑');
     window
@@ -183,6 +221,6 @@ class _FavoriteItemState extends State<_FavoriteItem> {
       });
     }
     selectedState = this;
-    widget.panel.change(widget.request, widget.request.response);
+    widget.panel.change(request, request.response);
   }
 }

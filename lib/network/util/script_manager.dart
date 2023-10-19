@@ -198,7 +198,7 @@ async function onResponse(context, request, response) {
     return response;
   }
 
-  ///
+  /// js结果转换
   static Future<dynamic> jsResultResolve(JsEvalResult jsResult) async {
     if (jsResult.isPromise) {
       jsResult = await flutterJs.handlePromise(jsResult);
@@ -266,6 +266,7 @@ async function onResponse(context, request, response) {
     response.body = map['body']?.toString().codeUnits;
     return response;
   }
+
 }
 
 class ScriptItem {

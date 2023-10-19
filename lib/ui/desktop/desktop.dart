@@ -54,7 +54,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
     proxyServer.addListener(this);
     panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 16), proxyServer: proxyServer);
 
-    if (widget.configuration.upgradeNoticeV3) {
+    if (widget.configuration.upgradeNoticeV4) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -126,22 +126,23 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
               actions: [
                 TextButton(
                     onPressed: () {
-                      widget.configuration.upgradeNoticeV3 = false;
+                      widget.configuration.upgradeNoticeV4 = false;
                       widget.configuration.flushConfig();
                       Navigator.pop(context);
                     },
                     child: const Text('关闭'))
               ],
-              title: const Text('更新内容V1.0.3', style: TextStyle(fontSize: 18)),
+              title: const Text('更新内容V1.0.4', style: TextStyle(fontSize: 18)),
               content: const Text(
                   '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                   '点击的HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
                   '新增更新:\n'
-                  '1. 增加历史记录功能,默认不会保存,需要去历史页点击保存；\n'
-                  '2. 请求重写增加名称&URL参数重写；\n'
-                  '3. 请求重写增加重定向；\n'
-                  '4. 建立连接异常显示请求体；\n'
-                  '5. 请求编辑重发响应体查看增加多种格式，详情Body体增加快速解码入口；',
+                  '1. 增加JS脚本，可修改请求和影响，脚本支持fetch API请求接口；\n'
+                  '2. 扫码配置同步增加脚本配置；\n'
+                  '3. 桌面端增加系统代理忽略域名设置，忽略的域名不会进行代理；\n'
+                  '4. 收藏增加重命名；\n'
+                  '5. 手机端认启动监听端口,无需开启抓包可直接下载证书；\n'
+                  '6. 修复安卓白名单已经删除应用展示异常问题；',
                   style: TextStyle(fontSize: 14)));
         });
   }

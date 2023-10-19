@@ -81,6 +81,7 @@ class RequestRowState extends State<RequestRow> {
   menu() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       enableDrag: true,
       builder: (ctx) {
         return Wrap(alignment: WrapAlignment.center, children: [
@@ -130,7 +131,7 @@ class RequestRowState extends State<RequestRow> {
           ),
           TextButton(
             child: Container(
-                height: 60,
+                height: 40,
                 width: double.infinity,
                 padding: const EdgeInsets.only(top: 10),
                 child: const Text("取消", textAlign: TextAlign.center)),
