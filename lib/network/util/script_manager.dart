@@ -199,16 +199,12 @@ async function onResponse(context, request, response) {
 
   /// js结果转换
   static Future<dynamic> jsResultResolve(JsEvalResult jsResult) async {
-    if (jsResult.isPromise) {
+    if (jsResult.isPromise || jsResult.rawResult is Future) {
       jsResult = await flutterJs.handlePromise(jsResult);
     }
     var result = jsResult.rawResult;
     if (Platform.isMacOS || Platform.isIOS) {
       result = flutterJs.convertValue(jsResult);
-    }
-    if (result is Future) {
-      flutterJs.executePendingJob();
-      result = await (jsResult.rawResult as Future);
     }
     if (result is String) {
       result = jsonDecode(result);

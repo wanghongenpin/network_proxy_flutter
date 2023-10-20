@@ -173,7 +173,8 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
               if (syncScript) {
                 await ScriptManager.instance.then((script) async {
                   script.list.clear();
-                  widget.config['scripts'].forEach((it) => script.addScript(ScriptItem.fromJson(it), it['script']));
+                  await widget.config['scripts']
+                      .forEach((it) async => await script.addScript(ScriptItem.fromJson(it), it['script']));
                   await script.flushConfig();
                 });
               }
