@@ -53,7 +53,6 @@ class FavoriteStorage {
   static Future<void> removeFavorite(Favorite favorite) async {
     var list = await favorites;
     list.remove(favorite);
-
     flushConfig();
   }
 

@@ -42,7 +42,6 @@ class RequestListState extends State<RequestListWidget> {
     if (widget.list != null) {
       container.addAll(widget.list!);
     }
-    print(domainListKey);
   }
 
   @override

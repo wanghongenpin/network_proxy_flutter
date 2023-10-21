@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:date_format/date_format.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/utils/files.dart';
 import 'package:network_proxy/utils/har.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -43,6 +44,11 @@ class HistoryStorage {
     }
   }
 
+  static Future<String> _homePath() async {
+    final home = await getApplicationSupportDirectory();
+    return '${home.path}${Platform.pathSeparator}history';
+  }
+
   /// 获取历史记录
   List<HistoryItem> get histories {
     return _histories;
@@ -60,8 +66,8 @@ class HistoryStorage {
 
   ///打开文件
   static Future<File> openFile(String name) async {
-    final directory = await getApplicationSupportDirectory();
-    var file = File('${directory.path}${Platform.pathSeparator}history${Platform.pathSeparator}$name');
+    final homePath = await _homePath();
+    var file = File('$homePath${Platform.pathSeparator}$name');
     return file.create(recursive: true);
   }
 
@@ -96,17 +102,18 @@ class HistoryStorage {
   ///删除
   void removeHistory(int index) async {
     var history = _histories.removeAt(index);
-    var file = File(history.path);
-    if (await file.exists()) {
-      await file.delete();
-    }
+    final homePath = await _homePath();
+    var file = File('$homePath${Platform.pathSeparator}${Files.getName(history.path)}');
+    file.delete();
     (await _path).writeAsString(jsonEncode(_histories));
   }
 
   //获取请求列表
   Future<List<HttpRequest>> getRequests(HistoryItem history) async {
     if (history.requests == null) {
-      var file = File(history.path);
+      final homePath = await _homePath();
+      String path = '$homePath${Platform.pathSeparator}${Files.getName(history.path)}';
+      var file = File(path);
       history.requests = await Har.readFile(file);
       history.requestLength = history.requests!.length;
       file.length().then((size) => history.fileSize = size);

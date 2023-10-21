@@ -105,8 +105,12 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       return const SizedBox();
     }
     var response = widget.response.get();
+    String requestUrl = request.requestUrl;
+    try {
+      requestUrl = Uri.decodeFull(request.requestUrl);
+    } catch (_) {}
     var content = [
-      rowWidget("Request URL", request.requestUrl),
+      rowWidget("Request URL", requestUrl),
       const SizedBox(height: 20),
       rowWidget("Request Method", request.method.name),
       const SizedBox(height: 20),

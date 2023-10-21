@@ -252,6 +252,7 @@ class _ScriptEditState extends State<ScriptEdit> {
                 } else {
                   widget.scriptItem?.name = nameController.text;
                   widget.scriptItem?.url = urlController.text;
+                  widget.scriptItem?.urlReg = null;
                   (await ScriptManager.instance).updateScript(widget.scriptItem!, script.text);
                 }
 

@@ -260,7 +260,6 @@ class _HistoryState extends State<_HistoryWidget> {
   //写入文件
   _writeHarFile(List<HttpRequest> container, String name) async {
     var file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
-    print(file);
     RandomAccessFile open = await file.open(mode: FileMode.append);
     HistoryItem item = await storage.addHistory(name, file, 0);
     writeTask = WriteTask(item, open, storage, callback: () => setState(() {}));

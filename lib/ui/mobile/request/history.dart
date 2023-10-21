@@ -116,7 +116,6 @@ class _MobileHistoryState extends State<MobileHistory> {
   //写入文件
   _writeHarFile(HistoryStorage storage, List<HttpRequest> container, String name) async {
     var file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch.toRadixString(36)}.txt");
-    print(file);
     RandomAccessFile open = await file.open(mode: FileMode.append);
     HistoryItem history = await storage.addHistory(name, file, 0);
 
