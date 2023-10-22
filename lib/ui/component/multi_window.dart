@@ -15,8 +15,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 
+bool isMultiWindow = false;
+
 ///多窗口
 Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
+  isMultiWindow = true;
+  //请求编辑器
   if (argument['name'] == 'RequestEditor') {
     return RequestEditor(
         windowController: WindowController.fromWindowId(windowId),
@@ -68,7 +72,7 @@ encodeWindow(EncoderType type, BuildContext context, [String? text]) async {
 
 bool _registerHandler = false;
 
-void methodHandler() {
+void registerMethodHandler() {
   if (_registerHandler) {
     return;
   }
@@ -113,7 +117,7 @@ openScriptWindow() async {
   if (Platform.isWindows) {
     ratio = WindowManager.instance.getDevicePixelRatio();
   }
-  methodHandler();
+  registerMethodHandler();
   final window = await DesktopMultiWindow.createWindow(jsonEncode(
     {'name': 'ScriptWidget'},
   ));

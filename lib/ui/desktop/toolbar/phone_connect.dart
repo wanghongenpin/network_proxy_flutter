@@ -6,7 +6,7 @@ class PhoneConnect extends StatefulWidget {
   final ProxyServer proxyServer;
   final List<String> hosts;
 
-  const PhoneConnect({Key? key, required this.proxyServer, required this.hosts}) : super(key: key);
+  const PhoneConnect({super.key, required this.proxyServer, required this.hosts});
 
   @override
   State<StatefulWidget> createState() {

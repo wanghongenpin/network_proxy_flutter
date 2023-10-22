@@ -47,7 +47,7 @@ class VpnServicePlugin : AndroidFlutterPlugin() {
      * 启动vpn服务
      */
     private fun startVpn(host: String, port: Int, allowApps: ArrayList<String>?) {
-        Log.i("com.network.proxy", "startVpn $allowApps")
+        Log.i("com.network.proxy", "startVpn $host:$port $allowApps")
         val intent = Intent(activity, ProxyVpnService::class.java)
         intent.putExtra(ProxyVpnService.ProxyHost, host)
         intent.putExtra(ProxyVpnService.ProxyPort, port)

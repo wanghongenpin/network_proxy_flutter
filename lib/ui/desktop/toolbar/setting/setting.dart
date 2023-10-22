@@ -100,7 +100,7 @@ class _SettingState extends State<Setting> {
         builder: (context) {
           return AlertDialog(
             titlePadding: const EdgeInsets.only(left: 24, top: 10, right: 15),
-            contentPadding: const EdgeInsets.only(left: 24, right: 20),
+            contentPadding: const EdgeInsets.only(left: 24, right: 20, bottom: 15),
             scrollable: true,
             title: const Row(children: [
               Text("请求重写", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),

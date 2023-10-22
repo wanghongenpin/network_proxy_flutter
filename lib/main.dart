@@ -45,6 +45,7 @@ void main(List<String> args) async {
   });
 
   var uiConfiguration = await instance;
+  registerMethodHandler();
   runApp(FluentApp(DesktopHomePage(configuration: await configuration), uiConfiguration: uiConfiguration));
 }
 

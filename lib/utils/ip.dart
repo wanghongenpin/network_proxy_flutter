@@ -59,5 +59,5 @@ Future<String> networkName() {
 
 // en0(macos系统) or WLAN(widows设备名)优先
 bool primary(NetworkInterface it) {
-  return it.name == 'en0' || it.name.startsWith('WLAN') || it.name.startsWith("wlan");
+  return it.name == 'en0' || it.name.startsWith('WLAN') || it.name.startsWith("wlan") || it.name.startsWith('ccmn');
 }

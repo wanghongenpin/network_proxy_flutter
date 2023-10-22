@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:network_proxy/native/vpn.dart';
@@ -8,11 +9,13 @@ import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/launch/launch.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/request/search.dart';
+import 'package:network_proxy/utils/ip.dart';
 
 class MobileHomePage extends StatefulWidget {
   final Configuration configuration;
@@ -89,15 +92,18 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
           ]),
       drawer: DrawerWidget(proxyServer: proxyServer, requestStateKey: requestStateKey),
       floatingActionButton: FloatingActionButton(
-          onPressed: null,
-          child: Center(
-              child: SocketLaunch(
-                  proxyServer: proxyServer,
-                  size: 36,
-                  startup: false,
-                  serverLaunch: false,
-                  onStart: () => Vpn.startVpn("127.0.0.1", proxyServer.port, proxyServer.configuration.appWhitelist),
-                  onStop: () => Vpn.stopVpn())),
+        onPressed: null,
+        child: Center(
+            child: futureWidget(
+                localIp(),
+                (data) => SocketLaunch(
+                    proxyServer: proxyServer,
+                    size: 36,
+                    startup: false,
+                    serverLaunch: false,
+                    onStart: () => Vpn.startVpn(Platform.isAndroid ? data : "127.0.0.1", proxyServer.port,
+                        proxyServer.configuration.appWhitelist),
+                    onStop: () => Vpn.stopVpn()))),
       ),
       body: ValueListenableBuilder(
           valueListenable: desktop,
