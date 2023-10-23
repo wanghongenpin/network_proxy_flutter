@@ -260,7 +260,7 @@ async function onResponse(context, request, response) {
     map['headers'].forEach((key, value) {
       request.headers.add(key, value);
     });
-    request.body = map['body']?.toString().codeUnits;
+    request.body = map['body'] == null ? null : utf8.encode(map['body'].toString());
     return request;
   }
 
@@ -271,7 +271,7 @@ async function onResponse(context, request, response) {
     map['headers'].forEach((key, value) {
       response.headers.add(key, value);
     });
-    response.body = map['body']?.toString().codeUnits;
+    response.body = map['body'] ==null ? null : utf8.encode(map['body'].toString());
     return response;
   }
 }

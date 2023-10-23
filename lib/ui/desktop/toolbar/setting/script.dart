@@ -39,7 +39,7 @@ void _refreshScript() {
     return;
   }
   _refresh = true;
-  Future.delayed(const Duration(milliseconds: 1500), () async {
+  Future.delayed(const Duration(milliseconds: 1000), () async {
     _refresh = false;
     (await ScriptManager.instance).flushConfig();
     await DesktopMultiWindow.invokeMethod(0, "refreshScript");
@@ -192,7 +192,7 @@ class ScriptEdit extends StatefulWidget {
   final ScriptItem? scriptItem;
   final String? script;
 
-  const ScriptEdit({Key? key, this.scriptItem, this.script}) : super(key: key);
+  const ScriptEdit({super.key, this.scriptItem, this.script});
 
   @override
   State<StatefulWidget> createState() => _ScriptEditState();
@@ -314,7 +314,7 @@ class ScriptList extends StatefulWidget {
   final int windowId;
   final List<ScriptItem> scripts;
 
-  const ScriptList({Key? key, required this.scripts, required this.windowId}) : super(key: key);
+  const ScriptList({super.key, required this.scripts, required this.windowId});
 
   @override
   State<ScriptList> createState() => _ScriptListState();

@@ -264,7 +264,7 @@ class _ScriptEditState extends State<ScriptEdit> {
 class ScriptList extends StatefulWidget {
   final List<ScriptItem> scripts;
 
-  const ScriptList({Key? key, required this.scripts}) : super(key: key);
+  const ScriptList({super.key, required this.scripts});
 
   @override
   State<ScriptList> createState() => _ScriptListState();

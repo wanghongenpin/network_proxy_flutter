@@ -110,7 +110,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
-    // log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+    log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
     if (channel.error != null) {
       _exceptionHandler(channel, httpRequest, channel.error);
       return;
