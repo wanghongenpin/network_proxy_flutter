@@ -148,8 +148,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       listener?.onRequest(channel, httpRequest);
 
       //重定向
-      var redirectRewrite =
-          requestRewrites?.findRequestRewrite(httpRequest.hostAndPort?.host, httpRequest.path(), RuleType.redirect);
+      var redirectRewrite = requestRewrites?.findRequestRewrite(httpRequest.requestUrl, RuleType.redirect);
       if (redirectRewrite?.redirectUrl?.isNotEmpty == true) {
         var proxyHandler = HttpResponseProxyHandler(channel, listener: listener, requestRewrites: requestRewrites);
         httpRequest.uri = redirectRewrite!.redirectUrl!;
@@ -165,7 +164,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
 
   //替换请求体
   rewriteBody(HttpRequest httpRequest) {
-    var rewrite = requestRewrites?.findRequestRewrite(httpRequest.hostAndPort?.host, httpRequest.path(), RuleType.body);
+    var rewrite = requestRewrites?.findRequestRewrite(httpRequest.requestUrl, RuleType.body);
 
     if (rewrite?.requestBody?.isNotEmpty == true) {
       httpRequest.body = utf8.encode(rewrite!.requestBody!);
@@ -293,7 +292,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
       log.e('[${clientChannel.id}] 执行脚本异常 ', error: e, stackTrace: t);
     }
 
-    var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.hostAndPort?.host, msg.request?.path());
+    var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.requestUrl);
     if (replaceBody?.isNotEmpty == true) {
       msg.body = utf8.encode(replaceBody!);
     }

@@ -92,7 +92,8 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
                                       onPressed: () {
                                         changed = true;
                                         setState(() {
-                                          widget.configuration.requestRewrites.removeIndex(requestRuleList.removeSelected());
+                                          widget.configuration.requestRewrites
+                                              .removeIndex(requestRuleList.removeSelected());
                                           requestRuleList.changeState();
                                         });
                                         FlutterToastr.show('删除成功', context);
@@ -146,7 +147,7 @@ class _RewriteRuleState extends State<RewriteRule> {
   @override
   void initState() {
     super.initState();
-    rule = widget.rule ?? RequestRewriteRule(true, "", null);
+    rule = widget.rule ?? RequestRewriteRule(true, url: '');
     enableNotifier = ValueNotifier(rule.enabled == true);
   }
 
@@ -203,19 +204,9 @@ class _RewriteRuleState extends State<RewriteRule> {
                   onSaved: (val) => rule.name = val,
                 ),
                 TextFormField(
-                    decoration: decoration('域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
-                    initialValue: rule.domain,
-                    onSaved: (val) => rule.domain = val?.trim()),
-                TextFormField(
-                    decoration: decoration('Path', hintText: '/api/v1/*'),
-                    validator: (val) {
-                      if (val == null || val.isEmpty) {
-                        return 'Path不能为空';
-                      }
-                      return null;
-                    },
-                    initialValue: rule.path,
-                    onSaved: (val) => rule.path = val!.trim()),
+                    decoration: decoration('URL', hintText: 'http://www.example.com/api/*'),
+                    initialValue: rule.url,
+                    onSaved: (val) => rule.url = val!.trim()),
                 DropdownButtonFormField<RuleType>(
                     decoration: decoration('行为'),
                     value: rule.type,
@@ -343,8 +334,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                           cell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
                           cell(ConstrainedBox(
                               constraints: const BoxConstraints(minWidth: 60, maxWidth: 150),
-                              child: Text(
-                                  '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}'))),
+                              child: Text(widget.requestRewrites.rules[index].url))),
                           cell(Text(widget.requestRewrites.rules[index].type.name)),
                         ],
                         selected: selected == index,

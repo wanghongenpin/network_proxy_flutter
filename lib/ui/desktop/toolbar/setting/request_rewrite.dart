@@ -146,7 +146,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
   @override
   void initState() {
     super.initState();
-    rule = widget.rule ?? RequestRewriteRule(true, "", null);
+    rule = widget.rule ?? RequestRewriteRule(true, url: '');
     enableNotifier = ValueNotifier(rule.enabled == true);
   }
 
@@ -188,20 +188,10 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                       ),
                       const SizedBox(height: 5),
                       TextFormField(
-                          decoration: decoration('域名(可选)', hintText: 'baidu.com 不需要填写HTTP'),
-                          initialValue: rule.domain,
-                          onSaved: (val) => rule.domain = val?.trim()),
-                      const SizedBox(height: 5),
-                      TextFormField(
-                          decoration: decoration('Path', hintText: '/api/v1/*'),
-                          validator: (val) {
-                            if (val == null || val.isEmpty) {
-                              return 'Path不能为空';
-                            }
-                            return null;
-                          },
-                          initialValue: rule.path,
-                          onSaved: (val) => rule.path = val!.trim()),
+                          decoration: decoration('URL', hintText: 'http://www.example.com/api/*'),
+                          initialValue: rule.url,
+                          validator: (val) => val?.isNotEmpty == true ? null : "URL不能为空",
+                          onSaved: (val) => rule.url = val!.trim()),
                       const SizedBox(height: 5),
                       DropdownButtonFormField<RuleType>(
                           value: rule.type,
@@ -298,6 +288,30 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
           onSaved: (val) => rule.responseBody = val)
     ];
   }
+
+  Widget textField(String label, TextEditingController controller, String hint, {TextInputType? keyboardType}) {
+    return Row(children: [
+      SizedBox(width: 50, child: Text(label)),
+      Expanded(
+          child: TextFormField(
+        controller: controller,
+        validator: (val) => val?.isNotEmpty == true ? null : "",
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+            contentPadding: const EdgeInsets.all(10),
+            errorStyle: const TextStyle(height: 0, fontSize: 0),
+            focusedBorder: focusedBorder(),
+            isDense: true,
+            border: const OutlineInputBorder()),
+      ))
+    ]);
+  }
+
+  InputBorder focusedBorder() {
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2));
+  }
 }
 
 class RequestRuleList extends StatefulWidget {
@@ -358,9 +372,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                           style: const TextStyle(fontSize: 14))),
                       DataCell(ConstrainedBox(
                         constraints: const BoxConstraints(minWidth: 60, maxWidth: 280),
-                        child: Text(
-                            '${widget.requestRewrites.rules[index].domain ?? ''}${widget.requestRewrites.rules[index].path}',
-                            style: const TextStyle(fontSize: 14)),
+                        child: Text(widget.requestRewrites.rules[index].url, style: const TextStyle(fontSize: 14)),
                       )),
                       DataCell(
                           Text(widget.requestRewrites.rules[index].type.name, style: const TextStyle(fontSize: 14))),

@@ -25,33 +25,28 @@ class RequestRewrites {
     });
   }
 
-  ///
-  RequestRewriteRule? findRequestRewrite(String? domain, String? url, RuleType type) {
+  /// 查找重写规则
+  RequestRewriteRule? findRequestRewrite(String? url, RuleType type) {
     if (!enabled || url == null) {
       return null;
     }
 
     for (var rule in rules) {
       if (rule.enabled && rule.urlReg.hasMatch(url) && type == rule.type) {
-        if (rule.domain?.isNotEmpty == true && rule.domain != domain) {
-          continue;
-        }
         return rule;
       }
     }
     return null;
   }
 
-  ///
-  String? findResponseReplaceWith(String? domain, String? path) {
-    if (!enabled || path == null) {
+  /// 查找重写规则
+  String? findResponseReplaceWith(String? url) {
+    if (!enabled || url == null) {
       return null;
     }
+
     for (var rule in rules) {
-      if (rule.enabled && rule.urlReg.hasMatch(path)) {
-        if (rule.domain?.isNotEmpty == true && rule.domain != domain) {
-          continue;
-        }
+      if (rule.enabled && rule.urlReg.hasMatch(url) && rule.type == RuleType.body) {
         return rule.responseBody;
       }
     }
@@ -60,7 +55,7 @@ class RequestRewrites {
 
   ///添加规则
   void addRule(RequestRewriteRule rule) {
-    rules.removeWhere((it) => it.path == rule.path && it.domain == rule.domain);
+    rules.removeWhere((it) => it.url == rule.url);
     rules.add(rule);
   }
 
@@ -95,11 +90,10 @@ enum RuleType {
 
 class RequestRewriteRule {
   bool enabled = false;
-  String path;
-  String? domain;
   RuleType type;
 
   String? name;
+  String url;
 
   //消息体
   String? queryParam;
@@ -111,14 +105,21 @@ class RequestRewriteRule {
 
   RegExp urlReg;
 
-  RequestRewriteRule(this.enabled, this.path, this.domain,
-      {this.name, this.type = RuleType.body, this.queryParam, this.requestBody, this.responseBody, this.redirectUrl})
-      : urlReg = RegExp(path.replaceAll("*", ".*"));
+  RequestRewriteRule(this.enabled,
+      {this.name,
+      required this.url,
+      this.type = RuleType.body,
+      this.queryParam,
+      this.requestBody,
+      this.responseBody,
+      this.redirectUrl})
+      : urlReg = RegExp(url.replaceAll("*", ".*"));
 
-  ///
+  /// 从json中创建
   factory RequestRewriteRule.formJson(Map<String, dynamic> map) {
-    return RequestRewriteRule(map['enabled'] == true, map['path'], map['domain'],
+    return RequestRewriteRule(map['enabled'] == true,
         name: map['name'],
+        url: map['url'] ?? map['domain'] + map['path'],
         type: map['type'] == null ? RuleType.body : RuleType.fromName(map['type']),
         queryParam: map['queryParam'],
         requestBody: map['requestBody'],
@@ -127,15 +128,14 @@ class RequestRewriteRule {
   }
 
   void updatePathReg() {
-    urlReg = RegExp(path.replaceAll("*", ".*"));
+    urlReg = RegExp(url.replaceAll("*", ".*"));
   }
 
   toJson() {
     return {
       'name': name,
       'enabled': enabled,
-      'domain': domain,
-      'path': path,
+      'url': url,
       'type': type.name,
       'queryParam': queryParam,
       'requestBody': requestBody,

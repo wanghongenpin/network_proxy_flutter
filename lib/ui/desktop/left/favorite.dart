@@ -8,6 +8,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/storage/favorites.dart';
@@ -20,7 +21,7 @@ import 'package:window_manager/window_manager.dart';
 class Favorites extends StatefulWidget {
   final NetworkTabController panel;
 
-  const Favorites({Key? key, required this.panel}) : super(key: key);
+  const Favorites({super.key, required this.panel});
 
   @override
   State<StatefulWidget> createState() {
@@ -70,8 +71,7 @@ class _FavoriteItem extends StatefulWidget {
   final NetworkTabController panel;
   final Function(Favorite favorite)? onRemove;
 
-  const _FavoriteItem(this.favorite, {Key? key, required this.panel, required this.onRemove, required this.index})
-      : super(key: key);
+  const _FavoriteItem(this.favorite, {required this.panel, required this.onRemove, required this.index});
 
   @override
   State<_FavoriteItem> createState() => _FavoriteItemState();
@@ -137,7 +137,8 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         popupItem("重命名", onTap: () => rename(widget.favorite)),
         popupItem("重放请求", onTap: () {
           var httpRequest = request.copy(uri: request.requestUrl);
-          HttpClients.proxyRequest(httpRequest);
+          var proxyInfo = widget.panel.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.panel.proxyServer.port) : null;
+          HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo);
 
           FlutterToastr.show('已重新发送请求', context);
         }),

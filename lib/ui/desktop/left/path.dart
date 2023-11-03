@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/storage/favorites.dart';
@@ -96,7 +97,8 @@ class _PathRowState extends State<PathRow> {
         const PopupMenuDivider(height: 0.3),
         popupItem("重放请求", onTap: () {
           var request = widget.request.copy(uri: widget.request.requestUrl);
-          HttpClients.proxyRequest(request);
+          var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
+          HttpClients.proxyRequest(request, proxyInfo: proxyInfo);
 
           FlutterToastr.show('已重新发送请求', context);
         }),
