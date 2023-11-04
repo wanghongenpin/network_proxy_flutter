@@ -8,13 +8,13 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
-import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
 import 'package:network_proxy/ui/mobile/request/history.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
 import 'package:network_proxy/ui/mobile/setting/filter.dart';
+import 'package:network_proxy/ui/mobile/setting/proxy.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/mobile/setting/script.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
@@ -29,7 +29,7 @@ class DrawerWidget extends StatelessWidget {
   final ProxyServer proxyServer;
   final GlobalKey<RequestListState> requestStateKey;
 
-  const DrawerWidget({Key? key, required this.proxyServer, required this.requestStateKey}) : super(key: key);
+  const DrawerWidget({super.key, required this.proxyServer, required this.requestStateKey});
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,10 @@ class DrawerWidget extends StatelessWidget {
           onTap: () => navigator(context, MobileHistory(proxyServer: proxyServer, requestStateKey: requestStateKey)),
         ),
         const Divider(thickness: 0.3),
-        PortWidget(proxyServer: proxyServer),
+        ListTile(
+            title: const Text("代理"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(context, ProxySetting(proxyServer: proxyServer))),
         ListTile(
             title: const Text("HTTPS抓包"),
             trailing: const Icon(Icons.arrow_right),

@@ -12,7 +12,7 @@ dependencies:
     sdk: flutter
   crypto: ^3.0.3
   cupertino_icons: ^1.0.2
-  basic_utils: ^5.6.1
+  basic_utils: ^5.7.0
   logger: ^2.0.1
   date_format: ^2.0.7
   window_manager: ^0.3.7
@@ -21,7 +21,7 @@ dependencies:
       url: https://gitee.com/wanghongenpin/flutter-plugins.git
       path: packages/desktop_multi_window
   path_provider: ^2.1.1
-  url_launcher: ^6.1.14
+  url_launcher: ^6.2.1
   proxy_manager: ^0.0.3
   qr_flutter: ^4.1.0
   easy_permission: ^1.0.0
