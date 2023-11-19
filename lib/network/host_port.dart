@@ -18,14 +18,13 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 
 /// 获取主机和端口
-HostAndPort getHostAndPort(HttpRequest request) {
+HostAndPort getHostAndPort(HttpRequest request, {bool? ssl}) {
   String requestUri = request.uri;
   //有些请求直接是路径 /xxx, 从header取host
   if (request.uri.startsWith("/")) {
     requestUri = request.headers.get(HttpHeaders.HOST)!;
   }
-
-  return HostAndPort.of(requestUri);
+  return HostAndPort.of(requestUri, ssl: ssl);
 }
 
 class HostAndPort {

@@ -23,7 +23,7 @@ class MobileHistory extends StatefulWidget {
   final ProxyServer proxyServer;
   final GlobalKey<RequestListState> requestStateKey;
 
-  const MobileHistory({Key? key, required this.proxyServer, required this.requestStateKey}) : super(key: key);
+  const MobileHistory({super.key, required this.proxyServer, required this.requestStateKey});
 
   @override
   State<StatefulWidget> createState() {
@@ -92,7 +92,7 @@ class _MobileHistoryState extends State<MobileHistory> {
 
   //导入har
   import(HistoryStorage storage) async {
-    const XTypeGroup typeGroup = XTypeGroup(label: 'Har', extensions: <String>['har']);
+    const XTypeGroup typeGroup = XTypeGroup(label: 'har', extensions: <String>['har'], uniformTypeIdentifiers: ["public.item"]);
     final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
     if (file == null) {
       return;

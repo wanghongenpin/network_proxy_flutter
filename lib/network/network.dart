@@ -24,6 +24,7 @@ import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/network/util/tls.dart';
 import 'package:network_proxy/utils/platform.dart';
 
 import 'host_port.dart';
@@ -70,12 +71,11 @@ class Network {
     }
 
     //ssl握手
-    if (hostAndPort?.isSsl() == true || (data.length > 3 && data.first == 0x16 && data[1] == 0x03 && data[2] == 0x01)) {
+    if (hostAndPort?.isSsl() == true || (data.length > 2 && data.first == 0x16 && data[1] == 0x03)) {
       if (hostAndPort?.scheme == HostAndPort.httpScheme) {
         hostAndPort?.scheme = HostAndPort.httpsScheme;
       }
-
-      ssl(channel, hostAndPort!, data);
+      ssl(channel, hostAndPort, data);
       return;
     }
 
@@ -83,16 +83,18 @@ class Network {
   }
 
   /// ssl握手
-  void ssl(Channel channel, HostAndPort hostAndPort, Uint8List data) async {
+  void ssl(Channel channel, HostAndPort? hostAndPort, Uint8List data) async {
     try {
       Channel? remoteChannel = channel.getAttribute(channel.id);
       if (remoteChannel != null) {
         remoteChannel.secureSocket = await SecureSocket.secure(remoteChannel.socket,
-            host: hostAndPort.host, onBadCertificate: (certificate) => true);
+            host: hostAndPort?.host, onBadCertificate: (certificate) => true);
       }
+      String? host = hostAndPort?.host;
+      host ??= TLS.getDomain(data);
 
       //ssl自签证书
-      var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
+      var certificate = await CertificateManager.getCertificateContext(host!);
       //服务端等待客户端ssl握手
       channel.secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
     } catch (error, trace) {

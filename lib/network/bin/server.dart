@@ -70,7 +70,7 @@ class ProxyServer {
       channel.pipeline.handle(
           HttpRequestCodec(),
           HttpResponseCodec(),
-          HttpChannelHandler(
+          HttpProxyChannelHandler(
               listener: CombinedEventListener(listeners), requestRewrites: configuration.requestRewrites));
     });
 

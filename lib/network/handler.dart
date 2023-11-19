@@ -40,11 +40,11 @@ abstract class EventListener {
 }
 
 /// http请求处理器
-class HttpChannelHandler extends ChannelHandler<HttpRequest> {
+class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   EventListener? listener;
   RequestRewrites? requestRewrites;
 
-  HttpChannelHandler({this.listener, this.requestRewrites});
+  HttpProxyChannelHandler({this.listener, this.requestRewrites});
 
   @override
   void channelRead(Channel channel, HttpRequest msg) async {
@@ -202,7 +202,7 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
       return remoteChannel;
     }
 
-    var hostAndPort = getHostAndPort(httpRequest);
+    var hostAndPort = httpRequest.hostAndPort ?? getHostAndPort(httpRequest);
     clientChannel.putAttribute(AttributeKeys.host, hostAndPort);
 
     var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
@@ -226,6 +226,9 @@ class HttpChannelHandler extends ChannelHandler<HttpRequest> {
     if (httpRequest.method == HttpMethod.connect) {
       await clientChannel.write(
           HttpResponse(HttpStatus.ok.reason('Connection established'), protocolVersion: httpRequest.protocolVersion));
+    } else if (clientChannel.isSsl) {
+      proxyChannel.secureSocket = await SecureSocket.secure(proxyChannel.socket,
+          host: hostAndPort.host, onBadCertificate: (certificate) => true);
     }
     return proxyChannel;
   }

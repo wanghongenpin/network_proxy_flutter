@@ -83,6 +83,9 @@ class Channel {
     pipeline.listen(this);
   }
 
+  ///是否是ssl链接
+  bool get isSsl => _socket is SecureSocket;
+
   Future<void> write(Object obj) async {
     if (isClosed) {
       logger.w("[$id] channel is closed");
@@ -214,7 +217,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       buffer.clear();
 
       if (data is HttpRequest) {
-        data.hostAndPort = channel.getAttribute(AttributeKeys.host) ?? getHostAndPort(data);
+        data.hostAndPort = channel.getAttribute(AttributeKeys.host) ?? getHostAndPort(data, ssl: channel.isSsl);
         if (data.headers.host != null && data.headers.host?.contains(":") == false) {
           data.hostAndPort?.host = data.headers.host!;
         }
