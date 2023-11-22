@@ -92,7 +92,6 @@ class Network {
       }
       String? host = hostAndPort?.host;
       host ??= TLS.getDomain(data);
-
       //ssl自签证书
       var certificate = await CertificateManager.getCertificateContext(host!);
       //服务端等待客户端ssl握手

@@ -321,7 +321,7 @@ class ScriptList extends StatefulWidget {
 }
 
 class _ScriptListState extends State<ScriptList> {
-  Map<int, bool> selected = {};
+  int selected = -1;
 
   @override
   Widget build(BuildContext context) {
@@ -354,47 +354,9 @@ class _ScriptListState extends State<ScriptList> {
               }
             });
           },
-          onSecondaryTapDown: (details) {
-            showContextMenu(context, details.globalPosition, items: [
-              PopupMenuItem(
-                  height: 35,
-                  child: const Text("编辑"),
-                  onTap: () async {
-                    String script = await (await ScriptManager.instance).getScript(list[index]);
-                    if (!context.mounted) {
-                      return;
-                    }
-                    showDialog(
-                        barrierDismissible: false,
-                        context: context,
-                        builder: (_) => ScriptEdit(scriptItem: list[index], script: script)).then((value) {
-                      if (value != null) {
-                        setState(() {});
-                      }
-                    });
-                  }),
-              PopupMenuItem(height: 35, child: const Text("导出"), onTap: () => export(list[index])),
-              PopupMenuItem(
-                  height: 35,
-                  child: list[index].enabled ? const Text("禁用") : const Text("启用"),
-                  onTap: () {
-                    list[index].enabled = !list[index].enabled;
-                    setState(() {});
-                  }),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                  height: 35,
-                  child: const Text("删除"),
-                  onTap: () async {
-                    (await ScriptManager.instance).removeScript(index);
-                    _refreshScript();
-                    setState(() {});
-                    if (context.mounted) FlutterToastr.show('删除成功', context);
-                  }),
-            ]);
-          },
+          onSecondaryTapDown: (details) => showMenus(details, index),
           child: Container(
-              color: selected[index] == true
+              color: selected == index
                   ? primaryColor.withOpacity(0.8)
                   : index.isEven
                       ? Colors.grey.withOpacity(0.1)
@@ -418,6 +380,52 @@ class _ScriptListState extends State<ScriptList> {
                   Expanded(child: Text(list[index].url, style: const TextStyle(fontSize: 13))),
                 ],
               )));
+    });
+  }
+
+  //点击菜单
+  showMenus(TapDownDetails details, int index) {
+    setState(() {
+      selected = index;
+    });
+    showContextMenu(context, details.globalPosition, items: [
+      PopupMenuItem(
+          height: 35,
+          child: const Text("编辑"),
+          onTap: () async {
+            String script = await (await ScriptManager.instance).getScript(widget.scripts[index]);
+            if (!context.mounted) {
+              return;
+            }
+            showDialog(
+                barrierDismissible: false,
+                context: context,
+                builder: (_) => ScriptEdit(scriptItem: widget.scripts[index], script: script)).then((value) {
+              if (value != null) {
+                setState(() {});
+              }
+            });
+          }),
+      PopupMenuItem(height: 35, child: const Text("导出"), onTap: () => export(widget.scripts[index])),
+      PopupMenuItem(
+          height: 35,
+          child: widget.scripts[index].enabled ? const Text("禁用") : const Text("启用"),
+          onTap: () {
+            widget.scripts[index].enabled = !widget.scripts[index].enabled;
+          }),
+      const PopupMenuDivider(),
+      PopupMenuItem(
+          height: 35,
+          child: const Text("删除"),
+          onTap: () async {
+            (await ScriptManager.instance).removeScript(index);
+            _refreshScript();
+            if (context.mounted) FlutterToastr.show('删除成功', context);
+          }),
+    ]).then((value) {
+      setState(() {
+        selected = -1;
+      });
     });
   }
 

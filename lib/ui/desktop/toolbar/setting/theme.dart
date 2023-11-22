@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:network_proxy/main.dart';
 
 class ThemeSetting extends StatelessWidget {
-  const ThemeSetting({Key? key}) : super(key: key);
+  const ThemeSetting({super.key});
 
   @override
   Widget build(BuildContext context) {

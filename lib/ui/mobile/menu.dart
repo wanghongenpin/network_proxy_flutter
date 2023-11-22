@@ -4,6 +4,7 @@ import 'package:easy_permission/easy_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
@@ -211,7 +212,7 @@ class MoreEnum extends StatelessWidget {
               hostname: response.headers.get("hostname"));
 
           if (context.mounted && Navigator.canPop(context)) {
-            FlutterToastr.show("连接成功${proxyServer.isRunning ? '' : ',手机需要开启抓包才可以抓取请求哦'}", context, duration: 3);
+            FlutterToastr.show("连接成功${Vpn.isVpnStarted ? '' : ',手机需要开启抓包才可以抓取请求哦'}", context, duration: 3);
             Navigator.pop(context);
           }
         }

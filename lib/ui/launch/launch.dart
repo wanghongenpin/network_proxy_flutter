@@ -12,7 +12,8 @@ class SocketLaunch extends StatefulWidget {
   final bool startup;
   final Function? onStart;
   final Function? onStop;
-  final bool serverLaunch;
+
+  final bool serverLaunch; //是否启动代理服务器
 
   const SocketLaunch(
       {super.key,
@@ -30,7 +31,7 @@ class SocketLaunch extends StatefulWidget {
 }
 
 class _SocketLaunchState extends State<SocketLaunch> with WindowListener, WidgetsBindingObserver {
-  bool started = false;
+  static bool started = false;
 
   @override
   void initState() {

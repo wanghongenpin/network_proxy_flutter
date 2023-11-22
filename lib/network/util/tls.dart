@@ -1,6 +1,32 @@
+/*
+ *  Copyright 2023 WangHongEn
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 import 'dart:typed_data';
 
 class TLS {
+  ///判断是否是TLS Client Hello
+  static bool isTLSClientHello(Uint8List data) {
+    if (data.length < 43) return false;
+    if (data[0] != 0x16 /* handshake */) return false;
+    if (data[1] != 0x03 || data[2] < 0x00 || data[2] > 0x03) return false;
+    if (data[5] != 0x01 /* client_hello */) return false;
+    if (data[9] != 0x03 || data[10] < 0x00 || data[10] > 0x03) return false;
+    return true;
+  }
+
   ///从TLS Client Hello 解析域名
   static String? getDomain(Uint8List data) {
     try {
