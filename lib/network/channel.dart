@@ -106,7 +106,7 @@ class Channel {
       }
       await _socket.flush();
     } catch (e, t) {
-      print(getAttribute(id)._attributes);
+      // print(getAttribute(id)._attributes);
       print(e);
       print(t);
     } finally {
@@ -145,7 +145,11 @@ class Channel {
     return _attributes[key] as T;
   }
 
-  void putAttribute(String key, Object value) {
+  void putAttribute(String key, Object? value) {
+    if (value == null) {
+      _attributes.remove(key);
+      return;
+    }
     _attributes[key] = value;
   }
 

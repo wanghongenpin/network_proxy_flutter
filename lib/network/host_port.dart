@@ -94,6 +94,9 @@ class HostAndPort {
 /// 代理信息
 class ProxyInfo {
   bool enabled = false;
+
+  //是否展示抓包
+  bool capturePacket = true;
   String host = '127.0.0.1';
   int? port;
 
@@ -103,6 +106,7 @@ class ProxyInfo {
 
   ProxyInfo.fromJson(Map<String, dynamic> json) {
     enabled = json['enabled'] == true;
+    capturePacket = json['capturePacket'] ?? true;
     host = json['host'];
     port = json['port'];
   }
@@ -110,6 +114,7 @@ class ProxyInfo {
   Map<String, dynamic> toJson() {
     return {
       'enabled': enabled,
+      'capturePacket': capturePacket,
       'host': host,
       'port': port,
     };

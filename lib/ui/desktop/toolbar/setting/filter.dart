@@ -169,7 +169,7 @@ class _DomainFilterState extends State<DomainFilter> {
                       if (host != null && host!.isNotEmpty) {
                         try {
                           changed = true;
-                          widget.hostList.add(host!);
+                          widget.hostList.add(host!.trim());
                           setState(() {});
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));

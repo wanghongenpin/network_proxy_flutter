@@ -88,12 +88,22 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const SizedBox(height: 10),
               Row(children: [
-                const Text("是否启用："),
+                const Expanded(flex: 2, child: Text("是否启用：")),
                 Expanded(
                     child: Switch(
                   value: externalProxy.enabled,
                   onChanged: (val) {
                     setState(() => externalProxy.enabled = val);
+                  },
+                ))
+              ]),
+              Row(children: [
+                const Expanded(flex: 2, child: Text("手机端是否展示抓包：")),
+                Expanded(
+                    child: Switch(
+                  value: externalProxy.capturePacket,
+                  onChanged: (val) {
+                    setState(() => externalProxy.capturePacket = val);
                   },
                 ))
               ]),

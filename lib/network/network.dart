@@ -21,6 +21,7 @@ import 'dart:typed_data';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
+import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
@@ -57,7 +58,13 @@ class Network {
 
     //外部代理信息
     if (configuration?.externalProxy?.enabled == true) {
-      channel.putAttribute(AttributeKeys.proxyInfo, configuration!.externalProxy!);
+      ProxyInfo externalProxy = configuration!.externalProxy!;
+      if (externalProxy.capturePacket == true) {
+        channel.putAttribute(AttributeKeys.proxyInfo, externalProxy);
+      } else {
+        //不抓包直接转发
+        channel.putAttribute(AttributeKeys.remote, HostAndPort.host(externalProxy.host, externalProxy.port!));
+      }
     }
 
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
@@ -71,7 +78,7 @@ class Network {
     }
 
     //ssl握手
-    if (hostAndPort?.isSsl() == true || (data.length > 2 && data.first == 0x16 && data[1] == 0x03)) {
+    if (hostAndPort?.isSsl() == true || TLS.isTLSClientHello(data)) {
       if (hostAndPort?.scheme == HostAndPort.httpScheme) {
         hostAndPort?.scheme = HostAndPort.httpsScheme;
       }
@@ -92,12 +99,24 @@ class Network {
       }
       String? host = hostAndPort?.host;
       host ??= TLS.getDomain(data);
+
+      if (HostFilter.filter(host)) {
+        remoteChannel =
+            remoteChannel ?? await HttpClients.startConnect(HostAndPort.host(host!, 443), RelayHandler(channel));
+        relay(channel, remoteChannel);
+        channel.pipeline.channelRead(channel, data);
+        return;
+      }
+
       //ssl自签证书
       var certificate = await CertificateManager.getCertificateContext(host!);
       //服务端等待客户端ssl握手
       channel.secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
     } catch (error, trace) {
       if (error is HandshakeException) {
+        String? host = hostAndPort?.host;
+        host ??= TLS.getDomain(data);
+        channel.putAttribute(AttributeKeys.host, host == null ? null : HostAndPort.host(host, 443));
         await subscription?.cancel();
       }
       channel.pipeline.exceptionCaught(channel, error, trace: trace);

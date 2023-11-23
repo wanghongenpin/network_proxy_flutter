@@ -61,7 +61,11 @@ class Configuration {
   static Future<Configuration> get instance async {
     if (_instance == null) {
       Configuration configuration = Configuration._();
-      await configuration.initConfig();
+      try {
+        await configuration.initConfig();
+      } catch (e) {
+        logger.e('初始化配置失败', error: e);
+      }
       _instance = configuration;
     }
     return _instance!;
@@ -70,7 +74,12 @@ class Configuration {
   /// 初始化配置
   Future<void> initConfig() async {
     // 读取配置文件
-    await _loadConfig();
+    try {
+      await _loadConfig();
+    } catch (e) {
+      logger.e('加载配置文件失败', error: e);
+    }
+    await _loadRequestRewriteConfig();
   }
 
   String? userHome;
@@ -131,8 +140,6 @@ class Configuration {
     appWhitelist = List<String>.from(config['appWhitelist'] ?? []);
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
-
-    await _loadRequestRewriteConfig();
   }
 
   /// 加载请求重写配置文件
