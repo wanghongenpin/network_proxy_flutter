@@ -1,112 +1,116 @@
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
+import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 
-class RequestRewrite extends StatefulWidget {
-  final Configuration configuration;
+bool _refresh = false;
 
-  const RequestRewrite({super.key, required this.configuration});
-
-  @override
-  State<RequestRewrite> createState() => _RequestRewriteState();
+/// 刷新请求重写
+void _refreshConfig() async {
+  if (_refresh) return;
+  _refresh = true;
+  Future.delayed(const Duration(milliseconds: 1000), () async {
+    _refresh = false;
+    (await RequestRewrites.instance).flushRequestRewriteConfig();
+    await DesktopMultiWindow.invokeMethod(0, "refreshRequestRewrite");
+  });
 }
 
-class _RequestRewriteState extends State<RequestRewrite> {
-  late RequestRuleList requestRuleList;
+class RequestRewriteWidget extends StatefulWidget {
+  final int windowId;
+  final RequestRewrites requestRewrites;
+
+  const RequestRewriteWidget({super.key, required this.windowId, required this.requestRewrites});
+
+  @override
+  State<StatefulWidget> createState() {
+    return RequestRewriteState();
+  }
+}
+
+class RequestRewriteState extends State<RequestRewriteWidget> {
   late ValueNotifier<bool> enableNotifier;
-  bool changed = false;
 
   @override
   void initState() {
     super.initState();
-    requestRuleList = RequestRuleList(widget.configuration.requestRewrites);
-    enableNotifier = ValueNotifier(widget.configuration.requestRewrites.enabled == true);
+    RawKeyboard.instance.addListener(onKeyEvent);
+    enableNotifier = ValueNotifier(widget.requestRewrites.enabled == true);
   }
 
   @override
   void dispose() {
-    if (changed || enableNotifier.value != widget.configuration.requestRewrites.enabled) {
-      widget.configuration.requestRewrites.enabled = enableNotifier.value;
-      widget.configuration.flushRequestRewriteConfig();
-    }
-
-    enableNotifier.dispose();
+    RawKeyboard.instance.removeListener(onKeyEvent);
     super.dispose();
+  }
+
+  void onKeyEvent(RawKeyEvent event) async {
+    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
+        event.isKeyPressed(LogicalKeyboardKey.keyW)) {
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+        return;
+      }
+      RawKeyboard.instance.removeListener(onKeyEvent);
+      WindowController.fromWindowId(widget.windowId).close();
+      return;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-            width: 280,
-            child: ValueListenableBuilder(
-                valueListenable: enableNotifier,
-                builder: (_, bool v, __) {
-                  return SwitchListTile(
-                      contentPadding: const EdgeInsets.only(left: 2),
-                      title: const Text('是否启用请求重写'),
-                      dense: true,
-                      value: enableNotifier.value,
-                      onChanged: (value) {
-                        enableNotifier.value = value;
-                      });
-                })),
-        const SizedBox(height: 10),
-        Row(children: [
-          FilledButton.icon(
-              icon: const Icon(Icons.add, size: 18),
-              onPressed: () {
-                add();
-              },
-              label: const Text("增加", style: TextStyle(fontSize: 12))),
-          const SizedBox(width: 10),
-          OutlinedButton.icon(
-              onPressed: () {
-                var selectedIndex = requestRuleList.currentSelectedIndex();
-                add(selectedIndex);
-              },
-              icon: const Icon(Icons.edit, size: 18),
-              label: const Text("编辑", style: TextStyle(fontSize: 12))),
-          TextButton.icon(
-              icon: const Icon(Icons.remove, size: 18),
-              label: const Text("删除", style: TextStyle(fontSize: 12)),
-              onPressed: () {
-                var selected = requestRuleList.currentSelectedIndex();
-                if (selected < 0) {
-                  return;
-                }
-
-                showDialog(
-                    context: context,
-                    builder: (ctx) {
-                      return AlertDialog(
-                        title: const Text("是否删除该请求重写？", style: TextStyle(fontSize: 18)),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
-                          TextButton(
-                              onPressed: () {
-                                changed = true;
-                                setState(() {
-                                  widget.configuration.requestRewrites.removeIndex(requestRuleList.removeSelected());
-                                  requestRuleList.changeState();
-                                });
-                                FlutterToastr.show('删除成功', context);
-                                Navigator.pop(context);
-                              },
-                              child: const Text("删除")),
-                        ],
-                      );
-                    });
-              })
-        ]),
-        const SizedBox(height: 10),
-        const Text("选择框只是用来操作编辑和删除，规则启用状态在编辑页切换", style: TextStyle(fontSize: 11)),
-        requestRuleList,
-      ],
-    );
+    return Scaffold(
+        backgroundColor: Theme.of(context).dialogBackgroundColor,
+        appBar: AppBar(
+            title: const Text("请求重写", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            toolbarHeight: 34,
+            centerTitle: true),
+        body: Padding(
+            padding: const EdgeInsets.only(left: 15, right: 10),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                SizedBox(
+                    width: 280,
+                    child: ValueListenableBuilder(
+                        valueListenable: enableNotifier,
+                        builder: (_, bool v, __) {
+                          return SwitchListTile(
+                              contentPadding: const EdgeInsets.only(left: 2),
+                              title: const Text('是否启用请求重写'),
+                              dense: true,
+                              value: enableNotifier.value,
+                              onChanged: (value) {
+                                enableNotifier.value = value;
+                                _refreshConfig();
+                              });
+                        })),
+                Expanded(
+                    child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const SizedBox(width: 10),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text("添加", style: TextStyle(fontSize: 12)),
+                      onPressed: add,
+                    ),
+                    // const SizedBox(width: 20),
+                    // FilledButton.icon(
+                    //   icon: const Icon(Icons.input_rounded, size: 18),
+                    //   style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
+                    //   onPressed: add,
+                    //   label: const Text("导入"),
+                    // )
+                  ],
+                )),
+                const SizedBox(width: 15)
+              ]),
+              const SizedBox(height: 10),
+              RequestRuleList(widget.requestRewrites),
+            ])));
   }
 
   void add([int currentIndex = -1]) {
@@ -115,13 +119,9 @@ class _RequestRewriteState extends State<RequestRewrite> {
         barrierDismissible: false,
         builder: (BuildContext context) {
           return RuleAddDialog(
-              currentIndex: currentIndex,
-              rule: currentIndex >= 0 ? widget.configuration.requestRewrites.rules[currentIndex] : null);
+              currentIndex: currentIndex, rule: currentIndex >= 0 ? widget.requestRewrites.rules[currentIndex] : null);
         }).then((value) {
-      if (value != null) {
-        changed = true;
-        requestRuleList.changeState();
-      }
+      if (value != null) setState(() {});
     });
   }
 }
@@ -212,19 +212,21 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
         actions: [
           FilledButton(
               child: const Text("保存"),
-              onPressed: () {
+              onPressed: () async {
                 if ((formKey.currentState as FormState).validate()) {
                   (formKey.currentState as FormState).save();
 
                   rule.updatePathReg();
                   rule.enabled = enableNotifier.value;
                   if (widget.currentIndex >= 0) {
-                    RequestRewrites.instance.rules[widget.currentIndex] = rule;
+                    (await RequestRewrites.instance).rules[widget.currentIndex] = rule;
                   } else {
-                    RequestRewrites.instance.addRule(rule);
+                    (await RequestRewrites.instance).addRule(rule);
                   }
-
-                  Navigator.of(context).pop(rule);
+                  _refreshConfig();
+                  if (mounted) {
+                    Navigator.of(context).pop(rule);
+                  }
                 }
               }),
           ElevatedButton(
@@ -321,27 +323,17 @@ class RequestRuleList extends StatefulWidget {
 
   @override
   State<RequestRuleList> createState() => _RequestRuleListState();
-
-  List<int> removeSelected() {
-    var index = currentSelectedIndex();
-    var state = (key as GlobalKey<_RequestRuleListState>).currentState;
-    state?.currentSelectedIndex = -1;
-    return index >= 0 ? [index] : [];
-  }
-
-  int currentSelectedIndex() {
-    var state = (key as GlobalKey<_RequestRuleListState>).currentState;
-    return state?.currentSelectedIndex ?? -1;
-  }
-
-  changeState() {
-    var state = (key as GlobalKey<_RequestRuleListState>).currentState;
-    state?.changeState();
-  }
 }
 
 class _RequestRuleListState extends State<RequestRuleList> {
-  int currentSelectedIndex = -1;
+  int selected = -1;
+  late List<RequestRewriteRule> rules;
+
+  @override
+  initState() {
+    super.initState();
+    rules = widget.requestRewrites.rules;
+  }
 
   changeState() {
     setState(() {});
@@ -351,39 +343,125 @@ class _RequestRuleListState extends State<RequestRuleList> {
   Widget build(BuildContext context) {
     return Container(
         padding: const EdgeInsets.only(top: 10),
-        constraints: const BoxConstraints(minWidth: 500, minHeight: 300),
+        constraints: const BoxConstraints(maxHeight: 500, minHeight: 300),
+        decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+            color: Colors.white,
+            backgroundBlendMode: BlendMode.colorBurn),
         child: SingleChildScrollView(
-            child: DataTable(
-          columnSpacing: 36,
-          border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
-          columns: const <DataColumn>[
-            DataColumn(label: Text('名称')),
-            DataColumn(label: Text('启用')),
-            DataColumn(label: Text('URL')),
-            DataColumn(label: Text('行为')),
-          ],
-          rows: List.generate(
-              widget.requestRewrites.rules.length,
-              (index) => DataRow(
-                    cells: [
-                      DataCell(
-                          Text(widget.requestRewrites.rules[index].name ?? "", style: const TextStyle(fontSize: 14))),
-                      DataCell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否",
-                          style: const TextStyle(fontSize: 14))),
-                      DataCell(ConstrainedBox(
-                        constraints: const BoxConstraints(minWidth: 60, maxWidth: 280),
-                        child: Text(widget.requestRewrites.rules[index].url, style: const TextStyle(fontSize: 14)),
-                      )),
-                      DataCell(
-                          Text(widget.requestRewrites.rules[index].type.name, style: const TextStyle(fontSize: 14))),
-                    ],
-                    selected: currentSelectedIndex == index,
-                    onSelectChanged: (value) {
-                      setState(() {
-                        currentSelectedIndex = value == true ? index : -1;
-                      });
-                    },
-                  )),
-        )));
+            child: Column(children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Container(width: 130, padding: const EdgeInsets.only(left: 10), child: const Text("名称")),
+              const SizedBox(width: 50, child: Text("启用", textAlign: TextAlign.center)),
+              const VerticalDivider(),
+              const Expanded(child: Text("URL")),
+              const SizedBox(width: 100, child: Text("行为", textAlign: TextAlign.center)),
+            ],
+          ),
+          const Divider(thickness: 0.5),
+          Column(children: rows(widget.requestRewrites.rules))
+        ])));
+  }
+
+  List<Widget> rows(List<RequestRewriteRule> list) {
+    var primaryColor = Theme.of(context).primaryColor;
+
+    return List.generate(list.length, (index) {
+      return InkWell(
+          highlightColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          hoverColor: primaryColor.withOpacity(0.3),
+          onDoubleTap: () async {
+            showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return RuleAddDialog(currentIndex: index, rule: widget.requestRewrites.rules[index]);
+                }).then((value) {
+              if (value != null) {
+                setState(() {});
+              }
+            });
+          },
+          onSecondaryTapDown: (details) => showMenus(details, index),
+          child: Container(
+              color: selected == index
+                  ? primaryColor.withOpacity(0.8)
+                  : index.isEven
+                      ? Colors.grey.withOpacity(0.1)
+                      : null,
+              height: 30,
+              padding: const EdgeInsets.all(5),
+              child: Row(
+                children: [
+                  SizedBox(width: 130, child: Text(list[index].name!, style: const TextStyle(fontSize: 13))),
+                  SizedBox(
+                      width: 40,
+                      child: Transform.scale(
+                          scale: 0.65,
+                          child: SwitchWidget(
+                              value: list[index].enabled,
+                              onChanged: (val) {
+                                list[index].enabled = val;
+                                _refreshConfig();
+                              }))),
+                  const SizedBox(width: 20),
+                  Expanded(
+                      child:
+                          Text(list[index].url, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
+                  SizedBox(
+                      width: 100,
+                      child: Text(list[index].type.name,
+                          textAlign: TextAlign.center, style: const TextStyle(fontSize: 13))),
+                ],
+              )));
+    });
+  }
+
+  //点击菜单
+  showMenus(TapDownDetails details, int index) {
+    setState(() {
+      selected = index;
+    });
+    showContextMenu(context, details.globalPosition, items: [
+      PopupMenuItem(
+          height: 35,
+          child: const Text("编辑"),
+          onTap: () async {
+            showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return RuleAddDialog(currentIndex: index, rule: widget.requestRewrites.rules[index]);
+                }).then((value) {
+              if (value != null) {
+                setState(() {});
+              }
+            });
+          }),
+      // PopupMenuItem(height: 35, child: const Text("导出"), onTap: () => export(widget.scripts[index])),
+      PopupMenuItem(
+          height: 35,
+          child: rules[index].enabled ? const Text("禁用") : const Text("启用"),
+          onTap: () {
+            rules[index].enabled = !rules[index].enabled;
+            _refreshConfig();
+          }),
+      const PopupMenuDivider(),
+      PopupMenuItem(
+          height: 35,
+          child: const Text("删除"),
+          onTap: () async {
+            widget.requestRewrites.removeIndex([index]);
+            _refreshConfig();
+            if (context.mounted) FlutterToastr.show('删除成功', context);
+          }),
+    ]).then((value) {
+      setState(() {
+        selected = -1;
+      });
+    });
   }
 }

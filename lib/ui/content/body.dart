@@ -5,7 +5,6 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
@@ -152,9 +151,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
                 responseBody: widget.httpMessage is HttpResponse ? body : null);
 
             if (Platforms.isMobile()) {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule))).then((value) {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule))).then((value) async {
                 if (value is RequestRewriteRule) {
-                  Configuration.instance.then((it) => it.flushRequestRewriteConfig());
+                  RequestRewrites.instance.then((it) => it.flushRequestRewriteConfig());
                 }
               });
             } else {
@@ -163,7 +162,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
                   barrierDismissible: false,
                   builder: (BuildContext context) => RuleAddDialog(rule: rule)).then((value) {
                 if (value != null) {
-                  Configuration.instance.then((it) => it.flushRequestRewriteConfig());
+                  RequestRewrites.instance.then((it) => it.flushRequestRewriteConfig());
                   FlutterToastr.show("保存请求重写规则成功", context);
                 }
               });

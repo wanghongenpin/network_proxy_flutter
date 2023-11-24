@@ -5,10 +5,13 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/network/util/script_manager.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
+import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/ui/desktop/left/request_editor.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/script.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:path_provider/path_provider.dart';
@@ -45,6 +48,11 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
   if (argument['name'] == 'ScriptWidget') {
     return ScriptWidget(windowId: windowId);
   }
+  //请求重写
+  if (argument['name'] == 'RequestRewriteWidget') {
+    return futureWidget(
+        RequestRewrites.instance, (data) => RequestRewriteWidget(windowId: windowId, requestRewrites: data));
+  }
 
   return const SizedBox();
 }
@@ -72,6 +80,7 @@ encodeWindow(EncoderType type, BuildContext context, [String? text]) async {
 
 bool _registerHandler = false;
 
+/// 桌面端多窗口 注册方法处理器
 void registerMethodHandler() {
   if (_registerHandler) {
     return;
@@ -83,6 +92,12 @@ void registerMethodHandler() {
     if (call.method == 'refreshScript') {
       await ScriptManager.instance.then((value) {
         return value.reloadScript();
+      });
+    }
+
+    if (call.method == 'refreshRequestRewrite') {
+      await RequestRewrites.instance.then((value) {
+        return value.reloadRequestRewrite();
       });
     }
 
@@ -124,6 +139,23 @@ openScriptWindow() async {
   window.setTitle('脚本');
   window
     ..setFrame(const Offset(30, 0) & Size(800 * ratio, 690 * ratio))
+    ..center()
+    ..show();
+}
+
+///打开请求重写窗口
+openRequestRewriteWindow() async {
+  var ratio = 1.0;
+  if (Platform.isWindows) {
+    ratio = WindowManager.instance.getDevicePixelRatio();
+  }
+  registerMethodHandler();
+  final window = await DesktopMultiWindow.createWindow(jsonEncode(
+    {'name': 'RequestRewriteWidget'},
+  ));
+  window.setTitle('请求重写');
+  window
+    ..setFrame(const Offset(50, 0) & Size(800 * ratio, 660 * ratio))
     ..center()
     ..show();
 }

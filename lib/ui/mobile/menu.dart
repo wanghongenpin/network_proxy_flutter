@@ -8,6 +8,7 @@ import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
@@ -82,7 +83,7 @@ class DrawerWidget extends StatelessWidget {
         ListTile(
             title: const Text("请求重写"),
             trailing: const Icon(Icons.arrow_right),
-            onTap: () => navigator(context, MobileRequestRewrite(configuration: proxyServer.configuration))),
+            onTap: () async => navigator(context, MobileRequestRewrite(requestRewrites: (await RequestRewrites.instance)))),
         ListTile(
             title: const Text("脚本"),
             trailing: const Icon(Icons.arrow_right),

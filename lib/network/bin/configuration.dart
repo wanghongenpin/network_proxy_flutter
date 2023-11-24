@@ -18,12 +18,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:network_proxy/network/host_port.dart';
+import 'package:network_proxy/network/util/file_read.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/network/util/logger.dart';
-import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
-import 'package:network_proxy/utils/platform.dart';
-import 'package:path_provider/path_provider.dart';
 
 class Configuration {
   ///代理相关配置
@@ -41,9 +39,6 @@ class Configuration {
   //是否显示更新内容公告
   bool upgradeNoticeV4 = true;
 
-  //请求重写
-  RequestRewrites requestRewrites = RequestRewrites.instance;
-
   //外部代理
   ProxyInfo? externalProxy;
 
@@ -60,48 +55,36 @@ class Configuration {
 
   static Future<Configuration> get instance async {
     if (_instance == null) {
-      Configuration configuration = Configuration._();
       try {
-        await configuration.initConfig();
+        var loadConfig = await _loadConfig();
+        _instance = Configuration.fromJson(loadConfig);
       } catch (e) {
-        logger.e('初始化配置失败', error: e);
+        logger.e('初始化配置失败', error: e, stackTrace: StackTrace.current);
+        _instance = Configuration._();
       }
-      _instance = configuration;
     }
     return _instance!;
   }
 
-  /// 初始化配置
-  Future<void> initConfig() async {
-    // 读取配置文件
-    try {
-      await _loadConfig();
-    } catch (e) {
-      logger.e('加载配置文件失败', error: e);
+  /// 加载配置
+  Configuration.fromJson(Map<String, dynamic> config) {
+    port = config['port'] ?? port;
+    enableSsl = config['enableSsl'] == true;
+    enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
+    proxyPassDomains = config['proxyPassDomains'] ?? SystemProxy.proxyPassDomains;
+    upgradeNoticeV4 = config['upgradeNoticeV4'] ?? true;
+    if (config['externalProxy'] != null) {
+      externalProxy = ProxyInfo.fromJson(config['externalProxy']);
     }
-    await _loadRequestRewriteConfig();
-  }
-
-  String? userHome;
-
-  Future<File> homeDir() async {
-    if (userHome != null) {
-      return File("${userHome!}${Platform.pathSeparator}.proxypin");
-    }
-    if (Platforms.isDesktop()) {
-      userHome = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
-    } else {
-      userHome = (await getApplicationSupportDirectory()).path;
-    }
-
-    var separator = Platform.pathSeparator;
-    return File("${userHome!}$separator.proxypin");
+    appWhitelist = List<String>.from(config['appWhitelist'] ?? []);
+    HostFilter.whitelist.load(config['whitelist']);
+    HostFilter.blacklist.load(config['blacklist']);
   }
 
   /// 配置文件
-  Future<File> configFile() async {
+  static Future<File> configFile() async {
     var separator = Platform.pathSeparator;
-    var home = await homeDir();
+    var home = await FileRead.homeDir();
     return File("${home.path}${separator}config.cnf");
   }
 
@@ -120,54 +103,16 @@ class Configuration {
   }
 
   /// 加载配置文件
-  Future<void> _loadConfig() async {
+  static Future<Map<String, dynamic>> _loadConfig() async {
     var file = await configFile();
     var exits = await file.exists();
     if (!exits) {
-      return;
+      return {};
     }
 
     Map<String, dynamic> config = jsonDecode(await file.readAsString());
     logger.i('加载配置文件 [$file]');
-    port = config['port'] ?? port;
-    enableSsl = config['enableSsl'] == true;
-    enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
-    proxyPassDomains = config['proxyPassDomains'] ?? SystemProxy.proxyPassDomains;
-    upgradeNoticeV4 = config['upgradeNoticeV4'] ?? true;
-    if (config['externalProxy'] != null) {
-      externalProxy = ProxyInfo.fromJson(config['externalProxy']);
-    }
-    appWhitelist = List<String>.from(config['appWhitelist'] ?? []);
-    HostFilter.whitelist.load(config['whitelist']);
-    HostFilter.blacklist.load(config['blacklist']);
-  }
-
-  /// 加载请求重写配置文件
-  Future<void> _loadRequestRewriteConfig() async {
-    var home = await homeDir();
-    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
-    var exits = await file.exists();
-    if (!exits) {
-      return;
-    }
-
-    Map<String, dynamic> config = jsonDecode(await file.readAsString());
-
-    logger.i('加载请求重写配置文件 [$file]');
-    requestRewrites.load(config);
-  }
-
-  /// 保存请求重写配置文件
-  flushRequestRewriteConfig() async {
-    var home = await homeDir();
-    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
-    bool exists = await file.exists();
-    if (!exists) {
-      await file.create(recursive: true);
-    }
-    var json = jsonEncode(requestRewrites.toJson());
-    logger.i('刷新请求重写配置文件 ${file.path}');
-    file.writeAsString(json);
+    return config;
   }
 
   Map<String, dynamic> toJson() {

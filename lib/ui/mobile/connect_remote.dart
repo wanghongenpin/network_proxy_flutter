@@ -5,6 +5,7 @@ import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/network/util/script_manager.dart';
 
 class RemoteModel {
@@ -167,8 +168,10 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
                 HostFilter.blacklist.load(widget.config['blacklist']);
               }
               if (syncRewrite) {
-                widget.configuration.requestRewrites.load(widget.config['requestRewrites']);
-                widget.configuration.flushRequestRewriteConfig();
+                await RequestRewrites.instance.then((it) {
+                  it.reload(widget.config['requestRewrites']);
+                  it.reloadRequestRewrite();
+                });
               }
               if (syncScript) {
                 ScriptManager.instance.then((script) async {

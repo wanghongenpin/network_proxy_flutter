@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
 
 class MobileRequestRewrite extends StatefulWidget {
-  final Configuration configuration;
+  final RequestRewrites requestRewrites;
 
-  const MobileRequestRewrite({super.key, required this.configuration});
+  const MobileRequestRewrite({super.key, required this.requestRewrites});
 
   @override
   State<MobileRequestRewrite> createState() => _MobileRequestRewriteState();
@@ -20,15 +19,15 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
   @override
   void initState() {
     super.initState();
-    requestRuleList = RequestRuleList(widget.configuration.requestRewrites);
-    enableNotifier = ValueNotifier(widget.configuration.requestRewrites.enabled);
+    requestRuleList = RequestRuleList(widget.requestRewrites);
+    enableNotifier = ValueNotifier(widget.requestRewrites.enabled);
   }
 
   @override
   void dispose() {
-    if (changed || enableNotifier.value != widget.configuration.requestRewrites.enabled) {
-      widget.configuration.requestRewrites.enabled = enableNotifier.value;
-      widget.configuration.flushRequestRewriteConfig();
+    if (changed || enableNotifier.value != widget.requestRewrites.enabled) {
+      widget.requestRewrites.enabled = enableNotifier.value;
+      widget.requestRewrites.flushRequestRewriteConfig();
     }
 
     enableNotifier.dispose();
@@ -92,7 +91,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
                                       onPressed: () {
                                         changed = true;
                                         setState(() {
-                                          widget.configuration.requestRewrites
+                                          widget.requestRewrites
                                               .removeIndex(requestRuleList.removeSelected());
                                           requestRuleList.changeState();
                                         });
@@ -114,7 +113,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
 
   void add([int currentIndex = -1]) {
     var rewriteRule =
-        RewriteRule(rule: currentIndex == -1 ? null : widget.configuration.requestRewrites.rules[currentIndex]);
+        RewriteRule(rule: currentIndex == -1 ? null : widget.requestRewrites.rules[currentIndex]);
 
     Navigator.push(context, MaterialPageRoute(builder: (_) => rewriteRule)).then((rule) {
       if (rule != null) {
@@ -167,19 +166,21 @@ class _RewriteRuleState extends State<RewriteRule> {
         actions: [
           TextButton(
               child: const Text("保存"),
-              onPressed: () {
+              onPressed: () async {
                 if ((formKey.currentState as FormState).validate()) {
                   (formKey.currentState as FormState).save();
                   rule.updatePathReg();
                   rule.enabled = enableNotifier.value;
                   if (widget.currentIndex >= 0) {
-                    RequestRewrites.instance.rules[widget.currentIndex] = rule;
+                    (await RequestRewrites.instance).rules[widget.currentIndex] = rule;
                   } else {
-                    RequestRewrites.instance.addRule(rule);
+                    (await RequestRewrites.instance).addRule(rule);
                   }
 
-                  FlutterToastr.show("保存请求重写规则成功", context);
-                  Navigator.of(context).pop(rule);
+                  if (mounted) {
+                    FlutterToastr.show("保存请求重写规则成功", context);
+                    Navigator.of(context).pop(rule);
+                  }
                 }
               })
         ],

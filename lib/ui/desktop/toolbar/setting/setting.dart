@@ -6,7 +6,6 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/external_proxy.dart';
-import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -93,22 +92,9 @@ class _SettingState extends State<Setting> {
   }
 
   ///请求重写Dialog
-  void requestRewrite() {
-    showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            titlePadding: const EdgeInsets.only(left: 24, top: 10, right: 15),
-            contentPadding: const EdgeInsets.only(left: 24, right: 20, bottom: 15),
-            scrollable: true,
-            title: const Row(children: [
-              Text("请求重写", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
-            ]),
-            content: RequestRewrite(configuration: configuration),
-          );
-        });
+  void requestRewrite() async {
+    if (!mounted) return;
+    openRequestRewriteWindow();
   }
 
   ///show域名过滤Dialog
@@ -212,7 +198,7 @@ class _ProxyMenuState extends State<_ProxyMenu> {
                 minLines: 1)),
         const SizedBox(height: 10),
       ],
-      child: const Padding(padding: EdgeInsets.only(left: 10), child: Text("代理",style: TextStyle(fontSize: 14))),
+      child: const Padding(padding: EdgeInsets.only(left: 10), child: Text("代理", style: TextStyle(fontSize: 14))),
     );
   }
 

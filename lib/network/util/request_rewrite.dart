@@ -1,28 +1,64 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:network_proxy/network/util/file_read.dart';
+import 'package:network_proxy/network/util/logger.dart';
+
 /// @author wanghongen
 /// 2023/7/26
 /// 请求重写
 class RequestRewrites {
   bool enabled = true;
-  final List<RequestRewriteRule> rules = [];
-
-  RequestRewrites._();
+  List<RequestRewriteRule> rules = [];
 
   //单例
-  static final RequestRewrites _instance = RequestRewrites._();
+  static RequestRewrites? _instance;
 
-  static RequestRewrites get instance => _instance;
+  static Future<RequestRewrites> get instance async {
+    if (_instance == null) {
+      var config = await _loadRequestRewriteConfig();
+      _instance = RequestRewrites.fromJson(config);
+    }
+    return _instance!;
+  }
 
   //加载配置
-  load(Map<String, dynamic>? map) {
+  RequestRewrites.fromJson(Map<String, dynamic>? map) {
+    reload(map);
+  }
+
+  //重新加载配置
+  reload(Map<String, dynamic>? map) {
     if (map == null) {
       return;
     }
+
     enabled = map['enabled'] == true;
     List? list = map['rules'];
     rules.clear();
     list?.forEach((element) {
       rules.add(RequestRewriteRule.formJson(element));
     });
+  }
+
+  ///重新加载请求重写
+  Future<void> reloadRequestRewrite() async {
+    var config = await _loadRequestRewriteConfig();
+    reload(config);
+  }
+
+  /// 加载请求重写配置文件
+  static Future<Map<String, dynamic>?> _loadRequestRewriteConfig() async {
+    var home = await FileRead.homeDir();
+    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
+    var exits = await file.exists();
+    if (!exits) {
+      return null;
+    }
+
+    Map<String, dynamic> config = jsonDecode(await file.readAsString());
+    logger.i('加载请求重写配置文件 [$file]');
+    return config;
   }
 
   /// 查找重写规则
@@ -70,6 +106,19 @@ class RequestRewrites {
       'enabled': enabled,
       'rules': rules.map((e) => e.toJson()).toList(),
     };
+  }
+
+  /// 保存请求重写配置文件
+  flushRequestRewriteConfig() async {
+    var home = await FileRead.homeDir();
+    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
+    bool exists = await file.exists();
+    if (!exists) {
+      await file.create(recursive: true);
+    }
+    var json = jsonEncode(toJson());
+    logger.i('刷新请求重写配置文件 ${file.path}');
+    file.writeAsString(json);
   }
 }
 

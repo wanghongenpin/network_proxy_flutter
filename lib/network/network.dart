@@ -107,6 +107,7 @@ class Network {
         channel.pipeline.channelRead(channel, data);
         return;
       }
+      //解析ssl握手协议
 
       //ssl自签证书
       var certificate = await CertificateManager.getCertificateContext(host!);

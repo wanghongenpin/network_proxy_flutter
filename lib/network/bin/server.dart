@@ -19,6 +19,7 @@ import 'dart:async';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/utils/platform.dart';
 
 import '../handler.dart';
@@ -65,13 +66,14 @@ class ProxyServer {
   /// 启动代理服务
   Future<Server> start() async {
     Server server = Server(configuration);
+    var requestRewrites = await RequestRewrites.instance;
 
     server.initChannel((channel) {
       channel.pipeline.handle(
           HttpRequestCodec(),
           HttpResponseCodec(),
           HttpProxyChannelHandler(
-              listener: CombinedEventListener(listeners), requestRewrites: configuration.requestRewrites));
+              listener: CombinedEventListener(listeners), requestRewrites: requestRewrites));
     });
 
     return server.bind(port).then((serverSocket) {
