@@ -3,21 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
+import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
-
-bool _refresh = false;
-
-/// 刷新请求重写
-void _refreshConfig() async {
-  if (_refresh) return;
-  _refresh = true;
-  Future.delayed(const Duration(milliseconds: 1000), () async {
-    _refresh = false;
-    (await RequestRewrites.instance).flushRequestRewriteConfig();
-    await DesktopMultiWindow.invokeMethod(0, "refreshRequestRewrite");
-  });
-}
 
 class RequestRewriteWidget extends StatefulWidget {
   final int windowId;
@@ -39,6 +27,13 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
     super.initState();
     RawKeyboard.instance.addListener(onKeyEvent);
     enableNotifier = ValueNotifier(widget.requestRewrites.enabled == true);
+    DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
+      print("call.method: ${call.method}");
+      if (call.method == 'reloadRequestRewrite') {
+        await widget.requestRewrites.reloadRequestRewrite();
+        setState(() {});
+      }
+    });
   }
 
   @override
@@ -48,6 +43,11 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
   }
 
   void onKeyEvent(RawKeyEvent event) async {
+    if (event.isKeyPressed(LogicalKeyboardKey.exit) && Navigator.canPop(context)) {
+      Navigator.pop(context);
+      return;
+    }
+
     if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
         event.isKeyPressed(LogicalKeyboardKey.keyW)) {
       if (Navigator.canPop(context)) {
@@ -84,7 +84,7 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
                               value: enableNotifier.value,
                               onChanged: (value) {
                                 enableNotifier.value = value;
-                                _refreshConfig();
+                                MultiWindow.invokeRefreshRewrite(Operation.refresh);
                               });
                         })),
                 Expanded(
@@ -220,10 +220,11 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                   rule.enabled = enableNotifier.value;
                   if (widget.currentIndex >= 0) {
                     (await RequestRewrites.instance).rules[widget.currentIndex] = rule;
+                    MultiWindow.invokeRefreshRewrite(Operation.update, index: widget.currentIndex, rule: rule);
                   } else {
                     (await RequestRewrites.instance).addRule(rule);
+                    MultiWindow.invokeRefreshRewrite(Operation.add, rule: rule);
                   }
-                  _refreshConfig();
                   if (mounted) {
                     Navigator.of(context).pop(rule);
                   }
@@ -335,10 +336,6 @@ class _RequestRuleListState extends State<RequestRuleList> {
     rules = widget.requestRewrites.rules;
   }
 
-  changeState() {
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -405,7 +402,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                               value: list[index].enabled,
                               onChanged: (val) {
                                 list[index].enabled = val;
-                                _refreshConfig();
+                                MultiWindow.invokeRefreshRewrite(Operation.update, index: index, rule: list[index]);
                               }))),
                   const SizedBox(width: 20),
                   Expanded(
@@ -447,7 +444,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
           child: rules[index].enabled ? const Text("禁用") : const Text("启用"),
           onTap: () {
             rules[index].enabled = !rules[index].enabled;
-            _refreshConfig();
+            MultiWindow.invokeRefreshRewrite(Operation.update, index: index, rule: rules[index]);
           }),
       const PopupMenuDivider(),
       PopupMenuItem(
@@ -455,7 +452,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
           child: const Text("删除"),
           onTap: () async {
             widget.requestRewrites.removeIndex([index]);
-            _refreshConfig();
+            MultiWindow.invokeRefreshRewrite(Operation.delete, index: index);
             if (context.mounted) FlutterToastr.show('删除成功', context);
           }),
     ]).then((value) {

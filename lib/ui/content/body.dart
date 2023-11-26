@@ -162,7 +162,12 @@ class HttpBodyState extends State<HttpBodyWidget> {
                   barrierDismissible: false,
                   builder: (BuildContext context) => RuleAddDialog(rule: rule)).then((value) {
                 if (value != null) {
-                  RequestRewrites.instance.then((it) => it.flushRequestRewriteConfig());
+                  DesktopMultiWindow.getAllSubWindowIds().then((windowIds) async {
+                    await (await RequestRewrites.instance).flushRequestRewriteConfig();
+                    for (var windowId in windowIds) {
+                      DesktopMultiWindow.invokeMethod(windowId, "reloadRequestRewrite");
+                    }
+                  });
                   FlutterToastr.show("保存请求重写规则成功", context);
                 }
               });

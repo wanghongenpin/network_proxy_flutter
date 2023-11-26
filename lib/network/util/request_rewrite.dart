@@ -109,7 +109,7 @@ class RequestRewrites {
   }
 
   /// 保存请求重写配置文件
-  flushRequestRewriteConfig() async {
+  Future<void> flushRequestRewriteConfig() async {
     var home = await FileRead.homeDir();
     var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
     bool exists = await file.exists();
@@ -118,7 +118,7 @@ class RequestRewrites {
     }
     var json = jsonEncode(toJson());
     logger.i('刷新请求重写配置文件 ${file.path}');
-    file.writeAsString(json);
+    await file.writeAsString(json);
   }
 }
 
@@ -165,7 +165,7 @@ class RequestRewriteRule {
       : urlReg = RegExp(url.replaceAll("*", ".*"));
 
   /// 从json中创建
-  factory RequestRewriteRule.formJson(Map<String, dynamic> map) {
+  factory RequestRewriteRule.formJson(Map<dynamic, dynamic> map) {
     return RequestRewriteRule(map['enabled'] == true,
         name: map['name'],
         url: map['url'] ?? map['domain'] + map['path'],

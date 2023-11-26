@@ -17,7 +17,7 @@ import 'package:network_proxy/utils/curl.dart';
 class MobileFavorites extends StatefulWidget {
   final ProxyServer proxyServer;
 
-  const MobileFavorites({Key? key, required this.proxyServer}) : super(key: key);
+  const MobileFavorites({super.key, required this.proxyServer});
 
   @override
   State<StatefulWidget> createState() {

@@ -61,7 +61,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
     });
 
     super.initState();
-    if (widget.configuration.upgradeNoticeV4) {
+    if (widget.configuration.upgradeNoticeV5) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -118,15 +118,14 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
 
   showUpgradeNotice() {
     String content = '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-        '新增更新:\n'
-        '1. 增加JS脚本，可修改请求和影响，脚本支持fetch API请求接口；\n'
-        '2. 扫码配置同步增加脚本配置；\n'
-        '3. 桌面端增加系统代理忽略域名设置，忽略的域名不会进行代理；\n'
-        '4. 收藏增加重命名；\n'
-        '5. 手机端认启动监听端口,无需开启抓包可直接下载证书；\n'
-        '6. 修复安卓白名单已经删除应用展示异常问题；';
-    showAlertDialog('更新内容V1.0.4', content, () {
-      widget.configuration.upgradeNoticeV4 = false;
+        '安卓重大更新！:\n'
+        '1. 安卓支持抓Flutter请求；\n'
+        '2. 安卓支持10以下版本；\n'
+        '3. 修复脚本导入中文乱码；\n'
+        '4. 手机端外部代理配置是否展示抓包；\n'
+        '5. 桌面端请求重写新窗口打开；';
+    showAlertDialog('更新内容V1.0.5', content, () {
+      widget.configuration.upgradeNoticeV5 = false;
       widget.configuration.flushConfig();
     });
   }
