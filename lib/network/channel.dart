@@ -22,6 +22,7 @@ import 'dart:typed_data';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/codec.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/logger.dart';
 
@@ -193,21 +194,34 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
     remoteChannel.pipeline.handle(rawCodec, rawCodec, RelayHandler(clientChannel));
   }
 
+  ///远程转发请求
+  remoteForward(Channel clientChannel, HostAndPort remote, Uint8List msg) async {
+    Channel? remoteChannel = clientChannel.getAttribute(clientChannel.id);
+    remoteChannel = remoteChannel ?? await HttpClients.startConnect(remote, RelayHandler(clientChannel));
+    if (clientChannel.isSsl && !remoteChannel.isSsl) {
+      remoteChannel.secureSocket = await SecureSocket.secure(remoteChannel.socket,
+          host: clientChannel.getAttribute(AttributeKeys.domain), onBadCertificate: (certificate) => true);
+    }
+
+    relay(clientChannel, remoteChannel);
+    handler.channelRead(clientChannel, msg);
+  }
+
   @override
-  void channelRead(Channel channel, Uint8List msg) {
+  void channelRead(Channel channel, Uint8List msg) async {
     try {
       //手机扫码连接转发远程
       HostAndPort? remote = channel.getAttribute(AttributeKeys.remote);
-      if (remote != null && channel.getAttribute(channel.id) != null) {
-        relay(channel, channel.getAttribute(channel.id));
-        handler.channelRead(channel, msg);
+      Channel? remoteChannel = channel.getAttribute(channel.id);
+      if (remote != null) {
+        remoteForward(channel, remote, msg);
         return;
       }
 
       buffer.add(msg);
       //大body 不解析直接转发
       if (buffer.length > Codec.maxBodyLength) {
-        relay(channel, channel.getAttribute(channel.id));
+        relay(channel, remoteChannel!);
         handler.channelRead(channel, buffer.buffer);
         buffer.clear();
         return;
@@ -227,7 +241,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
         }
 
         //websocket协议
-        if (data.headers.get("Upgrade") == 'websocket' && channel.getAttribute(channel.id) != null) {
+        if (data.headers.get("Upgrade") == 'websocket' && remoteChannel != null) {
           relay(channel, channel.getAttribute(channel.id));
           channel.pipeline.channelRead(channel, msg);
           return;

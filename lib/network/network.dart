@@ -92,33 +92,31 @@ class Network {
   /// ssl握手
   void ssl(Channel channel, HostAndPort? hostAndPort, Uint8List data) async {
     try {
+      if (hostAndPort == null && TLS.getDomain(data) != null) {
+        hostAndPort = HostAndPort.host(TLS.getDomain(data)!, 443);
+      }
+      channel.putAttribute(AttributeKeys.domain, hostAndPort?.host);
+
       Channel? remoteChannel = channel.getAttribute(channel.id);
       if (remoteChannel != null) {
         remoteChannel.secureSocket = await SecureSocket.secure(remoteChannel.socket,
             host: hostAndPort?.host, onBadCertificate: (certificate) => true);
       }
-      String? host = hostAndPort?.host;
-      host ??= TLS.getDomain(data);
 
-      if (HostFilter.filter(host)) {
-        remoteChannel =
-            remoteChannel ?? await HttpClients.startConnect(HostAndPort.host(host!, 443), RelayHandler(channel));
+      if (HostFilter.filter(hostAndPort?.host)) {
+        remoteChannel = remoteChannel ?? await HttpClients.startConnect(hostAndPort!, RelayHandler(channel));
         relay(channel, remoteChannel);
         channel.pipeline.channelRead(channel, data);
         return;
       }
-      //解析ssl握手协议
 
       //ssl自签证书
-      var certificate = await CertificateManager.getCertificateContext(host!);
+      var certificate = await CertificateManager.getCertificateContext(hostAndPort!.host);
       //服务端等待客户端ssl握手
       channel.secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
     } catch (error, trace) {
       if (error is HandshakeException) {
-        String? host = hostAndPort?.host;
-        host ??= TLS.getDomain(data);
-        channel.putAttribute(AttributeKeys.host, host == null ? null : HostAndPort.host(host, 443));
-        await subscription?.cancel();
+        channel.putAttribute(AttributeKeys.host, hostAndPort);
       }
       channel.pipeline.exceptionCaught(channel, error, trace: trace);
     }

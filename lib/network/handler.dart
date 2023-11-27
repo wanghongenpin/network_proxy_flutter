@@ -205,8 +205,6 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     var hostAndPort = httpRequest.hostAndPort ?? getHostAndPort(httpRequest);
     clientChannel.putAttribute(AttributeKeys.host, hostAndPort);
 
-    var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
-
     //远程转发
     HostAndPort? remote = clientChannel.getAttribute(AttributeKeys.remote);
     //外部代理
@@ -214,21 +212,33 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
     if (remote != null || proxyInfo != null) {
       HostAndPort connectHost = remote ?? HostAndPort.host(proxyInfo!.host, proxyInfo.port!);
-      var proxyChannel = await HttpClients.startConnect(connectHost, proxyHandler);
-      clientChannel.putAttribute(clientId, proxyChannel);
-      proxyChannel.write(httpRequest);
+      var proxyChannel = await connectRemote(clientChannel, connectHost);
+      if (httpRequest.method == HttpMethod.connect) {
+        proxyChannel.write(httpRequest);
+      }
       return proxyChannel;
     }
 
-    var proxyChannel = await HttpClients.startConnect(hostAndPort, proxyHandler);
-    clientChannel.putAttribute(clientId, proxyChannel);
+    var proxyChannel = await connectRemote(clientChannel, hostAndPort);
     //https代理新建连接请求
     if (httpRequest.method == HttpMethod.connect) {
       await clientChannel.write(
           HttpResponse(HttpStatus.ok.reason('Connection established'), protocolVersion: httpRequest.protocolVersion));
-    } else if (clientChannel.isSsl) {
+    }
+    return proxyChannel;
+  }
+
+  /// 连接远程
+  Future<Channel> connectRemote(Channel clientChannel, HostAndPort connectHost) async {
+    var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
+    var proxyChannel = await HttpClients.startConnect(connectHost, proxyHandler);
+
+    String clientId = clientChannel.id;
+    clientChannel.putAttribute(clientId, proxyChannel);
+
+    if (clientChannel.isSsl) {
       proxyChannel.secureSocket = await SecureSocket.secure(proxyChannel.socket,
-          host: hostAndPort.host, onBadCertificate: (certificate) => true);
+          host: connectHost.host, onBadCertificate: (certificate) => true);
     }
     return proxyChannel;
   }

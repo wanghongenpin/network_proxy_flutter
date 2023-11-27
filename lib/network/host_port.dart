@@ -122,6 +122,6 @@ class ProxyInfo {
 
   @override
   String toString() {
-    return '{enabled: $enabled, host: $host, port: $port}';
+    return 'ProxyInfo{enabled: $enabled, capturePacket: $capturePacket, host: $host, port: $port}';
   }
 }
