@@ -33,6 +33,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
         scrollable: true,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         title: const Text("外部代理设置", style: TextStyle(fontSize: 15)),
         actions: [
           TextButton(
@@ -101,11 +102,9 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
         if (context.mounted) {
           await showDialog(
               context: context,
-              builder: (_) =>
-                  AlertDialog(
+              builder: (_) => AlertDialog(
                     title: const Text("外部代理连接失败"),
-                    content: const Text(
-                        '网络不通所有接口将会访问失败，是否继续设置外部代理。', style: TextStyle(fontSize: 12)),
+                    content: const Text('网络不通所有接口将会访问失败，是否继续设置外部代理。', style: TextStyle(fontSize: 12)),
                     actions: [
                       TextButton(
                           onPressed: () {

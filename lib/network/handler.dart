@@ -26,6 +26,7 @@ import 'package:network_proxy/network/util/file_read.dart';
 import 'package:network_proxy/network/util/host_filter.dart';
 import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/network/util/script_manager.dart';
+import 'package:network_proxy/network/util/uri.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 import 'channel.dart';
@@ -151,8 +152,9 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
       var redirectRewrite = requestRewrites?.findRequestRewrite(httpRequest.requestUrl, RuleType.redirect);
       if (redirectRewrite?.redirectUrl?.isNotEmpty == true) {
         var proxyHandler = HttpResponseProxyHandler(channel, listener: listener, requestRewrites: requestRewrites);
-        httpRequest.uri = redirectRewrite!.redirectUrl!;
-        httpRequest.headers.host = Uri.parse(redirectRewrite.redirectUrl!).host;
+        var redirectUri = UriBuild.build(redirectRewrite!.redirectUrl!, params: httpRequest.queries);
+        httpRequest.uri = redirectUri.toString();
+        httpRequest.headers.host = redirectUri.host;
         var redirectChannel = await HttpClients.connect(Uri.parse(redirectRewrite.redirectUrl!), proxyHandler);
         await redirectChannel.write(httpRequest);
         return;

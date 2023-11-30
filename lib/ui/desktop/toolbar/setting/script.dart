@@ -224,6 +224,7 @@ class _ScriptEditState extends State<ScriptEdit> {
     GlobalKey formKey = GlobalKey<FormState>();
     return AlertDialog(
         scrollable: true,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         titlePadding: const EdgeInsets.only(left: 15, top: 5, right: 15),
         title: Row(children: [
           const Text("编辑脚本", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),

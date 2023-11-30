@@ -103,7 +103,7 @@ class HttpRequest extends HttpMessage {
   }
 
   String get requestUrl => uri.startsWith("/") ? '${remoteDomain()}$uri' : uri;
-
+  /// 请求的uri
   Uri? get requestUri {
     try {
       return Uri.parse(requestUrl);
@@ -118,6 +118,14 @@ class HttpRequest extends HttpMessage {
       return requestPath.isEmpty ? "/" : requestPath;
     } catch (e) {
       return "/";
+    }
+  }
+
+  Map<String, List<String>> get queries {
+    try {
+      return Uri.parse(requestUrl).queryParametersAll;
+    } catch (e) {
+      return {};
     }
   }
 

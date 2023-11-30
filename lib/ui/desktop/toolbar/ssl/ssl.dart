@@ -124,6 +124,7 @@ class _SslState extends State<SslWidget> {
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
               contentPadding: const EdgeInsets.all(16),
               title: const Row(children: [
                 Text("电脑HTTPS抓包配置", style: TextStyle(fontSize: 16)),
@@ -139,6 +140,7 @@ class _SslState extends State<SslWidget> {
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
               contentPadding: const EdgeInsets.all(16),
               title: const Row(children: [
                 Text("iOS根证书安装指南", style: TextStyle(fontSize: 16)),
@@ -182,6 +184,7 @@ class _SslState extends State<SslWidget> {
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
               contentPadding: const EdgeInsets.all(16),
               title: const Row(children: [
                 Text("Android根证书安装指南", style: TextStyle(fontSize: 16)),
@@ -254,7 +257,7 @@ class _Switch extends StatefulWidget {
   final ProxyServer proxyServer;
   final Function(bool val) onEnableChange;
 
-  const _Switch({Key? key, required this.proxyServer, required this.onEnableChange}) : super(key: key);
+  const _Switch({required this.proxyServer, required this.onEnableChange});
 
   @override
   State<_Switch> createState() => _SwitchState();

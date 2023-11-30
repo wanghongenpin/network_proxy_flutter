@@ -91,8 +91,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
                                       onPressed: () {
                                         changed = true;
                                         setState(() {
-                                          widget.requestRewrites
-                                              .removeIndex(requestRuleList.removeSelected());
+                                          widget.requestRewrites.removeIndex(requestRuleList.removeSelected());
                                           requestRuleList.changeState();
                                         });
                                         FlutterToastr.show('删除成功', context);
@@ -112,8 +111,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
   }
 
   void add([int currentIndex = -1]) {
-    var rewriteRule =
-        RewriteRule(rule: currentIndex == -1 ? null : widget.requestRewrites.rules[currentIndex]);
+    var rewriteRule = RewriteRule(rule: currentIndex == -1 ? null : widget.requestRewrites.rules[currentIndex]);
 
     Navigator.push(context, MaterialPageRoute(builder: (_) => rewriteRule)).then((rule) {
       if (rule != null) {
@@ -313,39 +311,41 @@ class _RequestRuleListState extends State<RequestRuleList> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        padding: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.only(top: 10, bottom: 30),
         child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: DataTable(
-              dataRowMinHeight: 30,
-              dataRowMaxHeight: 60,
-              columnSpacing: 10,
-              border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
-              columns: const <DataColumn>[
-                DataColumn(label: Text('名称')),
-                DataColumn(label: Text('启用')),
-                DataColumn(label: Text('URL')),
-                DataColumn(label: Text('行为')),
-              ],
-              rows: List.generate(
-                  widget.requestRewrites.rules.length,
-                  (index) => DataRow(
-                        cells: [
-                          cell(Text(widget.requestRewrites.rules[index].name ?? "")),
-                          cell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
-                          cell(ConstrainedBox(
-                              constraints: const BoxConstraints(minWidth: 60, maxWidth: 150),
-                              child: Text(widget.requestRewrites.rules[index].url))),
-                          cell(Text(widget.requestRewrites.rules[index].type.name)),
-                        ],
-                        selected: selected == index,
-                        onSelectChanged: (value) {
-                          setState(() {
-                            selected = value == true ? index : -1;
-                          });
-                        },
-                      )),
-            )));
+            child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: DataTable(
+                  dataRowMinHeight: 30,
+                  dataRowMaxHeight: 60,
+                  columnSpacing: 10,
+                  border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
+                  columns: const <DataColumn>[
+                    DataColumn(label: Text('名称')),
+                    DataColumn(label: Text('启用')),
+                    DataColumn(label: Text('URL')),
+                    DataColumn(label: Text('行为')),
+                  ],
+                  rows: List.generate(
+                      widget.requestRewrites.rules.length,
+                      (index) => DataRow(
+                            cells: [
+                              cell(Text(widget.requestRewrites.rules[index].name ?? "")),
+                              cell(Text(widget.requestRewrites.rules[index].enabled ? "是" : "否")),
+                              cell(ConstrainedBox(
+                                  constraints: const BoxConstraints(minWidth: 60, maxWidth: 150),
+                                  child: Text(widget.requestRewrites.rules[index].url))),
+                              cell(Text(widget.requestRewrites.rules[index].type.name)),
+                            ],
+                            selected: selected == index,
+                            onSelectChanged: (value) {
+                              setState(() {
+                                selected = value == true ? index : -1;
+                              });
+                            },
+                          )),
+                ))));
   }
 
   DataCell cell(Widget child) {

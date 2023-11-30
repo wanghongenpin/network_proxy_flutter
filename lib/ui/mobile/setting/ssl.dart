@@ -89,18 +89,24 @@ class _MobileSslState extends State<MobileSslWidget> {
                 child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"),
                 onPressed: () {
                   launchUrl(Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"));
-                })
+                }),
+            const SelectableText("模块不生效可以根据网上教程安装系统根证书, 根证书命名成 243f0bfb.0"),
           ]),
       const SizedBox(height: 10),
       ExpansionTile(
-          title: const Text("非Root用户:", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          title: const Text("非Root用户: (很多软件不会信任用户证书)", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
           tilePadding: const EdgeInsets.only(left: 0),
           expandedAlignment: Alignment.topLeft,
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
           initiallyExpanded: true,
           shape: const Border(),
           children: [
-            TextButton(onPressed: () => _downloadCert(), child: const Text("1. 点击下载根证书")),
+            TextButton(
+                onPressed: () => _downloadCert(),
+                child: Text.rich(TextSpan(children: [
+                  const TextSpan(text: "1. 点击下载根证书   "),
+                  WidgetSpan(child: SelectableText("http://127.0.0.1:${widget.proxyServer.port}/ssl"))
+                ]))),
             TextButton(onPressed: () {}, child: const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书")),
             ClipRRect(
                 child: Align(
@@ -115,25 +121,7 @@ class _MobileSslState extends State<MobileSslWidget> {
   }
 
   void _downloadCert() async {
-    if (!widget.proxyServer.isRunning) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("提示"),
-              content: const Text("请先从首页点击开启图标启动代理服务"),
-              actions: [
-                TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text("确定"))
-              ],
-            );
-          });
-      return;
-    }
-    launchUrl(Uri.parse("http://127.0.0.1:${widget.proxyServer.port}/ssl"), mode: LaunchMode.externalApplication);
     CertificateManager.cleanCache();
+    launchUrl(Uri.parse("http://127.0.0.1:${widget.proxyServer.port}/ssl"), mode: LaunchMode.externalApplication);
   }
 }

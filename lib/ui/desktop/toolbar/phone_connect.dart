@@ -28,6 +28,7 @@ class _PhoneConnectState extends State<PhoneConnect> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         title: Row(children: [
           const Text("手机连接", style: TextStyle(fontSize: 18)),
           Expanded(
