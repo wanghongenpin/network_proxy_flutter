@@ -6,6 +6,7 @@ import 'package:network_proxy/network/util/request_rewrite.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/rewite/rewrite_replace.dart';
 
 class RequestRewriteWidget extends StatefulWidget {
   final int windowId;
@@ -146,7 +147,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
   @override
   void initState() {
     super.initState();
-    rule = widget.rule ?? RequestRewriteRule(true, url: '');
+    rule = widget.rule ?? RequestRewriteRule(true, url: '', type: RuleType.responseReplace);
     enableNotifier = ValueNotifier(rule.enabled == true);
   }
 
@@ -161,10 +162,11 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
     GlobalKey formKey = GlobalKey<FormState>();
 
     return AlertDialog(
-        title: const Text("添加请求重写规则", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
         scrollable: true,
+        title: const Text("添加请求重写规则", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         content: Container(
-            constraints: const BoxConstraints(minWidth: 350, minHeight: 460),
+            constraints: const BoxConstraints(minWidth: 350),
             child: Form(
                 key: formKey,
                 child: Column(
@@ -175,39 +177,39 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                           valueListenable: enableNotifier,
                           builder: (_, bool enable, __) {
                             return SwitchListTile(
-                                dense: true,
                                 contentPadding: const EdgeInsets.only(left: 0),
-                                title: const Text('是否启用', textAlign: TextAlign.start),
+                                title: const Text('是否启用', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                 value: enable,
                                 onChanged: (value) => enableNotifier.value = value);
                           }),
-                      TextFormField(
-                        decoration: decoration('名称'),
-                        initialValue: rule.name,
-                        onSaved: (val) => rule.name = val,
-                      ),
                       const SizedBox(height: 5),
-                      TextFormField(
-                          decoration: decoration('URL', hintText: 'http://www.example.com/api/*'),
-                          initialValue: rule.url,
-                          validator: (val) => val?.isNotEmpty == true ? null : "URL不能为空",
-                          onSaved: (val) => rule.url = val!.trim()),
-                      const SizedBox(height: 5),
-                      DropdownButtonFormField<RuleType>(
-                          value: rule.type,
-                          isDense: true,
-                          decoration: decoration('行为'),
-                          items: RuleType.values
-                              .map((e) =>
-                                  DropdownMenuItem(value: e, child: Text(e.name, style: const TextStyle(fontSize: 14))))
-                              .toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              rule.type = val!;
-                            });
-                          }),
-                      const SizedBox(height: 5),
-                      ...rewriteWidgets()
+                      textField('名称:', rule.name, '请输入名称'),
+                      const SizedBox(height: 10),
+                      textField('URL:', rule.url, 'http://www.example.com/api/*'),
+                      const SizedBox(height: 10),
+                      Row(children: [
+                        const SizedBox(width: 60, child: Text('行为:')),
+                        SizedBox(
+                            width: 100,
+                            height: 33,
+                            child: DropdownButtonFormField<RuleType>(
+                                value: rule.type,
+                                decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.only(left: 7, right: 7),
+                                    focusedBorder: focusedBorder(),
+                                    border: const OutlineInputBorder()),
+                                items: RuleType.values
+                                    .map((e) => DropdownMenuItem(
+                                        value: e, child: Text(e.label, style: const TextStyle(fontSize: 13))))
+                                    .toList(),
+                                onChanged: (val) {
+                                  setState(() {
+                                    rule.type = val!;
+                                  });
+                                })),
+                        const SizedBox(width: 10),
+                        TextButton(onPressed: () => showEdit(rule), child: const Text("点击编辑"))
+                      ])
                     ]))),
         actions: [
           FilledButton(
@@ -238,71 +240,28 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
         ]);
   }
 
-  InputDecoration decoration(String label, {String? hintText}) {
-    Color color = Theme.of(context).colorScheme.primary;
-    // Color color = Colors.blueAccent;
-
-    return InputDecoration(
-        labelText: label,
-        hintText: hintText,
-        labelStyle: const TextStyle(fontSize: 14),
-        isDense: true,
-        border: UnderlineInputBorder(borderSide: BorderSide(width: 0.3, color: color)),
-        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(width: 0.3, color: color)),
-        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(width: 1.5, color: color)));
+  void showEdit(RequestRewriteRule rule) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => RewriteReplaceDialog(rule: rule),
+    ).then((value) {
+      if (value != null) setState(() {});
+    });
   }
 
-  List<Widget> rewriteWidgets() {
-    if (rule.type == RuleType.redirect) {
-      return [
-        TextFormField(
-            decoration: decoration('重定向到:', hintText: 'http://www.example.com/api'),
-            maxLines: 3,
-            initialValue: rule.redirectUrl,
-            onSaved: (val) => rule.redirectUrl = val,
-            validator: (val) {
-              if (val == null || val.trim().isEmpty) {
-                return '重定向URL不能为空';
-              }
-              return null;
-            }),
-      ];
-    }
-
-    return [
-      TextFormField(
-          initialValue: rule.queryParam,
-          decoration: decoration('URL参数替换为:'),
-          maxLines: 1,
-          onSaved: (val) => rule.queryParam = val),
-      const SizedBox(height: 5),
-      TextFormField(
-          initialValue: rule.requestBody,
-          decoration: decoration('请求体替换为:'),
-          minLines: 1,
-          maxLines: 5,
-          onSaved: (val) => rule.requestBody = val),
-      const SizedBox(height: 5),
-      TextFormField(
-          initialValue: rule.responseBody,
-          minLines: 3,
-          maxLines: 10,
-          decoration: decoration('响应体替换为:', hintText: '{"code":"200","data":{}}'),
-          onSaved: (val) => rule.responseBody = val)
-    ];
-  }
-
-  Widget textField(String label, TextEditingController controller, String hint, {TextInputType? keyboardType}) {
+  Widget textField(String label, dynamic value, String hint) {
     return Row(children: [
-      SizedBox(width: 50, child: Text(label)),
+      SizedBox(width: 60, child: Text(label)),
       Expanded(
           child: TextFormField(
-        controller: controller,
+        initialValue: value,
+        style: const TextStyle(fontSize: 14),
         validator: (val) => val?.isNotEmpty == true ? null : "",
-        keyboardType: keyboardType,
+        onChanged: (val) => value = val,
         decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+            hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
             contentPadding: const EdgeInsets.all(10),
             errorStyle: const TextStyle(height: 0, fontSize: 0),
             focusedBorder: focusedBorder(),
@@ -317,6 +276,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
   }
 }
 
+///请求重写规则列表
 class RequestRuleList extends StatefulWidget {
   final RequestRewrites requestRewrites;
 
@@ -396,21 +356,20 @@ class _RequestRuleListState extends State<RequestRuleList> {
                   SizedBox(width: 130, child: Text(list[index].name!, style: const TextStyle(fontSize: 13))),
                   SizedBox(
                       width: 40,
-                      child: Transform.scale(
+                      child: SwitchWidget(
                           scale: 0.65,
-                          child: SwitchWidget(
-                              value: list[index].enabled,
-                              onChanged: (val) {
-                                list[index].enabled = val;
-                                MultiWindow.invokeRefreshRewrite(Operation.update, index: index, rule: list[index]);
-                              }))),
+                          value: list[index].enabled,
+                          onChanged: (val) {
+                            list[index].enabled = val;
+                            MultiWindow.invokeRefreshRewrite(Operation.update, index: index, rule: list[index]);
+                          })),
                   const SizedBox(width: 20),
                   Expanded(
                       child:
                           Text(list[index].url, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
                   SizedBox(
                       width: 100,
-                      child: Text(list[index].type.name,
+                      child: Text(list[index].type.label,
                           textAlign: TextAlign.center, style: const TextStyle(fontSize: 13))),
                 ],
               )));

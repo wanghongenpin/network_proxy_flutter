@@ -146,6 +146,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
             var body = bodyKey.currentState?.body;
             var rule = RequestRewriteRule(true,
+                type: type == "Request" ? RuleType.requestReplace : RuleType.responseReplace,
                 url: '${request?.remoteDomain()}${request?.path()}',
                 requestBody: widget.httpMessage is HttpRequest ? body : null,
                 responseBody: widget.httpMessage is HttpResponse ? body : null);

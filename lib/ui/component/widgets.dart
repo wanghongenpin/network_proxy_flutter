@@ -8,11 +8,11 @@ class CustomPopupMenuItem<T> extends PopupMenuItem<T> {
     super.key,
     super.onTap,
     super.height,
-    T? value,
-    bool enabled = true,
-    required Widget child,
+    super.value,
+    super.enabled,
+    required Widget super.child,
     this.color,
-  }) : super(value: value, enabled: enabled, child: child);
+  });
 
   @override
   PopupMenuItemState<T, CustomPopupMenuItem<T>> createState() => _CustomPopupMenuItemState<T>();
@@ -35,8 +35,9 @@ class SwitchWidget extends StatefulWidget {
   final String? subtitle;
   final ValueWrap<bool> value;
   final ValueChanged<bool> onChanged;
+  final double scale;
 
-  SwitchWidget({super.key, this.title, this.subtitle, required bool value, required this.onChanged})
+  SwitchWidget({super.key, this.title, this.subtitle, required bool value, required this.onChanged, this.scale = 1})
       : value = ValueWrap.of(value);
 
   @override
@@ -47,27 +48,46 @@ class _SwitchState extends State<SwitchWidget> {
   @override
   Widget build(BuildContext context) {
     if (widget.title == null) {
-      return Switch(
-        value: widget.value.get() == true,
-        onChanged: (value) {
-          setState(() {
-            widget.value.set(value);
-          });
-          widget.onChanged(value);
-        },
-      );
+      return Transform.scale(
+          scale: widget.scale,
+          child: Switch(
+            value: widget.value.get() == true,
+            onChanged: (value) {
+              setState(() {
+                widget.value.set(value);
+              });
+              widget.onChanged(value);
+            },
+          ));
     }
-    return SwitchListTile(
-      title: widget.title == null ? null : Text(widget.title!),
-      subtitle: widget.subtitle == null ? null : Text(widget.subtitle!),
-      value: widget.value.get() == true,
-      dense: true,
-      onChanged: (value) {
-        setState(() {
-          widget.value.set(value);
-        });
-        widget.onChanged(value);
-      },
+    return Transform.scale(
+        scale: widget.scale,
+        child: SwitchListTile(
+          title: widget.title == null ? null : Text(widget.title!),
+          subtitle: widget.subtitle == null ? null : Text(widget.subtitle!),
+          value: widget.value.get() == true,
+          dense: true,
+          onChanged: (value) {
+            setState(() {
+              widget.value.set(value);
+            });
+            widget.onChanged(value);
+          },
+        ));
+  }
+}
+
+class Dot extends StatelessWidget {
+  final Color? color;
+  final double size;
+  const Dot({super.key, this.color = const Color(0xFF00FF00), this.size = 5});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

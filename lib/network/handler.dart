@@ -166,7 +166,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
   //替换请求体
   rewriteBody(HttpRequest httpRequest) {
-    var rewrite = requestRewrites?.findRequestRewrite(httpRequest.requestUrl, RuleType.body);
+    var rewrite = requestRewrites?.findRequestRewrite(httpRequest.requestUrl, RuleType.responseReplace);
 
     if (rewrite?.requestBody?.isNotEmpty == true) {
       httpRequest.body = utf8.encode(rewrite!.requestBody!);

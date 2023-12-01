@@ -144,7 +144,7 @@ class _RewriteRuleState extends State<RewriteRule> {
   @override
   void initState() {
     super.initState();
-    rule = widget.rule ?? RequestRewriteRule(true, url: '');
+    rule = widget.rule ?? RequestRewriteRule(true, url: '', type: RuleType.responseReplace);
     enableNotifier = ValueNotifier(rule.enabled == true);
   }
 

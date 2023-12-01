@@ -37,7 +37,20 @@ class RequestRewrites {
     List? list = map['rules'];
     rules.clear();
     list?.forEach((element) {
-      rules.add(RequestRewriteRule.formJson(element));
+      try {
+        // body("重写消息体"), 兼容旧版本
+        if (element['type'] == '重写消息体' && element['requestBody']?.toString().isNotEmpty == true) {
+          element['type'] = RuleType.requestReplace.name;
+          rules.add(RequestRewriteRule.formJson(element));
+        } else if (element['type'] == '重写消息体' && element['responseBody']?.toString().isNotEmpty == true) {
+          element['type'] = RuleType.responseReplace.name;
+          rules.add(RequestRewriteRule.formJson(element));
+        } else {
+          rules.add(RequestRewriteRule.formJson(element));
+        }
+      } catch (e) {
+        logger.e('加载请求重写配置失败 $element', error: e);
+      }
     });
   }
 
@@ -82,7 +95,7 @@ class RequestRewrites {
     }
 
     for (var rule in rules) {
-      if (rule.enabled && rule.urlReg.hasMatch(url) && rule.type == RuleType.body) {
+      if (rule.enabled && rule.urlReg.hasMatch(url) && rule.type == RuleType.responseReplace) {
         return rule.responseBody;
       }
     }
@@ -123,17 +136,20 @@ class RequestRewrites {
 }
 
 enum RuleType {
-  body("重写消息体"),
+  // body("重写消息体"), //OLD VERSION
+
+  requestReplace("替换请求"),
+  responseReplace("替换响应"),
   // header("重写Header"),
   redirect("重定向");
 
   //名称
-  final String name;
+  final String label;
 
-  const RuleType(this.name);
+  const RuleType(this.label);
 
   static RuleType fromName(String name) {
-    return values.firstWhere((element) => element.name == name);
+    return values.firstWhere((element) => element.name == name || element.label == name);
   }
 }
 
@@ -157,7 +173,7 @@ class RequestRewriteRule {
   RequestRewriteRule(this.enabled,
       {this.name,
       required this.url,
-      this.type = RuleType.body,
+      required this.type,
       this.queryParam,
       this.requestBody,
       this.responseBody,
@@ -169,7 +185,7 @@ class RequestRewriteRule {
     return RequestRewriteRule(map['enabled'] == true,
         name: map['name'],
         url: map['url'] ?? map['domain'] + map['path'],
-        type: map['type'] == null ? RuleType.body : RuleType.fromName(map['type']),
+        type: RuleType.fromName(map['type']),
         queryParam: map['queryParam'],
         requestBody: map['requestBody'],
         responseBody: map['responseBody'],

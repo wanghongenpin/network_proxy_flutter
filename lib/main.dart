@@ -79,10 +79,10 @@ class FluentApp extends StatelessWidget {
     themeNotifier = ValueNotifier(uiConfiguration.theme);
 
     var light = lightTheme();
-    var darkTheme = ThemeData.dark(useMaterial3: false);
+    var darkTheme = config(ThemeData.dark(useMaterial3: false));
 
-    var material3Light = ThemeData.light(useMaterial3: true);
-    var material3Dark = ThemeData.dark(useMaterial3: true);
+    var material3Light = config(ThemeData.light(useMaterial3: true));
+    var material3Dark = config(ThemeData.dark(useMaterial3: true));
 
     if (Platform.isWindows) {
       material3Light = material3Light.useSystemChineseFont();
@@ -108,9 +108,20 @@ class FluentApp extends StatelessWidget {
         });
   }
 
+  ThemeData config(ThemeData themeData) {
+    return themeData.copyWith(
+        dialogTheme: themeData.dialogTheme.copyWith(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ));
+  }
+
+  ///浅色主题
   ThemeData lightTheme() {
     var theme = ThemeData.light(useMaterial3: false);
     theme = theme.copyWith(
+        dialogTheme: theme.dialogTheme.copyWith(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
         expansionTileTheme: theme.expansionTileTheme.copyWith(
           textColor: theme.textTheme.titleMedium?.color,
         ),
