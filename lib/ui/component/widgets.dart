@@ -80,6 +80,7 @@ class _SwitchState extends State<SwitchWidget> {
 class Dot extends StatelessWidget {
   final Color? color;
   final double size;
+
   const Dot({super.key, this.color = const Color(0xFF00FF00), this.size = 5});
 
   @override
@@ -89,5 +90,22 @@ class Dot extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
+  }
+}
+
+class BottomSheetItem extends StatelessWidget {
+  final String text;
+  final VoidCallback? onPressed;
+
+  const BottomSheetItem({super.key, required this.text, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+        onPressed: () {
+          Navigator.of(context).pop();
+          onPressed?.call();
+        },
+        child: SizedBox(width: double.infinity, child: Text(text, textAlign: TextAlign.center)));
   }
 }

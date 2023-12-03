@@ -5,8 +5,9 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/util/request_rewrite.dart';
-import 'package:network_proxy/network/util/script_manager.dart';
+import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/script_manager.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/body.dart';
@@ -61,6 +62,7 @@ enum Operation {
   add,
   update,
   delete,
+  enabled,
   refresh;
 
   static Operation of(String name) {
@@ -70,21 +72,41 @@ enum Operation {
 
 class MultiWindow {
   /// 刷新请求重写
-  static Future<void> invokeRefreshRewrite(Operation operation, {int? index, RequestRewriteRule? rule}) async {
-    await DesktopMultiWindow.invokeMethod(
-        0, "refreshRequestRewrite", {"operation": operation.name, 'index': index, 'rule': rule?.toJson()});
+  static Future<void> invokeRefreshRewrite(Operation operation,
+      {int? index, RequestRewriteRule? rule, List<RewriteItem>? items, bool? enabled}) async {
+    await DesktopMultiWindow.invokeMethod(0, "refreshRequestRewrite", {
+      "enabled": enabled,
+      "operation": operation.name,
+      'index': index,
+      'rule': rule?.toJson(),
+      'items': items?.map((e) => e.toJson()).toList()
+    });
   }
 
   static bool _refreshRewrite = false;
 
-  static void _handleRefreshRewrite(Operation operation, Map<dynamic, dynamic> arguments) {
-    if (Operation.add == operation) {
-      RequestRewrites.instance.then((it) => it.addRule(RequestRewriteRule.formJson(arguments['rule'])));
-    } else if (Operation.update == operation) {
-      RequestRewrites.instance
-          .then((it) => it.rules[arguments['index']] = RequestRewriteRule.formJson(arguments['rule']));
-    } else if (Operation.delete == operation) {
-      RequestRewrites.instance.then((it) => it.removeIndex([arguments['index']]));
+  static void _handleRefreshRewrite(Operation operation, Map<dynamic, dynamic> arguments) async {
+    RequestRewrites requestRewrites = await RequestRewrites.instance;
+
+    switch (operation) {
+      case Operation.add:
+        List<dynamic> list = arguments['items'] as List<dynamic>;
+        List<RewriteItem> items =list.map((e) => RewriteItem.fromJson(e)).toList();
+        await requestRewrites.addRule(RequestRewriteRule.formJson(arguments['rule']), items);
+        break;
+      case Operation.update:
+        List<dynamic>? list = arguments['items'] as List<dynamic>?;
+        List<RewriteItem>? items = list?.map((e) => RewriteItem.fromJson(e)).toList();
+        await requestRewrites.updateRule(arguments['index'], RequestRewriteRule.formJson(arguments['rule']), items);
+        break;
+      case Operation.delete:
+        await requestRewrites.removeIndex([arguments['index']]);
+        break;
+      case Operation.enabled:
+        requestRewrites.enabled = arguments['enabled'];
+        break;
+      default:
+        break;
     }
 
     if (_refreshRewrite) return;
@@ -105,7 +127,7 @@ void registerMethodHandler() {
   }
   _registerHandler = true;
   DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
-    print('${call.method} ${call.arguments} $fromWindowId');
+    logger.d('${call.method} $fromWindowId ${call.arguments}');
 
     if (call.method == 'refreshScript') {
       await ScriptManager.instance.then((value) {
@@ -195,6 +217,6 @@ openRequestRewriteWindow() async {
   window.setTitle('请求重写');
   window
     ..setFrame(const Offset(50, 0) & Size(800 * ratio, 650 * ratio))
-    ..center()
-    ..show();
+    ..center();
+  window.show();
 }

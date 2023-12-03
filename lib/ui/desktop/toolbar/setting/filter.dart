@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
-import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/network/components/host_filter.dart';
 
 class FilterDialog extends StatefulWidget {
   final Configuration configuration;

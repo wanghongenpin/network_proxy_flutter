@@ -24,7 +24,7 @@ import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
-import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/util/tls.dart';
 import 'package:network_proxy/utils/platform.dart';
 

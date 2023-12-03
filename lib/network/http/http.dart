@@ -121,9 +121,9 @@ class HttpRequest extends HttpMessage {
     }
   }
 
-  Map<String, List<String>> get queries {
+  Map<String, String> get queries {
     try {
-      return Uri.parse(requestUrl).queryParametersAll;
+      return Uri.parse(requestUrl).queryParameters;
     } catch (e) {
       return {};
     }

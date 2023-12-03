@@ -86,9 +86,9 @@ class _MobileSslState extends State<MobileSslWidget> {
           children: [
             const Text("针对安卓Root用户做了个Magisk模块ProxyPinCA系统证书，安装完重启手机即可。"),
             TextButton(
-                child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"),
+                child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
                 onPressed: () {
-                  launchUrl(Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"));
+                  launchUrl(Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
                 }),
             const SelectableText("模块不生效可以根据网上教程安装系统根证书, 根证书命名成 243f0bfb.0"),
           ]),

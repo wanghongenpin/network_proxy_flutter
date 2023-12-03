@@ -200,10 +200,10 @@ class _SslState extends State<SslWidget> {
                     children: [
                       const Text("针对安卓Root用户做了个Magisk模块ProxyPinCA系统证书，安装完重启手机即可。"),
                       TextButton(
-                          child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"),
+                          child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
                           onPressed: () {
                             launchUrl(
-                                Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases/tag/1.0.0"));
+                                Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
                           })
                     ]),
                 const SizedBox(height: 10),

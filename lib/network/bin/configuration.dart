@@ -19,7 +19,7 @@ import 'dart:io';
 
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/util/file_read.dart';
-import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
 

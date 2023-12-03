@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter_js/flutter_js.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// @author wanghongen
@@ -54,7 +55,7 @@ async function onResponse(context, request, response) {
     if (_instance == null) {
       _instance = ScriptManager._();
       await _instance?.reloadScript();
-      print('init script manager');
+      logger.d('init script manager');
     }
     return _instance!;
   }
@@ -63,7 +64,7 @@ async function onResponse(context, request, response) {
   Future<void> reloadScript() async {
     List<ScriptItem> scripts = [];
     var file = await _path;
-    print("reloadScript ${file.path}");
+    logger.d("reloadScript ${file.path}");
     if (await file.exists()) {
       var content = await file.readAsString();
       if (content.isEmpty) {
@@ -248,7 +249,7 @@ async function onResponse(context, request, response) {
 
   //http request
   HttpRequest convertHttpRequest(HttpRequest request, Map<dynamic, dynamic> map) {
-    request.headers.clean();
+    request.headers.clear();
     request.method = HttpMethod.values.firstWhere((element) => element.name == map['method']);
     String query = '';
     map['queries']?.forEach((key, value) {
@@ -266,12 +267,12 @@ async function onResponse(context, request, response) {
 
   //http response
   HttpResponse convertHttpResponse(HttpResponse response, Map<dynamic, dynamic> map) {
-    response.headers.clean();
+    response.headers.clear();
     response.status = HttpStatus.valueOf(map['statusCode']);
     map['headers'].forEach((key, value) {
       response.headers.add(key, value);
     });
-    response.body = map['body'] ==null ? null : utf8.encode(map['body'].toString());
+    response.body = map['body'] == null ? null : utf8.encode(map['body'].toString());
     return response;
   }
 }

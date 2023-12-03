@@ -19,7 +19,7 @@ import 'dart:async';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/util/request_rewrite.dart';
+import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/utils/platform.dart';
 
 import '../handler.dart';

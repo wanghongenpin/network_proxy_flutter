@@ -110,6 +110,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   ///右键菜单
   menu() {
     showModalBottomSheet(
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
       context: context,
       isScrollControlled: true,
       builder: (ctx) {

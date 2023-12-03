@@ -12,6 +12,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
@@ -105,8 +106,7 @@ class _MobileHistoryState extends State<MobileHistory> {
         FlutterToastr.show("导入成功", context);
       });
     } catch (e, t) {
-      print(e);
-      print(t);
+      logger.e("导入失败", error: e, stackTrace: t);
       if (context.mounted) {
         FlutterToastr.show("导入失败 $e", context);
       }

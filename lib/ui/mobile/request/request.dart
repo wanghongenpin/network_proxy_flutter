@@ -80,6 +80,7 @@ class RequestRowState extends State<RequestRow> {
   ///菜单
   menu() {
     showModalBottomSheet(
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
       context: context,
       isScrollControlled: true,
       enableDrag: true,

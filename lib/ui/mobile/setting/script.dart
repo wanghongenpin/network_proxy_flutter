@@ -7,8 +7,8 @@ import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:highlight/languages/javascript.dart';
+import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/util/logger.dart';
-import 'package:network_proxy/network/util/script_manager.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:share_plus/share_plus.dart';
@@ -198,14 +198,15 @@ class _ScriptEditState extends State<ScriptEdit> {
                       return;
                     }
                     //新增
+                    var scriptManager = await ScriptManager.instance;
                     if (widget.scriptItem == null) {
                       var scriptItem = ScriptItem(true, nameController.text, urlController.text);
-                      (await ScriptManager.instance).addScript(scriptItem, script.text);
+                      await scriptManager.addScript(scriptItem, script.text);
                     } else {
                       widget.scriptItem?.name = nameController.text;
                       widget.scriptItem?.url = urlController.text;
                       widget.scriptItem?.urlReg = null;
-                      (await ScriptManager.instance).updateScript(widget.scriptItem!, script.text);
+                      await scriptManager.updateScript(widget.scriptItem!, script.text);
                     }
 
                     _refreshScript();
@@ -283,7 +284,7 @@ class _ScriptListState extends State<ScriptList> {
     return List.generate(list.length, (index) {
       return InkWell(
           splashColor: primaryColor.withOpacity(0.3),
-          onDoubleTap: () async {
+          onTap: () async {
             String script = await (await ScriptManager.instance).getScript(list[index]);
             if (!context.mounted) {
               return;
@@ -296,7 +297,7 @@ class _ScriptListState extends State<ScriptList> {
               }
             });
           },
-          onTapDown: (details) => showMenus(details, index),
+          onLongPress: () => showMenus(index),
           child: Container(
               color: selected == index
                   ? primaryColor.withOpacity(0.8)
@@ -314,7 +315,7 @@ class _ScriptListState extends State<ScriptList> {
                   SizedBox(
                       width: 50,
                       child: Transform.scale(
-                          scale: 0.8,
+                          scale: 0.65,
                           child: SwitchWidget(
                               value: list[index].enabled,
                               onChanged: (val) {
@@ -329,45 +330,69 @@ class _ScriptListState extends State<ScriptList> {
   }
 
   //点击菜单
-  showMenus(TapDownDetails details, int index) {
+  showMenus(int index) {
     setState(() {
       selected = index;
     });
-    showContextMenu(context, details.globalPosition, items: [
-      PopupMenuItem(
-          height: 35,
-          child: const Text("编辑"),
-          onTap: () async {
-            String script = await (await ScriptManager.instance).getScript(widget.scripts[index]);
-            if (!context.mounted) {
-              return;
-            }
-            Navigator.of(context)
-                .push(MaterialPageRoute(
-                    builder: (context) => ScriptEdit(scriptItem: widget.scripts[index], script: script)))
-                .then((value) {
-              if (value != null) {
-                setState(() {});
-              }
-            });
-          }),
-      PopupMenuItem(height: 35, child: const Text("分享"), onTap: () => export(widget.scripts[index])),
-      PopupMenuItem(
-          height: 35,
-          child: widget.scripts[index].enabled ? const Text("禁用") : const Text("启用"),
-          onTap: () {
-            widget.scripts[index].enabled = !widget.scripts[index].enabled;
-          }),
-      const PopupMenuDivider(),
-      PopupMenuItem(
-          height: 35,
-          child: const Text("删除"),
-          onTap: () async {
-            (await ScriptManager.instance).removeScript(index);
-            _refreshScript();
-            if (context.mounted) FlutterToastr.show('删除成功', context);
-          }),
-    ]).then((value) {
+    showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
+        enableDrag: true,
+        builder: (context) {
+          return Wrap(
+            alignment: WrapAlignment.center,
+            children: [
+              BottomSheetItem(
+                  text: "编辑",
+                  onPressed: () async {
+                    String script = await (await ScriptManager.instance).getScript(widget.scripts[index]);
+                    if (!context.mounted) {
+                      return;
+                    }
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(
+                            builder: (context) => ScriptEdit(scriptItem: widget.scripts[index], script: script)))
+                        .then((value) {
+                      if (value != null) {
+                        setState(() {});
+                      }
+                    });
+                  }),
+              const Divider(thickness: 0.5, height: 0.5),
+              BottomSheetItem(
+                  text: "分享",
+                  onPressed: () {
+                    export(widget.scripts[index]);
+                  }),
+              const Divider(thickness: 0.5, height: 0.5),
+              BottomSheetItem(
+                  text: widget.scripts[index].enabled ? "禁用" : "启用",
+                  onPressed: () {
+                    widget.scripts[index].enabled = !widget.scripts[index].enabled;
+                    _refreshScript();
+                  }),
+              const Divider(thickness: 0.5, height: 0.5),
+              BottomSheetItem(
+                  text: "删除",
+                  onPressed: () async {
+                    await (await ScriptManager.instance).removeScript(index);
+                    _refreshScript();
+                    if (context.mounted) FlutterToastr.show('删除成功', context);
+                  }),
+              Container(color: Theme.of(context).hoverColor, height: 8),
+              TextButton(
+                child: Container(
+                    height: 42,
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(top: 10),
+                    child: const Text("取消", textAlign: TextAlign.center)),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        }).then((value) {
       setState(() {
         selected = -1;
       });

@@ -8,7 +8,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/util/host_filter.dart';
+import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
 
@@ -387,6 +387,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   menu(int index) {
     var hostAndPort = list.elementAt(index);
     showModalBottomSheet(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
         context: context,
         enableDrag: true,
         builder: (ctx) {

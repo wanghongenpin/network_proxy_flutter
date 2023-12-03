@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 
-import '../../../../network/util/host_filter.dart';
+import '../../../network/components/host_filter.dart';
 
 class MobileFilterWidget extends StatefulWidget {
   final Configuration configuration;

@@ -50,6 +50,7 @@ class MobileSearchState extends State<MobileSearch> {
 
   showSearch() {
     showModalBottomSheet(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
         isScrollControlled: true,
         context: context,
         builder: (context) {

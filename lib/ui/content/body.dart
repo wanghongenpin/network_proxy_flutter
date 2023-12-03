@@ -5,15 +5,15 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/util/request_rewrite.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/json/json_viewer.dart';
 import 'package:network_proxy/ui/component/json/theme.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
-import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/utils/num.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
@@ -133,47 +133,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
     if (!widget.hideRequestRewrite) {
       list.add(const SizedBox(width: 3));
-      list.add(IconButton(
-          icon: const Icon(Icons.edit_document, size: 18),
-          tooltip: '请求重写',
-          onPressed: () {
-            HttpRequest? request;
-            if (widget.httpMessage is HttpRequest) {
-              request = widget.httpMessage as HttpRequest;
-            } else {
-              request = (widget.httpMessage as HttpResponse).request;
-            }
-
-            var body = bodyKey.currentState?.body;
-            var rule = RequestRewriteRule(true,
-                type: type == "Request" ? RuleType.requestReplace : RuleType.responseReplace,
-                url: '${request?.remoteDomain()}${request?.path()}',
-                requestBody: widget.httpMessage is HttpRequest ? body : null,
-                responseBody: widget.httpMessage is HttpResponse ? body : null);
-
-            if (Platforms.isMobile()) {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule))).then((value) async {
-                if (value is RequestRewriteRule) {
-                  RequestRewrites.instance.then((it) => it.flushRequestRewriteConfig());
-                }
-              });
-            } else {
-              showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) => RuleAddDialog(rule: rule)).then((value) {
-                if (value != null) {
-                  DesktopMultiWindow.getAllSubWindowIds().then((windowIds) async {
-                    await (await RequestRewrites.instance).flushRequestRewriteConfig();
-                    for (var windowId in windowIds) {
-                      DesktopMultiWindow.invokeMethod(windowId, "reloadRequestRewrite");
-                    }
-                  });
-                  FlutterToastr.show("保存请求重写规则成功", context);
-                }
-              });
-            }
-          }));
+      list.add(
+          IconButton(icon: const Icon(Icons.edit_document, size: 18), tooltip: '请求重写', onPressed: showRequestRewrite));
     }
 
     list.add(const SizedBox(width: 3));
@@ -192,6 +153,57 @@ class HttpBodyState extends State<HttpBodyWidget> {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: list,
     );
+  }
+
+  showRequestRewrite() async {
+    HttpRequest? request;
+    bool isRequest = widget.httpMessage is HttpRequest;
+    if (widget.httpMessage is HttpRequest) {
+      request = widget.httpMessage as HttpRequest;
+    } else {
+      request = (widget.httpMessage as HttpResponse).request;
+    }
+    var requestRewrites = await RequestRewrites.instance;
+
+    var ruleType = isRequest ? RuleType.requestReplace : RuleType.responseReplace;
+    var url = '${request?.remoteDomain()}${request?.path()}';
+    var rule = requestRewrites.rules
+        .firstWhere((it) => it.match(url, ruleType), orElse: () => RequestRewriteRule(type: ruleType, url: url));
+
+    var body = bodyKey.currentState?.body;
+
+    var rewriteItems = await requestRewrites.getRewriteItems(rule);
+    RewriteType rewriteType = isRequest ? RewriteType.replaceRequestBody : RewriteType.replaceResponseBody;
+    if (!rewriteItems.any((element) => element.type == rewriteType)) {
+      rewriteItems.add(RewriteItem(rewriteType, true, values: {'body': body}));
+    }
+
+    if (!mounted) return;
+
+    if (Platforms.isMobile()) {
+      //   Navigator.push(context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule))).then((value) async {
+      //     if (value is RequestRewriteRule) {
+      //       RequestRewrites.instance.then((it) => it.flushRequestRewriteConfig());
+      //     }
+      //   });
+    } else {
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => RuleAddDialog(rule: rule, items: rewriteItems)).then((value) {
+        if (value is RequestRewriteRule) {
+          DesktopMultiWindow.getAllSubWindowIds().then((windowIds) async {
+            await requestRewrites.flushRequestRewriteConfig();
+            var items = await requestRewrites.getRewriteItems(value);
+            await requestRewrites.updateRule(requestRewrites.rules.indexOf(value), value, items);
+            for (var windowId in windowIds) {
+              DesktopMultiWindow.invokeMethod(windowId, "reloadRequestRewrite");
+            }
+          });
+          FlutterToastr.show("保存请求重写规则成功", context);
+        }
+      });
+    }
   }
 
   void openNew() async {
@@ -303,7 +315,7 @@ class _BodyState extends State<_Body> {
       }
     } catch (e) {
       // ignore: avoid_print
-      print(e);
+      logger.e(e, stackTrace: StackTrace.current);
     }
 
     return SelectableText.rich(TextSpan(text: message?.bodyAsString), contextMenuBuilder: contextMenu);

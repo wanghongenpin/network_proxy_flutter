@@ -129,7 +129,7 @@ class HttpHeaders {
   }
 
   //清空
-  void clean() {
+  void clear() {
     _headers.clear();
     _originalHeaderNames.clear();
   }

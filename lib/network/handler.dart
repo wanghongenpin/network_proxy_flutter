@@ -15,22 +15,19 @@
  */
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
-import 'package:network_proxy/network/util/file_read.dart';
-import 'package:network_proxy/network/util/host_filter.dart';
-import 'package:network_proxy/network/util/request_rewrite.dart';
-import 'package:network_proxy/network/util/script_manager.dart';
+import 'package:network_proxy/network/components/host_filter.dart';
+import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/script_manager.dart';
+import 'package:network_proxy/network/proxy_helper.dart';
 import 'package:network_proxy/network/util/uri.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 import 'channel.dart';
-import 'http/codec.dart';
 import 'http_client.dart';
 
 ///请求和响应事件监听
@@ -50,19 +47,18 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   @override
   void channelRead(Channel channel, HttpRequest msg) async {
     channel.putAttribute(AttributeKeys.request, msg);
-
+    //下载证书
     if (msg.uri == 'http://proxy.pin/ssl' || msg.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
-      _crtDownload(channel, msg);
+      ProxyHelper.crtDownload(channel, msg);
       return;
     }
-
     //请求本服务
     if ((await localIps()).contains(msg.hostAndPort?.host) && msg.hostAndPort?.port == channel.socket.port) {
-      localRequest(msg, channel);
+      ProxyHelper.localRequest(msg, channel);
       return;
     }
 
-    //转发请求
+    //代理转发请求
     forward(channel, msg).catchError((error, trace) {
       exceptionCaught(channel, error, trace: trace);
     });
@@ -71,7 +67,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   @override
   void exceptionCaught(Channel channel, error, {StackTrace? trace}) {
     super.exceptionCaught(channel, error, trace: trace);
-    _exceptionHandler(channel, channel.getAttribute(AttributeKeys.request), error);
+    ProxyHelper.exceptionHandler(channel, listener, channel.getAttribute(AttributeKeys.request), error);
   }
 
   @override
@@ -81,39 +77,11 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     // log.i("[${channel.id}] close  ${channel.error}");
   }
 
-  //请求本服务
-  localRequest(HttpRequest msg, Channel channel) async {
-    //获取配置
-    if (msg.path() == '/config') {
-      var response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
-      var body = {
-        "requestRewrites": requestRewrites?.toJson(),
-        'whitelist': HostFilter.whitelist.toJson(),
-        'blacklist': HostFilter.blacklist.toJson(),
-        'scripts': await ScriptManager.instance.then((script) {
-          var list = script.list.map((e) async {
-            return {'name': e.name, 'enabled': e.enabled, 'url': e.url, 'script': await script.getScript(e)};
-          });
-          return Future.wait(list);
-        }),
-      };
-      response.body = utf8.encode(json.encode(body));
-      channel.writeAndClose(response);
-      return;
-    }
-
-    var response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
-    response.body = utf8.encode('pong');
-    response.headers.set("os", Platform.operatingSystem);
-    response.headers.set("hostname", Platform.isAndroid ? Platform.operatingSystem : Platform.localHostname);
-    channel.writeAndClose(response);
-  }
-
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
     log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
     if (channel.error != null) {
-      _exceptionHandler(channel, httpRequest, channel.error);
+      ProxyHelper.exceptionHandler(channel, listener, httpRequest, channel.error);
       return;
     }
 
@@ -143,56 +111,26 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
       //脚本替换
       var scriptManager = await ScriptManager.instance;
       httpRequest = await scriptManager.runScript(httpRequest);
-      //替换请求体
-      rewriteBody(httpRequest);
+      //重写请求
+      await requestRewrites?.requestRewrite(httpRequest);
 
       listener?.onRequest(channel, httpRequest);
 
       //重定向
-      var redirectRewrite = requestRewrites?.findRequestRewrite(httpRequest.requestUrl, RuleType.redirect);
-      if (redirectRewrite?.redirectUrl?.isNotEmpty == true) {
+      String? redirectUrl = await requestRewrites?.getRedirectRule(httpRequest.requestUrl);
+      if (redirectUrl?.isNotEmpty == true) {
         var proxyHandler = HttpResponseProxyHandler(channel, listener: listener, requestRewrites: requestRewrites);
-        var redirectUri = UriBuild.build(redirectRewrite!.redirectUrl!, params: httpRequest.queries);
+        var redirectUri = UriBuild.build(redirectUrl!, params: httpRequest.queries);
         httpRequest.uri = redirectUri.toString();
+        print(redirectUri);
         httpRequest.headers.host = redirectUri.host;
-        var redirectChannel = await HttpClients.connect(Uri.parse(redirectRewrite.redirectUrl!), proxyHandler);
+        var redirectChannel = await HttpClients.connect(Uri.parse(redirectUrl), proxyHandler);
         await redirectChannel.write(httpRequest);
         return;
       }
 
       await remoteChannel.write(httpRequest);
     }
-  }
-
-  //替换请求体
-  rewriteBody(HttpRequest httpRequest) {
-    var rewrite = requestRewrites?.findRequestRewrite(httpRequest.requestUrl, RuleType.responseReplace);
-
-    if (rewrite?.requestBody?.isNotEmpty == true) {
-      httpRequest.body = utf8.encode(rewrite!.requestBody!);
-    }
-    if (rewrite?.queryParam?.isNotEmpty == true) {
-      httpRequest.uri = httpRequest.requestUri?.replace(query: rewrite!.queryParam!).toString() ?? httpRequest.uri;
-    }
-  }
-
-  /// 下载证书
-  void _crtDownload(Channel channel, HttpRequest request) async {
-    const String fileMimeType = 'application/x-x509-ca-cert';
-    var response = HttpResponse(HttpStatus.ok);
-    response.headers.set(HttpHeaders.CONTENT_TYPE, fileMimeType);
-    response.headers.set("Content-Disposition", 'inline;filename=ProxyPinCA.crt');
-    response.headers.set("Connection", 'close');
-
-    var body = await FileRead.read('assets/certs/ca.crt');
-    response.headers.set("Content-Length", body.lengthInBytes.toString());
-
-    if (request.method == HttpMethod.head) {
-      channel.writeAndClose(response);
-      return;
-    }
-    response.body = body.buffer.asUint8List();
-    channel.writeAndClose(response);
   }
 
   /// 获取远程连接
@@ -244,36 +182,6 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     }
     return proxyChannel;
   }
-
-  /// 异常处理
-  _exceptionHandler(Channel channel, HttpRequest? request, error) {
-    HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
-    hostAndPort ??= HostAndPort.host(scheme: HostAndPort.httpScheme, channel.remoteAddress.host, channel.remotePort);
-    String message = error.toString();
-    HttpStatus status = HttpStatus(-1, message);
-    if (error is HandshakeException) {
-      status = HttpStatus(-2, 'SSL握手失败');
-    } else if (error is ParserException) {
-      status = HttpStatus(-3, error.message);
-    } else if (error is SocketException) {
-      status = HttpStatus(-4, error.message);
-    } else if (error is SignalException) {
-      status.reason('执行脚本异常');
-    }
-
-    request ??= HttpRequest(HttpMethod.connect, hostAndPort.domain)
-      ..body = message.codeUnits
-      ..headers.contentLength = message.codeUnits.length
-      ..hostAndPort = hostAndPort;
-
-    request.response = HttpResponse(status)
-      ..headers.contentType = 'text/plain'
-      ..headers.contentLength = message.codeUnits.length
-      ..body = message.codeUnits;
-
-    listener?.onRequest(channel, request);
-    listener?.onResponse(channel, request.response!);
-  }
 }
 
 /// http响应代理
@@ -307,10 +215,8 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
       log.e('[${clientChannel.id}] 执行脚本异常 ', error: e, stackTrace: t);
     }
 
-    var replaceBody = requestRewrites?.findResponseReplaceWith(msg.request?.requestUrl);
-    if (replaceBody?.isNotEmpty == true) {
-      msg.body = utf8.encode(replaceBody!);
-    }
+    //重写响应
+    requestRewrites?.responseRewrite(msg.request?.requestUrl, msg);
 
     listener?.onResponse(clientChannel, msg);
     //发送给客户端

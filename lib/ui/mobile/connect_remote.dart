@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
-import 'package:network_proxy/network/util/host_filter.dart';
-import 'package:network_proxy/network/util/request_rewrite.dart';
-import 'package:network_proxy/network/util/script_manager.dart';
+import 'package:network_proxy/network/components/host_filter.dart';
+import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/script_manager.dart';
 
 class RemoteModel {
   final bool connect;
