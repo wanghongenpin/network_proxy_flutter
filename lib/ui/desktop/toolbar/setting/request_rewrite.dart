@@ -195,7 +195,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
           onSecondaryTapDown: (details) => showMenus(details, index),
           child: Container(
               color: selected == index
-                  ? primaryColor.withOpacity(0.8)
+                  ? primaryColor.withOpacity(0.3)
                   : index.isEven
                       ? Colors.grey.withOpacity(0.1)
                       : null,
@@ -413,7 +413,8 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => RewriteReplaceDialog(subtitle: urlInput.text, items: items, ruleType: ruleType),
+      builder: (BuildContext context) =>
+          RewriteReplaceDialog(subtitle: urlInput.text, items: items, ruleType: ruleType),
     ).then((value) {
       if (value is List<RewriteItem>) {
         setState(() {

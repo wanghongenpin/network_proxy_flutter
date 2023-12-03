@@ -55,20 +55,26 @@ class _PathRowState extends State<PathRow> {
     try {
       title = '${request.method.name} ${Uri.parse(request.uri).path}';
     } catch (_) {}
+
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
+    String contentType = response?.contentType.name.toUpperCase() ?? '';
+    var packagesSize = getPackagesSize(request, response);
 
     return GestureDetector(
         onSecondaryTapDown: menu,
         child: ListTile(
-            minLeadingWidth: 25,
+            minLeadingWidth: 5,
             leading: getIcon(widget.response.get() ?? widget.request.response),
             title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
             subtitle: Text(
-                '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
-                maxLines: 1),
+                '$time - [${response?.status.code ?? ''}]  $contentType $packagesSize ${response?.costTime() ?? ''}',
+                maxLines: 1,
+                overflow: TextOverflow.visible),
+            subtitleTextStyle: const TextStyle(fontSize: 12, color: Colors.grey),
             selected: selected,
             dense: true,
-            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 42.0),
+            visualDensity: const VisualDensity(vertical: -4),
+            contentPadding: const EdgeInsets.only(left: 35),
             onTap: onClick));
   }
 

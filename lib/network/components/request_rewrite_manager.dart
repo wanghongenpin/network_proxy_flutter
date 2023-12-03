@@ -185,13 +185,19 @@ class RequestRewrites {
   }
 
   ///获取重定向
-  Future<String?> getRedirectRule(String url) async {
+  Future<String?> getRedirectRule(String? url) async {
     var rewriteRule = getRewriteRule(url, RuleType.redirect);
     if (rewriteRule == null) {
       return null;
     }
+
     var rewriteItems = await getRewriteItems(rewriteRule);
-    return rewriteItems.firstWhereOrNull((element) => element.enabled)?.redirectUrl;
+    var redirectUrl = rewriteItems.firstWhereOrNull((element) => element.enabled)?.redirectUrl;
+    if (rewriteRule.url.contains("*") && redirectUrl?.contains("*") == true) {
+      String ruleUrl = rewriteRule.url.replaceAll("*", "");
+      redirectUrl = redirectUrl?.replaceAll("*", url!.replaceAll(ruleUrl, ""));
+    }
+    return redirectUrl;
   }
 
   RequestRewriteRule? getRewriteRule(String? url, RuleType type) {

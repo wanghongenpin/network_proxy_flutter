@@ -21,7 +21,12 @@ class RequestRow extends StatefulWidget {
   final Function(HttpRequest)? onRemove;
 
   const RequestRow(
-      {super.key, required this.request, required this.proxyServer, this.displayDomain = true, this.onRemove, required this.index});
+      {super.key,
+      required this.request,
+      required this.proxyServer,
+      this.displayDomain = true,
+      this.onRemove,
+      required this.index});
 
   @override
   State<StatefulWidget> createState() {
@@ -49,22 +54,28 @@ class RequestRowState extends State<RequestRow> {
   @override
   Widget build(BuildContext context) {
     var title = '${request.method.name} ${widget.displayDomain ? request.requestUrl : request.path()}';
+
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
+    var contentType = response?.contentType.name.toUpperCase() ?? '';
+    var packagesSize = getPackagesSize(request, response);
+
     var subTitle =
-        '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''}';
+        '$time - [${response?.status.code ?? ''}] $contentType $packagesSize ${response?.costTime() ?? ''}';
+
     return ListTile(
         visualDensity: const VisualDensity(vertical: -4),
+        minLeadingWidth: 5,
         leading: getIcon(response),
         title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2, style: const TextStyle(fontSize: 14)),
         subtitle: Text.rich(
             maxLines: 1,
             TextSpan(children: [
               TextSpan(text: '#${widget.index} ', style: const TextStyle(fontSize: 12, color: Colors.teal)),
-              TextSpan(text: subTitle, style: const TextStyle(fontSize: 12)),
+              TextSpan(text: subTitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
             ])),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: const Icon(Icons.chevron_right, size: 22),
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        contentPadding: const EdgeInsets.only(left: 3),
         onLongPress: menu,
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {

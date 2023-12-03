@@ -41,6 +41,9 @@ abstract class HttpMessage {
   final HttpHeaders headers = HttpHeaders();
   int contentLength = -1;
 
+  //报文大小
+  int? packageSize;
+
   List<int>? body;
   String? remoteAddress;
 
@@ -94,7 +97,8 @@ class HttpRequest extends HttpMessage {
   String? remoteDomain() {
     if (hostAndPort == null) {
       try {
-        return Uri.parse(uri).host;
+        var uri = Uri.parse(requestUrl);
+        return '${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}';
       } catch (e) {
         return null;
       }
@@ -103,6 +107,7 @@ class HttpRequest extends HttpMessage {
   }
 
   String get requestUrl => uri.startsWith("/") ? '${remoteDomain()}$uri' : uri;
+
   /// 请求的uri
   Uri? get requestUri {
     try {
@@ -144,6 +149,7 @@ class HttpRequest extends HttpMessage {
       '_class': 'HttpRequest',
       'uri': requestUrl,
       'method': method.name,
+      'packageSize': packageSize,
       'headers': headers.toJson(),
       'body': body == null ? null : String.fromCharCodes(body!),
       'requestTime': requestTime.millisecondsSinceEpoch,
@@ -157,6 +163,7 @@ class HttpRequest extends HttpMessage {
     if (json['requestTime'] != null) {
       request.requestTime = DateTime.fromMillisecondsSinceEpoch(json['requestTime']);
     }
+    request.packageSize = json['packageSize'];
     return request;
   }
 
@@ -195,7 +202,11 @@ class HttpResponse extends HttpMessage {
     if (request == null) {
       return '';
     }
-    return '${responseTime.difference(request!.requestTime).inMilliseconds}ms';
+    var cost = responseTime.difference(request!.requestTime).inMilliseconds;
+    if (cost > 1000) {
+      return '${(cost / 1000).toStringAsFixed(2)}s';
+    }
+    return '${cost}ms';
   }
 
   //json序列化
@@ -207,6 +218,7 @@ class HttpResponse extends HttpMessage {
     if (json['responseTime'] != null) {
       httpResponse.responseTime = DateTime.fromMillisecondsSinceEpoch(json['responseTime']);
     }
+    httpResponse.packageSize = json['packageSize'];
     return httpResponse;
   }
 
@@ -215,6 +227,7 @@ class HttpResponse extends HttpMessage {
     return {
       '_class': 'HttpResponse',
       'protocolVersion': protocolVersion,
+      'packageSize': packageSize,
       'status': {
         'code': status.code,
         'reasonPhrase': status.reasonPhrase,

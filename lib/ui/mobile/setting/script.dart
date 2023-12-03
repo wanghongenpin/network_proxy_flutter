@@ -358,20 +358,20 @@ class _ScriptListState extends State<ScriptList> {
                       }
                     });
                   }),
-              const Divider(thickness: 0.5, height: 0.5),
+              const Divider(thickness: 0.5, height: 1),
               BottomSheetItem(
                   text: "分享",
                   onPressed: () {
                     export(widget.scripts[index]);
                   }),
-              const Divider(thickness: 0.5, height: 0.5),
+              const Divider(thickness: 0.5, height: 1),
               BottomSheetItem(
                   text: widget.scripts[index].enabled ? "禁用" : "启用",
                   onPressed: () {
                     widget.scripts[index].enabled = !widget.scripts[index].enabled;
                     _refreshScript();
                   }),
-              const Divider(thickness: 0.5, height: 0.5),
+              const Divider(thickness: 0.5, height: 1),
               BottomSheetItem(
                   text: "删除",
                   onPressed: () async {

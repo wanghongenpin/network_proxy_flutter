@@ -125,6 +125,10 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       rowWidget("Request Content-Type", request.headers.contentType),
       const SizedBox(height: 20),
       rowWidget("Response Content-Type", response?.headers.contentType),
+      const SizedBox(height: 20),
+      rowWidget("Request Package", getPackage(request)),
+      const SizedBox(height: 20),
+      rowWidget("Response Package", getPackage(response)),
     ];
 
     return ListView(children: [expansionTile("General", content)]);

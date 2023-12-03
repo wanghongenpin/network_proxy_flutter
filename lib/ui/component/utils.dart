@@ -27,6 +27,27 @@ Icon getIcon(HttpResponse? response) {
   return Icon(map[contentType] ?? Icons.http, size: 16, color: Colors.green);
 }
 
+//展示报文大小
+String getPackagesSize(HttpRequest request, HttpResponse? response) {
+  var package = getPackage(request);
+  var responsePackage = getPackage(response);
+  if (responsePackage.isEmpty) {
+    return package;
+  }
+  return "$package / $package ";
+}
+
+String getPackage(HttpMessage? message) {
+  var size = message?.packageSize;
+  if (size == null) {
+    return "";
+  }
+  if (size > 1024 * 1024) {
+    return "${(size / 1024 / 1024).toStringAsFixed(2)}MB";
+  }
+  return "${(size / 1024).toStringAsFixed(2)}KB";
+}
+
 String copyRequest(HttpRequest request, HttpResponse? response) {
   var sb = StringBuffer();
   sb.writeln("请求内容Request");

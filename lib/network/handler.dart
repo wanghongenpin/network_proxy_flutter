@@ -117,20 +117,26 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
       listener?.onRequest(channel, httpRequest);
 
       //重定向
-      String? redirectUrl = await requestRewrites?.getRedirectRule(httpRequest.requestUrl);
+      var uri = '${httpRequest.remoteDomain()}${httpRequest.path()}';
+      String? redirectUrl = await requestRewrites?.getRedirectRule(uri);
       if (redirectUrl?.isNotEmpty == true) {
-        var proxyHandler = HttpResponseProxyHandler(channel, listener: listener, requestRewrites: requestRewrites);
-        var redirectUri = UriBuild.build(redirectUrl!, params: httpRequest.queries);
-        httpRequest.uri = redirectUri.toString();
-        print(redirectUri);
-        httpRequest.headers.host = redirectUri.host;
-        var redirectChannel = await HttpClients.connect(Uri.parse(redirectUrl), proxyHandler);
-        await redirectChannel.write(httpRequest);
+        await redirect(channel, httpRequest, redirectUrl!);
         return;
       }
 
       await remoteChannel.write(httpRequest);
     }
+  }
+
+  //重定向
+  Future<void> redirect(Channel channel, HttpRequest httpRequest, String redirectUrl) async {
+    var proxyHandler = HttpResponseProxyHandler(channel, listener: listener, requestRewrites: requestRewrites);
+
+    var redirectUri = UriBuild.build(redirectUrl, params: httpRequest.queries);
+    httpRequest.uri = redirectUri.toString();
+    httpRequest.headers.host = redirectUri.host;
+    var redirectChannel = await HttpClients.connect(Uri.parse(redirectUrl), proxyHandler);
+    await redirectChannel.write(httpRequest);
   }
 
   /// 获取远程连接

@@ -201,14 +201,14 @@ class _RequestRuleListState extends State<RequestRuleList> {
                     }
                   });
                 }),
-            const Divider(thickness: 0.5, height: 0.5),
+            const Divider(thickness: 0.5, height: 1),
             BottomSheetItem(
                 text: rules[index].enabled ? "禁用" : "启用",
                 onPressed: () {
                   rules[index].enabled = !rules[index].enabled;
                   changed = true;
                 }),
-            const Divider(thickness: 0.5, height: 0.5),
+            const Divider(thickness: 0.5, height: 1),
             BottomSheetItem(
                 text: "删除",
                 onPressed: () async {
@@ -227,7 +227,9 @@ class _RequestRuleListState extends State<RequestRuleList> {
               },
             ),
           ]);
-        }).then((value) => setState(() {}));
+        }).then((value) => setState(() {
+          selected = -1;
+    }));
   }
 
   DataCell cell(Widget child) {

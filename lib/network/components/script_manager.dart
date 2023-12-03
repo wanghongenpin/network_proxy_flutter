@@ -170,7 +170,7 @@ async function onResponse(context, request, response) {
     if (!enabled) {
       return request;
     }
-    var url = request.requestUrl;
+    var url = '${request.remoteDomain()}${request.path()}';
     for (var item in list) {
       if (item.enabled && item.match(url)) {
         var context = jsonEncode(scriptContext(item));
@@ -194,7 +194,7 @@ async function onResponse(context, request, response) {
     }
 
     var request = response.request!;
-    var url = request.requestUrl;
+    var url = '${request.remoteDomain()}${request.path()}';
     for (var item in list) {
       if (item.enabled && item.match(url)) {
         var context = jsonEncode(request.attributes['scriptContext'] ?? scriptContext(item));
