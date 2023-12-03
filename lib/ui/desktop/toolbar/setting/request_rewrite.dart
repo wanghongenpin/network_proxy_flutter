@@ -203,7 +203,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
               padding: const EdgeInsets.all(5),
               child: Row(
                 children: [
-                  SizedBox(width: 130, child: Text(list[index].name!, style: const TextStyle(fontSize: 13))),
+                  SizedBox(width: 130, child: Text(list[index].name ?? '', style: const TextStyle(fontSize: 13))),
                   SizedBox(
                       width: 40,
                       child: SwitchWidget(

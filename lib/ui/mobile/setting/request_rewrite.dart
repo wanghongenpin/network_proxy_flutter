@@ -153,7 +153,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                 children: [
                   SizedBox(
                       width: 80,
-                      child: Text(list[index].name!,
+                      child: Text(list[index].name ?? "",
                           overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
                   SizedBox(
                       width: 20,

@@ -142,7 +142,9 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   '3. 修复脚本导入中文乱码；\n'
                   '4. 手机端外部代理配置是否展示抓包；\n'
                   '5. 桌面端请求重写新窗口打开；\n'
-                  '6. 请求重写升级，支持请求行、header、状态码重写；',
+                  '6. 请求重写升级，支持请求行、header、状态码重写；'
+                  '7. 展示请求/响应报文大小；'
+                  ,
                   style: TextStyle(fontSize: 14)));
         });
   }
