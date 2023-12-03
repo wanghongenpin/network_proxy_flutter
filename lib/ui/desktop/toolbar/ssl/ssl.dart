@@ -182,7 +182,7 @@ class _SslState extends State<SslWidget> {
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return SimpleDialog(
+          return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
               contentPadding: const EdgeInsets.all(16),
               title: const Row(children: [
@@ -190,54 +190,65 @@ class _SslState extends State<SslWidget> {
                 Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
               ]),
               alignment: Alignment.center,
-              children: [
-                ExpansionTile(
-                    title: const Text("Root用户:", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-                    tilePadding: const EdgeInsets.only(left: 0),
-                    expandedAlignment: Alignment.topLeft,
-                    initiallyExpanded: true,
-                    shape: const Border(),
-                    children: [
-                      const Text("针对安卓Root用户做了个Magisk模块ProxyPinCA系统证书，安装完重启手机即可。"),
-                      TextButton(
-                          child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
-                          onPressed: () {
-                            launchUrl(
-                                Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
-                          })
-                    ]),
-                const SizedBox(height: 10),
-                ExpansionTile(
-                  title: const Text("非Root用户:", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-                  tilePadding: const EdgeInsets.only(left: 0),
-                  expandedAlignment: Alignment.topLeft,
-                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  initiallyExpanded: true,
-                  shape: const Border(),
-                  children: [
-                    SelectableText.rich(TextSpan(text: "1. 配置手机Wi-Fi代理 Host：$host  Port：${widget.proxyServer.port}")),
+              content: SizedBox(
+                  width: 600,
+                  child: ListView(children: [
+                    ExpansionTile(
+                        title:
+                            const Text("ROOT用户: 安装到系统证书", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                        tilePadding: const EdgeInsets.only(left: 0),
+                        expandedAlignment: Alignment.topLeft,
+                        initiallyExpanded: true,
+                        shape: const Border(),
+                        children: [
+                          const Text("针对安卓ROOT用户做了个Magisk模块ProxyPinCA系统证书，安装完重启手机即可。"),
+                          TextButton(
+                              child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
+                              onPressed: () {
+                                launchUrl(Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
+                              }),
+                          const SelectableText("模块不生效可以根据网上教程安装系统根证书, 根证书命名成 243f0bfb.0"),
+                        ]),
                     const SizedBox(height: 10),
-                    const Row(
+                    ExpansionTile(
+                      title: const Text("非ROOT用户: 安装到用户证书(很多软件不会信任用户证书)",
+                          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                      tilePadding: const EdgeInsets.only(left: 0),
+                      expandedAlignment: Alignment.topLeft,
+                      expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                      initiallyExpanded: true,
+                      shape: const Border(),
                       children: [
-                        Text("2. 在 Android 设备上打开浏览器访问：\t"),
-                        SelectableText.rich(TextSpan(
-                            text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
+                        SelectableText.rich(
+                            TextSpan(text: "1. 配置手机Wi-Fi代理 Host：$host  Port：${widget.proxyServer.port}")),
+                        const SizedBox(height: 10),
+                        const Row(
+                          children: [
+                            Text("2. 在 Android 设备上打开浏览器访问：\t"),
+                            SelectableText.rich(TextSpan(
+                                text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Text("3. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书"),
+                        const SizedBox(height: 10),
+                        TextButton(
+                            onPressed: () {
+                              launchUrl(Uri.parse(
+                                  "https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E5%AE%89%E5%8D%93%E6%97%A0ROOT%E4%BD%BF%E7%94%A8Xposed%E6%A8%A1%E5%9D%97%E6%8A%93%E5%8C%85"));
+                            },
+                            child: const Text(" 推荐使用Xposed模块抓包(无需ROOT), 点击查看wiki")),
+                        ClipRRect(
+                            child: Align(
+                                alignment: Alignment.topCenter,
+                                heightFactor: .7,
+                                child: Image.network(
+                                  "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
+                                  height: 550,
+                                )))
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书"),
-                    const SizedBox(height: 10),
-                    ClipRRect(
-                        child: Align(
-                            alignment: Alignment.topCenter,
-                            heightFactor: .7,
-                            child: Image.network(
-                              "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
-                              height: 550,
-                            )))
-                  ],
-                ),
-              ]);
+                  ])));
         });
   }
 

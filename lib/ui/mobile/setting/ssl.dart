@@ -78,7 +78,7 @@ class _MobileSslState extends State<MobileSslWidget> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text("安装根证书"),
       ExpansionTile(
-          title: const Text("Root用户:", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          title: const Text("ROOT用户: 安装到系统证书", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
           tilePadding: const EdgeInsets.only(left: 0),
           expandedAlignment: Alignment.topLeft,
           initiallyExpanded: true,
@@ -94,7 +94,8 @@ class _MobileSslState extends State<MobileSslWidget> {
           ]),
       const SizedBox(height: 10),
       ExpansionTile(
-          title: const Text("非Root用户: (很多软件不会信任用户证书)", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          title:
+              const Text("非ROOT用户: 安装到用户证书(很多软件不会信任用户证书)", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
           tilePadding: const EdgeInsets.only(left: 0),
           expandedAlignment: Alignment.topLeft,
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
@@ -108,6 +109,12 @@ class _MobileSslState extends State<MobileSslWidget> {
                   WidgetSpan(child: SelectableText("http://127.0.0.1:${widget.proxyServer.port}/ssl"))
                 ]))),
             TextButton(onPressed: () {}, child: const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书")),
+            TextButton(
+                onPressed: () {
+                  launchUrl(Uri.parse(
+                      "https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E5%AE%89%E5%8D%93%E6%97%A0ROOT%E4%BD%BF%E7%94%A8Xposed%E6%A8%A1%E5%9D%97%E6%8A%93%E5%8C%85"));
+                },
+                child: const Text("推荐使用Xposed模块抓包(无需ROOT), 点击查看wiki")),
             ClipRRect(
                 child: Align(
                     alignment: Alignment.topCenter,

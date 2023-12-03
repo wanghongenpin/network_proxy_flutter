@@ -37,72 +37,64 @@ class DrawerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
         child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Theme
-                  .of(context)
-                  .colorScheme
-                  .primaryContainer),
-              child: const Text(''),
-            ),
-            ListTile(
-                leading: const Icon(Icons.favorite),
-                title: const Text("收藏"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () => navigator(context, MobileFavorites(proxyServer: proxyServer))),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text("历史"),
-              trailing: const Icon(Icons.arrow_right),
-              onTap: () =>
-                  navigator(context, MobileHistory(proxyServer: proxyServer, requestStateKey: requestStateKey)),
-            ),
-            const Divider(thickness: 0.3),
-            ListTile(
-                title: const Text("代理"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () => navigator(context, ProxySetting(proxyServer: proxyServer))),
-            ListTile(
-                title: const Text("HTTPS抓包"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
-            const MobileThemeSetting(),
-            Platform.isIOS
-                ? const SizedBox()
-                : ListTile(
+      padding: EdgeInsets.zero,
+      children: [
+        DrawerHeader(
+          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
+          child: const Text(''),
+        ),
+        ListTile(
+            leading: const Icon(Icons.favorite),
+            title: const Text("收藏"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(context, MobileFavorites(proxyServer: proxyServer))),
+        ListTile(
+          leading: const Icon(Icons.history),
+          title: const Text("历史"),
+          trailing: const Icon(Icons.arrow_right),
+          onTap: () => navigator(context, MobileHistory(proxyServer: proxyServer, requestStateKey: requestStateKey)),
+        ),
+        const Divider(thickness: 0.3),
+        ListTile(
+            title: const Text("代理"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(context, ProxySetting(proxyServer: proxyServer))),
+        ListTile(
+            title: const Text("HTTPS抓包"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
+        const MobileThemeSetting(),
+        Platform.isIOS
+            ? const SizedBox()
+            : ListTile(
                 title: const Text("应用白名单"),
                 trailing: const Icon(Icons.arrow_right),
                 onTap: () => navigator(context, AppWhitelist(proxyServer: proxyServer))),
-            ListTile(
-                title: const Text("域名白名单"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () =>
-                    navigator(
-                        context,
-                        MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.whitelist))),
-            ListTile(
-                title: const Text("域名黑名单"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () =>
-                    navigator(
-                        context,
-                        MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.blacklist))),
-            ListTile(
-                title: const Text("请求重写"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () async =>
-                    navigator(context, MobileRequestRewrite(requestRewrites: (await RequestRewrites.instance)))),
-            ListTile(
-                title: const Text("脚本"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () => navigator(context, const MobileScript())),
-            ListTile(
-                title: const Text("关于"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () => navigator(context, const About())),
-          ],
-        ));
+        ListTile(
+            title: const Text("域名白名单"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(
+                context, MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.whitelist))),
+        ListTile(
+            title: const Text("域名黑名单"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(
+                context, MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.blacklist))),
+        ListTile(
+            title: const Text("请求重写"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () async =>
+                navigator(context, MobileRequestRewrite(requestRewrites: (await RequestRewrites.instance)))),
+        ListTile(
+            title: const Text("脚本"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(context, const MobileScript())),
+        ListTile(
+            title: const Text("关于"),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () => navigator(context, const About())),
+      ],
+    ));
   }
 
   ///跳转页面
@@ -144,37 +136,36 @@ class MoreEnum extends StatelessWidget {
                   })),
           PopupMenuItem(
               child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.qr_code_scanner_outlined),
-                title: const Text("连接终端"),
-                onTap: () {
-                  connectRemote(context);
-                },
-              )),
+            dense: true,
+            leading: const Icon(Icons.qr_code_scanner_outlined),
+            title: const Text("连接终端"),
+            onTap: () {
+              connectRemote(context);
+            },
+          )),
           PopupMenuItem(
               child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.phone_iphone),
-                title: const Text("我的二维码"),
-                onTap: () async {
-                  var ip = await localIp();
-                  if (context.mounted) {
-                    connectQrCode(context, ip, proxyServer.port);
-                  }
-                },
-              )),
+            dense: true,
+            leading: const Icon(Icons.phone_iphone),
+            title: const Text("我的二维码"),
+            onTap: () async {
+              var ip = await localIp();
+              if (context.mounted) {
+                connectQrCode(context, ip, proxyServer.port);
+              }
+            },
+          )),
           PopupMenuItem(
               child: ListTile(
                   dense: true,
                   leading: const Icon(Icons.construction),
                   title: const Text("工具箱"),
-                  onTap: () =>
-                      Navigator.of(context).push(
+                  onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (BuildContext context) {
                           return Scaffold(
                               appBar:
-                              AppBar(title: const Text("工具箱", style: TextStyle(fontSize: 16)), centerTitle: true),
-                              body: const Toolbox());
+                                  AppBar(title: const Text("工具箱", style: TextStyle(fontSize: 16)), centerTitle: true),
+                              body: Toolbox(proxyServer: proxyServer));
                         }),
                       ))),
         ];
@@ -213,8 +204,7 @@ class MoreEnum extends StatelessWidget {
               hostname: response.headers.get("hostname"));
 
           if (context.mounted && Navigator.canPop(context)) {
-            FlutterToastr.show(
-                "连接成功${Vpn.isVpnStarted ? '' : ',手机需要开启抓包才可以抓取请求哦'}", context, duration: 3);
+            FlutterToastr.show("连接成功${Vpn.isVpnStarted ? '' : ',手机需要开启抓包才可以抓取请求哦'}", context, duration: 3);
             Navigator.pop(context);
           }
         }
@@ -271,6 +261,7 @@ class MoreEnum extends StatelessWidget {
         });
   }
 }
+
 /**
  * 关于
  */
@@ -300,8 +291,7 @@ class About extends StatelessWidget {
                 title: const Text("下载地址"),
                 trailing: const Icon(Icons.arrow_right),
                 onTap: () {
-                  launchUrl(
-                      Uri.parse("https://gitee.com/wanghongenpin/network-proxy-flutter/releases"),
+                  launchUrl(Uri.parse("https://gitee.com/wanghongenpin/network-proxy-flutter/releases"),
                       mode: LaunchMode.externalApplication);
                 })
           ],

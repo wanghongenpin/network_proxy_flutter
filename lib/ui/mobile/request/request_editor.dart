@@ -129,7 +129,8 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     request.headers.addAll(headers);
     request.body = requestBody == null ? null : utf8.encode(requestBody);
 
-    var proxyInfo = Vpn.isVpnStarted ? ProxyInfo.of("127.0.0.1", widget.proxyServer!.port) : null;
+    var proxyInfo =
+        Vpn.isVpnStarted && widget.proxyServer != null ? ProxyInfo.of("127.0.0.1", widget.proxyServer?.port) : null;
     HttpClients.proxyRequest(proxyInfo: proxyInfo, request).then((response) {
       FlutterToastr.show('请求成功', context);
       this.response = response;

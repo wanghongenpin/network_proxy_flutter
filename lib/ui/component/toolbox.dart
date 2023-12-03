@@ -13,7 +13,7 @@ import 'package:window_manager/window_manager.dart';
 class Toolbox extends StatefulWidget {
   final ProxyServer? proxyServer;
 
-  const Toolbox({Key? key, this.proxyServer}) : super(key: key);
+  const Toolbox({super.key, this.proxyServer});
 
   @override
   State<StatefulWidget> createState() {
