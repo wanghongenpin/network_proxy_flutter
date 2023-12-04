@@ -222,7 +222,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     }
 
     //重写响应
-    requestRewrites?.responseRewrite(msg.request?.requestUrl, msg);
+    await requestRewrites?.responseRewrite(msg.request?.requestUrl, msg);
 
     listener?.onResponse(clientChannel, msg);
     //发送给客户端

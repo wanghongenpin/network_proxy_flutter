@@ -14,6 +14,7 @@ import 'package:network_proxy/ui/component/json/theme.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
+import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/utils/num.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
@@ -155,6 +156,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
     );
   }
 
+  //
   showRequestRewrite() async {
     HttpRequest? request;
     bool isRequest = widget.httpMessage is HttpRequest;
@@ -181,11 +183,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
     if (!mounted) return;
 
     if (Platforms.isMobile()) {
-      //   Navigator.push(context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule))).then((value) async {
-      //     if (value is RequestRewriteRule) {
-      //       RequestRewrites.instance.then((it) => it.flushRequestRewriteConfig());
-      //     }
-      //   });
+      Navigator.push(context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule, items: rewriteItems)));
     } else {
       showDialog(
           context: context,

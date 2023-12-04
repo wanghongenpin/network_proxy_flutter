@@ -285,6 +285,7 @@ class RequestRewrites {
     }
     var rewriteItems = await getRewriteItems(rewriteRule);
     rewriteItems.where((item) => item.enabled).forEach((item) => _replaceResponse(response, item));
+    logger.d('rewrite response $response');
   }
 
   //替换相应

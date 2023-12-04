@@ -53,7 +53,7 @@ static void my_application_activate(GApplication* application) {
   if (g_file_test("assets", G_FILE_TEST_IS_DIR)) {
       gtk_window_set_icon_from_file(window, "assets/icon.png", NULL); // For debug mode
   } else {
-      gtk_window_set_icon_from_file(window, "data/flutter_assets/assets/icon.png", NULL); // For release mode
+      gtk_window_set_icon_from_file(window, "/opt/proxypin/data/flutter_assets/assets/icon.png", NULL); // For release mode
   }
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
