@@ -23,7 +23,7 @@ class ProxyHelper {
       final requestRewrites = await RequestRewrites.instance;
       var response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
       var body = {
-        "requestRewrites": requestRewrites.toJson(),
+        "requestRewrites": await requestRewrites.toFullJson(),
         'whitelist': HostFilter.whitelist.toJson(),
         'blacklist': HostFilter.blacklist.toJson(),
         'scripts': await ScriptManager.instance.then((script) {
@@ -64,7 +64,7 @@ class ProxyHelper {
     channel.writeAndClose(response);
   }
 
-  /// 异常处理
+  ///异常处理
  static exceptionHandler(Channel channel, EventListener? listener, HttpRequest? request, error) {
     HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
     hostAndPort ??= HostAndPort.host(scheme: HostAndPort.httpScheme, channel.remoteAddress.host, channel.remotePort);

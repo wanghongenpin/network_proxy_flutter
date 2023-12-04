@@ -167,23 +167,23 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
               if (syncBlackList) {
                 HostFilter.blacklist.load(widget.config['blacklist']);
               }
-              if (syncRewrite) {
-                await RequestRewrites.instance.then((it) {
-                  it.reload(widget.config['requestRewrites']);
-                  it.reloadRequestRewrite();
-                });
-              }
-              if (syncScript) {
-                ScriptManager.instance.then((script) async {
-                  await script.clean();
-                  script.list.clear();
-                  for (var item in widget.config['scripts']) {
-                    await script.addScript(ScriptItem.fromJson(item), item['script']);
-                  }
-                  await script.flushConfig();
-                });
-              }
               widget.configuration.flushConfig();
+
+              if (syncRewrite) {
+                var requestRewrites = await RequestRewrites.instance;
+                await requestRewrites.syncConfig(widget.config['requestRewrites']);
+              }
+
+              if (syncScript) {
+                var scriptManager = await ScriptManager.instance;
+                await scriptManager.clean();
+                scriptManager.list.clear();
+                for (var item in widget.config['scripts']) {
+                  await scriptManager.addScript(ScriptItem.fromJson(item), item['script']);
+                }
+                await scriptManager.flushConfig();
+              }
+
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('同步成功')));

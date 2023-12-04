@@ -197,7 +197,9 @@ class _SslState extends State<SslWidget> {
                         title:
                             const Text("ROOT用户: 安装到系统证书", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
                         tilePadding: const EdgeInsets.only(left: 0),
+                        expandedCrossAxisAlignment: CrossAxisAlignment.start,
                         expandedAlignment: Alignment.topLeft,
+                        childrenPadding: const EdgeInsets.only(left: 20),
                         initiallyExpanded: true,
                         shape: const Border(),
                         children: [
@@ -214,8 +216,8 @@ class _SslState extends State<SslWidget> {
                       title: const Text("非ROOT用户: 安装到用户证书(很多软件不会信任用户证书)",
                           style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
                       tilePadding: const EdgeInsets.only(left: 0),
-                      expandedAlignment: Alignment.topLeft,
                       expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                      childrenPadding: const EdgeInsets.only(left: 20),
                       initiallyExpanded: true,
                       shape: const Border(),
                       children: [

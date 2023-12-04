@@ -92,7 +92,7 @@ class _MobileSslState extends State<MobileSslWidget> {
                 }),
             const SelectableText("模块不生效可以根据网上教程安装系统根证书, 根证书命名成 243f0bfb.0"),
           ]),
-      const SizedBox(height: 10),
+      const SizedBox(height: 20),
       ExpansionTile(
           title:
               const Text("非ROOT用户: 安装到用户证书(很多软件不会信任用户证书)", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),

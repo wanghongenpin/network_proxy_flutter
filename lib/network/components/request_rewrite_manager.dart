@@ -17,21 +17,19 @@ class RequestRewrites {
   //单例
   static RequestRewrites? _instance;
 
+  RequestRewrites._();
+
   static Future<RequestRewrites> get instance async {
     if (_instance == null) {
       var config = await _loadRequestRewriteConfig();
-      _instance = RequestRewrites.fromJson(config);
+      _instance = RequestRewrites._();
+      await _instance!.reload(config);
     }
     return _instance!;
   }
 
   bool enabled = true;
   List<RequestRewriteRule> rules = [];
-
-  //加载配置
-  RequestRewrites.fromJson(Map<String, dynamic>? map) {
-    reload(map);
-  }
 
   //重新加载配置
   Future<void> reload(Map<String, dynamic>? map) async {
@@ -106,6 +104,29 @@ class RequestRewrites {
   Future<void> reloadRequestRewrite() async {
     var config = await _loadRequestRewriteConfig();
     reload(config);
+  }
+
+  ///同步配置
+  Future<void> syncConfig(Map<String, dynamic>? config) async {
+    if (config == null) {
+      return;
+    }
+
+    rewriteItems.clear();
+    enabled = config['enabled'] == true;
+    List list = config['rules'] ?? [];
+    rules.clear();
+    for (var element in list) {
+      try {
+        var rule = RequestRewriteRule.formJson(element);
+        List list = element['items'] as List;
+        List<RewriteItem> items = list.map((e) => RewriteItem.fromJson(e)).toList();
+        await addRule(rule, items);
+      } catch (e) {
+        logger.e('加载请求重写配置失败 $element', error: e);
+      }
+    }
+    flushRequestRewriteConfig();
   }
 
   /// 加载请求重写配置文件
@@ -291,6 +312,20 @@ class RequestRewrites {
     return {
       'enabled': enabled,
       'rules': rules.map((e) => e.toJson()).toList(),
+    };
+  }
+
+  Future<Map<String, dynamic>> toFullJson() async {
+    var rulesJson = [];
+    for (var rule in rules) {
+      var json = rule.toJson();
+      json['items'] = await getRewriteItems(rule);
+      rulesJson.add(json);
+    }
+
+    return {
+      'enabled': enabled,
+      'rules': rulesJson,
     };
   }
 }
