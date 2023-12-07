@@ -115,7 +115,11 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
   ///添加请求
   add(Channel channel, HttpRequest request) {
     container.add(request);
-    HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
+    HostAndPort? hostAndPort = request.hostAndPort;
+    if (hostAndPort == null) {
+      return;
+    }
+
     //按照域名分类
     HeaderBody? headerBody = containerMap[hostAndPort];
     if (headerBody != null) {

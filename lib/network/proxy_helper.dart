@@ -90,6 +90,8 @@ class ProxyHelper {
       ..headers.contentLength = message.codeUnits.length
       ..body = message.codeUnits;
 
+    channel.putAttribute(AttributeKeys.host, hostAndPort);
+
     listener?.onRequest(channel, request);
     listener?.onResponse(channel, request.response!);
   }

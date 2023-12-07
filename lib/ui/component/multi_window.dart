@@ -90,14 +90,16 @@ class MultiWindow {
 
     switch (operation) {
       case Operation.add:
-        List<dynamic> list = arguments['items'] as List<dynamic>;
-        List<RewriteItem> items =list.map((e) => RewriteItem.fromJson(e)).toList();
-        await requestRewrites.addRule(RequestRewriteRule.formJson(arguments['rule']), items);
-        break;
       case Operation.update:
-        List<dynamic>? list = arguments['items'] as List<dynamic>?;
-        List<RewriteItem>? items = list?.map((e) => RewriteItem.fromJson(e)).toList();
-        await requestRewrites.updateRule(arguments['index'], RequestRewriteRule.formJson(arguments['rule']), items);
+        var rule = RequestRewriteRule.formJson(arguments['rule']);
+        List<dynamic> list = arguments['items'] as List<dynamic>;
+        List<RewriteItem> items = list.map((e) => RewriteItem.fromJson(e)).toList();
+
+        if (operation == Operation.add) {
+          await requestRewrites.addRule(rule, items);
+        } else {
+          await requestRewrites.updateRule(arguments['index'], rule, items);
+        }
         break;
       case Operation.delete:
         await requestRewrites.removeIndex([arguments['index']]);
@@ -113,7 +115,7 @@ class MultiWindow {
     _refreshRewrite = true;
     Future.delayed(const Duration(milliseconds: 1000), () async {
       _refreshRewrite = false;
-      (await RequestRewrites.instance).flushRequestRewriteConfig();
+      requestRewrites.flushRequestRewriteConfig();
     });
   }
 }
@@ -136,7 +138,7 @@ void registerMethodHandler() {
       return 'done';
     }
 
-    if (call.method == 'refreshRequestRewrite' && fromWindowId != 0) {
+    if (call.method == 'refreshRequestRewrite') {
       MultiWindow._handleRefreshRewrite(Operation.of(call.arguments['operation']), call.arguments);
       return 'done';
     }

@@ -188,10 +188,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
       showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (BuildContext context) => RuleAddDialog(rule: rule, items: rewriteItems)).then((value) {
+          builder: (BuildContext context) => RuleAddDialog(rule: rule, items: rewriteItems, newWindow: false)).then((value) {
         if (value is RequestRewriteRule) {
           DesktopMultiWindow.getAllSubWindowIds().then((windowIds) async {
-            await requestRewrites.flushRequestRewriteConfig();
             var items = await requestRewrites.getRewriteItems(value);
             await requestRewrites.updateRule(requestRewrites.rules.indexOf(value), value, items);
             for (var windowId in windowIds) {

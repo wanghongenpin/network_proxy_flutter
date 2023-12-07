@@ -279,8 +279,9 @@ class _RequestRuleListState extends State<RequestRuleList> {
 class RuleAddDialog extends StatefulWidget {
   final RequestRewriteRule? rule;
   final List<RewriteItem>? items;
+  final bool newWindow;
 
-  const RuleAddDialog({super.key, this.rule, this.items});
+  const RuleAddDialog({super.key, this.rule, this.items, this.newWindow = true});
 
   @override
   State<StatefulWidget> createState() {
@@ -397,7 +398,10 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                 if (index >= 0) {
                   MultiWindow.invokeRefreshRewrite(Operation.update, index: index, rule: rule, items: items);
                 } else {
-                  requestRewrites.rules.add(rule);
+                  if (widget.newWindow) {
+                    requestRewrites.rules.add(rule);
+                  }
+
                   MultiWindow.invokeRefreshRewrite(Operation.add, rule: rule, items: items);
                 }
                 if (mounted) {
