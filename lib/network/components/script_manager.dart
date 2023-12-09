@@ -166,7 +166,7 @@ async function onResponse(context, request, response) {
   }
 
   ///运行脚本
-  Future<HttpRequest> runScript(HttpRequest request) async {
+  Future<HttpRequest?> runScript(HttpRequest request) async {
     if (!enabled) {
       return request;
     }
@@ -179,7 +179,9 @@ async function onResponse(context, request, response) {
         var jsResult = await flutterJs.evaluateAsync(
             """var request = $jsRequest, context = $context;  request['context'] = context; $script\n  onRequest(context, request)""");
         var result = await jsResultResolve(jsResult);
-
+        if (result == null) {
+          return null;
+        }
         request.attributes['scriptContext'] = result['context'];
         return convertHttpRequest(request, result);
       }
@@ -188,7 +190,7 @@ async function onResponse(context, request, response) {
   }
 
   ///运行脚本
-  Future<HttpResponse> runResponseScript(HttpResponse response) async {
+  Future<HttpResponse?> runResponseScript(HttpResponse response) async {
     if (!enabled || response.request == null) {
       return response;
     }
@@ -204,6 +206,9 @@ async function onResponse(context, request, response) {
         var jsResult = await flutterJs.evaluateAsync("""$script\n  onResponse($context, $jsRequest,$jsResponse);""");
         // print("response: ${jsResult.isPromise} ${jsResult.isError} ${jsResult.rawResult}");
         var result = await jsResultResolve(jsResult);
+        if (result == null) {
+          return null;
+        }
         return convertHttpResponse(response, result);
       }
     }

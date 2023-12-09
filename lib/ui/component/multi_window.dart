@@ -92,11 +92,11 @@ class MultiWindow {
       case Operation.add:
       case Operation.update:
         var rule = RequestRewriteRule.formJson(arguments['rule']);
-        List<dynamic> list = arguments['items'] as List<dynamic>;
-        List<RewriteItem> items = list.map((e) => RewriteItem.fromJson(e)).toList();
+        List<dynamic>? list = arguments['items'] as List<dynamic>?;
+        List<RewriteItem>? items = list?.map((e) => RewriteItem.fromJson(e)).toList();
 
         if (operation == Operation.add) {
-          await requestRewrites.addRule(rule, items);
+          await requestRewrites.addRule(rule, items!);
         } else {
           await requestRewrites.updateRule(arguments['index'], rule, items);
         }

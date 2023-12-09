@@ -110,7 +110,13 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
       //脚本替换
       var scriptManager = await ScriptManager.instance;
-      httpRequest = await scriptManager.runScript(httpRequest);
+      HttpRequest? request = await scriptManager.runScript(httpRequest);
+      if (request == null) {
+        listener?.onRequest(channel, httpRequest);
+        return;
+      }
+
+      httpRequest = request;
       //重写请求
       await requestRewrites?.requestRewrite(httpRequest);
 
@@ -214,7 +220,11 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     //脚本替换
     var scriptManager = await ScriptManager.instance;
     try {
-      msg = await scriptManager.runResponseScript(msg);
+      HttpResponse? response = await scriptManager.runResponseScript(msg);
+      if (response == null) {
+        return;
+      }
+      msg = response;
     } catch (e, t) {
       msg.status = HttpStatus(-1, '执行脚本异常');
       msg.body = "$e\n${msg.bodyAsString}".codeUnits;

@@ -12,7 +12,7 @@ class RequestRewrites {
   static String separator = Platform.pathSeparator;
 
   //重写规则
-  final Map<RequestRewriteRule, List<RewriteItem>> rewriteItems = {};
+  final Map<RequestRewriteRule, List<RewriteItem>> rewriteItemsCache = {};
 
   //单例
   static RequestRewrites? _instance;
@@ -33,7 +33,7 @@ class RequestRewrites {
 
   //重新加载配置
   Future<void> reload(Map<String, dynamic>? map) async {
-    rewriteItems.clear();
+    rewriteItemsCache.clear();
     if (map == null) {
       return;
     }
@@ -112,7 +112,7 @@ class RequestRewrites {
       return;
     }
 
-    rewriteItems.clear();
+    rewriteItemsCache.clear();
     enabled = config['enabled'] == true;
     List list = config['rules'] ?? [];
     rules.clear();
@@ -166,12 +166,12 @@ class RequestRewrites {
     rule.rewritePath = rewritePath;
 
     rules.add(rule);
-    rewriteItems[rule] = items;
+    rewriteItemsCache[rule] = items;
   }
 
   ///更新规则
   Future<void> updateRule(int index, RequestRewriteRule rule, List<RewriteItem>? items) async {
-    rewriteItems.remove(rules[index]);
+    rewriteItemsCache.remove(rules[index]);
     final home = await FileRead.homeDir();
     rule._updatePathReg();
     rules[index] = rule;
@@ -191,13 +191,13 @@ class RequestRewrites {
     }
 
     await file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()));
-    rewriteItems[rule] = items;
+    rewriteItemsCache[rule] = items;
   }
 
   removeIndex(List<int> indexes) async {
     for (var i in indexes) {
       var rule = rules.removeAt(i);
-      rewriteItems.remove(rule); //删除缓存
+      rewriteItemsCache.remove(rule); //删除缓存
       if (rule.rewritePath != null) {
         File home = await FileRead.homeDir();
         await File(home.path + rule.rewritePath!).delete();
@@ -235,8 +235,8 @@ class RequestRewrites {
 
   /// 获取重写规则
   Future<List<RewriteItem>> getRewriteItems(RequestRewriteRule rule) async {
-    if (rewriteItems.containsKey(rule)) {
-      return rewriteItems[rule]!;
+    if (rewriteItemsCache.containsKey(rule)) {
+      return rewriteItemsCache[rule]!;
     }
     if (rule.rewritePath == null) {
       return [];
@@ -248,7 +248,7 @@ class RequestRewrites {
       var json = await File(home.path + rule.rewritePath!).readAsString();
       List? list = jsonDecode(json);
       list?.forEach((element) => items.add(RewriteItem.fromJson(element)));
-      rewriteItems[rule] = items;
+      rewriteItemsCache[rule] = items;
     } catch (e) {
       logger.e('加载请求重写配置文件失败 ${home.path + rule.rewritePath!}', error: e);
     }
@@ -303,7 +303,8 @@ class RequestRewrites {
       return;
     }
 
-    if (item.type == RewriteType.replaceResponseBody && item.body != null) {
+    if (item.body != null &&
+        (item.type == RewriteType.replaceResponseBody || item.type == RewriteType.replaceRequestBody)) {
       message.body = item.body?.codeUnits;
       return;
     }
