@@ -393,7 +393,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                 rule.url = urlInput.text;
 
                 var requestRewrites = await RequestRewrites.instance;
-                requestRewrites.rewriteItems[rule] = items!;
+                requestRewrites.rewriteItemsCache[rule] = items!;
                 var index = requestRewrites.rules.indexOf(rule);
                 if (index >= 0) {
                   MultiWindow.invokeRefreshRewrite(Operation.update, index: index, rule: rule, items: items);

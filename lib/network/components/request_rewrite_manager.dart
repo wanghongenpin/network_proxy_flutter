@@ -305,7 +305,7 @@ class RequestRewrites {
 
     if (item.body != null &&
         (item.type == RewriteType.replaceResponseBody || item.type == RewriteType.replaceRequestBody)) {
-      message.body = item.body?.codeUnits;
+      message.body = utf8.encode(item.body!);
       return;
     }
   }

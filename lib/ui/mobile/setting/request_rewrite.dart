@@ -29,6 +29,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
       widget.requestRewrites.enabled = enabled;
       widget.requestRewrites.flushRequestRewriteConfig();
     }
+
     super.dispose();
   }
 
@@ -43,7 +44,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
               children: [
                 Row(children: [
                   const Text("是否启用请求重写"),
-                  SwitchWidget(value: true, scale: 0.8, onChanged: (val) => enabled = val),
+                  SwitchWidget(value: enabled, scale: 0.8, onChanged: (val) => enabled = val),
                   const Expanded(child: SizedBox()),
                   FilledButton.icon(icon: const Icon(Icons.add, size: 18), onPressed: add, label: const Text("添加")),
                   const SizedBox(width: 10),
