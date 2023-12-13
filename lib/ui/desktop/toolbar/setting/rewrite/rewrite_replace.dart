@@ -59,7 +59,6 @@ class _RewriteReplaceState extends State<RewriteReplaceDialog> {
         titlePadding: const EdgeInsets.all(0),
         actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
         contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("关闭")),
           TextButton(

@@ -11,7 +11,7 @@ echo "Depends: ca-certificates" >> package/DEBIAN/control
 echo "Section: utils" >> package/DEBIAN/control
 echo "Maintainer: wanghongenpin@gmail.com" >> package/DEBIAN/control
 echo "Homepage: https://github.com/wanghongenpin/network_proxy_flutter" >> package/DEBIAN/control
-echo "Description: http\https Capture packets" >> package/DEBIAN/control
+echo "Description: http/https Capture packets" >> package/DEBIAN/control
 echo "" >> package/DEBIAN/control
 mkdir -p package/usr/share/applications
 cp ../../../../linux/proxy-pin.desktop package/usr/share/applications

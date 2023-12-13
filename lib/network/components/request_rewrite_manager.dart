@@ -1,5 +1,7 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/file_read.dart';
 import 'package:network_proxy/network/util/logger.dart';
@@ -207,7 +209,7 @@ class RequestRewrites {
 
   ///获取重定向
   Future<String?> getRedirectRule(String? url) async {
-    var rewriteRule = getRewriteRule(url, RuleType.redirect);
+    var rewriteRule = getRewriteRule(url, [RuleType.redirect]);
     if (rewriteRule == null) {
       return null;
     }
@@ -221,12 +223,12 @@ class RequestRewrites {
     return redirectUrl;
   }
 
-  RequestRewriteRule? getRewriteRule(String? url, RuleType type) {
+  RequestRewriteRule? getRewriteRule(String? url, List<RuleType> types) {
     if (url == null || !enabled) {
       return null;
     }
     for (var rule in rules) {
-      if (rule.match(url, type)) {
+      if (rule.match(url) && types.contains(rule.type)) {
         return rule;
       }
     }
@@ -258,13 +260,59 @@ class RequestRewrites {
   /// 查找重写规则
   Future<void> requestRewrite(HttpRequest request) async {
     var url = request.requestUrl;
-    var rewriteRule = getRewriteRule(url, RuleType.requestReplace);
-    if (rewriteRule == null) {
+    var rewriteRule = getRewriteRule(url, [RuleType.requestReplace, RuleType.requestUpdate]);
+
+    if (rewriteRule?.type == RuleType.requestReplace) {
+      var rewriteItems = await getRewriteItems(rewriteRule!);
+      rewriteItems.where((item) => item.enabled).forEach((item) => _replaceRequest(request, item));
       return;
     }
 
-    var rewriteItems = await getRewriteItems(rewriteRule);
-    rewriteItems.where((item) => item.enabled).forEach((item) => _replaceRequest(request, item));
+    if (rewriteRule?.type == RuleType.requestUpdate) {
+      var rewriteItems = await getRewriteItems(rewriteRule!);
+      rewriteItems.where((item) => item.enabled).forEach((item) => _updateRequest(request, item));
+      return;
+    }
+  }
+
+  _updateRequest(HttpRequest request, RewriteItem item) {
+    var paramTypes = [RewriteType.addQueryParam, RewriteType.removeQueryParam, RewriteType.updateQueryParam];
+
+    if (paramTypes.contains(item.type)) {
+      var requestUri = request.requestUri;
+      Map<String, dynamic> queryParameters = LinkedHashMap.from(requestUri!.queryParameters);
+
+      switch (item.type) {
+        case RewriteType.addQueryParam:
+          queryParameters[item.key!] = item.value;
+          break;
+        case RewriteType.removeQueryParam:
+          if (item.value?.isNotEmpty == true) {
+            var val = queryParameters[item.key!];
+            if (val != null && item.value != null && RegExp(item.value!).hasMatch(val)) {
+              return;
+            }
+          }
+          queryParameters.remove(item.value);
+          break;
+        case RewriteType.updateQueryParam:
+          var pair = item.key?.split("=");
+          var val = queryParameters[pair!.first];
+          if (val != null && RegExp(pair.last).hasMatch(val)) {
+            var split = item.value?.split("=");
+            queryParameters.remove(pair.first);
+            queryParameters[split!.first] = split.last;
+          }
+          break;
+        default:
+          return;
+      }
+
+      request.uri = requestUri.replace(queryParameters: queryParameters).toString();
+      return;
+    }
+
+    _updateMessage(request, item);
   }
 
   //替换请求
@@ -279,13 +327,62 @@ class RequestRewrites {
 
   /// 查找重写规则
   Future<void> responseRewrite(String? url, HttpResponse response) async {
-    var rewriteRule = getRewriteRule(url, RuleType.responseReplace);
+    var rewriteRule = getRewriteRule(url, [RuleType.responseReplace, RuleType.responseUpdate]);
     if (rewriteRule == null) {
       return;
     }
-    var rewriteItems = await getRewriteItems(rewriteRule);
-    rewriteItems.where((item) => item.enabled).forEach((item) => _replaceResponse(response, item));
-    logger.d('rewrite response $response');
+
+    if (rewriteRule.type == RuleType.responseReplace) {
+      var rewriteItems = await getRewriteItems(rewriteRule);
+      rewriteItems.where((item) => item.enabled).forEach((item) => _replaceResponse(response, item));
+      logger.d('rewrite response $response');
+      return;
+    }
+
+    if (rewriteRule.type == RuleType.responseUpdate) {
+      var rewriteItems = await getRewriteItems(rewriteRule);
+      rewriteItems.where((item) => item.enabled).forEach((item) => _updateMessage(response, item));
+    }
+  }
+
+  //修改消息
+  _updateMessage(HttpMessage message, RewriteItem item) {
+    if (item.type == RewriteType.updateBody && message.body != null) {
+      message.body = message.bodyAsString.replaceAllMapped(RegExp(item.key!), (match) {
+        if (match.groupCount > 0 && item.value?.contains("\$1") == true) {
+          return item.value!.replaceAll("\$1", match.group(1)!);
+        }
+        return item.value ?? '';
+      }).codeUnits;
+      return;
+    }
+
+    if (item.type == RewriteType.addHeader) {
+      message.headers.set(item.key!, item.value ?? '');
+      return;
+    }
+
+    if (item.type == RewriteType.removeHeader) {
+      if (item.value?.isNotEmpty == true) {
+        var val = message.headers.get(item.key!);
+        if (val != null && item.value != null && RegExp(item.value!).hasMatch(val)) {
+          return;
+        }
+      }
+      message.headers.remove(item.key!);
+      return;
+    }
+
+    if (item.type == RewriteType.updateHeader) {
+      var pair = item.key?.split(":");
+      var val = message.headers.get(pair!.first);
+      if (val != null && RegExp(pair.last.trim()).hasMatch(val)) {
+        var split = item.value?.split(":");
+        message.headers.remove(pair.first);
+        message.headers.set(split!.first, split.last.trim());
+      }
+      return;
+    }
   }
 
   //替换相应
@@ -337,7 +434,8 @@ enum RuleType {
 
   requestReplace("替换请求"),
   responseReplace("替换响应"),
-  // header("重写Header"),
+  requestUpdate("修改请求"),
+  responseUpdate("修改响应"),
   redirect("重定向");
 
   //名称
@@ -362,8 +460,8 @@ class RequestRewriteRule {
   RequestRewriteRule({this.enabled = true, this.name, required this.url, required this.type, this.rewritePath})
       : _urlReg = RegExp(url.replaceAll("*", ".*"));
 
-  bool match(String url, RuleType type) {
-    return enabled && this.type == type && _urlReg.hasMatch(url);
+  bool match(String url, [RuleType? type]) {
+    return enabled && (type == null || this.type == type) && _urlReg.hasMatch(url);
   }
 
   /// 从json中创建
@@ -393,7 +491,7 @@ class RequestRewriteRule {
 
 class RewriteItem {
   bool enabled;
-  final RewriteType type;
+  RewriteType type;
 
   //key redirectUrl, method, path, queryParam, headers, body, statusCode
   final Map<String, dynamic> values = {};
@@ -407,6 +505,15 @@ class RewriteItem {
   factory RewriteItem.fromJson(Map<dynamic, dynamic> map) {
     return RewriteItem(RewriteType.fromName(map['type']), map['enabled'], values: map['values']);
   }
+
+  //key
+  String? get key => values['key'];
+
+  set key(String? key) => values['key'] = key;
+
+  String? get value => values['value'];
+
+  set value(String? value) => values['value'] = value;
 
   //redirectUrl
   String? get redirectUrl => values['redirectUrl'];
@@ -467,17 +574,26 @@ enum RewriteType {
   replaceResponseBody("响应体"),
 
   //修改请求
-  updateRequestBody("请求体"),
-  addQueryParam("添加请求参数"),
-  removeQueryParam("删除请求参数"),
-  updateQueryParam("修改请求参数"),
-  addRequestHeader("添加请求头"),
-  removeRequestHeader("删除请求头"),
-  updateRequestHeader("修改请求头"),
-  updateResponseBody("响应体"),
-  updateResponseHeader("响应头"),
-  addResponseHeader("添加响应头"),
-  removeResponseHeader("删除响应头");
+  updateBody("修改Body"),
+  addQueryParam("添加参数"),
+  removeQueryParam("删除参数"),
+  updateQueryParam("修改参数"),
+  addHeader("添加头部"),
+  removeHeader("删除头部"),
+  updateHeader("修改头部"),
+  ;
+
+  static List<RewriteType> updateRequest = [
+    updateBody,
+    addQueryParam,
+    updateQueryParam,
+    removeQueryParam,
+    addHeader,
+    updateHeader,
+    removeHeader
+  ];
+
+  static List<RewriteType> updateResponse = [updateBody, addHeader, updateHeader, removeHeader];
 
   final String label;
 

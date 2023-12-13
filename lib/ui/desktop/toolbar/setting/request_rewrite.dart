@@ -7,6 +7,7 @@ import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/rewrite/rewrite_replace.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/rewrite/rewrite_update.dart';
 
 class RequestRewriteWidget extends StatefulWidget {
   final int windowId;
@@ -44,7 +45,7 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
   }
 
   void onKeyEvent(RawKeyEvent event) async {
-    if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
+    if (event.isKeyPressed(LogicalKeyboardKey.escape) && Navigator.canPop(context)) {
       Navigator.maybePop(context);
       return;
     }
@@ -195,7 +196,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
           onSecondaryTapDown: (details) => showMenus(details, index),
           child: Container(
               color: selected == index
-                  ? primaryColor.withOpacity(0.3)
+                  ? primaryColor
                   : index.isEven
                       ? Colors.grey.withOpacity(0.1)
                       : null,
@@ -365,17 +366,16 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                                   .map((e) => DropdownMenuItem(
                                       value: e, child: Text(e.label, style: const TextStyle(fontSize: 13))))
                                   .toList(),
-                              onChanged: (val) => ruleType = val!,
+                              onChanged: (val) {
+                                ruleType = val!;
+                                items = ruleType == widget.rule?.type ? widget.items : [];
+                              },
                             )),
                         const SizedBox(width: 10),
                         TextButton(onPressed: () => showEdit(rule), child: const Text("点击编辑")),
                       ]),
                       const SizedBox(height: 10),
-                      if (items?.isNotEmpty == true && ruleType != RuleType.redirect)
-                        Padding(
-                            padding: const EdgeInsets.only(left: 60),
-                            child: Text("替换: ${items?.where((it) => it.enabled).map((e) => e.type.label).join(" ")}",
-                                style: const TextStyle(color: Colors.grey))),
+                      Padding(padding: const EdgeInsets.only(left: 60), child: getDescribe()),
                     ]))),
         actions: [
           ElevatedButton(child: const Text("关闭"), onPressed: () => Navigator.of(context).pop()),
@@ -393,7 +393,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                 rule.url = urlInput.text;
 
                 var requestRewrites = await RequestRewrites.instance;
-                requestRewrites.rewriteItems[rule] = items!;
+                requestRewrites.rewriteItemsCache[rule] = items!;
                 var index = requestRewrites.rules.indexOf(rule);
                 if (index >= 0) {
                   MultiWindow.invokeRefreshRewrite(Operation.update, index: index, rule: rule, items: items);
@@ -411,14 +411,27 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
         ]);
   }
 
+  Widget getDescribe() {
+    if (items?.isNotEmpty == true && (ruleType == RuleType.requestReplace || ruleType == RuleType.responseReplace)) {
+      return Text("替换: ${items?.where((it) => it.enabled).map((e) => e.type.label).join(" ")}",
+          style: const TextStyle(color: Colors.grey));
+    }
+
+    if (ruleType == RuleType.requestUpdate || ruleType == RuleType.responseUpdate) {
+      return Text("${items?.length}条修改", style: const TextStyle(color: Colors.grey));
+    }
+    return const SizedBox();
+  }
+
   void showEdit(RequestRewriteRule rule) async {
     if (!mounted) return;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) =>
-          RewriteReplaceDialog(subtitle: urlInput.text, items: items, ruleType: ruleType),
+      builder: (BuildContext context) => ruleType == RuleType.requestUpdate || ruleType == RuleType.responseUpdate
+          ? RewriteUpdateDialog(subtitle: urlInput.text, items: items, ruleType: ruleType)
+          : RewriteReplaceDialog(subtitle: urlInput.text, items: items, ruleType: ruleType),
     ).then((value) {
       if (value is List<RewriteItem>) {
         setState(() {
