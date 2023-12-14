@@ -102,7 +102,8 @@ class MultiWindow {
         }
         break;
       case Operation.delete:
-        await requestRewrites.removeIndex([arguments['index']]);
+        var rule = requestRewrites.rules.removeAt(arguments['index']);
+        requestRewrites.rewriteItemsCache.remove(rule); //删除缓存
         break;
       case Operation.enabled:
         requestRewrites.enabled = arguments['enabled'];

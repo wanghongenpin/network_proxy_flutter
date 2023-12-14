@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
-import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 
-class RewriteUpdateDialog extends StatefulWidget {
+class RewriteUpdateWidget extends StatefulWidget {
   final String subtitle;
   final RuleType ruleType;
   final List<RewriteItem>? items;
 
-  const RewriteUpdateDialog({super.key, required this.subtitle, required this.ruleType, this.items});
+  const RewriteUpdateWidget({super.key, required this.subtitle, required this.ruleType, this.items});
 
   @override
-  State<RewriteUpdateDialog> createState() => _RewriteUpdateState();
+  State<RewriteUpdateWidget> createState() => _RewriteUpdateState();
 }
 
-class _RewriteUpdateState extends State<RewriteUpdateDialog> {
+class _RewriteUpdateState extends State<RewriteUpdateWidget> {
   List<RewriteItem> items = [];
 
   @override
@@ -32,22 +31,22 @@ class _RewriteUpdateState extends State<RewriteUpdateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-        titlePadding: const EdgeInsets.all(0),
-        actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
-        contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 5),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("关闭")),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(items);
-              },
-              child: const Text("完成")),
-        ],
-        title: ListTile(title: Text(widget.ruleType.label, textAlign: TextAlign.center)),
-        content: SizedBox(
-            height: 380,
-            child: Column(
+    return Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text(widget.ruleType.label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(items);
+                },
+                child: const Text("完成")),
+            const SizedBox(width: 10)
+          ],
+        ),
+        body: Padding(
+            padding: const EdgeInsets.all(8),
+            child: ListView(
               children: [
                 Row(
                   children: [
@@ -134,10 +133,10 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
         ],
         content: SizedBox(
             width: 320,
-            height: 150,
+            height: 180,
             child: Form(
                 key: formKey,
-                child: Column(children: [
+                child: ListView(children: [
                   Row(
                     children: [
                       const Text('类型'),
@@ -250,20 +249,20 @@ class _UpdateListState extends State<UpdateList> {
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
           hoverColor: primaryColor.withOpacity(0.3),
-          onDoubleTap: () => showDialog(
+          onTap: () => showDialog(
                       context: context,
                       builder: (context) => RewriteUpdateAddDialog(item: list[index], ruleType: widget.ruleType))
                   .then((value) {
                 if (value != null) setState(() {});
               }),
-          onSecondaryTapDown: (details) => showMenus(details, index),
+          onLongPress: () => showMenus(index),
           child: Container(
               color: selected == index
                   ? primaryColor
                   : index.isEven
                       ? Colors.grey.withOpacity(0.1)
                       : null,
-              height: 30,
+              height: 38,
               padding: const EdgeInsets.all(5),
               child: Row(
                 children: [
@@ -293,39 +292,53 @@ class _UpdateListState extends State<UpdateList> {
     return "${item.key}=${item.value}";
   }
 
-  showMenus(TapDownDetails details, int index) {
+  showMenus(int index) {
     setState(() {
       selected = index;
     });
 
-    showContextMenu(context, details.globalPosition, items: [
-      PopupMenuItem(
-          height: 35,
-          child: const Text("编辑"),
-          onTap: () async {
-            showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (BuildContext context) =>
-                    RewriteUpdateAddDialog(item: widget.items[index], ruleType: widget.ruleType)).then((value) {
-              if (value != null) {
-                setState(() {});
-              }
-            });
-          }),
-      PopupMenuItem(
-          height: 35,
-          child: widget.items[index].enabled ? const Text("禁用") : const Text("启用"),
-          onTap: () => widget.items[index].enabled = !widget.items[index].enabled),
-      const PopupMenuDivider(),
-      PopupMenuItem(
-          height: 35,
-          child: const Text("删除"),
-          onTap: () async {
-            widget.items.removeAt(index);
-            if (mounted) FlutterToastr.show('删除成功', context);
-          }),
-    ]).then((value) {
+    showModalBottomSheet(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
+        context: context,
+        enableDrag: true,
+        builder: (ctx) {
+          return Wrap(alignment: WrapAlignment.center, children: [
+            BottomSheetItem(
+                text: "编辑",
+                onPressed: () async {
+                  showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) =>
+                          RewriteUpdateAddDialog(item: widget.items[index], ruleType: widget.ruleType)).then((value) {
+                    if (value != null) {
+                      setState(() {});
+                    }
+                  });
+                }),
+            const Divider(thickness: 0.5),
+            BottomSheetItem(
+                text: widget.items[index].enabled ? "禁用" : "启用",
+                onPressed: () => widget.items[index].enabled = !widget.items[index].enabled),
+            const Divider(thickness: 0.5),
+            BottomSheetItem(
+                text: "删除",
+                onPressed: () async {
+                  widget.items.removeAt(index);
+                  if (mounted) FlutterToastr.show('删除成功', context);
+                }),
+            Container(color: Theme.of(context).hoverColor, height: 8),
+            TextButton(
+                child: Container(
+                    height: 48,
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(top: 10),
+                    child: const Text("取消", textAlign: TextAlign.center)),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                }),
+          ]);
+        }).then((value) {
       setState(() {
         selected = -1;
       });

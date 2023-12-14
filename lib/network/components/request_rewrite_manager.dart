@@ -202,7 +202,12 @@ class RequestRewrites {
       rewriteItemsCache.remove(rule); //删除缓存
       if (rule.rewritePath != null) {
         File home = await FileRead.homeDir();
-        await File(home.path + rule.rewritePath!).delete();
+        try {
+          await File(home.path + rule.rewritePath!).delete();
+        } catch (e) {
+          logger.e('删除请求重写配置文件失败 ${home.path + rule.rewritePath!}', error: e);
+        }
+        rule.rewritePath = null;
       }
     }
   }
@@ -348,12 +353,12 @@ class RequestRewrites {
   //修改消息
   _updateMessage(HttpMessage message, RewriteItem item) {
     if (item.type == RewriteType.updateBody && message.body != null) {
-      message.body = message.bodyAsString.replaceAllMapped(RegExp(item.key!), (match) {
+      message.body = utf8.encode(message.bodyAsString.replaceAllMapped(RegExp(item.key!), (match) {
         if (match.groupCount > 0 && item.value?.contains("\$1") == true) {
           return item.value!.replaceAll("\$1", match.group(1)!);
         }
         return item.value ?? '';
-      }).codeUnits;
+      }));
       return;
     }
 

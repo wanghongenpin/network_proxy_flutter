@@ -1,7 +1,17 @@
+import 'dart:collection';
+import 'dart:convert';
+
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
+import 'package:network_proxy/ui/mobile/setting/rewrite/rewrite_update.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'rewrite/rewrite_replace.dart';
 
@@ -40,19 +50,53 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
         body: Container(
             padding: const EdgeInsets.all(10),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [
+                Wrap(alignment: WrapAlignment.end, crossAxisAlignment: WrapCrossAlignment.center, children: [
                   const Text("是否启用请求重写"),
                   SwitchWidget(value: enabled, scale: 0.8, onChanged: (val) => enabled = val),
                   const Expanded(child: SizedBox()),
                   FilledButton.icon(icon: const Icon(Icons.add, size: 18), onPressed: add, label: const Text("添加")),
                   const SizedBox(width: 10),
+                  FilledButton.icon(
+                    icon: const Icon(Icons.input_rounded, size: 18),
+                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
+                    onPressed: import,
+                    label: const Text("导入"),
+                  ),
                 ]),
                 const SizedBox(height: 10),
                 Expanded(child: RequestRuleList(widget.requestRewrites)),
               ],
             )));
+  }
+
+  //导入
+  import() async {
+    final XFile? file = await openFile();
+    if (file == null) {
+      return;
+    }
+
+    try {
+      List json = jsonDecode(utf8.decode(await file.readAsBytes()));
+
+      for (var item in json) {
+        var rule = RequestRewriteRule.formJson(item);
+        var items = (item['items'] as List).map((e) => RewriteItem.fromJson(e)).toList();
+        widget.requestRewrites.addRule(rule, items);
+      }
+      widget.requestRewrites.flushRequestRewriteConfig();
+
+      if (context.mounted) {
+        FlutterToastr.show("导入成功", context);
+      }
+      setState(() {});
+    } catch (e, t) {
+      logger.e('导入失败 $file', error: e, stackTrace: t);
+      if (context.mounted) {
+        FlutterToastr.show("导入失败 $e", context);
+      }
+    }
   }
 
   void add([int currentIndex = -1]) {
@@ -75,9 +119,11 @@ class RequestRuleList extends StatefulWidget {
 }
 
 class _RequestRuleListState extends State<RequestRuleList> {
-  int selected = -1;
+  Set<int> selected = HashSet<int>();
   late List<RequestRewriteRule> rules;
   bool changed = false;
+
+  bool multiple = false;
 
   @override
   initState() {
@@ -96,29 +142,78 @@ class _RequestRuleListState extends State<RequestRuleList> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        padding: const EdgeInsets.only(top: 10, bottom: 30),
-        decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            color: Colors.white,
-            backgroundBlendMode: BlendMode.colorBurn),
-        child: Scrollbar(
-            child: ListView(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+    return Scaffold(
+        persistentFooterButtons: [multiple ? globalMenu() : const SizedBox()],
+        body: Container(
+            padding: const EdgeInsets.only(top: 10, bottom: 30),
+            decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                color: Colors.white,
+                backgroundBlendMode: BlendMode.colorBurn),
+            child: Scrollbar(
+                child: ListView(
               children: [
-                Container(width: 80, padding: const EdgeInsets.only(left: 10), child: const Text("名称")),
-                const SizedBox(width: 30, child: Text("启用", textAlign: TextAlign.center)),
-                const VerticalDivider(),
-                const Expanded(child: Text("URL")),
-                const SizedBox(width: 60, child: Text("行为", textAlign: TextAlign.center)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(width: 80, padding: const EdgeInsets.only(left: 10), child: const Text("名称")),
+                    const SizedBox(width: 30, child: Text("启用", textAlign: TextAlign.center)),
+                    const VerticalDivider(),
+                    const Expanded(child: Text("URL")),
+                    const SizedBox(width: 60, child: Text("行为", textAlign: TextAlign.center)),
+                  ],
+                ),
+                const Divider(thickness: 0.5),
+                Column(children: rows(widget.requestRewrites.rules))
               ],
-            ),
-            const Divider(thickness: 0.5),
-            Column(children: rows(widget.requestRewrites.rules))
-          ],
-        )));
+            ))));
+  }
+
+  globalMenu() {
+    return Stack(children: [
+      Container(
+          height: 50,
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 10),
+          decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+              color: Colors.white,
+              backgroundBlendMode: BlendMode.colorBurn)),
+      Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Center(
+              child: TextButton(
+                  onPressed: () {},
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    TextButton.icon(
+                        onPressed: () {
+                          export(selected.toList());
+                          setState(() {
+                            selected.clear();
+                            multiple = false;
+                          });
+                        },
+                        icon: const Icon(Icons.share, size: 18),
+                        label: const Text("导出")),
+                    const SizedBox(width: 15),
+                    TextButton.icon(
+                        onPressed: () => removeRewrite(),
+                        icon: const Icon(Icons.delete, size: 18),
+                        label: const Text("删除")),
+                    const SizedBox(width: 15),
+                    TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            multiple = false;
+                            selected.clear();
+                          });
+                        },
+                        icon: const Icon(Icons.cancel, size: 18),
+                        label: const Text("取消")),
+                  ]))))
+    ]);
   }
 
   List<Widget> rows(List<RequestRewriteRule> list) {
@@ -131,6 +226,14 @@ class _RequestRuleListState extends State<RequestRuleList> {
           hoverColor: primaryColor.withOpacity(0.3),
           onLongPress: () => showMenus(index),
           onTap: () async {
+            if (multiple) {
+              setState(() {
+                if (!selected.add(index)) {
+                  selected.remove(index);
+                }
+              });
+              return;
+            }
             var rule = widget.requestRewrites.rules[index];
             var rewriteItems = await widget.requestRewrites.getRewriteItems(rule);
             if (!mounted) return;
@@ -143,7 +246,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
             });
           },
           child: Container(
-              color: selected == index
+              color: selected.contains(index)
                   ? primaryColor.withOpacity(0.8)
                   : index.isEven
                       ? Colors.grey.withOpacity(0.1)
@@ -179,14 +282,23 @@ class _RequestRuleListState extends State<RequestRuleList> {
   //点击菜单
   showMenus(int index) {
     setState(() {
-      selected = index;
+      selected.add(index);
     });
+
     showModalBottomSheet(
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
         context: context,
         enableDrag: true,
         builder: (ctx) {
           return Wrap(alignment: WrapAlignment.center, children: [
+            BottomSheetItem(
+                text: '多选',
+                onPressed: () {
+                  setState(() {
+                    multiple = true;
+                  });
+                }),
+            const Divider(thickness: 0.5),
             BottomSheetItem(
                 text: "编辑",
                 onPressed: () async {
@@ -202,6 +314,8 @@ class _RequestRuleListState extends State<RequestRuleList> {
                     }
                   });
                 }),
+            const Divider(thickness: 0.5),
+            BottomSheetItem(text: "分享", onPressed: () => export([index])),
             const Divider(thickness: 0.5, height: 1),
             BottomSheetItem(
                 text: rules[index].enabled ? "禁用" : "启用",
@@ -209,32 +323,71 @@ class _RequestRuleListState extends State<RequestRuleList> {
                   rules[index].enabled = !rules[index].enabled;
                   changed = true;
                 }),
-            const Divider(thickness: 0.5, height: 1),
+            const Divider(thickness: 0.5),
             BottomSheetItem(
                 text: "删除",
                 onPressed: () async {
-                  widget.requestRewrites.removeIndex([index]);
+                  await widget.requestRewrites.removeIndex([index]);
+                  widget.requestRewrites.flushRequestRewriteConfig();
                   if (mounted) FlutterToastr.show('删除成功', context);
                 }),
             Container(color: Theme.of(context).hoverColor, height: 8),
             TextButton(
-              child: Container(
-                  height: 42,
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(top: 10),
-                  child: const Text("取消", textAlign: TextAlign.center)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
+                child: Container(
+                    height: 48,
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(top: 10),
+                    child: const Text("取消", textAlign: TextAlign.center)),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                }),
           ]);
-        }).then((value) => setState(() {
-          selected = -1;
-    }));
+        }).then((value) {
+      if (multiple) {
+        return;
+      }
+      setState(() {
+        selected.remove(index);
+      });
+    });
   }
 
-  DataCell cell(Widget child) {
-    return DataCell(child);
+  //导出js
+  Future<void> export(List<int> indexes) async {
+    if (indexes.isEmpty) return;
+
+    String fileName = 'proxypin-rewrites.config';
+
+    var list = [];
+    for (var index in indexes) {
+      var rule = widget.requestRewrites.rules[index];
+      var json = rule.toJson();
+      json.remove("rewritePath");
+      json['items'] = await widget.requestRewrites.getRewriteItems(rule);
+      list.add(json);
+    }
+
+    final XFile file = XFile.fromData(utf8.encode(jsonEncode(list)), mimeType: 'config');
+    await Share.shareXFiles([file], subject: fileName);
+    if (context.mounted) FlutterToastr.show('导出成功', context);
+  }
+
+  //删除
+  Future<void> removeRewrite() async {
+    if (selected.isEmpty) return;
+    return showConfirmDialog(context, content: '是否删除${selected.length}条规则?', onConfirm: () async {
+      var list = selected.toList();
+      list.sort((a, b) => b.compareTo(a));
+      for (var value in list) {
+        await widget.requestRewrites.removeIndex([value]);
+      }
+      widget.requestRewrites.flushRequestRewriteConfig();
+      setState(() {
+        multiple = false;
+        selected.clear();
+      });
+      if (mounted) FlutterToastr.show('删除成功', context);
+    });
   }
 }
 
@@ -286,7 +439,16 @@ class _RewriteRuleState extends State<RewriteRule> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text("请求重写规则", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        title: Row(children: [
+          const Text("请求重写规则", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          const SizedBox(width: 20),
+          Text.rich(TextSpan(
+              text: '使用文档',
+              style: const TextStyle(color: Colors.blue, fontSize: 14),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => launchUrl(Uri.parse(
+                    'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%AF%B7%E6%B1%82%E9%87%8D%E5%86%99')))),
+        ]),
         actions: [
           TextButton(
               child: const Text("保存"),
@@ -350,27 +512,40 @@ class _RewriteRuleState extends State<RewriteRule> {
                           contentPadding: EdgeInsets.only(left: 7, right: 7),
                         ),
                         items: RuleType.values.map((e) => DropdownMenuItem(value: e, child: Text(e.label))).toList(),
-                        onChanged: (val) => ruleType = val!,
+                        onChanged: (val) {
+                          ruleType = val!;
+                          items = ruleType == widget.rule?.type ? widget.items : [];
+                        },
                       )),
                   const SizedBox(width: 10),
                   TextButton(
                       onPressed: () => showEdit(rule), child: const Text("点击编辑", style: TextStyle(fontSize: 16))),
                 ]),
                 const SizedBox(height: 10),
-                if (items?.isNotEmpty == true && ruleType != RuleType.redirect)
-                  Padding(
-                      padding: const EdgeInsets.only(left: 50),
-                      child: Text("替换: ${items?.where((it) => it.enabled).map((e) => e.type.label).join(" ")}",
-                          style: const TextStyle(color: Colors.grey))),
+                Padding(padding: const EdgeInsets.only(left: 60), child: getDescribe()),
               ]))),
     );
+  }
+
+  Widget getDescribe() {
+    if (items?.isNotEmpty == true && (ruleType == RuleType.requestReplace || ruleType == RuleType.responseReplace)) {
+      return Text("替换: ${items?.where((it) => it.enabled).map((e) => e.type.label).join(" ")}",
+          style: const TextStyle(color: Colors.grey));
+    }
+
+    if (ruleType == RuleType.requestUpdate || ruleType == RuleType.responseUpdate) {
+      return Text("${items?.length}条修改", style: const TextStyle(color: Colors.grey));
+    }
+    return const SizedBox();
   }
 
   void showEdit(RequestRewriteRule rule) async {
     if (!mounted) return;
     Navigator.of(context)
         .push(MaterialPageRoute(
-            builder: (context) => RewriteReplaceWidget(subtitle: urlInput.text, items: items, ruleType: ruleType)))
+            builder: (context) => ruleType == RuleType.requestUpdate || ruleType == RuleType.responseUpdate
+                ? RewriteUpdateWidget(subtitle: urlInput.text, items: items, ruleType: ruleType)
+                : RewriteReplaceWidget(subtitle: urlInput.text, items: items, ruleType: ruleType)))
         .then((value) {
       if (value is List<RewriteItem>) {
         setState(() {

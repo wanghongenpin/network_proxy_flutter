@@ -160,3 +160,27 @@ Future showContextMenu(BuildContext context, Offset offset, {required List<Popup
       ),
       items: items);
 }
+
+showConfirmDialog(BuildContext context, {String title = '确认操作', String content = '是否确认此操作?', VoidCallback? onConfirm}) {
+  showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("取消"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                if (onConfirm != null) onConfirm();
+              },
+              child: const Text("确定"),
+            ),
+          ],
+        );
+      });
+}
