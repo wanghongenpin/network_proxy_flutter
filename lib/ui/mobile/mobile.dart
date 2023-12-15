@@ -8,8 +8,10 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/launch/launch.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/menu.dart';
@@ -42,6 +44,14 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   @override
   void onResponse(Channel channel, HttpResponse response) {
     requestStateKey.currentState!.addResponse(channel, response);
+  }
+
+  @override
+  void onMessage(Channel channel, HttpMessage message, WebSocketFrame frame) {
+    var panel = NetworkTabController.current;
+    if (panel?.request.get() == message || panel?.response.get() == message) {
+      panel?.changeState();
+    }
   }
 
   @override
@@ -125,9 +135,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
         '4. 手机端外部代理配置是否展示抓包；\n'
         '5. 桌面端请求重写新窗口打开；\n'
         '6. 请求重写升级，支持请求行、header、状态码重写；\n'
-        '7. 展示请求/响应报文大小'
-
-    ;
+        '7. 展示请求/响应报文大小';
     showAlertDialog('更新内容V1.0.5', content, () {
       widget.configuration.upgradeNoticeV5 = false;
       widget.configuration.flushConfig();

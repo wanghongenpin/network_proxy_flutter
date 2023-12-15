@@ -15,6 +15,7 @@ import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
+import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/num.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
@@ -70,7 +71,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.httpMessage?.body == null || widget.httpMessage?.body?.isEmpty == true) {
+    if ((widget.httpMessage?.body == null || widget.httpMessage?.body?.isEmpty == true) &&
+        widget.httpMessage?.messages.isNotEmpty == false) {
       return const SizedBox();
     }
 
@@ -156,7 +158,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
     );
   }
 
-  //
+  //展示请求重写
   showRequestRewrite() async {
     HttpRequest? request;
     bool isRequest = widget.httpMessage is HttpRequest;
@@ -186,9 +188,10 @@ class HttpBodyState extends State<HttpBodyWidget> {
       Navigator.push(context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule, items: rewriteItems)));
     } else {
       showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) => RuleAddDialog(rule: rule, items: rewriteItems, newWindow: false)).then((value) {
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) => RuleAddDialog(rule: rule, items: rewriteItems, newWindow: false))
+          .then((value) {
         if (value is RequestRewriteRule) {
           DesktopMultiWindow.getAllSubWindowIds().then((windowIds) async {
             var items = await requestRewrites.getRewriteItems(value);
@@ -263,6 +266,10 @@ class _BodyState extends State<_Body> {
   }
 
   String? get body {
+    if (message?.isWebSocket == true) {
+      return message?.messages.map((e) => e.payloadDataAsString).join("\n");
+    }
+
     if (message == null || message?.body == null) {
       return null;
     }
@@ -284,6 +291,34 @@ class _BodyState extends State<_Body> {
   }
 
   Widget _getBody(ViewType type) {
+    if (message?.isWebSocket == true) {
+      List<Widget>? list = message?.messages
+          .map((e) => Container(
+              margin: const EdgeInsets.only(top: 2, bottom: 2),
+              child: Row(
+                children: [
+                  Expanded(child: Text(e.payloadDataAsString)),
+                  const SizedBox(width: 5),
+                  SizedBox(
+                      width: 130,
+                      child: SelectionContainer.disabled(
+                          child: Text(e.time.format(), style: const TextStyle(fontSize: 12, color: Colors.grey))))
+                ],
+              )))
+          .toList();
+      return Column(
+        children: [
+          const SelectionContainer.disabled(
+              child: Row(children: [
+            Expanded(child: Text("Data")),
+            SizedBox(width: 130, child: Text("Time")),
+          ])),
+          Divider(height: 5, thickness: 1, color: Colors.grey[300]),
+          ...list ?? []
+        ],
+      );
+    }
+
     if (message == null || message?.body == null) {
       return const SizedBox();
     }

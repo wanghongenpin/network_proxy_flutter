@@ -1,3 +1,5 @@
+import 'package:date_format/date_format.dart';
+
 extension ListFirstWhere<T> on Iterable<T> {
   T? firstWhereOrNull(bool Function(T) test) {
     try {
@@ -8,14 +10,21 @@ extension ListFirstWhere<T> on Iterable<T> {
   }
 }
 
+extension DateTimeFormat on DateTime {
+  String format() {
+    return formatDate(this, [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn, ':', ss]);
+  }
+}
+
 class ValueWrap<V> {
   V? _v;
+
   ValueWrap();
 
   factory ValueWrap.of(V v) {
-     var valueWrap = ValueWrap<V>();
-      valueWrap._v = v;
-      return valueWrap;
+    var valueWrap = ValueWrap<V>();
+    valueWrap._v = v;
+    return valueWrap;
   }
 
   void set(V? v) => this._v = v;

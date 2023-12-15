@@ -25,6 +25,7 @@ const String _x = "-X";
 const String _request = "--request";
 const String _data = "--data";
 const String _dataRaw = "--data-raw";
+const String _d = "-d";
 
 ///解析curl
 HttpRequest parseCurl(String curl) {
@@ -34,6 +35,9 @@ HttpRequest parseCurl(String curl) {
   HttpHeaders headers = HttpHeaders();
   String requestUrl = '';
   String body = '';
+
+  bool parseBody = false;
+
   for (var it in lines) {
     it = it.trim();
     if (it.endsWith("\\")) {
@@ -44,21 +48,49 @@ HttpRequest parseCurl(String curl) {
     if (it.startsWith(_h) || it.startsWith(_header)) {
       int index = it.startsWith(_h) ? _h.length : _header.length;
       var line = it.substring(index).trim();
-      line = Strings.trimWrap(line, "'");
+      line = line.startsWith("'") ? line.substring(1) : line;
+      var endIdx = endIndex(line);
+
+      it = line.substring(endIdx + 1);
+      line = line.substring(0, endIdx == -1 ? line.length : endIdx);
       var pair = _split(line, ":");
       if (pair != null) {
         headers.add(pair.key, pair.value);
       }
-    } else if (it.startsWith(_data)) {
+
+      if (endIdx == -1) {
+        continue;
+      }
+      it = it.trim();
+    }
+
+    if (it.startsWith(_data) || it.startsWith(_d)) {
       //body
       String value;
       if (it.startsWith(_dataRaw)) {
         value = it.substring(_dataRaw.length).trim();
-      } else {
+      } else if (it.startsWith(_data)) {
         value = it.substring(_data.length).trim();
+      } else {
+        value = it.substring(_d.length).trim();
       }
-      value = value.startsWith('\$') ? value.substring(1) : value;
-      body = Strings.trimWrap(value, "'");
+      value = value.startsWith('\$') || value.startsWith("'") ? value.substring(1) : value;
+
+      int index = endIndex(value);
+      if (index > 0) {
+        body += value.substring(0, index);
+      } else {
+        parseBody = true;
+        body += value;
+      }
+    } else if (parseBody) {
+      int index = endIndex(it);
+      if (index >= 0) {
+        parseBody = false;
+        body += "\n${it.substring(0, index)}";
+      } else {
+        body += "\n$it";
+      }
     } else if (it.startsWith(_x) || it.startsWith(_request)) {
       //method
       int index = it.startsWith(_x) ? _x.length : _request.length;
@@ -93,4 +125,16 @@ Pair<String, String>? _split(String line, String code) {
   } catch (e) {
     return null;
   }
+}
+
+//判断是否结束
+int endIndex(String str) {
+  for (int i = 0; i < str.length; i++) {
+    if (str[i] == '\'') {
+      if (i == 0 || str[i - 1] != '\\') {
+        return i;
+      }
+    }
+  }
+  return -1;
 }

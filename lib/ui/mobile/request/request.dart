@@ -78,7 +78,9 @@ class RequestRowState extends State<RequestRow> {
         contentPadding: const EdgeInsets.only(left: 3),
         onLongPress: menu,
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
+          Navigator.push(context, MaterialPageRoute(
+            settings: const RouteSettings(name: "NetworkTabController"),
+              builder: (context) {
             return NetworkTabController(
                 proxyServer: widget.proxyServer,
                 httpRequest: request,

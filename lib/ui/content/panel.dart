@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/ui/component/share.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/utils/lang.dart';
@@ -8,12 +9,7 @@ import 'package:network_proxy/utils/lang.dart';
 import 'body.dart';
 
 class NetworkTabController extends StatefulWidget {
-  final tabs = [
-    'General',
-    'Request',
-    'Response',
-    'Cookies',
-  ];
+  static GlobalKey<NetworkTabState>? currentKey;
 
   final ProxyServer proxyServer;
   final ValueWrap<HttpRequest> request = ValueWrap();
@@ -24,6 +20,7 @@ class NetworkTabController extends StatefulWidget {
   NetworkTabController(
       {HttpRequest? httpRequest, HttpResponse? httpResponse, this.title, this.tabStyle, required this.proxyServer})
       : super(key: GlobalKey<NetworkTabState>()) {
+    currentKey = key as GlobalKey<NetworkTabState>;
     request.set(httpRequest);
     response.set(httpResponse);
   }
@@ -35,13 +32,27 @@ class NetworkTabController extends StatefulWidget {
     state.currentState?.changeState();
   }
 
+  void changeState() {
+    var state = key as GlobalKey<NetworkTabState>;
+    state.currentState?.changeState();
+  }
+
   @override
   State<StatefulWidget> createState() {
     return NetworkTabState();
   }
+
+  static NetworkTabController? get current => currentKey?.currentWidget as NetworkTabController?;
 }
 
 class NetworkTabState extends State<NetworkTabController> with SingleTickerProviderStateMixin {
+  final tabs = [
+    'General',
+    'Request',
+    'Response',
+    'Cookies',
+  ];
+
   final TextStyle textStyle = const TextStyle(fontSize: 14);
   late TabController _tabController;
 
@@ -52,7 +63,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: widget.tabs.length, vsync: this);
+    _tabController = TabController(length: tabs.length, vsync: this);
   }
 
   @override
@@ -63,11 +74,14 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
   @override
   Widget build(BuildContext context) {
+    bool isWebSocket = widget.request.get()?.isWebSocket == true;
+    tabs[tabs.length - 1] = isWebSocket ? "WebSocket" : 'Cookies';
+
     var tabBar = TabBar(
       padding: const EdgeInsets.only(bottom: 0),
       controller: _tabController,
       labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-      tabs: widget.tabs.map((title) => Tab(child: Text(title, style: widget.tabStyle, maxLines: 1))).toList(),
+      tabs: tabs.map((title) => Tab(child: Text(title, style: widget.tabStyle, maxLines: 1))).toList(),
     );
 
     Widget appBar = widget.title == null
@@ -90,12 +104,68 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
             physics: const NeverScrollableScrollPhysics(), //禁止滑动
             controller: _tabController,
             children: [
-              general(),
-              request(),
-              response(),
-              cookies(),
+              SelectionArea(child: general()),
+              SelectionArea(child: request()),
+              SelectionArea(child: response()),
+              SelectionArea(child: isWebSocket ? websocket() : cookies()),
             ],
           )),
+    );
+  }
+
+  ///以聊天对话框样式展示websocket消息
+  Widget websocket() {
+    var request = widget.request.get();
+    if (request == null) {
+      return const SizedBox();
+    }
+    List<WebSocketFrame> messages = List.from(request.messages);
+    var response = widget.response.get();
+    if (response != null) {
+      messages.addAll(response.messages);
+    }
+    messages.sort((a, b) => a.time.compareTo(b.time));
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 15),
+      itemCount: messages.length,
+      itemBuilder: (context, index) {
+        var message = messages[index];
+        var avatar = SelectionContainer.disabled(
+            child: CircleAvatar(
+                backgroundColor: message.isFromClient ? Colors.green : Colors.blue,
+                child:
+                    Text(message.isFromClient ? 'C' : 'S', style: const TextStyle(fontSize: 18, color: Colors.white))));
+
+        return Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Row(
+              mainAxisAlignment: message.isFromClient ? MainAxisAlignment.start : MainAxisAlignment.end,
+              children: [
+                if (message.isFromClient) avatar,
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Column(
+                      crossAxisAlignment: message.isFromClient ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                      children: [
+                        SelectionContainer.disabled(
+                            child:
+                                Text(message.time.format(), style: const TextStyle(fontSize: 12, color: Colors.grey))),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: message.isFromClient ? Colors.green[100] : Colors.blue[100],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(message.payloadDataAsString),
+                        )
+                      ]),
+                ),
+                const SizedBox(width: 8),
+                if (!message.isFromClient) avatar,
+              ],
+            ));
+      },
     );
   }
 
@@ -178,10 +248,9 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     message?.headers.forEach((name, values) {
       for (var v in values) {
         headers.add(Row(children: [
-          SelectableText('$name: ',
+          Text('$name: ',
               style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent, fontSize: 14)),
-          Expanded(
-              child: SelectableText(v, style: textStyle, contextMenuBuilder: contextMenu, maxLines: 8, minLines: 1)),
+          Expanded(child: Text(v, style: textStyle, maxLines: 8)),
         ]));
         headers.add(const Divider(thickness: 0.1));
       }
@@ -219,14 +288,8 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
   Widget rowWidget(final String name, String? value) {
     return Row(children: [
-      Expanded(flex: 2, child: SelectableText(name, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14))),
-      Expanded(
-          flex: 4,
-          child: SelectableText(
-            style: textStyle,
-            value ?? '',
-            contextMenuBuilder: contextMenu,
-          ))
+      Expanded(flex: 2, child: Text(name, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14))),
+      Expanded(flex: 4, child: Text(style: textStyle, value ?? ''))
     ]);
   }
 }

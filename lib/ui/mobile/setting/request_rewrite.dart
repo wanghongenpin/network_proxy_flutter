@@ -51,10 +51,13 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
             padding: const EdgeInsets.all(10),
             child: Column(
               children: [
-                Wrap(alignment: WrapAlignment.end, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                  const Text("是否启用请求重写"),
-                  SwitchWidget(value: enabled, scale: 0.8, onChanged: (val) => enabled = val),
-                  const Expanded(child: SizedBox()),
+                Row(
+                  children: [
+                    const Text("是否启用请求重写"),
+                    SwitchWidget(value: enabled, scale: 0.8, onChanged: (val) => enabled = val),
+                  ],
+                ),
+                Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                   FilledButton.icon(icon: const Icon(Icons.add, size: 18), onPressed: add, label: const Text("添加")),
                   const SizedBox(width: 10),
                   FilledButton.icon(
@@ -369,7 +372,6 @@ class _RequestRuleListState extends State<RequestRuleList> {
 
     final XFile file = XFile.fromData(utf8.encode(jsonEncode(list)), mimeType: 'config');
     await Share.shareXFiles([file], subject: fileName);
-    if (context.mounted) FlutterToastr.show('导出成功', context);
   }
 
   //删除

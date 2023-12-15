@@ -234,7 +234,7 @@ class _MobileHistoryState extends State<MobileHistory> {
   }
 }
 
-class WriteTask implements EventListener {
+class WriteTask extends EventListener {
   final HistoryStorage historyStorage;
   final RandomAccessFile open;
   Queue writeList = Queue();

@@ -121,7 +121,8 @@ class MacSystemProxy implements SystemProxy {
   ///获取系统代理
   @override
   Future<ProxyInfo?> _getSystemProxy(ProxyTypes proxyTypes) async {
-    _hardwarePort = await hardwarePort();
+    _hardwarePort = _hardwarePort ?? await hardwarePort();
+
     var result = await Process.run('bash', [
       '-c',
       'networksetup ${proxyTypes == ProxyTypes.http ? '-getwebproxy' : '-getsecurewebproxy'} $_hardwarePort'
@@ -143,13 +144,14 @@ class MacSystemProxy implements SystemProxy {
   ///mac设置代理地址
   @override
   Future<bool> _setSystemProxy(int port, bool sslSetting, String proxyPassDomains) async {
-    _hardwarePort = await hardwarePort();
+    _hardwarePort = _hardwarePort ?? await hardwarePort();
     var results = await Process.run('bash', [
       '-c',
       _concatCommands([
         'networksetup -setwebproxy $_hardwarePort 127.0.0.1 $port',
         sslSetting == true ? 'networksetup -setsecurewebproxy $_hardwarePort 127.0.0.1 $port' : '',
         'networksetup -setproxybypassdomains $_hardwarePort ${proxyPassDomains.replaceAll(";", " ")}',
+        'networksetup -setsocksfirewallproxystate $_hardwarePort off',
       ])
     ]);
     print('set proxyServer, name: $_hardwarePort, exitCode: ${results.exitCode}, stdout: ${results.stdout}');
@@ -159,7 +161,7 @@ class MacSystemProxy implements SystemProxy {
   ///设置Https代理
   @override
   Future<bool> _setSslProxyEnable(bool proxyEnable, port) async {
-    var name = await hardwarePort();
+    var name = _hardwarePort ?? await hardwarePort();
 
     var results = await Process.run('bash', [
       '-c',

@@ -50,7 +50,10 @@ class _RewriteUpdateState extends State<RewriteUpdateWidget> {
               children: [
                 Row(
                   children: [
-                    Text(widget.subtitle, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                    SizedBox(
+                        width: 260,
+                        child: Text(widget.subtitle,
+                            maxLines: 1, style: const TextStyle(fontSize: 13, color: Colors.grey))),
                     Expanded(
                         child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,

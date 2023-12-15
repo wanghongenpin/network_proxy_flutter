@@ -20,6 +20,7 @@ import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/utils/platform.dart';
 
 import '../handler.dart';
@@ -69,11 +70,9 @@ class ProxyServer {
     var requestRewrites = await RequestRewrites.instance;
 
     server.initChannel((channel) {
-      channel.pipeline.handle(
-          HttpRequestCodec(),
-          HttpResponseCodec(),
-          HttpProxyChannelHandler(
-              listener: CombinedEventListener(listeners), requestRewrites: requestRewrites));
+      channel.pipeline.listener = CombinedEventListener(listeners);
+      channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(),
+          HttpProxyChannelHandler(listener: CombinedEventListener(listeners), requestRewrites: requestRewrites));
     });
 
     return server.bind(port).then((serverSocket) {
@@ -138,6 +137,13 @@ class CombinedEventListener extends EventListener {
   void onResponse(Channel channel, HttpResponse response) {
     for (var element in listeners) {
       element.onResponse(channel, response);
+    }
+  }
+
+  @override
+  void onMessage(Channel channel, HttpMessage message, WebSocketFrame frame) {
+    for (var element in listeners) {
+      element.onMessage(channel, message, frame);
     }
   }
 }

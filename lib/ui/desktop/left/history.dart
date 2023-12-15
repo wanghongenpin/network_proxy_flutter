@@ -273,7 +273,7 @@ class _HistoryState extends State<_HistoryWidget> {
 }
 
 ///写入任务
-class WriteTask implements EventListener {
+class WriteTask extends EventListener {
   final HistoryStorage historyStorage;
   final RandomAccessFile open;
   Queue writeList = Queue();

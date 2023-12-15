@@ -16,14 +16,17 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:network_proxy/network/host_port.dart';
-import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
+import 'package:network_proxy/network/host_port.dart';
+import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/proxy_helper.dart';
+import 'package:network_proxy/network/util/attribute_keys.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/uri.dart';
 import 'package:network_proxy/utils/ip.dart';
 
@@ -35,6 +38,8 @@ abstract class EventListener {
   void onRequest(Channel channel, HttpRequest request);
 
   void onResponse(Channel channel, HttpResponse response);
+
+  void onMessage(Channel channel, HttpMessage message, WebSocketFrame frame) {}
 }
 
 /// http请求处理器
@@ -79,7 +84,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(Channel channel, HttpRequest httpRequest) async {
-    log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+    // log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
     if (channel.error != null) {
       ProxyHelper.exceptionHandler(channel, listener, httpRequest, channel.error);
       return;
@@ -184,7 +189,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   Future<Channel> connectRemote(Channel clientChannel, HostAndPort connectHost) async {
     var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
     var proxyChannel = await HttpClients.startConnect(connectHost, proxyHandler);
-
+    proxyChannel.pipeline.listener = listener;
     String clientId = clientChannel.id;
     clientChannel.putAttribute(clientId, proxyChannel);
 
@@ -208,8 +213,6 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
 
   @override
   void channelRead(Channel channel, HttpResponse msg) async {
-    msg.request = clientChannel.getAttribute(AttributeKeys.request);
-    msg.request?.response = msg;
     //域名是否过滤
     if (HostFilter.filter(msg.request?.hostAndPort?.host) || msg.request?.method == HttpMethod.connect) {
       await clientChannel.write(msg);
@@ -259,5 +262,31 @@ class RelayHandler extends ChannelHandler<Object> {
   @override
   void channelInactive(Channel channel) {
     remoteChannel.close();
+  }
+}
+
+//
+class WebSocketChannelHandler extends ChannelHandler<Uint8List> {
+  final WebSocketDecoder decoder = WebSocketDecoder();
+
+  final Channel proxyChannel;
+  final HttpMessage message;
+  EventListener? listener;
+
+  WebSocketChannelHandler(this.proxyChannel, this.message, {this.listener});
+
+  @override
+  void channelRead(Channel channel, Uint8List msg) {
+    proxyChannel.write(msg);
+
+    var frame = decoder.decode(msg);
+    if (frame == null) {
+      return;
+    }
+    frame.isFromClient = message is HttpRequest;
+
+    message.messages.add(frame);
+    listener?.onMessage(channel, message, frame);
+    logger.d("socket channelRead ${frame.payloadLength} ${frame.fin} ${frame.payloadDataAsString}");
   }
 }

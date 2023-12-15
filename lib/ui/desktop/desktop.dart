@@ -4,6 +4,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/content/panel.dart';
@@ -46,6 +47,13 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   @override
   void onResponse(Channel channel, HttpResponse response) {
     domainStateKey.currentState!.addResponse(channel, response);
+  }
+
+  @override
+  void onMessage(Channel channel, HttpMessage message, WebSocketFrame frame) {
+    if (panel.request.get() == message || panel.response.get() == message) {
+      panel.changeState();
+    }
   }
 
   @override
@@ -143,8 +151,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   '4. 手机端外部代理配置是否展示抓包；\n'
                   '5. 桌面端请求重写新窗口打开；\n'
                   '6. 请求重写升级，支持请求行、header、状态码重写；\n'
-                  '7. 展示请求/响应报文大小；'
-                  ,
+                  '7. 展示请求/响应报文大小；',
                   style: TextStyle(fontSize: 14)));
         });
   }

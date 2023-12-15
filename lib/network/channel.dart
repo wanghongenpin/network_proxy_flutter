@@ -164,6 +164,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   late Decoder _decoder;
   late Encoder _encoder;
   late ChannelHandler handler;
+  EventListener? listener;
 
   final ByteBuf buffer = ByteBuf();
 
@@ -241,19 +242,28 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
         if (data.headers.host != null && data.headers.host?.contains(":") == false) {
           data.hostAndPort?.host = data.headers.host!;
         }
-
-        //websocket协议
-        if (data.headers.get("Upgrade") == 'websocket' && remoteChannel != null) {
-          relay(channel, channel.getAttribute(channel.id));
-          channel.pipeline.channelRead(channel, msg);
-          return;
-        }
       }
 
       if (data is HttpResponse) {
         data.packageSize = length;
         data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
+        data.request = remoteChannel?.getAttribute(AttributeKeys.request);
+        data.request?.response = data;
       }
+
+      //websocket协议
+      if (data is HttpResponse && data.isWebSocket && remoteChannel != null) {
+        data.request?.hostAndPort?.scheme = channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme;
+        print("webSocket ${data.request?.hostAndPort}");
+        remoteChannel.write(data);
+
+        var rawCodec = RawCodec();
+        channel.pipeline.handle(rawCodec, rawCodec, WebSocketChannelHandler(remoteChannel, data, listener: listener));
+        remoteChannel.pipeline
+            .handle(rawCodec, rawCodec, WebSocketChannelHandler(channel, data.request!, listener: listener));
+        return;
+      }
+
       handler.channelRead(channel, data!);
     } catch (error, trace) {
       buffer.clear();

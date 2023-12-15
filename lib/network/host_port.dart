@@ -30,6 +30,9 @@ HostAndPort getHostAndPort(HttpRequest request, {bool? ssl}) {
 class HostAndPort {
   static const String httpScheme = "http://";
   static const String httpsScheme = "https://";
+  static const String wsScheme = "ws://";
+  static const String wssScheme = "wss://";
+
   String scheme;
   String host;
   final int port;

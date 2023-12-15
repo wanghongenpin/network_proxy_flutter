@@ -17,6 +17,7 @@
 import 'dart:convert';
 
 import 'package:network_proxy/network/host_port.dart';
+import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/utils/compress.dart';
 
 import 'http_headers.dart';
@@ -60,6 +61,9 @@ abstract class HttpMessage {
 
   Map<String, dynamic> toJson();
 
+  /// 是否是websocket协议
+  bool get isWebSocket => headers.get("Upgrade") == 'websocket';
+
   ContentType get contentType => contentTypes.entries
       .firstWhere((element) => headers.contentType.contains(element.key),
           orElse: () => const MapEntry("unknown", ContentType.http))
@@ -80,6 +84,8 @@ abstract class HttpMessage {
   }
 
   String get cookie => headers.cookie;
+
+  List<WebSocketFrame> messages = [];
 }
 
 ///HTTP请求。
