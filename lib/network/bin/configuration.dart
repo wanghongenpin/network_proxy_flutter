@@ -37,7 +37,7 @@ class Configuration {
   String proxyPassDomains = SystemProxy.proxyPassDomains;
 
   //是否显示更新内容公告
-  bool upgradeNoticeV5 = true;
+  bool upgradeNoticeV6 = true;
 
   //外部代理
   ProxyInfo? externalProxy;
@@ -72,7 +72,7 @@ class Configuration {
     enableSsl = config['enableSsl'] == true;
     enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
     proxyPassDomains = config['proxyPassDomains'] ?? SystemProxy.proxyPassDomains;
-    upgradeNoticeV5 = config['upgradeNoticeV5'] ?? true;
+    upgradeNoticeV6 = config['upgradeNoticeV6'] ?? true;
     if (config['externalProxy'] != null) {
       externalProxy = ProxyInfo.fromJson(config['externalProxy']);
     }
@@ -117,7 +117,7 @@ class Configuration {
 
   Map<String, dynamic> toJson() {
     return {
-      'upgradeNoticeV5': upgradeNoticeV5,
+      'upgradeNoticeV6': upgradeNoticeV6,
       'port': port,
       'enableSsl': enableSsl,
       'enableSystemProxy': enableSystemProxy,

@@ -279,16 +279,22 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
   }
 
   Iterable<Widget>? _cookieWidget(String? cookie) {
-    return cookie
-        ?.split(";")
-        .map((e) => Strings.splitFirst(e, "="))
-        .where((element) => element != null)
-        .map((e) => rowWidget(e!.key, e.value));
+    var headers = <Widget>[];
+
+    cookie?.split(";").map((e) => Strings.splitFirst(e, "=")).where((element) => element != null).forEach((e) {
+      headers.add(rowWidget(e!.key.trim(), e.value));
+      headers.add(const Divider(thickness: 0.1));
+    });
+
+    return headers;
   }
 
   Widget rowWidget(final String name, String? value) {
     return Row(children: [
-      Expanded(flex: 2, child: Text(name, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14))),
+      Expanded(
+          flex: 2,
+          child: Text(name,
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: Colors.deepOrangeAccent))),
       Expanded(flex: 4, child: Text(style: textStyle, value ?? ''))
     ]);
   }

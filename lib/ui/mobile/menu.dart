@@ -279,7 +279,7 @@ class About extends StatelessWidget {
             const SizedBox(height: 20),
             const Text("全平台开源免费抓包软件"),
             const SizedBox(height: 10),
-            const Text("V1.0.5"),
+            const Text("V1.0.6"),
             ListTile(
                 title: const Text("Github"),
                 trailing: const Icon(Icons.arrow_right),

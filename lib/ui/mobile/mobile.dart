@@ -71,7 +71,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
     });
 
     super.initState();
-    if (widget.configuration.upgradeNoticeV5) {
+    if (widget.configuration.upgradeNoticeV6) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -128,16 +128,14 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
 
   showUpgradeNotice() {
     String content = '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-        '安卓重大更新！:\n'
-        '1. 安卓支持抓Flutter请求；\n'
-        '2. 安卓支持10以下版本；\n'
-        '3. 修复脚本导入中文乱码；\n'
-        '4. 手机端外部代理配置是否展示抓包；\n'
-        '5. 桌面端请求重写新窗口打开；\n'
-        '6. 请求重写升级，支持请求行、header、状态码重写；\n'
-        '7. 展示请求/响应报文大小';
-    showAlertDialog('更新内容V1.0.5', content, () {
-      widget.configuration.upgradeNoticeV5 = false;
+        '1. 请求重写增加 修改请求，可根据增则替换；\n'
+        '2. 请求重写批量导入、导出；\n'
+        '3. 支持WebSocket抓包；\n'
+        '4. 优化curl导入；\n'
+        '5. 支持head请求，修复手机端请求重写切换应用恢复原始的请求问题；\n'
+        '';
+    showAlertDialog('更新内容V1.0.6', content, () {
+      widget.configuration.upgradeNoticeV6 = false;
       widget.configuration.flushConfig();
     });
   }

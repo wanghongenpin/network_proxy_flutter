@@ -235,7 +235,6 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       if (data == null) {
         return;
       }
-      // print(String.fromCharCodes(buffer.buffer));
 
       var length = buffer.length;
       buffer.clear();
