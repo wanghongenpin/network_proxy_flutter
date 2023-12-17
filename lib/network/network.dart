@@ -98,10 +98,6 @@ class Network {
       channel.putAttribute(AttributeKeys.domain, hostAndPort?.host);
 
       Channel? remoteChannel = channel.getAttribute(channel.id);
-      if (remoteChannel != null) {
-        remoteChannel.secureSocket = await SecureSocket.secure(remoteChannel.socket,
-            host: hostAndPort?.host, onBadCertificate: (certificate) => true);
-      }
 
       if (HostFilter.filter(hostAndPort?.host)) {
         remoteChannel = remoteChannel ?? await HttpClients.startConnect(hostAndPort!, RelayHandler(channel));
@@ -110,6 +106,13 @@ class Network {
         return;
       }
 
+      if (remoteChannel != null && !remoteChannel.isSsl) {
+        // var supportProtocols = TLS.supportProtocols(data);
+        remoteChannel.secureSocket = await SecureSocket.secure(remoteChannel.socket,
+            host: hostAndPort?.host, onBadCertificate: (certificate) => true);
+      }
+
+      // var selectedProtocol = remoteChannel?.selectedProtocol;
       //ssl自签证书
       var certificate = await CertificateManager.getCertificateContext(hostAndPort!.host);
       //服务端等待客户端ssl握手

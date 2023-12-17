@@ -113,7 +113,7 @@ class ByteBuf {
 /// 解码
 abstract interface class Decoder<T> {
   /// 解码 如果返回null说明数据不完整
-  T? decode(ByteBuf byteBuf);
+  T? decode(ByteBuf byteBuf, {bool resolveBody = true});
 }
 
 /// 编码
@@ -139,7 +139,7 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
   T createMessage(List<String> reqLine);
 
   @override
-  T? decode(ByteBuf data) {
+  T? decode(ByteBuf data, {bool resolveBody = true}) {
     //请求行
     if (_state == State.readInitial) {
       init();
@@ -156,10 +156,10 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
 
       //请求体
       if (_state == State.body) {
-        var result = bodyReader!.readBody(data.readBytes(data.readableBytes()));
-        if (result.isDone) {
+        var result = resolveBody ? bodyReader!.readBody(data.readBytes(data.readableBytes())) : null;
+        if (!resolveBody || result?.isDone == true) {
           _state = State.done;
-          message.body = result.body;
+          message.body = result?.body;
         }
       }
 

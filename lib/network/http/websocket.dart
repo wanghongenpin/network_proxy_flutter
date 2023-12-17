@@ -68,23 +68,9 @@ class WebSocketFrame {
 
 ///websocket 解码器
 class WebSocketDecoder {
-  // Add a buffer to store incomplete data
-  final buffer = BytesBuilder();
-
   WebSocketFrame? decode(Uint8List byteBuf) {
-    // Add the new data to the buffer
-    buffer.add(byteBuf);
-
-    // Try to parse a WebSocket frame from the buffer
-    var data = buffer.toBytes();
-    if (canParseWebSocketFrame(data)) {
-      var frame = _parseWebSocketFrame(data);
-
-      buffer.clear();
-      return frame;
-    }
-
-    return null;
+    var frame = _parseWebSocketFrame(byteBuf);
+    return frame;
   }
 
   bool canParseWebSocketFrame(Uint8List data) {

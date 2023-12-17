@@ -18,6 +18,7 @@ import 'dart:convert';
 
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/websocket.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/utils/compress.dart';
 
 import 'http_headers.dart';
@@ -272,7 +273,7 @@ enum HttpMethod {
     try {
       return HttpMethod.values.firstWhere((element) => element.name == name.toUpperCase());
     } catch (error) {
-      print("$name :$error");
+      logger.e("HttpMethod error $name :$error");
       rethrow;
     }
   }

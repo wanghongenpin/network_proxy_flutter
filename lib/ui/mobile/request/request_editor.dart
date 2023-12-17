@@ -167,6 +167,12 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
     return body;
   }
 
+  @override
+  void initState() {
+    super.initState();
+    body = widget.message?.bodyAsString;
+  }
+
   HttpHeaders? getHeaders() {
     return headerKey.currentState?.getHeaders();
   }
@@ -174,11 +180,13 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    body = widget.message?.bodyAsString;
-    headerKey.currentState?.refreshHeader(widget.message?.headers);
 
     if (widget.message == null && widget.readOnly) {
       return const Center(child: Text("无数据"));
+    }
+    if (widget.readOnly) {
+      body = widget.message?.bodyAsString;
+      headerKey.currentState?.refreshHeader(widget.message?.headers);
     }
 
     return SingleChildScrollView(
@@ -322,24 +330,24 @@ class HeadersState extends State<Headers> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const SizedBox(
-              width: double.infinity,
-              child: Text("Headers", style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue))),
-          const SizedBox(height: 10),
-          ...buildHeaders(),
-          widget.readOnly
-              ? const SizedBox()
-              : Container(
-                  alignment: Alignment.center,
-                  child: TextButton(
-                      onPressed: () {
-                        modifyHeader("", "");
-                      },
-                      child: const Text("添加Header", textAlign: TextAlign.center))) //添加按钮
-        ]));
+    return ExpansionTile(
+      title: const Text("Headers", style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue)),
+      tilePadding: const EdgeInsets.only(left: 0, top: 10, bottom: 10),
+      initiallyExpanded: true,
+      shape: const Border(),
+      children: [
+        ...buildHeaders(),
+        widget.readOnly
+            ? const SizedBox()
+            : Container(
+                alignment: Alignment.center,
+                child: TextButton(
+                    onPressed: () {
+                      modifyHeader("", "");
+                    },
+                    child: const Text("添加Header", textAlign: TextAlign.center))) //添加按钮
+      ],
+    );
   }
 
   List<Widget> buildHeaders() {

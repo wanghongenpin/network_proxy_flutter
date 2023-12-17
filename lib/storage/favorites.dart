@@ -16,7 +16,9 @@ class FavoriteStorage {
       var file = await _path;
       if (await file.exists()) {
         var value = await file.readAsString();
-
+        if (value.isEmpty) {
+          return list!;
+        }
         try {
           var config = jsonDecode(value) as List<dynamic>;
           for (var element in config) {

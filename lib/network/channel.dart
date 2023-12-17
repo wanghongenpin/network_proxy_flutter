@@ -84,6 +84,8 @@ class Channel {
     pipeline.listen(this);
   }
 
+  String? get selectedProtocol => isSsl ? (_socket as SecureSocket).selectedProtocol : null;
+
   ///是否是ssl链接
   bool get isSsl => _socket is SecureSocket;
 
@@ -228,10 +230,12 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
         return;
       }
 
-      var data = _decoder.decode(buffer);
+      HttpRequest? request = remoteChannel?.getAttribute(AttributeKeys.request);
+      var data = _decoder.decode(buffer, resolveBody: request?.method != HttpMethod.head);
       if (data == null) {
         return;
       }
+      // print(String.fromCharCodes(buffer.buffer));
 
       var length = buffer.length;
       buffer.clear();
@@ -247,14 +251,14 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       if (data is HttpResponse) {
         data.packageSize = length;
         data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
-        data.request = remoteChannel?.getAttribute(AttributeKeys.request);
-        data.request?.response = data;
+        data.request = request;
+        request?.response = data;
       }
 
       //websocket协议
       if (data is HttpResponse && data.isWebSocket && remoteChannel != null) {
-        data.request?.hostAndPort?.scheme = channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme;
-        print("webSocket ${data.request?.hostAndPort}");
+        request?.hostAndPort?.scheme = channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme;
+        logger.d("webSocket ${data.request?.hostAndPort}");
         remoteChannel.write(data);
 
         var rawCodec = RawCodec();
@@ -284,7 +288,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
 
 class RawCodec extends Codec<Object> {
   @override
-  Object? decode(ByteBuf data) {
+  Object? decode(ByteBuf data, {bool resolveBody = true}) {
     return data.readBytes(data.readableBytes());
   }
 

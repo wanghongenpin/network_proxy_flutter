@@ -17,6 +17,62 @@
 import 'dart:typed_data';
 
 class TLS {
+  ///从TLS Client Hello 获取支持的协议
+  static List<String>? supportProtocols(Uint8List data) {
+    try {
+      int sessionLength = data[43];
+      int pos = 44 + sessionLength;
+      if (data.length < pos + 2) return null;
+
+      int cipherSuitesLength = data.buffer.asByteData().getUint16(pos);
+      pos += 2 + cipherSuitesLength;
+      if (data.length < pos + 1) return null;
+
+      int compressionMethodsLength = data[pos];
+      pos += 1 + compressionMethodsLength;
+      if (data.length < pos + 2) return null;
+
+      int extensionsLength = data.buffer.asByteData().getUint16(pos);
+      pos += 2;
+      if (data.length < pos + extensionsLength) return null;
+
+      List<String> protocols = [];
+
+      int end = pos + extensionsLength;
+      while (pos + 4 <= end) {
+        int extensionType = data.buffer.asByteData().getUint16(pos);
+        int extensionLength = data.buffer.asByteData().getUint16(pos + 2);
+        pos += 4;
+
+        if (extensionType == 16 /* ALPN */) {
+          if (pos + 2 > end) return protocols;
+          int alpnExtensionLength = data.buffer.asByteData().getUint16(pos);
+          pos += 2;
+          if (pos + alpnExtensionLength > end) return protocols;
+
+          int alpnEnd = pos + alpnExtensionLength;
+          while (pos + 1 <= alpnEnd) {
+            int protocolLength = data[pos];
+            pos += 1;
+            if (pos + protocolLength > alpnEnd) return protocols;
+
+            String protocol = String.fromCharCodes(data.sublist(pos, pos + protocolLength));
+            protocols.add(protocol);
+
+            pos += protocolLength;
+          }
+        } else {
+          pos += extensionLength;
+        }
+      }
+      return protocols;
+    } catch (_) {
+      // Ignore errors, just return empty list
+    }
+
+    return null;
+  }
+
   ///判断是否是TLS Client Hello
   static bool isTLSClientHello(Uint8List data) {
     if (data.length < 43) return false;
@@ -70,7 +126,7 @@ class TLS {
         }
       }
     } catch (_) {
-      // Ignore errors, just return null
+// Ignore errors, just return null
     }
 
     return null;
