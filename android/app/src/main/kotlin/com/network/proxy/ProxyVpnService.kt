@@ -21,6 +21,10 @@ import com.network.proxy.vpn.socket.ProtectSocketHolder
 class ProxyVpnService : VpnService(), ProtectSocket {
     private var vpnInterface: ParcelFileDescriptor? = null
 
+    private var host: String? = null
+    private var port: Int = 0
+    private var allowApps: List<String>? = null
+
     companion object {
         const val MAX_PACKET_LEN = 1500
 

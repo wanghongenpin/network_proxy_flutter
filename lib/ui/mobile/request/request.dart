@@ -145,7 +145,7 @@ class RequestRowState extends State<RequestRow> {
           ),
           TextButton(
             child: Container(
-                height: 40,
+                height: 55,
                 width: double.infinity,
                 padding: const EdgeInsets.only(top: 10),
                 child: const Text("取消", textAlign: TextAlign.center)),

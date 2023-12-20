@@ -40,8 +40,6 @@ class MobileHomeState extends State<MobileHomePage> with WidgetsBindingObserver 
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    print("didChangeAppLifecycleState $state");
-
     if (state == AppLifecycleState.inactive && Vpn.isVpnStarted) {
       if (desktop.value.connect || !Platform.isAndroid || !widget.configuration.smallWindow) {
         return;
@@ -53,7 +51,6 @@ class MobileHomeState extends State<MobileHomePage> with WidgetsBindingObserver 
     if (state == AppLifecycleState.resumed && pictureInPictureNotifier.value) {
       Vpn.isRunning().then((value) {
         Vpn.isVpnStarted = value;
-        print("isRunning $value");
         pictureInPictureNotifier.value = false;
       });
     }
@@ -165,8 +162,9 @@ class MobileHomeState extends State<MobileHomePage> with WidgetsBindingObserver 
         '1. 请求重写增加 修改请求，可根据增则替换；\n'
         '2. 请求重写批量导入、导出；\n'
         '3. 支持WebSocket抓包；\n'
-        '4. 优化curl导入；\n'
-        '5. 支持head请求，修复手机端请求重写切换应用恢复原始的请求问题；\n'
+        '4. 安卓支持小窗口模式；\n'
+        '5. 优化curl导入；\n'
+        '6. 支持head请求，修复手机端请求重写切换应用恢复原始的请求问题；\n'
         '';
     showAlertDialog('更新内容V1.0.6', content, () {
       widget.configuration.upgradeNoticeV6 = false;

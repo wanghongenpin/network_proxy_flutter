@@ -46,7 +46,6 @@ class _ToolbarState extends State<Toolbar> {
     }
 
     if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyQ)) {
-      print("windowManager.close()");
       windowManager.close();
       return;
     }

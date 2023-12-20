@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/native/app_lifecycle.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
@@ -38,8 +40,8 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
     super.initState();
     windowManager.addListener(this);
     WidgetsBinding.instance.addObserver(this);
+    AppLifecycleBinding.ensureInitialized();
     //启动代理服务器
-    print("SocketLaunch ${widget.startup}");
     if (widget.startup) {
       start();
     }
@@ -57,11 +59,21 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
 
   @override
   void onWindowClose() async {
-    await widget.proxyServer.stop();
     print("onWindowClose");
+    await appExit();
+  }
+
+  Future<void> appExit() async {
+    await widget.proxyServer.stop();
     SocketLaunch.started = false;
     await windowManager.destroy();
     exit(0);
+  }
+
+  @override
+  Future<AppExitResponse> didRequestAppExit() async {
+    await appExit();
+    return super.didRequestAppExit();
   }
 
   @override
@@ -76,8 +88,6 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
 
   @override
   Widget build(BuildContext context) {
-    print("SocketLaunch build ${widget.startup}");
-
     return IconButton(
         tooltip: SocketLaunch.started ? "停止" : "启动",
         icon: Icon(SocketLaunch.started ? Icons.stop : Icons.play_arrow_sharp,

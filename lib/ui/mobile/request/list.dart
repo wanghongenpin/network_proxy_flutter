@@ -461,7 +461,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
               ),
               TextButton(
                 child: Container(
-                    height: 60,
+                    height: 55,
                     width: double.infinity,
                     padding: const EdgeInsets.only(top: 10),
                     child: const Text("取消", textAlign: TextAlign.center)),

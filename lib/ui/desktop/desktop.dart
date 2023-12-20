@@ -147,8 +147,9 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   '1. 请求重写增加 修改请求，可根据正则替换；\n'
                   '2. 请求重写批量导入、导出；\n'
                   '3. 支持WebSocket抓包；\n'
-                  '4. 优化curl导入；\n'
-                  '5. 支持head请求，修复手机端请求重写切换应用恢复原始的请求问题；\n'
+                  '4. 安卓支持小窗口模式；\n'
+                  '5. 优化curl导入；\n'
+                  '6. 支持head请求，修复手机端请求重写切换应用恢复原始的请求问题；\n'
                   '',
                   style: TextStyle(fontSize: 14)));
         });

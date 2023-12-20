@@ -337,7 +337,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
             Container(color: Theme.of(context).hoverColor, height: 8),
             TextButton(
                 child: Container(
-                    height: 48,
+                    height: 55,
                     width: double.infinity,
                     padding: const EdgeInsets.only(top: 10),
                     child: const Text("取消", textAlign: TextAlign.center)),

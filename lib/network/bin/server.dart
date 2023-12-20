@@ -87,10 +87,14 @@ class ProxyServer {
 
   /// 停止代理服务
   Future<Server?> stop() async {
-    logger.i("stop on $port");
+    if (!isRunning) {
+      return server;
+    }
+
     if (configuration.enableSystemProxy) {
       await setSystemProxyEnable(false);
     }
+    logger.i("stop on $port");
     await server?.stop();
     return server;
   }
