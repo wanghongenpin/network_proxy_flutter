@@ -1,14 +1,18 @@
 package com.network.proxy
 
+import android.app.PictureInPictureParams
 import android.content.Intent
 import android.net.VpnService
 import android.os.Bundle
+import com.network.proxy.plugin.AppLifecyclePlugin
+import com.network.proxy.plugin.PictureInPicturePlugin
 import com.network.proxy.plugin.VpnServicePlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 
 
 class MainActivity : FlutterActivity() {
+    private val lifecycleChannel: AppLifecyclePlugin = AppLifecyclePlugin()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,11 +24,23 @@ class MainActivity : FlutterActivity() {
         pluginRegister(flutterEngine)
     }
 
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        lifecycleChannel.onUserLeaveHint()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleChannel.onResume()
+    }
+
     /**
      * 注册插件
      */
     private fun pluginRegister(flutterEngine: FlutterEngine) {
         flutterEngine.plugins.add(VpnServicePlugin())
+        flutterEngine.plugins.add(PictureInPicturePlugin())
+        flutterEngine.plugins.add(lifecycleChannel)
     }
 
     /**

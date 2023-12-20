@@ -6,14 +6,14 @@ import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
-import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
 import 'package:network_proxy/ui/mobile/request/history.dart';
-import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
 import 'package:network_proxy/ui/mobile/setting/filter.dart';
 import 'package:network_proxy/ui/mobile/setting/proxy.dart';
@@ -29,9 +29,8 @@ import 'package:url_launcher/url_launcher.dart';
 ///左侧抽屉
 class DrawerWidget extends StatelessWidget {
   final ProxyServer proxyServer;
-  final GlobalKey<RequestListState> requestStateKey;
 
-  const DrawerWidget({super.key, required this.proxyServer, required this.requestStateKey});
+  const DrawerWidget({super.key, required this.proxyServer});
 
   @override
   Widget build(BuildContext context) {
@@ -46,73 +45,124 @@ class DrawerWidget extends StatelessWidget {
         ListTile(
             leading: const Icon(Icons.favorite),
             title: const Text("收藏"),
-            trailing: const Icon(Icons.arrow_right),
             onTap: () => navigator(context, MobileFavorites(proxyServer: proxyServer))),
         ListTile(
           leading: const Icon(Icons.history),
           title: const Text("历史"),
-          trailing: const Icon(Icons.arrow_right),
-          onTap: () => navigator(context, MobileHistory(proxyServer: proxyServer, requestStateKey: requestStateKey)),
+          onTap: () => navigator(context, MobileHistory(proxyServer: proxyServer)),
         ),
         const Divider(thickness: 0.3),
         ListTile(
-            title: const Text("代理"),
-            trailing: const Icon(Icons.arrow_right),
-            onTap: () => navigator(context, ProxySetting(proxyServer: proxyServer))),
-        ListTile(
             title: const Text("HTTPS抓包"),
-            trailing: const Icon(Icons.arrow_right),
+            leading: const Icon(Icons.https),
             onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
-        const MobileThemeSetting(),
-        Platform.isIOS
-            ? const SizedBox()
-            : ListTile(
-                title: const Text("应用白名单"),
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () => navigator(context, AppWhitelist(proxyServer: proxyServer))),
         ListTile(
-            title: const Text("域名白名单"),
-            trailing: const Icon(Icons.arrow_right),
-            onTap: () => navigator(
-                context, MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.whitelist))),
-        ListTile(
-            title: const Text("域名黑名单"),
-            trailing: const Icon(Icons.arrow_right),
-            onTap: () => navigator(
-                context, MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.blacklist))),
+            title: const Text("过滤"),
+            leading: const Icon(Icons.filter_alt_outlined),
+            onTap: () => navigator(context, FilterMenu(proxyServer: proxyServer))),
         ListTile(
             title: const Text("请求重写"),
-            trailing: const Icon(Icons.arrow_right),
+            leading: const Icon(Icons.replay_outlined),
             onTap: () async =>
                 navigator(context, MobileRequestRewrite(requestRewrites: (await RequestRewrites.instance)))),
         ListTile(
             title: const Text("脚本"),
-            trailing: const Icon(Icons.arrow_right),
+            leading: const Icon(Icons.code),
             onTap: () => navigator(context, const MobileScript())),
         ListTile(
+            title: const Text("设置"),
+            leading: const Icon(Icons.settings),
+            onTap: () => navigator(context, SettingMenu(proxyServer: proxyServer))),
+        ListTile(
             title: const Text("关于"),
-            trailing: const Icon(Icons.arrow_right),
+            leading: const Icon(Icons.info_outline),
             onTap: () => navigator(context, const About())),
       ],
     ));
   }
+}
 
-  ///跳转页面
-  navigator(BuildContext context, Widget widget) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (BuildContext context) {
-        return widget;
-      }),
-    );
+///跳转页面
+navigator(BuildContext context, Widget widget) {
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (BuildContext context) {
+      return widget;
+    }),
+  );
+}
+
+///设置
+class SettingMenu extends StatelessWidget {
+  final ProxyServer proxyServer;
+
+  const SettingMenu({super.key, required this.proxyServer});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(title: const Text("设置", style: TextStyle(fontSize: 16)), centerTitle: true),
+        body: Padding(
+            padding: const EdgeInsets.all(5),
+            child: ListView(children: [
+              ListTile(
+                  title: const Text("代理"),
+                  trailing: const Icon(Icons.arrow_right),
+                  onTap: () => navigator(context, ProxySetting(proxyServer: proxyServer))),
+              const MobileThemeSetting(),
+              Platform.isIOS
+                  ? const SizedBox()
+                  : ListTile(
+                      title: const Text("窗口模式"),
+                      subtitle: const Text("开启抓包后 如果应用退回到后台，显示一个小窗口", style: TextStyle(fontSize: 12)),
+                      trailing: SwitchWidget(
+                          value: proxyServer.configuration.smallWindow,
+                          onChanged: (value) {
+                            proxyServer.configuration.smallWindow = value;
+                            proxyServer.configuration.flushConfig();
+                          })),
+            ])));
+  }
+}
+
+///抓包过滤菜单
+class FilterMenu extends StatelessWidget {
+  final ProxyServer proxyServer;
+
+  const FilterMenu({super.key, required this.proxyServer});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(title: const Text("过滤", style: TextStyle(fontSize: 16)), centerTitle: true),
+        body: Padding(
+            padding: const EdgeInsets.all(5),
+            child: ListView(children: [
+              ListTile(
+                  title: const Text("域名白名单"),
+                  trailing: const Icon(Icons.arrow_right),
+                  onTap: () => navigator(context,
+                      MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.whitelist))),
+              ListTile(
+                  title: const Text("域名黑名单"),
+                  trailing: const Icon(Icons.arrow_right),
+                  onTap: () => navigator(context,
+                      MobileFilterWidget(configuration: proxyServer.configuration, hostList: HostFilter.blacklist))),
+              Platform.isIOS
+                  ? const SizedBox()
+                  : ListTile(
+                      title: const Text("应用白名单"),
+                      trailing: const Icon(Icons.arrow_right),
+                      onTap: () => navigator(context, AppWhitelist(proxyServer: proxyServer))),
+            ])));
   }
 }
 
 /// +号菜单
-class MoreEnum extends StatelessWidget {
+class MoreMenu extends StatelessWidget {
   final ProxyServer proxyServer;
   final ValueNotifier<RemoteModel> desktop;
 
-  const MoreEnum({super.key, required this.proxyServer, required this.desktop});
+  const MoreMenu({super.key, required this.proxyServer, required this.desktop});
 
   @override
   Widget build(BuildContext context) {
@@ -262,9 +312,7 @@ class MoreEnum extends StatelessWidget {
   }
 }
 
-/**
- * 关于
- */
+/// 关于
 class About extends StatelessWidget {
   const About({super.key});
 

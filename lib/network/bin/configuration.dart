@@ -45,6 +45,9 @@ class Configuration {
   //白名单应用
   List<String> appWhitelist = [];
 
+  /// 是否启用小窗口
+  bool smallWindow = false;
+
   //远程连接 不持久化保存
   String? remoteHost;
 
@@ -79,6 +82,7 @@ class Configuration {
     appWhitelist = List<String>.from(config['appWhitelist'] ?? []);
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
+    smallWindow = config['smallWindow'] ?? Platform.isAndroid;
   }
 
   /// 配置文件
@@ -126,6 +130,7 @@ class Configuration {
       'appWhitelist': appWhitelist,
       'whitelist': HostFilter.whitelist.toJson(),
       'blacklist': HostFilter.blacklist.toJson(),
+      'smallWindow': smallWindow,
     };
   }
 }

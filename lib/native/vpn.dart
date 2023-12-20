@@ -20,4 +20,8 @@ class Vpn {
     proxyVpnChannel.invokeMethod("restartVpn", {"proxyHost": host, "proxyPort": port, "allowApps": appList});
     isVpnStarted = true;
   }
+
+  static Future<bool> isRunning() async {
+    return await proxyVpnChannel.invokeMethod("isRunning");
+  }
 }

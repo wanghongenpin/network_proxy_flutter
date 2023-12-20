@@ -34,7 +34,7 @@ String getPackagesSize(HttpRequest request, HttpResponse? response) {
   if (responsePackage.isEmpty) {
     return package;
   }
-  return "$package / $package ";
+  return "$package / $responsePackage ";
 }
 
 String getPackage(HttpMessage? message) {

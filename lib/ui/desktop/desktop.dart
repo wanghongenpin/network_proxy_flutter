@@ -144,12 +144,12 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
               content: const Text(
                   '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                   '点击的HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
-                  '1. 请求重写增加 修改请求，可根据增则替换；\n'
+                  '1. 请求重写增加 修改请求，可根据正则替换；\n'
                   '2. 请求重写批量导入、导出；\n'
                   '3. 支持WebSocket抓包；\n'
                   '4. 优化curl导入；\n'
                   '5. 支持head请求，修复手机端请求重写切换应用恢复原始的请求问题；\n'
-                  '；',
+                  '',
                   style: TextStyle(fontSize: 14)));
         });
   }

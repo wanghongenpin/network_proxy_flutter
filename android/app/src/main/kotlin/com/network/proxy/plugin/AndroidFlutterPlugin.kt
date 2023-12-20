@@ -16,7 +16,7 @@ abstract class AndroidFlutterPlugin : FlutterPlugin, ActivityAware {
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        activity = binding.activity;
+        activity = binding.activity
     }
 
     override fun onDetachedFromActivityForConfigChanges() {

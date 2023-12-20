@@ -22,9 +22,8 @@ import '../../../utils/har.dart';
 
 class MobileHistory extends StatefulWidget {
   final ProxyServer proxyServer;
-  final GlobalKey<RequestListState> requestStateKey;
 
-  const MobileHistory({super.key, required this.proxyServer, required this.requestStateKey});
+  const MobileHistory({super.key, required this.proxyServer});
 
   @override
   State<StatefulWidget> createState() {
@@ -42,10 +41,10 @@ class _MobileHistoryState extends State<MobileHistory> {
     return futureWidget(HistoryStorage.instance, (data) {
       List<Widget> children = [];
 
-      var container = widget.requestStateKey.currentState?.container;
-      if (container?.isNotEmpty == true && !_sessionSaved) {
+      var container = RequestListState.container;
+      if (container.isNotEmpty == true && !_sessionSaved) {
         //当前会话未保存，是否保存当前会话
-        children.add(buildSaveSession(data, container!));
+        children.add(buildSaveSession(data, container));
       }
 
       var histories = data.histories;

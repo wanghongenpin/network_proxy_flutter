@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:network_proxy/native/pip.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
@@ -17,6 +18,7 @@ import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/request/search.dart';
+import 'package:network_proxy/ui/ui_configuration.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 class MobileHomePage extends StatefulWidget {
@@ -30,11 +32,32 @@ class MobileHomePage extends StatefulWidget {
   }
 }
 
-class MobileHomeState extends State<MobileHomePage> implements EventListener {
+class MobileHomeState extends State<MobileHomePage> with WidgetsBindingObserver implements EventListener {
   final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
 
   late ProxyServer proxyServer;
   ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print("didChangeAppLifecycleState $state");
+
+    if (state == AppLifecycleState.inactive && Vpn.isVpnStarted) {
+      if (desktop.value.connect || !Platform.isAndroid || !widget.configuration.smallWindow) {
+        return;
+      }
+
+      PictureInPicture.enterPictureInPictureMode().then((value) => pictureInPictureNotifier.value = value);
+    }
+
+    if (state == AppLifecycleState.resumed && pictureInPictureNotifier.value) {
+      Vpn.isRunning().then((value) {
+        Vpn.isVpnStarted = value;
+        print("isRunning $value");
+        pictureInPictureNotifier.value = false;
+      });
+    }
+  }
 
   @override
   void onRequest(Channel channel, HttpRequest request) {
@@ -56,6 +79,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
 
   @override
   void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
     proxyServer = ProxyServer(widget.configuration);
     proxyServer.addListener(this);
     proxyServer.start();
@@ -70,7 +95,6 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
       }
     });
 
-    super.initState();
     if (widget.configuration.upgradeNoticeV6) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
@@ -81,49 +105,59 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener {
   @override
   void dispose() {
     desktop.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          title: MobileSearch(onSearch: (val) {
-            requestStateKey.currentState?.search(val);
-          }),
-          actions: [
-            IconButton(
-                tooltip: "清理",
-                icon: const Icon(Icons.cleaning_services_outlined),
-                onPressed: () => requestStateKey.currentState?.clean()),
-            const SizedBox(width: 2),
-            MoreEnum(proxyServer: proxyServer, desktop: desktop),
-            const SizedBox(width: 10)
-          ]),
-      drawer: DrawerWidget(proxyServer: proxyServer, requestStateKey: requestStateKey),
-      floatingActionButton: FloatingActionButton(
-        onPressed: null,
-        child: Center(
-            child: futureWidget(
-                localIp(),
-                (data) => SocketLaunch(
+    return ValueListenableBuilder<bool>(
+        valueListenable: pictureInPictureNotifier,
+        builder: (context, pip, _) {
+          if (pip) {
+            return Scaffold(body: RequestListWidget(key: requestStateKey, proxyServer: proxyServer));
+          }
+
+          return Scaffold(
+            appBar: AppBar(
+                title: MobileSearch(onSearch: (val) {
+                  requestStateKey.currentState?.search(val);
+                }),
+                actions: [
+                  IconButton(
+                      tooltip: "清理",
+                      icon: const Icon(Icons.cleaning_services_outlined),
+                      onPressed: () => requestStateKey.currentState?.clean()),
+                  const SizedBox(width: 2),
+                  MoreMenu(proxyServer: proxyServer, desktop: desktop),
+                  const SizedBox(width: 10)
+                ]),
+            drawer: DrawerWidget(proxyServer: proxyServer),
+            floatingActionButton: FloatingActionButton(
+              onPressed: null,
+              child: Center(
+                  child: futureWidget(localIp(), (data) {
+                SocketLaunch.started = Vpn.isVpnStarted;
+                return SocketLaunch(
                     proxyServer: proxyServer,
                     size: 36,
                     startup: false,
                     serverLaunch: false,
                     onStart: () => Vpn.startVpn(Platform.isAndroid ? data : "127.0.0.1", proxyServer.port,
                         proxyServer.configuration.appWhitelist),
-                    onStop: () => Vpn.stopVpn()))),
-      ),
-      body: ValueListenableBuilder(
-          valueListenable: desktop,
-          builder: (context, value, _) {
-            return Column(children: [
-              value.connect ? remoteConnect(value) : const SizedBox(),
-              Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
-            ]);
-          }),
-    );
+                    onStop: () => Vpn.stopVpn());
+              })),
+            ),
+            body: ValueListenableBuilder(
+                valueListenable: desktop,
+                builder: (context, value, _) {
+                  return Column(children: [
+                    value.connect ? remoteConnect(value) : const SizedBox(),
+                    Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
+                  ]);
+                }),
+          );
+        });
   }
 
   showUpgradeNotice() {

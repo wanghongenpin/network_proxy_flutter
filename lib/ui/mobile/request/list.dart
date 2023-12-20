@@ -6,11 +6,12 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
+import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
+import 'package:network_proxy/ui/ui_configuration.dart';
 
 class RequestListWidget extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -34,7 +35,7 @@ class RequestListState extends State<RequestListWidget> {
   final GlobalKey<DomainListState> domainListKey = GlobalKey<DomainListState>();
 
   //请求列表容器
-  List<HttpRequest> container = [];
+  static List<HttpRequest> container = [];
 
   @override
   void initState() {
@@ -45,12 +46,24 @@ class RequestListState extends State<RequestListWidget> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    if (pictureInPictureNotifier.value) {
+      if (container.isEmpty) {
+        return const Center(child: Text("暂无请求", style: TextStyle(color: Colors.grey)));
+      }
+
+      return ListView.separated(
+          padding: const EdgeInsets.only(left: 2),
+          itemCount: container.length,
+          separatorBuilder: (context, index) => const Divider(thickness: 0.2, height: 0.5),
+          itemBuilder: (context, index) {
+            return Text.rich(
+                overflow: TextOverflow.ellipsis,
+                TextSpan(text: container[container.length - index - 1].requestUrl, style: const TextStyle(fontSize: 8)),
+                maxLines: 2);
+          });
+    }
+
     return DefaultTabController(
         length: tabs.length,
         child: Scaffold(
@@ -67,6 +80,13 @@ class RequestListState extends State<RequestListWidget> {
 
   ///添加请求
   add(Channel channel, HttpRequest request) {
+    if (pictureInPictureNotifier.value) {
+      setState(() {
+        container.add(request);
+      });
+      return;
+    }
+
     container.add(request);
     requestSequenceKey.currentState?.add(request);
     domainListKey.currentState?.add(request);

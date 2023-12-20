@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:network_proxy/main.dart';
 
 class MobileThemeSetting extends StatelessWidget {
-  const MobileThemeSetting({Key? key}) : super(key: key);
+  const MobileThemeSetting({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,20 +31,31 @@ class MobileThemeSetting extends StatelessWidget {
                   themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.system);
                 }),
             PopupMenuItem(
-                child: const ListTile(trailing: Icon(Icons.nightlight_outlined), dense: true, title: Text("深色")),
-                onTap: () {
-                  themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.dark);
-                }),
-            PopupMenuItem(
                 child: const ListTile(trailing: Icon(Icons.sunny), dense: true, title: Text("浅色")),
                 onTap: () {
                   themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.light);
                 }),
+            PopupMenuItem(
+                child: const ListTile(trailing: Icon(Icons.nightlight_outlined), dense: true, title: Text("深色")),
+                onTap: () {
+                  themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.dark);
+                }),
           ];
         },
-        child: const ListTile(
-          title: Text("主题"),
-          trailing: Icon(Icons.arrow_right),
+        child: ListTile(
+          title: const Text("主题"),
+          trailing: getIcon(),
         ));
+  }
+
+  Icon getIcon() {
+    switch (themeNotifier.value.mode) {
+      case ThemeMode.system:
+        return const Icon(Icons.cached);
+      case ThemeMode.dark:
+        return const Icon(Icons.nightlight_outlined);
+      case ThemeMode.light:
+        return const Icon(Icons.sunny);
+    }
   }
 }

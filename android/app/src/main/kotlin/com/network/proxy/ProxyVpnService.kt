@@ -4,18 +4,21 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.net.ProxyInfo
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
+import com.network.proxy.vpn.socket.ProtectSocket
+import com.network.proxy.vpn.socket.ProtectSocketHolder
 
 /**
  * VPN服务
  * @author wanghongen
  */
-class ProxyVpnService : VpnService() {
+class ProxyVpnService : VpnService(), ProtectSocket {
     private var vpnInterface: ParcelFileDescriptor? = null
 
     companion object {
@@ -35,6 +38,27 @@ class ProxyVpnService : VpnService() {
          */
         private const val NOTIFICATION_ID = 9527
         const val VPN_NOTIFICATION_CHANNEL_ID = "vpn-notifications"
+
+        var isRunning = false
+
+        fun stopVpnIntent(context: Context): Intent {
+            return Intent(context, ProxyVpnService::class.java).also {
+                it.action = ACTION_DISCONNECT
+            }
+        }
+
+        fun startVpnIntent(
+            context: Context,
+            proxyHost: String? = null,
+            proxyPort: Int? = null,
+            allowApps: ArrayList<String>? = null
+        ): Intent {
+            return Intent(context, ProxyVpnService::class.java).also {
+                it.putExtra(ProxyHost, proxyHost)
+                it.putExtra(ProxyPort, proxyPort)
+                it.putStringArrayListExtra(AllowApps, allowApps)
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -42,14 +66,15 @@ class ProxyVpnService : VpnService() {
         disconnect()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return if (intent?.action == ACTION_DISCONNECT) {
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        return if (intent.action == ACTION_DISCONNECT) {
             disconnect()
             START_NOT_STICKY
         } else {
             connect(
-                intent?.getStringExtra(ProxyHost)!!, intent.getIntExtra(ProxyPort, 0),
-                intent.getStringArrayListExtra(AllowApps)
+                intent.getStringExtra(ProxyHost) ?: this.host!!,
+                intent.getIntExtra(ProxyPort, this.port),
+                intent.getStringArrayListExtra(AllowApps) ?: this.allowApps
             )
             START_STICKY
         }
@@ -61,9 +86,13 @@ class ProxyVpnService : VpnService() {
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
         vpnInterface = null
+        isRunning = false
     }
 
     private fun connect(proxyHost: String, proxyPort: Int, allowPackages: List<String>?) {
+        this.host = proxyHost
+        this.port = proxyPort
+        this.allowApps = allowPackages
         vpnInterface = createVpnInterface(proxyHost, proxyPort, allowPackages)
         if (vpnInterface == null) {
             val alertDialog = Intent(applicationContext, VpnAlertDialog::class.java)
@@ -72,7 +101,10 @@ class ProxyVpnService : VpnService() {
             startActivity(alertDialog)
             return
         }
+
+        ProtectSocketHolder.setProtectSocket(this)
         showServiceNotification()
+        isRunning = true
     }
 
     private fun showServiceNotification() {
@@ -110,6 +142,7 @@ class ProxyVpnService : VpnService() {
             .addAddress("10.0.0.2", 32)
             .addRoute("0.0.0.0", 0)
             .setSession(baseContext.applicationInfo.name)
+            .setBlocking(true)
 
         val packages = allowPackages?.filter { it != baseContext.packageName }
         if (packages?.isNotEmpty() == true) {
@@ -119,6 +152,15 @@ class ProxyVpnService : VpnService() {
         } else {
             build.addDisallowedApplication(baseContext.packageName)
         }
+
+        build.setConfigureIntent(
+            PendingIntent.getActivity(
+                this,
+                0,
+                Intent(this, MainActivity::class.java),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+        )
 
         return build.apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

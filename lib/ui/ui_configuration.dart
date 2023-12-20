@@ -6,6 +6,9 @@ import 'package:network_proxy/main.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:path_provider/path_provider.dart';
 
+///画中画
+ ValueNotifier<bool> pictureInPictureNotifier = ValueNotifier(false);
+
 class UIConfiguration {
   ThemeModel theme = ThemeModel();
 
