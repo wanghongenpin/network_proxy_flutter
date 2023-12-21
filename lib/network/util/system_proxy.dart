@@ -96,7 +96,7 @@ class SystemProxy {
   ///设置系统代理
   Future<void> _setSystemProxy(int port, bool sslSetting, String proxyPassDomains) async {
     ProxyManager manager = ProxyManager();
-    await manager.setAsSystemProxy(ProxyTypes.https, "127.0.0.1", port);
+    await manager.setAsSystemProxy(sslSetting ? ProxyTypes.https : ProxyTypes.http, "127.0.0.1", port);
     setProxyPassDomains(proxyPassDomains);
   }
 
@@ -270,6 +270,16 @@ class WindowsSystemProxy extends SystemProxy {
 }
 
 class LinuxSystemProxy extends SystemProxy {
+  @override
+  Future<void> _setSystemProxy(int port, bool sslSetting, String proxyPassDomains) async {
+    ProxyManager manager = ProxyManager();
+
+    await manager.setAsSystemProxy(ProxyTypes.http, "127.0.0.1", port);
+    if (sslSetting) await manager.setAsSystemProxy(ProxyTypes.https, "127.0.0.1", port);
+
+    SystemProxy.setProxyPassDomains(proxyPassDomains);
+  }
+
   ///linux 获取代理
   @override
   Future<ProxyInfo?> _getSystemProxy(ProxyTypes types) async {

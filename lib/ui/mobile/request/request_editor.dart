@@ -32,6 +32,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
 
   final requestLineKey = GlobalKey<_RequestLineState>();
   final requestKey = GlobalKey<_HttpState>();
+  final responseKey = GlobalKey<_HttpState>();
 
   ValueNotifier responseChange = ValueNotifier<bool>(false);
 
@@ -76,6 +77,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
                   try {
                     setState(() {
                       request = parseCurl(text!);
+                      requestKey.currentState?.change(request!);
                       requestLineKey.currentState?.change(request?.uri, request?.method.name);
                     });
                   } catch (e) {
@@ -107,6 +109,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
             ValueListenableBuilder(
                 valueListenable: responseChange,
                 builder: (_, value, __) => _HttpWidget(
+                    key: responseKey,
                     title: Row(children: [
                       const Text('状态码：', style: TextStyle(fontWeight: FontWeight.w500)),
                       const SizedBox(width: 10),
@@ -135,8 +138,9 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
       FlutterToastr.show('请求成功', context);
       this.response = response;
       this.response?.request = request;
-      tabController.animateTo(1);
       responseChange.value = !responseChange.value;
+      responseKey.currentState?.change(response);
+      tabController.animateTo(1);
     }).catchError((e) {
       FlutterToastr.show('请求失败$e', context);
     });
@@ -158,6 +162,7 @@ class _HttpWidget extends StatefulWidget {
 
 class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
   final headerKey = GlobalKey<HeadersState>();
+  HttpMessage? message;
   String? body;
 
   @override
@@ -170,7 +175,15 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
+    message = widget.message;
     body = widget.message?.bodyAsString;
+    print("_HttpWidget initState");
+  }
+
+  change(HttpMessage message) {
+    this.message = message;
+    body = message.bodyAsString;
+    headerKey.currentState?.refreshHeader(message.headers);
   }
 
   HttpHeaders? getHeaders() {
@@ -181,19 +194,15 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
 
-    if (widget.message == null && widget.readOnly) {
+    if (message == null && widget.readOnly) {
       return const Center(child: Text("无数据"));
-    }
-    if (widget.readOnly) {
-      body = widget.message?.bodyAsString;
-      headerKey.currentState?.refreshHeader(widget.message?.headers);
     }
 
     return SingleChildScrollView(
         padding: const EdgeInsets.all(15),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           widget.title,
-          Headers(headers: widget.message?.headers, key: headerKey, readOnly: widget.readOnly), // 请求头
+          Headers(headers: message?.headers, key: headerKey, readOnly: widget.readOnly), // 请求头
           const SizedBox(height: 10),
           const Text("Body", style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue)),
           _body(),
@@ -203,7 +212,7 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
 
   Widget _body() {
     if (widget.readOnly) {
-      return SingleChildScrollView(child: HttpBodyWidget(httpMessage: widget.message));
+      return SingleChildScrollView(child: HttpBodyWidget(httpMessage: message));
     }
 
     return TextField(
