@@ -382,7 +382,7 @@ class _ScriptListState extends State<ScriptList> {
               Container(color: Theme.of(context).hoverColor, height: 8),
               TextButton(
                 child: Container(
-                    height: 42,
+                    height: 50,
                     width: double.infinity,
                     padding: const EdgeInsets.only(top: 10),
                     child: const Text("取消", textAlign: TextAlign.center)),

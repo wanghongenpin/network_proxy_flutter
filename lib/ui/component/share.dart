@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
@@ -41,7 +40,7 @@ class ShareWidget extends StatelessWidget {
                     FlutterToastr.show("请求为空", context);
                     return;
                   }
-                  var file = XFile.fromData(Uint8List.fromList(utf8.encode(copyRequest(request!, response))),
+                  var file = XFile.fromData(utf8.encode(copyRequest(request!, response)),
                       name: "抓包详情", mimeType: "txt");
                   Share.shareXFiles([file], text: "ProxyPin全平台抓包软件");
                 }),
@@ -51,7 +50,7 @@ class ShareWidget extends StatelessWidget {
                   if (request == null) {
                     return;
                   }
-                  var file = XFile.fromData(Uint8List.fromList(utf8.encode(curlRequest(request!))),
+                  var file = XFile.fromData(utf8.encode(curlRequest(request!)),
                       name: "cURL.txt", mimeType: "txt");
                   Share.shareXFiles([file], text: "ProxyPin全平台抓包软件");
                 }),

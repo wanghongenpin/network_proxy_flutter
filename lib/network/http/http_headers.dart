@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 /*
  * Copyright 2023 the original author or authors.
  *

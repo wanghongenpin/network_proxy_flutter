@@ -69,7 +69,7 @@ class _FavoriteItem extends StatefulWidget {
   final ProxyServer proxyServer;
   final Function(Favorite favorite)? onRemove;
 
-  const _FavoriteItem(this.favorite, {super.key, required this.onRemove, required this.proxyServer, required this.index});
+  const _FavoriteItem(this.favorite, {required this.onRemove, required this.proxyServer, required this.index});
 
   @override
   State<_FavoriteItem> createState() => _FavoriteItemState();
@@ -155,7 +155,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           Container(color: Theme.of(context).hoverColor, height: 8),
           TextButton(
             child: Container(
-                height: 55,
+                height: 50,
                 width: double.infinity,
                 padding: const EdgeInsets.only(top: 10),
                 child: const Text("取消", textAlign: TextAlign.center)),
