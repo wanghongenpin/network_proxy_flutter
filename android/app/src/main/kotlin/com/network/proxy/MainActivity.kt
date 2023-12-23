@@ -2,7 +2,6 @@ package com.network.proxy
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.net.VpnService
 import android.os.Bundle
 import com.network.proxy.plugin.AppLifecyclePlugin
 import com.network.proxy.plugin.PictureInPicturePlugin
@@ -16,7 +15,6 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        prepareVpn()
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -46,18 +44,20 @@ class MainActivity : FlutterActivity() {
         flutterEngine.plugins.add(lifecycleChannel)
     }
 
-    /**
-     * 准备vpn<br>
-     * 设备可能弹出连接vpn提示
-     */
-    private fun prepareVpn() {
-        val intent = VpnService.prepare(this@MainActivity)
-        if (intent != null) {
-            startActivityForResult(intent, VpnServicePlugin.REQUEST_CODE)
-        }
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == VpnServicePlugin.REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                activity.startService(ProxyVpnService.startVpnIntent(activity))
+                return
+            }
+
+            val alertDialog = Intent(applicationContext, VpnAlertDialog::class.java)
+                .setAction("com.network.proxy.ProxyVpnService")
+            alertDialog.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(alertDialog)
+            return
+        }
+
         super.onActivityResult(requestCode, resultCode, data)
     }
 

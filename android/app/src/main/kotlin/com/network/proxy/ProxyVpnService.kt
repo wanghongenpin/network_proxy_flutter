@@ -10,6 +10,7 @@ import android.net.ProxyInfo
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.network.proxy.vpn.socket.ProtectSocket
 import com.network.proxy.vpn.socket.ProtectSocketHolder
@@ -20,10 +21,6 @@ import com.network.proxy.vpn.socket.ProtectSocketHolder
  */
 class ProxyVpnService : VpnService(), ProtectSocket {
     private var vpnInterface: ParcelFileDescriptor? = null
-
-    private var host: String? = null
-    private var port: Int = 0
-    private var allowApps: List<String>? = null
 
     companion object {
         const val MAX_PACKET_LEN = 1500
@@ -45,6 +42,10 @@ class ProxyVpnService : VpnService(), ProtectSocket {
 
         var isRunning = false
 
+        var host: String? = null
+        var port: Int = 0
+        var allowApps: ArrayList<String>? = null
+
         fun stopVpnIntent(context: Context): Intent {
             return Intent(context, ProxyVpnService::class.java).also {
                 it.action = ACTION_DISCONNECT
@@ -53,9 +54,9 @@ class ProxyVpnService : VpnService(), ProtectSocket {
 
         fun startVpnIntent(
             context: Context,
-            proxyHost: String? = null,
-            proxyPort: Int? = null,
-            allowApps: ArrayList<String>? = null
+            proxyHost: String? = host,
+            proxyPort: Int? = port,
+            allowApps: ArrayList<String>? = this.allowApps
         ): Intent {
             return Intent(context, ProxyVpnService::class.java).also {
                 it.putExtra(ProxyHost, proxyHost)
@@ -76,9 +77,9 @@ class ProxyVpnService : VpnService(), ProtectSocket {
             START_NOT_STICKY
         } else {
             connect(
-                intent.getStringExtra(ProxyHost) ?: this.host!!,
-                intent.getIntExtra(ProxyPort, this.port),
-                intent.getStringArrayListExtra(AllowApps) ?: this.allowApps
+                intent.getStringExtra(ProxyHost) ?: host!!,
+                intent.getIntExtra(ProxyPort, port),
+                intent.getStringArrayListExtra(AllowApps) ?: allowApps
             )
             START_STICKY
         }
@@ -93,10 +94,12 @@ class ProxyVpnService : VpnService(), ProtectSocket {
         isRunning = false
     }
 
-    private fun connect(proxyHost: String, proxyPort: Int, allowPackages: List<String>?) {
-        this.host = proxyHost
-        this.port = proxyPort
-        this.allowApps = allowPackages
+    private fun connect(proxyHost: String, proxyPort: Int, allowPackages: ArrayList<String>?) {
+        Log.i("ProxyVpnService", "startVpn $host:$port $allowApps")
+
+        host = proxyHost
+        port = proxyPort
+        allowApps = allowPackages
         vpnInterface = createVpnInterface(proxyHost, proxyPort, allowPackages)
         if (vpnInterface == null) {
             val alertDialog = Intent(applicationContext, VpnAlertDialog::class.java)

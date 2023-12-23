@@ -31,8 +31,7 @@ class _AppWhitelistState extends State<AppWhitelist> {
   @override
   void dispose() {
     if (changed && widget.proxyServer.isRunning) {
-      Vpn.stopVpn();
-      Vpn.startVpn("127.0.0.1", widget.proxyServer.port, configuration.appWhitelist);
+      Vpn.restartVpn("127.0.0.1", widget.proxyServer.port, configuration.appWhitelist);
       configuration.flushConfig();
     }
     super.dispose();
