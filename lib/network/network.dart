@@ -112,9 +112,11 @@ class Network {
             host: hostAndPort?.host, onBadCertificate: (certificate) => true);
       }
 
-      // var selectedProtocol = remoteChannel?.selectedProtocol;
       //ssl自签证书
       var certificate = await CertificateManager.getCertificateContext(hostAndPort!.host);
+      // var selectedProtocol = remoteChannel?.selectedProtocol;
+      // if (selectedProtocol != null) certificate.setAlpnProtocols([selectedProtocol], true);
+
       //服务端等待客户端ssl握手
       channel.secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
     } catch (error, trace) {

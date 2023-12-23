@@ -27,6 +27,7 @@ class VpnServicePlugin : AndroidFlutterPlugin() {
 
                 "stopVpn" -> {
                     stopVpn()
+                    result.success(null)
                 }
 
                 "restartVpn" -> {

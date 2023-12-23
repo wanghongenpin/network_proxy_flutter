@@ -21,15 +21,21 @@ import androidx.core.content.ContextCompat
  */
 class PictureInPicturePlugin : AndroidFlutterPlugin() {
     private var registerBroadcast = false
+    var channel: MethodChannel? = null
 
     ///广播事件接受者
     private val vpnBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.d("com.network.proxy", "onReceive ${intent?.action}")
 
-            if (context == null || intent?.action != VPN_ACTION) {
+            if (context == null || (intent?.action != VPN_ACTION && intent?.action != CLEAN_ACTION)) {
                 return
             }
+            if (intent.action == CLEAN_ACTION) {
+                channel?.invokeMethod("cleanSession", null)
+                return
+            }
+
             val isRunning = ProxyVpnService.isRunning
 
             if (isRunning) {
@@ -48,11 +54,12 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
     companion object {
         const val CHANNEL = "com.proxy/pictureInPicture"
         const val VPN_ACTION = "VPN_ACTION"
+        const val CLEAN_ACTION = "CLEAN_ACTION"
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        val channel = MethodChannel(binding.binaryMessenger, CHANNEL)
-        channel.setMethodCallHandler { call, result ->
+        channel = MethodChannel(binding.binaryMessenger, CHANNEL)
+        channel!!.setMethodCallHandler { call, result ->
             when (call.method) {
                 "enterPictureInPictureMode" -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -63,7 +70,10 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
                             ContextCompat.registerReceiver(
                                 activity,
                                 vpnBroadcastReceiver,
-                                IntentFilter(VPN_ACTION),
+                                IntentFilter().apply {
+                                    addAction(VPN_ACTION)
+                                    addAction(CLEAN_ACTION)
+                                },
                                 ContextCompat.RECEIVER_NOT_EXPORTED
                             )
                         }
@@ -84,9 +94,9 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
 
         val params = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             PictureInPictureParams.Builder()
-                .setAspectRatio(Rational(8, 19))
+                .setAspectRatio(Rational(9, 19))
                 .apply {
-                    setActions(listOf(action(isRunning)))   //vpn服务运行中，显示停止按钮
+                    setActions(actions(isRunning))   //vpn服务运行中，显示停止按钮
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         setSeamlessResizeEnabled(false)
                     }
@@ -100,7 +110,7 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
     }
 
     //停止vpn服务 RemoteAction
-    private fun action(isRunning: Boolean): RemoteAction {
+    private fun actions(isRunning: Boolean): List<RemoteAction> {
         val pIntent: PendingIntent = PendingIntent.getBroadcast(
             activity,
             if (isRunning) 0 else 1,
@@ -108,13 +118,28 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val cleanIntent: PendingIntent = PendingIntent.getBroadcast(
+            activity,
+            2,
+            Intent(CLEAN_ACTION),
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
         //vpn服务运行中，显示停止按钮
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            return RemoteAction(
-                Icon.createWithResource(
-                    this@PictureInPicturePlugin.activity,
-                    if (isRunning) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
-                ), "Proxy", "Proxy", pIntent
+            return listOf(
+                RemoteAction(
+                    Icon.createWithResource(
+                        this@PictureInPicturePlugin.activity,
+                        if (isRunning) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+                    ), "Proxy", "Proxy", pIntent
+                ),
+                RemoteAction(
+                    Icon.createWithResource(
+                        this@PictureInPicturePlugin.activity,
+                        android.R.drawable.ic_menu_delete
+                    ), "Clean", "Clean", cleanIntent
+                )
             )
         } else {
             throw RuntimeException("action error")

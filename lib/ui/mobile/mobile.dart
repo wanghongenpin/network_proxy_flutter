@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/native/app_lifecycle.dart';
 import 'package:network_proxy/native/pip.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
@@ -32,23 +35,34 @@ class MobileHomePage extends StatefulWidget {
   }
 }
 
-class MobileHomeState extends State<MobileHomePage> with WidgetsBindingObserver implements EventListener {
-  final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
+class MobileHomeState extends State<MobileHomePage> implements EventListener, LifecycleListener {
+  static final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
 
   late ProxyServer proxyServer;
   ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive && Vpn.isVpnStarted) {
+  void onUserLeaveHint() {
+    if (Vpn.isVpnStarted && !pictureInPictureNotifier.value) {
       if (desktop.value.connect || !Platform.isAndroid || !widget.configuration.smallWindow) {
         return;
       }
 
-      PictureInPicture.enterPictureInPictureMode().then((value) => pictureInPictureNotifier.value = value);
+      PictureInPicture.enterPictureInPictureMode();
+    }
+  }
+
+  @override
+  onPictureInPictureModeChanged(bool isInPictureInPictureMode) {
+    if (isInPictureInPictureMode && !pictureInPictureNotifier.value) {
+      while (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+      pictureInPictureNotifier.value = true;
+      return;
     }
 
-    if (state == AppLifecycleState.resumed && pictureInPictureNotifier.value) {
+    if (!isInPictureInPictureMode && pictureInPictureNotifier.value) {
       Vpn.isRunning().then((value) {
         Vpn.isVpnStarted = value;
         pictureInPictureNotifier.value = false;
@@ -77,7 +91,7 @@ class MobileHomeState extends State<MobileHomePage> with WidgetsBindingObserver 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    AppLifecycleBinding.instance.addListener(this);
     proxyServer = ProxyServer(widget.configuration);
     proxyServer.addListener(this);
     proxyServer.start();
@@ -102,59 +116,77 @@ class MobileHomeState extends State<MobileHomePage> with WidgetsBindingObserver 
   @override
   void dispose() {
     desktop.dispose();
-    WidgetsBinding.instance.removeObserver(this);
+    AppLifecycleBinding.instance.removeListener(this);
     super.dispose();
   }
 
+  int exitTime = 0;
+
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-        valueListenable: pictureInPictureNotifier,
-        builder: (context, pip, _) {
-          if (pip) {
-            return Scaffold(body: RequestListWidget(key: requestStateKey, proxyServer: proxyServer));
+    return PopScope(
+        canPop: false,
+        onPopInvoked: (d) {
+          if (DateTime.now().millisecondsSinceEpoch - exitTime > 2000) {
+            exitTime = DateTime.now().millisecondsSinceEpoch;
+            FlutterToastr.show("再按一次退出程序", context, rootNavigator: true, duration: FlutterToastr.lengthLong);
+            return;
           }
 
-          return Scaffold(
-            appBar: AppBar(
-                title: MobileSearch(onSearch: (val) {
-                  requestStateKey.currentState?.search(val);
-                }),
-                actions: [
-                  IconButton(
-                      tooltip: "清理",
-                      icon: const Icon(Icons.cleaning_services_outlined),
-                      onPressed: () => requestStateKey.currentState?.clean()),
-                  const SizedBox(width: 2),
-                  MoreMenu(proxyServer: proxyServer, desktop: desktop),
-                  const SizedBox(width: 10)
-                ]),
-            drawer: DrawerWidget(proxyServer: proxyServer),
-            floatingActionButton: FloatingActionButton(
-              onPressed: null,
-              child: Center(
-                  child: futureWidget(localIp(), (data) {
-                SocketLaunch.started = Vpn.isVpnStarted;
-                return SocketLaunch(
-                    proxyServer: proxyServer,
-                    size: 36,
-                    startup: false,
-                    serverLaunch: false,
-                    onStart: () => Vpn.startVpn(Platform.isAndroid ? data : "127.0.0.1", proxyServer.port,
-                        proxyServer.configuration.appWhitelist),
-                    onStop: () => Vpn.stopVpn());
-              })),
-            ),
-            body: ValueListenableBuilder(
-                valueListenable: desktop,
-                builder: (context, value, _) {
-                  return Column(children: [
-                    value.connect ? remoteConnect(value) : const SizedBox(),
-                    Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
-                  ]);
-                }),
-          );
-        });
+          //退出程序
+          SystemNavigator.pop();
+        },
+        child: ValueListenableBuilder<bool>(
+            valueListenable: pictureInPictureNotifier,
+            builder: (context, pip, _) {
+              if (pip) {
+                return Scaffold(body: RequestListWidget(key: requestStateKey, proxyServer: proxyServer));
+              }
+
+              return Scaffold(
+                appBar: appBar(),
+                drawer: DrawerWidget(proxyServer: proxyServer),
+                floatingActionButton: _floatingActionButton(),
+                body: ValueListenableBuilder(
+                    valueListenable: desktop,
+                    builder: (context, value, _) {
+                      return Column(children: [
+                        value.connect ? remoteConnect(value) : const SizedBox(),
+                        Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
+                      ]);
+                    }),
+              );
+            }));
+  }
+
+  AppBar appBar() {
+    return AppBar(title: MobileSearch(onSearch: (val) => requestStateKey.currentState?.search(val)), actions: [
+      IconButton(
+          tooltip: "清理",
+          icon: const Icon(Icons.cleaning_services_outlined),
+          onPressed: () => requestStateKey.currentState?.clean()),
+      const SizedBox(width: 2),
+      MoreMenu(proxyServer: proxyServer, desktop: desktop),
+      const SizedBox(width: 10)
+    ]);
+  }
+
+  FloatingActionButton _floatingActionButton() {
+    return FloatingActionButton(
+      onPressed: null,
+      child: Center(
+          child: futureWidget(localIp(), (data) {
+        SocketLaunch.started = Vpn.isVpnStarted;
+        return SocketLaunch(
+            proxyServer: proxyServer,
+            size: 36,
+            startup: false,
+            serverLaunch: false,
+            onStart: () => Vpn.startVpn(
+                Platform.isAndroid ? data : "127.0.0.1", proxyServer.port, proxyServer.configuration.appWhitelist),
+            onStop: () => Vpn.stopVpn());
+      })),
+    );
   }
 
   showUpgradeNotice() {

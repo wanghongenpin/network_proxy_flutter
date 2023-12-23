@@ -12,6 +12,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
 import 'package:network_proxy/ui/ui_configuration.dart';
+import 'package:network_proxy/utils/lang.dart';
 
 class RequestListWidget extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -55,11 +56,13 @@ class RequestListState extends State<RequestListWidget> {
       return ListView.separated(
           padding: const EdgeInsets.only(left: 2),
           itemCount: container.length,
-          separatorBuilder: (context, index) => const Divider(thickness: 0.2, height: 0.5),
+          separatorBuilder: (context, index) => const Divider(thickness: 0.3, height: 0.5),
           itemBuilder: (context, index) {
             return Text.rich(
                 overflow: TextOverflow.ellipsis,
-                TextSpan(text: container[container.length - index - 1].requestUrl, style: const TextStyle(fontSize: 8)),
+                TextSpan(
+                    text: container[container.length - index - 1].requestUrl.fixAutoLines(),
+                    style: const TextStyle(fontSize: 9)),
                 maxLines: 2);
           });
     }

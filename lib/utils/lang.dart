@@ -1,4 +1,5 @@
 import 'package:date_format/date_format.dart';
+import 'package:flutter/material.dart';
 
 extension ListFirstWhere<T> on Iterable<T> {
   T? firstWhereOrNull(bool Function(T) test) {
@@ -49,6 +50,21 @@ class Strings {
       return str.substring(1, str.length - 1);
     }
     return str;
+  }
+
+  ///防止文字自动换行
+  static String autoLineString(String str) {
+    return str.fixAutoLines();
+  }
+}
+
+/// 防止文字自动换行
+/// 当中英文混合，或者中文与数字或者特殊符号，或则英文单词时，文本会被自动换行，
+/// 这样会导致，换行时上一行可能会留很大的空白区域
+/// 把每个字符插入一个0宽的字符， \u{200B}
+extension FixAutoLines on String {
+  String fixAutoLines() {
+    return Characters(this).join('\u{200B}');
   }
 }
 

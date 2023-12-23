@@ -11,6 +11,7 @@ import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/curl.dart';
+import 'package:network_proxy/utils/lang.dart';
 
 ///请求行
 class RequestRow extends StatefulWidget {
@@ -53,7 +54,7 @@ class RequestRowState extends State<RequestRow> {
 
   @override
   Widget build(BuildContext context) {
-    var title = '${request.method.name} ${widget.displayDomain ? request.requestUrl : request.path()}';
+    var title = Strings.autoLineString('${request.method.name} ${widget.displayDomain ? request.requestUrl : request.path()}');
 
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
     var contentType = response?.contentType.name.toUpperCase() ?? '';

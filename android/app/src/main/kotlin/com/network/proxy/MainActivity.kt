@@ -1,7 +1,7 @@
 package com.network.proxy
 
-import android.app.PictureInPictureParams
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.VpnService
 import android.os.Bundle
 import com.network.proxy.plugin.AppLifecyclePlugin
@@ -29,9 +29,12 @@ class MainActivity : FlutterActivity() {
         lifecycleChannel.onUserLeaveHint()
     }
 
-    override fun onResume() {
-        super.onResume()
-        lifecycleChannel.onResume()
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration?
+    ) {
+        lifecycleChannel.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
     }
 
     /**
@@ -56,6 +59,11 @@ class MainActivity : FlutterActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onDestroy() {
+        activity.startService(ProxyVpnService.stopVpnIntent(activity))
+        super.onDestroy()
     }
 
 }

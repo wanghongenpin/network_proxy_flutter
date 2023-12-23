@@ -19,8 +19,8 @@ class AppLifecyclePlugin : AndroidFlutterPlugin() {
         channel?.invokeMethod("onUserLeaveHint", null)
     }
 
-    fun onResume() {
-        channel?.invokeMethod("onResume", null)
+    fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        channel?.invokeMethod("onPictureInPictureModeChanged", isInPictureInPictureMode)
     }
 
 }
