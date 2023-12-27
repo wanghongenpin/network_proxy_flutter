@@ -247,11 +247,14 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     var headers = <Widget>[];
     message?.headers.forEach((name, values) {
       for (var v in values) {
-        headers.add(Row(children: [
-          Text('$name: ',
+        headers.add(SelectionArea(
+            child: Row(children: [
+          SelectableText('$name: ',
+              contextMenuBuilder: contextMenu,
               style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent, fontSize: 14)),
-          Expanded(child: Text(v, style: textStyle, maxLines: 8)),
-        ]));
+          Expanded(
+              child: SelectableText(v, style: textStyle, contextMenuBuilder: contextMenu, maxLines: 8, minLines: 1)),
+        ])));
         headers.add(const Divider(thickness: 0.1));
       }
     });

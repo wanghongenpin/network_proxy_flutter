@@ -29,36 +29,39 @@ class HttpHeaders {
   final LinkedHashMap<String, List<String>> _headers = LinkedHashMap<String, List<String>>();
 
   // 由小写标头名称键入的原始标头名称。
-  final Map<String, List<String>> _originalHeaderNames = {};
+  final Map<String, String> _originalHeaderNames = {};
 
   HttpHeaders();
 
   ///设置header。
   void set(String name, String value) {
-    _headers[name.toLowerCase()] = [value];
-    _originalHeaderNames[name] = [value];
+    var original = _originalHeaderNames[name.toLowerCase()];
+    if (original != null && original != name) {
+      _headers.remove(original);
+    }
+
+    _headers[name] = [value];
+    _originalHeaderNames[name.toLowerCase()] = name;
   }
 
   ///添加header。
   void add(String name, String value) {
-    if (!_headers.containsKey(name.toLowerCase())) {
-      _headers[name.toLowerCase()] = [];
-      _originalHeaderNames[name] = [];
-    }
-
-    _headers[name.toLowerCase()]?.add(value);
-    _originalHeaderNames[name]?.add(value);
+    addValues(name, [value]);
   }
 
   ///添加header。
   void addValues(String name, List<String> values) {
-    if (!_headers.containsKey(name.toLowerCase())) {
-      _headers[name.toLowerCase()] = [];
-      _originalHeaderNames[name] = [];
+    var original = _originalHeaderNames[name.toLowerCase()];
+    if (original != null && original != name) {
+      var old = _headers.remove(original);
+      _headers[name] = List.from(old!);
+    }
+    if (_headers[name] == null) {
+      _headers[name] = [];
     }
 
-    _headers[name.toLowerCase()]?.addAll(values);
-    _originalHeaderNames[name]?.addAll(values);
+    _headers[name]?.addAll(values);
+    _originalHeaderNames[name.toLowerCase()] = name;
   }
 
   ///从headers中添加
@@ -71,17 +74,20 @@ class HttpHeaders {
   }
 
   String? get(String name) {
-    return _headers[name.toLowerCase()]?.first;
+    return getList(name)?.first;
   }
 
   List<String>? getList(String name) {
-    return _headers[name.toLowerCase()];
+    var originalHeaderName = _originalHeaderNames[name.toLowerCase()];
+    if (originalHeaderName == null) {
+      return null;
+    }
+    return _headers[originalHeaderName];
   }
 
   void remove(String name) {
-    _headers.remove(name.toLowerCase());
-    _originalHeaderNames.remove(name);
-    _originalHeaderNames.remove(name.toLowerCase());
+    var originalHeaderName = _originalHeaderNames.remove(name.toLowerCase());
+    _headers.remove(originalHeaderName);
   }
 
   int? getInt(String name) {
@@ -113,10 +119,10 @@ class HttpHeaders {
   String get cookie => get(Cookie) ?? "";
 
   void forEach(void Function(String name, List<String> values) f) {
-    _originalHeaderNames.forEach(f);
+    _headers.forEach(f);
   }
 
-  Iterable<MapEntry<String, List<String>>> get entries => _originalHeaderNames.entries;
+  Iterable<MapEntry<String, List<String>>> get entries => _headers.entries;
 
   set contentType(String contentType) => set(CONTENT_TYPE, contentType);
 
@@ -179,6 +185,6 @@ class HttpHeaders {
 
   @override
   String toString() {
-    return 'HttpHeaders{$_originalHeaderNames}';
+    return 'HttpHeaders{$_headers}';
   }
 }

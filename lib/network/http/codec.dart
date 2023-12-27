@@ -195,6 +195,7 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
 
     //请求头
     message.headers.remove(HttpHeaders.TRANSFER_ENCODING);
+    message.headers.remove(HttpHeaders.CONTENT_LENGTH);
     if (body != null && body.isNotEmpty) {
       message.headers.contentLength = body.length;
     }
