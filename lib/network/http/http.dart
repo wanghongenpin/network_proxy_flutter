@@ -15,6 +15,7 @@
  */
 
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/websocket.dart';
@@ -38,10 +39,11 @@ abstract class HttpMessage {
     "application/json": ContentType.json
   };
 
-  final String protocolVersion;
+  String protocolVersion;
 
   final HttpHeaders headers = HttpHeaders();
-  int contentLength = -1;
+
+  int get contentLength => headers.contentLength;
 
   //报文大小
   int? packageSize;
@@ -49,6 +51,8 @@ abstract class HttpMessage {
   List<int>? body;
   String? remoteAddress;
 
+  String requestId = (DateTime.now().millisecondsSinceEpoch + Random().nextInt(99999)).toRadixString(16);
+  int? streamId; // http2 streamId
   HttpMessage(this.protocolVersion);
 
   //json序列化
@@ -145,7 +149,6 @@ class HttpRequest extends HttpMessage {
   HttpRequest copy({String? uri}) {
     var request = HttpRequest(method, uri ?? this.uri, protocolVersion: protocolVersion);
     request.headers.addAll(headers);
-    request.contentLength = contentLength;
     request.body = body;
     return request;
   }

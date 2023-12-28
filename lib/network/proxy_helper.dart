@@ -9,15 +9,13 @@ import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/codec.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
-import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/file_read.dart';
 
 import 'components/host_filter.dart';
 
 class ProxyHelper {
-
   //请求本服务
- static localRequest(HttpRequest msg, Channel channel) async {
+  static localRequest(HttpRequest msg, Channel channel) async {
     //获取配置
     if (msg.path() == '/config') {
       final requestRewrites = await RequestRewrites.instance;
@@ -46,7 +44,7 @@ class ProxyHelper {
   }
 
   /// 下载证书
- static void crtDownload(Channel channel, HttpRequest request) async {
+  static void crtDownload(Channel channel, HttpRequest request) async {
     const String fileMimeType = 'application/x-x509-ca-cert';
     var response = HttpResponse(HttpStatus.ok);
     response.headers.set(HttpHeaders.CONTENT_TYPE, fileMimeType);
@@ -65,8 +63,9 @@ class ProxyHelper {
   }
 
   ///异常处理
- static exceptionHandler(Channel channel, EventListener? listener, HttpRequest? request, error) {
-    HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
+  static exceptionHandler(
+      ChannelContext channelContext, Channel channel, EventListener? listener, HttpRequest? request, error) {
+    HostAndPort? hostAndPort = channelContext.host;
     hostAndPort ??= HostAndPort.host(scheme: HostAndPort.httpScheme, channel.remoteAddress.host, channel.remotePort);
     String message = error.toString();
     HttpStatus status = HttpStatus(-1, message);
@@ -89,10 +88,11 @@ class ProxyHelper {
       ..headers.contentType = 'text/plain'
       ..headers.contentLength = message.codeUnits.length
       ..body = message.codeUnits;
+    request.response?.request = request;
 
-    channel.putAttribute(AttributeKeys.host, hostAndPort);
+    channelContext.host = hostAndPort;
 
     listener?.onRequest(channel, request);
-    listener?.onResponse(channel, request.response!);
+    listener?.onResponse(channelContext, request.response!);
   }
 }

@@ -8,7 +8,7 @@ import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/content/panel.dart';
-import 'package:network_proxy/ui/desktop/left/domain.dart';
+import 'package:network_proxy/ui/desktop/left/list.dart';
 import 'package:network_proxy/ui/desktop/left/favorite.dart';
 import 'package:network_proxy/ui/desktop/left/history.dart';
 import 'package:network_proxy/ui/desktop/toolbar/toolbar.dart';
@@ -45,8 +45,8 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   }
 
   @override
-  void onResponse(Channel channel, HttpResponse response) {
-    domainStateKey.currentState!.addResponse(channel, response);
+  void onResponse(ChannelContext channelContext, HttpResponse response) {
+    domainStateKey.currentState!.addResponse(channelContext, response);
   }
 
   @override
@@ -71,7 +71,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
 
   @override
   Widget build(BuildContext context) {
-    final domainWidget = DomainWidget(key: domainStateKey, proxyServer: proxyServer, panel: panel);
+    final domainWidget = DomainList(key: domainStateKey, proxyServer: proxyServer, panel: panel);
     return Scaffold(
         appBar: Tab(child: Toolbar(proxyServer, domainStateKey, sideNotifier: _selectIndex)),
         body: Row(

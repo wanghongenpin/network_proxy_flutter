@@ -51,6 +51,8 @@ class Configuration {
   //远程连接 不持久化保存
   String? remoteHost;
 
+  bool enabledHttp2 = false; //
+
   Configuration._();
 
   /// 单例

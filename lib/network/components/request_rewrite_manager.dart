@@ -340,7 +340,7 @@ class RequestRewrites {
     if (rewriteRule.type == RuleType.responseReplace) {
       var rewriteItems = await getRewriteItems(rewriteRule);
       rewriteItems.where((item) => item.enabled).forEach((item) => _replaceResponse(response, item));
-      logger.d('rewrite response $response');
+      // logger.d('rewrite response $response');
       return;
     }
 
@@ -359,6 +359,8 @@ class RequestRewrites {
         }
         return item.value ?? '';
       }));
+
+      message.headers.contentLength = message.body!.length;
       return;
     }
 
@@ -408,6 +410,7 @@ class RequestRewrites {
     if (item.body != null &&
         (item.type == RewriteType.replaceResponseBody || item.type == RewriteType.replaceRequestBody)) {
       message.body = utf8.encode(item.body!);
+      message.headers.contentLength = message.body!.length;
       return;
     }
   }

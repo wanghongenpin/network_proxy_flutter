@@ -20,112 +20,35 @@ import 'dart:typed_data';
 
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/channel.dart';
+import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/handler.dart';
-import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
-import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/util/tls.dart';
 import 'package:network_proxy/utils/platform.dart';
 
 import 'host_port.dart';
 
-class Network {
+abstract class Network {
   late Function _channelInitializer;
-  Configuration? configuration;
-  StreamSubscription? subscription;
 
   Network initChannel(void Function(Channel channel) initializer) {
     _channelInitializer = initializer;
     return this;
   }
 
-  Channel listen(Socket socket) {
-    var channel = Channel(socket);
+  Channel listen(Channel channel, ChannelContext channelContext) {
     _channelInitializer.call(channel);
-    channel.pipeline.channelActive(channel);
-    subscription = socket.listen((data) => _onEvent(data, channel),
-        onError: (error, StackTrace trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
-        onDone: () => channel.pipeline.channelInactive(channel));
+    channel.pipeline.channelActive(channelContext, channel);
+
+    channel.socket.listen((data) => onEvent(data, channelContext, channel),
+        onError: (error, StackTrace trace) =>
+            channel.pipeline.exceptionCaught(channelContext, channel, error, trace: trace),
+        onDone: () => channel.pipeline.channelInactive(channelContext, channel));
     return channel;
   }
 
-  _onEvent(Uint8List data, Channel channel) async {
-    //手机扫码转发远程地址
-    if (configuration?.remoteHost != null) {
-      channel.putAttribute(AttributeKeys.remote, HostAndPort.of(configuration!.remoteHost!));
-    }
-
-    //外部代理信息
-    if (configuration?.externalProxy?.enabled == true) {
-      ProxyInfo externalProxy = configuration!.externalProxy!;
-      if (externalProxy.capturePacket == true) {
-        channel.putAttribute(AttributeKeys.proxyInfo, externalProxy);
-      } else {
-        //不抓包直接转发
-        channel.putAttribute(AttributeKeys.remote, HostAndPort.host(externalProxy.host, externalProxy.port!));
-      }
-    }
-
-    HostAndPort? hostAndPort = channel.getAttribute(AttributeKeys.host);
-
-    //黑名单 或 没开启https 直接转发
-    if ((Platforms.isMobile() && HostFilter.filter(hostAndPort?.host)) ||
-        (hostAndPort?.isSsl() == true && configuration?.enableSsl == false)) {
-      relay(channel, channel.getAttribute(channel.id));
-      channel.pipeline.channelRead(channel, data);
-      return;
-    }
-
-    //ssl握手
-    if (hostAndPort?.isSsl() == true || TLS.isTLSClientHello(data)) {
-      if (hostAndPort?.scheme == HostAndPort.httpScheme) {
-        hostAndPort?.scheme = HostAndPort.httpsScheme;
-      }
-      ssl(channel, hostAndPort, data);
-      return;
-    }
-
-    channel.pipeline.channelRead(channel, data);
-  }
-
-  /// ssl握手
-  void ssl(Channel channel, HostAndPort? hostAndPort, Uint8List data) async {
-    try {
-      if (hostAndPort == null && TLS.getDomain(data) != null) {
-        hostAndPort = HostAndPort.host(TLS.getDomain(data)!, 443);
-      }
-      channel.putAttribute(AttributeKeys.domain, hostAndPort?.host);
-
-      Channel? remoteChannel = channel.getAttribute(channel.id);
-
-      if (HostFilter.filter(hostAndPort?.host)) {
-        remoteChannel = remoteChannel ?? await HttpClients.startConnect(hostAndPort!, RelayHandler(channel));
-        relay(channel, remoteChannel);
-        channel.pipeline.channelRead(channel, data);
-        return;
-      }
-
-      if (remoteChannel != null && !remoteChannel.isSsl) {
-        // var supportProtocols = TLS.supportProtocols(data);
-        remoteChannel.secureSocket = await SecureSocket.secure(remoteChannel.socket,
-            host: hostAndPort?.host, onBadCertificate: (certificate) => true);
-      }
-
-      //ssl自签证书
-      var certificate = await CertificateManager.getCertificateContext(hostAndPort!.host);
-      // var selectedProtocol = remoteChannel?.selectedProtocol;
-      // if (selectedProtocol != null) certificate.setAlpnProtocols([selectedProtocol], true);
-
-      //服务端等待客户端ssl握手
-      channel.secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
-    } catch (error, trace) {
-      if (error is HandshakeException) {
-        channel.putAttribute(AttributeKeys.host, hostAndPort);
-      }
-      channel.pipeline.exceptionCaught(channel, error, trace: trace);
-    }
-  }
+  Future<void> onEvent(Uint8List data, ChannelContext channelContext, Channel channel);
 
   /// 转发请求
   void relay(Channel clientChannel, Channel remoteChannel) {
@@ -136,17 +59,22 @@ class Network {
 }
 
 class Server extends Network {
+  Configuration configuration;
+
   late ServerSocket serverSocket;
   bool isRunning = false;
+  EventListener? listener;
 
-  Server(Configuration configuration) {
-    super.configuration = configuration;
-  }
+  Server(this.configuration, {this.listener});
 
   Future<ServerSocket> bind(int port) async {
     serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, port);
     serverSocket.listen((socket) {
-      listen(socket);
+      var channel = Channel(socket);
+      ChannelContext channelContext = ChannelContext();
+      channelContext.clientChannel = channel;
+      channelContext.listener = listener;
+      listen(channel, channelContext);
     });
     isRunning = true;
     return serverSocket;
@@ -158,10 +86,93 @@ class Server extends Network {
     await serverSocket.close();
     return serverSocket;
   }
+
+  @override
+  Future<void> onEvent(Uint8List data, ChannelContext channelContext, Channel channel) async {
+    //手机扫码转发远程地址
+    if (configuration.remoteHost != null) {
+      channelContext.putAttribute(AttributeKeys.remote, HostAndPort.of(configuration.remoteHost!));
+    }
+
+    //外部代理信息
+    if (configuration.externalProxy?.enabled == true) {
+      ProxyInfo externalProxy = configuration.externalProxy!;
+      if (externalProxy.capturePacket == true) {
+        channelContext.putAttribute(AttributeKeys.proxyInfo, externalProxy);
+      } else {
+        //不抓包直接转发
+        channelContext.putAttribute(AttributeKeys.remote, HostAndPort.host(externalProxy.host, externalProxy.port!));
+      }
+    }
+
+    HostAndPort? hostAndPort = channelContext.host;
+
+    //黑名单 或 没开启https 直接转发
+    if ((Platforms.isMobile() && HostFilter.filter(hostAndPort?.host)) ||
+        (hostAndPort?.isSsl() == true && configuration.enableSsl == false)) {
+      var remoteChannel = channelContext.serverChannel ??
+          await channelContext.connectServerChannel(hostAndPort!, RelayHandler(channel));
+      relay(channel, remoteChannel);
+      channel.pipeline.channelRead(channelContext, channel, data);
+      return;
+    }
+
+    //ssl握手
+    if (hostAndPort?.isSsl() == true || TLS.isTLSClientHello(data)) {
+      if (hostAndPort?.scheme == HostAndPort.httpScheme) {
+        hostAndPort?.scheme = HostAndPort.httpsScheme;
+      }
+      ssl(channelContext, channel, data);
+      return;
+    }
+
+    channel.pipeline.channelRead(channelContext, channel, data);
+  }
+
+  /// ssl握手
+  void ssl(ChannelContext channelContext, Channel channel, Uint8List data) async {
+    var hostAndPort = channelContext.host;
+    try {
+      if (hostAndPort == null && TLS.getDomain(data) != null) {
+        hostAndPort = HostAndPort.host(TLS.getDomain(data)!, 443);
+      }
+      channelContext.putAttribute(AttributeKeys.domain, hostAndPort?.host);
+
+      Channel? remoteChannel = channelContext.serverChannel;
+
+      if (HostFilter.filter(hostAndPort?.host)) {
+        remoteChannel = remoteChannel ?? await channelContext.connectServerChannel(hostAndPort!, RelayHandler(channel));
+        relay(channel, remoteChannel);
+        channel.pipeline.channelRead(channelContext, channel, data);
+        return;
+      }
+
+      if (remoteChannel != null && !remoteChannel.isSsl) {
+        var supportProtocols = configuration.enabledHttp2 ? TLS.supportProtocols(data) : null;
+        var secureSocket = await SecureSocket.secure(remoteChannel.socket,
+            supportedProtocols: supportProtocols, host: hostAndPort?.host, onBadCertificate: (certificate) => true);
+        remoteChannel.secureSocket(secureSocket, channelContext);
+      }
+
+      //ssl自签证书
+      var certificate = await CertificateManager.getCertificateContext(hostAndPort!.host);
+      var selectedProtocol = remoteChannel?.selectedProtocol;
+      if (selectedProtocol != null) certificate.setAlpnProtocols([selectedProtocol], true);
+
+      //服务端等待客户端ssl握手
+      var secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
+      channel.secureSocket(secureSocket, channelContext);
+    } catch (error, trace) {
+      if (error is HandshakeException) {
+        channelContext.host = hostAndPort;
+      }
+      channel.pipeline.exceptionCaught(channelContext, channel, error, trace: trace);
+    }
+  }
 }
 
 class Client extends Network {
-  Future<Channel> connect(HostAndPort hostAndPort) async {
+  Future<Channel> connect(HostAndPort hostAndPort, ChannelContext channelContext) async {
     String host = hostAndPort.host;
     //说明支持ipv6
     if (host.startsWith("[") && host.endsWith(']')) {
@@ -172,13 +183,24 @@ class Client extends Network {
       if (socket.address.type != InternetAddressType.unix) {
         socket.setOption(SocketOption.tcpNoDelay, true);
       }
-      return listen(socket);
+      var channel = Channel(socket);
+      channelContext.serverChannel = channel;
+      return listen(channel, channelContext);
     });
   }
 
   /// ssl连接
-  Future<Channel> secureConnect(HostAndPort hostAndPort) async {
+  Future<Channel> secureConnect(HostAndPort hostAndPort, ChannelContext channelContext) async {
     return SecureSocket.connect(hostAndPort.host, hostAndPort.port,
-        timeout: const Duration(seconds: 3), onBadCertificate: (certificate) => true).then((socket) => listen(socket));
+        timeout: const Duration(seconds: 3), onBadCertificate: (certificate) => true).then((socket) {
+      var channel = Channel(socket);
+      channelContext.serverChannel = channel;
+      return listen(channel, channelContext);
+    });
+  }
+
+  @override
+  Future<void> onEvent(Uint8List data, ChannelContext channelContext, Channel channel) async {
+    channel.pipeline.channelRead(channelContext, channel, data);
   }
 }

@@ -19,31 +19,31 @@ import 'package:network_proxy/utils/lang.dart';
 import 'package:window_manager/window_manager.dart';
 
 ///请求 URI
-class PathRow extends StatefulWidget {
+class RequestWidget extends StatefulWidget {
   final Color? color;
   final HttpRequest request;
   final ValueWrap<HttpResponse> response = ValueWrap();
 
   final NetworkTabController panel;
   final ProxyServer proxyServer;
-  final Function(PathRow)? remove;
+  final Function(RequestWidget)? remove;
 
-  PathRow(this.request, this.panel, {Key? key, this.color = Colors.green, required this.proxyServer, this.remove})
-      : super(key: GlobalKey<_PathRowState>());
+  RequestWidget(this.request, this.panel, {Key? key, this.color = Colors.green, required this.proxyServer, this.remove})
+      : super(key: GlobalKey<_RequestWidgetState>());
 
   @override
-  State<PathRow> createState() => _PathRowState();
+  State<RequestWidget> createState() => _RequestWidgetState();
 
   void add(HttpResponse response) {
     this.response.set(response);
-    var state = key as GlobalKey<_PathRowState>;
+    var state = key as GlobalKey<_RequestWidgetState>;
     state.currentState?.changeState();
   }
 }
 
-class _PathRowState extends State<PathRow> {
+class _RequestWidgetState extends State<RequestWidget> {
   //选择的节点
-  static _PathRowState? selectedState;
+  static _RequestWidgetState? selectedState;
 
   bool selected = false;
 

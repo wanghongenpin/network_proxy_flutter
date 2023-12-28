@@ -5,26 +5,24 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
-import 'package:network_proxy/network/host_port.dart';
-import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
+import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/component/transition.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
-import 'package:network_proxy/ui/desktop/left/path.dart';
+import 'package:network_proxy/ui/desktop/left/request.dart';
 import 'package:network_proxy/ui/desktop/left/search.dart';
 
 ///左侧域名
-class DomainWidget extends StatefulWidget {
+class DomainList extends StatefulWidget {
   final NetworkTabController panel;
   final ProxyServer proxyServer;
   final List<HttpRequest>? list;
   final bool shrinkWrap;
 
-  const DomainWidget({super.key, required this.panel, required this.proxyServer, this.list, this.shrinkWrap = true});
+  const DomainList({super.key, required this.panel, required this.proxyServer, this.list, this.shrinkWrap = true});
 
   @override
   State<StatefulWidget> createState() {
@@ -32,10 +30,10 @@ class DomainWidget extends StatefulWidget {
   }
 }
 
-class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClientMixin {
+class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientMixin {
   List<HttpRequest> container = [];
-  LinkedHashMap<HostAndPort, HeaderBody> containerMap = LinkedHashMap<HostAndPort, HeaderBody>();
-  LinkedHashMap<HostAndPort, HeaderBody> searchView = LinkedHashMap<HostAndPort, HeaderBody>();
+  LinkedHashMap<String, DomainRequests> containerMap = LinkedHashMap<String, DomainRequests>();
+  LinkedHashMap<String, DomainRequests> searchView = LinkedHashMap<String, DomainRequests>();
 
   //搜索的内容
   SearchModel? searchModel;
@@ -56,15 +54,15 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
   void initState() {
     super.initState();
     widget.list?.forEach((request) {
-      var host = HostAndPort.of(request.requestUrl);
-      HeaderBody? headerBody = containerMap[host];
-      if (headerBody == null) {
-        headerBody = HeaderBody(host, proxyServer: widget.panel.proxyServer, onRemove: () => remove(host));
-        containerMap[host] = headerBody;
+      var host = request.remoteDomain()!;
+      DomainRequests? domainRequests = containerMap[host];
+      if (domainRequests == null) {
+        domainRequests = DomainRequests(host, proxyServer: widget.panel.proxyServer, onRemove: () => remove(host));
+        containerMap[host] = domainRequests;
       }
-      var listURI =
-          PathRow(request, widget.panel, proxyServer: widget.panel.proxyServer, remove: (it) => headerBody!.remove(it));
-      headerBody.addBody(null, listURI);
+      var listURI = RequestWidget(request, widget.panel,
+          proxyServer: widget.panel.proxyServer, remove: (it) => domainRequests!.remove(it));
+      domainRequests.addBody(null, listURI);
     });
   }
 
@@ -86,8 +84,7 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
 
     Widget body = widget.shrinkWrap
         ? SingleChildScrollView(child: Column(children: list.toList()))
-        : ListView.builder(
-        itemCount: list.length, cacheExtent: 1000, itemBuilder: (_, index) => list.elementAt(index));
+        : ListView.builder(itemCount: list.length, cacheExtent: 1000, itemBuilder: (_, index) => list.elementAt(index));
 
     return Scaffold(
         body: body,
@@ -99,13 +96,13 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
   }
 
   ///搜索过滤
-  LinkedHashMap<HostAndPort, HeaderBody> searchFilter(SearchModel searchModel) {
-    LinkedHashMap<HostAndPort, HeaderBody> result = LinkedHashMap<HostAndPort, HeaderBody>();
+  LinkedHashMap<String, DomainRequests> searchFilter(SearchModel searchModel) {
+    LinkedHashMap<String, DomainRequests> result = LinkedHashMap<String, DomainRequests>();
 
-    containerMap.forEach((key, headerBody) {
-      var body = headerBody.search(searchModel);
+    containerMap.forEach((key, domainRequests) {
+      var body = domainRequests.search(searchModel);
       if (body.isNotEmpty) {
-        result[key] = headerBody.copy(body: body, selected: searchView[key]?.currentSelected);
+        result[key] = domainRequests.copy(body: body, selected: searchView[key]?.currentSelected);
       }
     });
 
@@ -115,46 +112,46 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
   ///添加请求
   add(Channel channel, HttpRequest request) {
     container.add(request);
-    HostAndPort? hostAndPort = request.hostAndPort;
-    if (hostAndPort == null) {
+    String? host = request.remoteDomain();
+    if (host == null) {
       return;
     }
 
     //按照域名分类
-    HeaderBody? headerBody = containerMap[hostAndPort];
-    if (headerBody != null) {
-      var listURI =
-          PathRow(request, widget.panel, proxyServer: widget.proxyServer, remove: (it) => headerBody!.remove(it));
-      headerBody.addBody(channel.id, listURI);
+    DomainRequests? domainRequests = containerMap[host];
+    if (domainRequests != null) {
+      var requestWidget = RequestWidget(request, widget.panel,
+          proxyServer: widget.proxyServer, remove: (it) => domainRequests!.remove(it));
+      domainRequests.addBody(request.requestId, requestWidget);
 
       //搜索视图
       if (searchModel?.isNotEmpty == true && searchModel?.filter(request, null) == true) {
-        searchView[hostAndPort]?.addBody(channel.id, listURI);
+        searchView[host]?.addBody(request.requestId, requestWidget);
       }
       return;
     }
 
-    headerBody = HeaderBody(hostAndPort, proxyServer: widget.proxyServer, onRemove: () => remove(hostAndPort));
-    var listURI =
-        PathRow(request, widget.panel, proxyServer: widget.proxyServer, remove: (it) => headerBody!.remove(it));
-    headerBody.addBody(channel.id, listURI);
+    domainRequests = DomainRequests(host, proxyServer: widget.proxyServer, onRemove: () => remove(host));
+    var requestWidget = RequestWidget(request, widget.panel,
+        proxyServer: widget.proxyServer, remove: (it) => domainRequests!.remove(it));
+    domainRequests.addBody(request.requestId, requestWidget);
     setState(() {
-      containerMap[hostAndPort] = headerBody!;
+      containerMap[host] = domainRequests!;
     });
   }
 
-  remove(HostAndPort hostAndPort) {
+  remove(String host) {
     setState(() {
-      containerMap.remove(hostAndPort);
-      container.removeWhere((element) => element.hostAndPort == hostAndPort);
+      containerMap.remove(host);
+      container.removeWhere((element) => element.remoteDomain() == host);
     });
   }
 
   ///添加响应
-  addResponse(Channel channel, HttpResponse response) {
-    HostAndPort hostAndPort = channel.getAttribute(AttributeKeys.host);
-    HeaderBody? headerBody = containerMap[hostAndPort];
-    var pathRow = headerBody?.getBody(channel.id);
+  addResponse(ChannelContext channelContext, HttpResponse response) {
+    String domain = channelContext.host!.domain;
+    DomainRequests? domainRequests = containerMap[domain];
+    var pathRow = domainRequests?.getRequest(response);
     pathRow?.add(response);
     if (pathRow == null) {
       return;
@@ -162,11 +159,11 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
 
     //搜索视图
     if (searchModel?.isNotEmpty == true && searchModel?.filter(pathRow.request, response) == true) {
-      var header = searchView[hostAndPort];
-      if (header?.getBody(channel.id) == null) {
-        header?.addBody(channel.id, pathRow);
+      var requests = searchView[domain];
+      if (requests?.getRequest(response) == null) {
+        requests?.addBody(response.requestId, pathRow);
       }
-      headerBody?.getBody(channel.id)?.add(response);
+      requests?.getRequest(response)?.add(response);
     }
   }
 
@@ -181,17 +178,15 @@ class DomainWidgetState extends State<DomainWidget> with AutomaticKeepAliveClien
 }
 
 ///标题和内容布局 标题是域名 内容是域名下请求
-class HeaderBody extends StatefulWidget {
-  final stateKey = GlobalKey<_HeaderBodyState>();
-
+class DomainRequests extends StatefulWidget {
   //请求ID和请求的映射
-  final Map<String, PathRow> channelIdPathMap = HashMap<String, PathRow>();
+  final Map<String, RequestWidget> requestMap = HashMap<String, RequestWidget>();
 
-  final HostAndPort header;
+  final String domain;
   final ProxyServer proxyServer;
 
   //请求列表
-  final Queue<PathRow> body = Queue();
+  final Queue<RequestWidget> body = Queue();
 
   //是否选中
   final bool selected;
@@ -199,39 +194,39 @@ class HeaderBody extends StatefulWidget {
   //移除回调
   final Function()? onRemove;
 
-  HeaderBody(this.header, {this.selected = false, this.onRemove, required this.proxyServer})
-      : super(key: GlobalKey<_HeaderBodyState>());
+  DomainRequests(this.domain, {this.selected = false, this.onRemove, required this.proxyServer})
+      : super(key: GlobalKey<_DomainRequestsState>());
 
   ///添加请求
-  void addBody(String? key, PathRow widget) {
+  void addBody(String? requestId, RequestWidget widget) {
     body.addFirst(widget);
-    if (key == null) {
+    if (requestId == null) {
       return;
     }
-    channelIdPathMap[key] = widget;
+    requestMap[requestId] = widget;
     changeState();
   }
 
-  PathRow? getBody(String key) {
-    return channelIdPathMap[key];
+  RequestWidget? getRequest(HttpResponse response) {
+    return requestMap[response.request?.requestId ?? response.requestId];
   }
 
-  remove(PathRow pathRow) {
-    if (body.remove(pathRow)) {
+  remove(RequestWidget requestWidget) {
+    if (body.remove(requestWidget)) {
       changeState();
     }
   }
 
   ///根据文本过滤
-  Iterable<PathRow> search(SearchModel searchModel) {
+  Iterable<RequestWidget> search(SearchModel searchModel) {
     return body
         .where((element) => searchModel.filter(element.request, element.response.get() ?? element.request.response));
   }
 
   ///复制
-  HeaderBody copy({Iterable<PathRow>? body, bool? selected}) {
-    var state = key as GlobalKey<_HeaderBodyState>;
-    var headerBody = HeaderBody(header,
+  DomainRequests copy({Iterable<RequestWidget>? body, bool? selected}) {
+    var state = key as GlobalKey<_DomainRequestsState>;
+    var headerBody = DomainRequests(domain,
         selected: selected ?? state.currentState?.selected == true, onRemove: onRemove, proxyServer: proxyServer);
     if (body != null) {
       headerBody.body.addAll(body);
@@ -240,22 +235,22 @@ class HeaderBody extends StatefulWidget {
   }
 
   bool get currentSelected {
-    var state = key as GlobalKey<_HeaderBodyState>;
+    var state = key as GlobalKey<_DomainRequestsState>;
     return state.currentState?.selected == true;
   }
 
   changeState() {
-    var state = key as GlobalKey<_HeaderBodyState>;
+    var state = key as GlobalKey<_DomainRequestsState>;
     state.currentState?.changeState();
   }
 
   @override
   State<StatefulWidget> createState() {
-    return _HeaderBodyState();
+    return _DomainRequestsState();
   }
 }
 
-class _HeaderBodyState extends State<HeaderBody> {
+class _DomainRequestsState extends State<DomainRequests> {
   final GlobalKey<ColorTransitionState> transitionState = GlobalKey<ColorTransitionState>();
   late Configuration configuration;
   late bool selected;
@@ -275,7 +270,7 @@ class _HeaderBodyState extends State<HeaderBody> {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      _hostWidget(widget.header.domain),
+      _hostWidget(widget.domain),
       Offstage(offstage: !selected, child: Column(children: widget.body.toList()))
     ]);
   }
@@ -318,7 +313,7 @@ class _HeaderBodyState extends State<HeaderBody> {
             height: 35,
             child: const Text("添加黑名单", style: TextStyle(fontSize: 13)),
             onTap: () {
-              HostFilter.blacklist.add(widget.header.host);
+              HostFilter.blacklist.add(Uri.parse(widget.domain).host);
               configuration.flushConfig();
               FlutterToastr.show('添加成功', context);
             }),
@@ -326,7 +321,7 @@ class _HeaderBodyState extends State<HeaderBody> {
             height: 35,
             child: const Text("添加白名单", style: TextStyle(fontSize: 13)),
             onTap: () {
-              HostFilter.whitelist.add(widget.header.host);
+              HostFilter.whitelist.add(Uri.parse(widget.domain).host);
               configuration.flushConfig();
               FlutterToastr.show('添加成功', context);
             }),
@@ -334,7 +329,7 @@ class _HeaderBodyState extends State<HeaderBody> {
             height: 35,
             child: const Text("删除白名单", style: TextStyle(fontSize: 13)),
             onTap: () {
-              HostFilter.whitelist.remove(widget.header.host);
+              HostFilter.whitelist.remove(Uri.parse(widget.domain).host);
               configuration.flushConfig();
               FlutterToastr.show('删除成功', context);
             }),
@@ -346,7 +341,7 @@ class _HeaderBodyState extends State<HeaderBody> {
   }
 
   _delete() {
-    widget.channelIdPathMap.clear();
+    widget.requestMap.clear();
     widget.body.clear();
     widget.onRemove?.call();
     FlutterToastr.show('删除成功', context);

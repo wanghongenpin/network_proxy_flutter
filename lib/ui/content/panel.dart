@@ -184,6 +184,8 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       const SizedBox(height: 20),
       rowWidget("Request Method", request.method.name),
       const SizedBox(height: 20),
+      rowWidget("Protocol", request.protocolVersion),
+      const SizedBox(height: 20),
       rowWidget("Status Code", response?.status.toString()),
       const SizedBox(height: 20),
       rowWidget("Remote Address", response?.remoteAddress),

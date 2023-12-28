@@ -66,11 +66,10 @@ class ProxyServer {
 
   /// 启动代理服务
   Future<Server> start() async {
-    Server server = Server(configuration);
+    Server server = Server(configuration, listener: CombinedEventListener(listeners));
     var requestRewrites = await RequestRewrites.instance;
 
     server.initChannel((channel) {
-      channel.pipeline.listener = CombinedEventListener(listeners);
       channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(),
           HttpProxyChannelHandler(listener: CombinedEventListener(listeners), requestRewrites: requestRewrites));
     });
@@ -138,9 +137,9 @@ class CombinedEventListener extends EventListener {
   }
 
   @override
-  void onResponse(Channel channel, HttpResponse response) {
+  void onResponse(ChannelContext channelContext, HttpResponse response) {
     for (var element in listeners) {
-      element.onResponse(channel, response);
+      element.onResponse(channelContext, response);
     }
   }
 

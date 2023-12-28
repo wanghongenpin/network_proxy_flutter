@@ -21,10 +21,13 @@ import 'dart:typed_data';
 
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/codec.dart';
+import 'package:network_proxy/network/http/h2/setting.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
+import 'package:network_proxy/network/util/byte_buf.dart';
 import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/utils/lang.dart';
 
 import 'handler.dart';
 
@@ -33,19 +36,19 @@ abstract class ChannelHandler<T> {
   var log = logger;
 
   ///连接建立
-  void channelActive(Channel channel) {}
+  void channelActive(ChannelContext context, Channel channel) {}
 
   ///读取数据事件
-  void channelRead(Channel channel, T msg) {}
+  void channelRead(ChannelContext channelContext, Channel channel, T msg) {}
 
   ///连接断开
-  void channelInactive(Channel channel) {
+  void channelInactive(ChannelContext channelContext, Channel channel) {
     // log.i("close $channel");
   }
 
-  void exceptionCaught(Channel channel, dynamic error, {StackTrace? trace}) {
-    HostAndPort? attribute = channel.getAttribute(AttributeKeys.host);
-    log.e("[${channel.id}] error $attribute $channel", error: error, stackTrace: trace);
+  void exceptionCaught(ChannelContext channelContext, Channel channel, dynamic error, {StackTrace? trace}) {
+    HostAndPort? host = channelContext.host;
+    log.e("[${channel.id}] error $host $channel", error: error, stackTrace: trace);
     channel.close();
   }
 }
@@ -55,7 +58,6 @@ class Channel {
   final int _id;
   final ChannelPipeline pipeline = ChannelPipeline();
   Socket _socket;
-  final Map<String, Object> _attributes = {};
 
   //是否打开
   bool isOpen = true;
@@ -79,9 +81,10 @@ class Channel {
 
   Socket get socket => _socket;
 
-  set secureSocket(SecureSocket secureSocket) {
+  secureSocket(SecureSocket secureSocket, ChannelContext channelContext) {
     _socket = secureSocket;
-    pipeline.listen(this);
+    _socket.done.then((value) => isOpen = false);
+    pipeline.listen(this, channelContext);
   }
 
   String? get selectedProtocol => isSsl ? (_socket as SecureSocket).selectedProtocol : null;
@@ -90,6 +93,11 @@ class Channel {
   bool get isSsl => _socket is SecureSocket;
 
   Future<void> write(Object obj) async {
+    var data = pipeline._encoder.encode(obj);
+    await writeBytes(data);
+  }
+
+  Future<void> writeBytes(List<int> bytes) async {
     if (isClosed) {
       logger.w("[$id] channel is closed");
       return;
@@ -103,15 +111,16 @@ class Channel {
 
     isWriting = true;
     try {
-      var data = pipeline._encoder.encode(obj);
       if (!isClosed) {
-        _socket.add(data);
+        _socket.add(bytes);
       }
       await _socket.flush();
     } catch (e, t) {
-      // print(getAttribute(id)._attributes);
-      print(e);
-      print(t);
+      if (e is StateError && e.message == "StreamSink is closed") {
+        isOpen = false;
+      } else {
+        logger.e("[$id] write error", error: e, stackTrace: t);
+      }
     } finally {
       isWriting = false;
     }
@@ -141,6 +150,37 @@ class Channel {
   ///返回此channel是否打开
   bool get isClosed => !isOpen;
 
+  @override
+  String toString() {
+    return 'Channel($id ${remoteAddress.host}:$remotePort)';
+  }
+}
+
+///
+class ChannelContext {
+  final Map<String, Object> _attributes = {};
+
+  //和本地客户端的连接
+  Channel? clientChannel;
+
+  //和远程服务端的连接
+  Channel? serverChannel;
+
+  EventListener? listener;
+
+  //http2 stream
+  final Map<int, Pair<HttpRequest, ValueWrap<HttpResponse>>> _streams = {};
+
+  ChannelContext();
+
+  //创建服务端连接
+  Future<Channel> connectServerChannel(HostAndPort hostAndPort, ChannelHandler channelHandler) async {
+    serverChannel = await HttpClients.startConnect(hostAndPort, channelHandler, this);
+    putAttribute(clientChannel!.id, serverChannel);
+    putAttribute(serverChannel!.id, clientChannel);
+    return serverChannel!;
+  }
+
   T? getAttribute<T>(String key) {
     if (!_attributes.containsKey(key)) {
       return null;
@@ -156,9 +196,39 @@ class Channel {
     _attributes[key] = value;
   }
 
-  @override
-  String toString() {
-    return 'Channel($id ${remoteAddress.host}:$remotePort)';
+  HostAndPort? get host => getAttribute(AttributeKeys.host);
+
+  set host(HostAndPort? host) => putAttribute(AttributeKeys.host, host);
+
+  HttpRequest? get currentRequest => getAttribute(AttributeKeys.request);
+
+  set currentRequest(HttpRequest? request) => putAttribute(AttributeKeys.request, request);
+
+  StreamSetting? setting;
+
+  HttpRequest? putStreamRequest(int streamId, HttpRequest request) {
+    var old = _streams[streamId]?.key;
+    _streams[streamId] = Pair(request, ValueWrap());
+    return old;
+  }
+
+  void putStreamResponse(int streamId, HttpResponse response) {
+    var stream = _streams[streamId]!;
+    stream.key.response = response;
+    response.request = stream.key;
+    stream.value.set(response);
+  }
+
+  HttpRequest? getStreamRequest(int streamId) {
+    return _streams[streamId]?.key;
+  }
+
+  HttpResponse? getStreamResponse(int streamId) {
+    return _streams[streamId]?.value.get();
+  }
+
+  void removeStream(int streamId) {
+    _streams.remove(streamId);
   }
 }
 
@@ -166,7 +236,6 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   late Decoder _decoder;
   late Encoder _encoder;
   late ChannelHandler handler;
-  EventListener? listener;
 
   final ByteBuf buffer = ByteBuf();
 
@@ -177,17 +246,16 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   }
 
   /// 监听
-  void listen(Channel channel) {
+  void listen(Channel channel, ChannelContext channelContext) {
     buffer.clear();
-
-    channel.socket.listen((data) => channel.pipeline.channelRead(channel, data),
-        onError: (error, trace) => channel.pipeline.exceptionCaught(channel, error, trace: trace),
-        onDone: () => channel.pipeline.channelInactive(channel));
+    channel.socket.listen((data) => channel.pipeline.channelRead(channelContext, channel, data),
+        onError: (error, trace) => channel.pipeline.exceptionCaught(channelContext, channel, error, trace: trace),
+        onDone: () => channel.pipeline.channelInactive(channelContext, channel));
   }
 
   @override
-  void channelActive(Channel channel) {
-    handler.channelActive(channel);
+  void channelActive(ChannelContext context, Channel channel) {
+    handler.channelActive(context, channel);
   }
 
   /// 转发请求
@@ -198,101 +266,117 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
   }
 
   ///远程转发请求
-  remoteForward(Channel clientChannel, HostAndPort remote, Uint8List msg) async {
-    Channel? remoteChannel = clientChannel.getAttribute(clientChannel.id);
-    remoteChannel = remoteChannel ?? await HttpClients.startConnect(remote, RelayHandler(clientChannel));
+  remoteForward(ChannelContext channelContext, HostAndPort remote, Uint8List msg) async {
+    var clientChannel = channelContext.clientChannel!;
+    Channel? remoteChannel =
+        channelContext.serverChannel ?? await channelContext.connectServerChannel(remote, RelayHandler(clientChannel));
     if (clientChannel.isSsl && !remoteChannel.isSsl) {
-      remoteChannel.secureSocket = await SecureSocket.secure(remoteChannel.socket,
-          host: clientChannel.getAttribute(AttributeKeys.domain), onBadCertificate: (certificate) => true);
+      SecureSocket secureSocket = await SecureSocket.secure(remoteChannel.socket,
+          host: channelContext.getAttribute(AttributeKeys.domain), onBadCertificate: (certificate) => true);
+      remoteChannel.secureSocket(secureSocket, channelContext);
     }
 
     relay(clientChannel, remoteChannel);
-    handler.channelRead(clientChannel, msg);
+    handler.channelRead(channelContext, clientChannel, msg);
   }
 
   @override
-  void channelRead(Channel channel, Uint8List msg) async {
+  void channelRead(ChannelContext channelContext, Channel channel, Uint8List msg) async {
     try {
       //手机扫码连接转发远程
-      HostAndPort? remote = channel.getAttribute(AttributeKeys.remote);
-      Channel? remoteChannel = channel.getAttribute(channel.id);
+      HostAndPort? remote = channelContext.getAttribute(AttributeKeys.remote);
       if (remote != null) {
-        remoteForward(channel, remote, msg);
+        remoteForward(channelContext, remote, msg);
         return;
       }
 
       buffer.add(msg);
+
+      Channel? remoteChannel = channelContext.getAttribute(channel.id);
+
       //大body 不解析直接转发
       if (buffer.length > Codec.maxBodyLength) {
         relay(channel, remoteChannel!);
-        handler.channelRead(channel, buffer.buffer);
+        handler.channelRead(channelContext, channel, buffer.bytes);
         buffer.clear();
         return;
       }
 
-      HttpRequest? request = remoteChannel?.getAttribute(AttributeKeys.request);
-      var data = _decoder.decode(buffer, resolveBody: request?.method != HttpMethod.head);
-      if (data == null) {
+      var decodeResult = _decoder.decode(channelContext, buffer);
+      if (!decodeResult.isDone) {
+        return;
+      }
+
+      if (decodeResult.forward != null) {
+        if (remoteChannel != null) {
+          await remoteChannel.writeBytes(decodeResult.forward!);
+        } else {
+          logger.w("[$channel] forward remoteChannel is null");
+        }
+        buffer.clearRead();
         return;
       }
 
       var length = buffer.length;
-      buffer.clear();
+      buffer.clearRead();
 
+      var data = decodeResult.data;
       if (data is HttpRequest) {
-        data.packageSize = length;
-        data.hostAndPort = channel.getAttribute(AttributeKeys.host) ?? getHostAndPort(data, ssl: channel.isSsl);
+        channelContext.currentRequest = data;
+        data.hostAndPort = channelContext.host ?? getHostAndPort(data, ssl: channel.isSsl);
         if (data.headers.host != null && data.headers.host?.contains(":") == false) {
           data.hostAndPort?.host = data.headers.host!;
         }
       }
 
       if (data is HttpResponse) {
+        data.requestId = channelContext.currentRequest?.requestId ?? data.requestId;
         data.packageSize = length;
         data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
-        data.request = request;
-        request?.response = data;
+        data.request ??= channelContext.currentRequest;
+        channelContext.currentRequest?.response = data;
       }
 
       //websocket协议
       if (data is HttpResponse && data.isWebSocket && remoteChannel != null) {
-        request?.hostAndPort?.scheme = channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme;
+        channelContext.currentRequest?.hostAndPort?.scheme =
+            channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme;
         logger.d("webSocket ${data.request?.hostAndPort}");
         remoteChannel.write(data);
 
         var rawCodec = RawCodec();
-        channel.pipeline.handle(rawCodec, rawCodec, WebSocketChannelHandler(remoteChannel, data, listener: listener));
-        remoteChannel.pipeline
-            .handle(rawCodec, rawCodec, WebSocketChannelHandler(channel, data.request!, listener: listener));
+        channel.pipeline.handle(rawCodec, rawCodec, WebSocketChannelHandler(remoteChannel, data));
+        remoteChannel.pipeline.handle(rawCodec, rawCodec, WebSocketChannelHandler(channel, data.request!));
         return;
       }
 
-      handler.channelRead(channel, data!);
+      handler.channelRead(channelContext, channel, data!);
     } catch (error, trace) {
       buffer.clear();
-      exceptionCaught(channel, error, trace: trace);
+      exceptionCaught(channelContext, channel, error, trace: trace);
     }
   }
 
   @override
-  exceptionCaught(Channel channel, dynamic error, {StackTrace? trace}) {
-    handler.exceptionCaught(channel, error, trace: trace);
+  exceptionCaught(ChannelContext channelContext, Channel channel, dynamic error, {StackTrace? trace}) {
+    handler.exceptionCaught(channelContext, channel, error, trace: trace);
   }
 
   @override
-  channelInactive(Channel channel) {
-    handler.channelInactive(channel);
+  channelInactive(ChannelContext channelContext, Channel channel) {
+    handler.channelInactive(channelContext, channel);
   }
 }
 
-class RawCodec extends Codec<Object> {
+class RawCodec extends Codec<dynamic> {
   @override
-  Object? decode(ByteBuf data, {bool resolveBody = true}) {
-    return data.readBytes(data.readableBytes());
+  DecoderResult<dynamic> decode(ChannelContext channelContext, ByteBuf byteBuf, {bool resolveBody = true}) {
+    var decoderResult = DecoderResult()..data = byteBuf.readAvailableBytes();
+    return decoderResult;
   }
 
   @override
-  List<int> encode(Object data) {
+  List<int> encode(dynamic data) {
     return data as List<int>;
   }
 }

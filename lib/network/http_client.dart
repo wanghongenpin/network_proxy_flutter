@@ -28,15 +28,17 @@ import 'http/codec.dart';
 
 class HttpClients {
   /// 建立连接
-  static Future<Channel> startConnect(HostAndPort hostAndPort, ChannelHandler handler) async {
+  static Future<Channel> startConnect(
+      HostAndPort hostAndPort, ChannelHandler handler, ChannelContext channelContext) async {
     var client = Client()
       ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
 
-    return client.connect(hostAndPort);
+    return client.connect(hostAndPort, channelContext);
   }
 
   ///代理建立连接
-  static Future<Channel> proxyConnect(HostAndPort hostAndPort, ChannelHandler handler, {ProxyInfo? proxyInfo}) async {
+  static Future<Channel> proxyConnect(HostAndPort hostAndPort, ChannelHandler handler, ChannelContext channelContext,
+      {ProxyInfo? proxyInfo}) async {
     var client = Client()
       ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
 
@@ -46,7 +48,7 @@ class HttpClients {
     }
 
     HostAndPort connectHost = proxyInfo == null ? hostAndPort : HostAndPort.host(proxyInfo.host, proxyInfo.port!);
-    var channel = await client.connect(connectHost);
+    var channel = await client.connect(connectHost, channelContext);
 
     if (proxyInfo == null || !hostAndPort.isSsl()) {
       return channel;
@@ -74,14 +76,14 @@ class HttpClients {
   }
 
   /// 建立连接
-  static Future<Channel> connect(Uri uri, ChannelHandler handler) async {
+  static Future<Channel> connect(Uri uri, ChannelHandler handler, ChannelContext channelContext) async {
     Client client = Client()
       ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
     if (uri.scheme == "https" || uri.scheme == "wss") {
-      return client.secureConnect(HostAndPort.of(uri.toString()));
+      return client.secureConnect(HostAndPort.of(uri.toString()), channelContext);
     }
 
-    return client.connect(HostAndPort.of(uri.toString()));
+    return client.connect(HostAndPort.of(uri.toString()), channelContext);
   }
 
   /// 发送get请求
@@ -98,7 +100,8 @@ class HttpClients {
     var client = Client()
       ..initChannel((channel) => channel.pipeline.handle(HttpResponseCodec(), HttpRequestCodec(), httpResponseHandler));
 
-    Channel channel = await client.connect(hostAndPort);
+    ChannelContext channelContext = ChannelContext();
+    Channel channel = await client.connect(hostAndPort, channelContext);
     await channel.write(request);
 
     return httpResponseHandler.getResponse(duration).whenComplete(() => channel.close());
@@ -112,13 +115,16 @@ class HttpClients {
         request.headers.host = '${Uri.parse(request.uri).host}:${Uri.parse(request.uri).port}';
       } catch (_) {}
     }
+    request.protocolVersion = 'HTTP/1.1';
 
+    ChannelContext channelContext = ChannelContext();
     var httpResponseHandler = HttpResponseHandler();
     HostAndPort hostPort = HostAndPort.of(request.uri);
-    Channel channel = await proxyConnect(proxyInfo: proxyInfo, hostPort, httpResponseHandler);
+    Channel channel = await proxyConnect(proxyInfo: proxyInfo, hostPort, httpResponseHandler, channelContext);
 
     if (hostPort.isSsl()) {
-      channel.secureSocket = await SecureSocket.secure(channel.socket, onBadCertificate: (certificate) => true);
+      var secureSocket = await SecureSocket.secure(channel.socket, onBadCertificate: (certificate) => true);
+      channel.secureSocket(secureSocket, channelContext);
     }
 
     await channel.write(request);
@@ -130,7 +136,7 @@ class HttpResponseHandler extends ChannelHandler<HttpResponse> {
   Completer<HttpResponse> _completer = Completer<HttpResponse>();
 
   @override
-  void channelRead(Channel channel, HttpResponse msg) {
+  void channelRead(ChannelContext channelContext, Channel channel, HttpResponse msg) {
     // log.i("[${channel.id}] Response $msg");
     _completer.complete(msg);
   }
@@ -144,7 +150,7 @@ class HttpResponseHandler extends ChannelHandler<HttpResponse> {
   }
 
   @override
-  void channelInactive(Channel channel) {
+  void channelInactive(ChannelContext channelContext, Channel channel) {
     // log.i("[${channel.id}] channelInactive");
   }
 }

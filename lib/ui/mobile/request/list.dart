@@ -96,8 +96,7 @@ class RequestListState extends State<RequestListWidget> {
   }
 
   ///添加响应
-  addResponse(Channel channel, HttpResponse response) {
-    response.request?.response = response;
+  addResponse(ChannelContext channelContext, HttpResponse response) {
     requestSequenceKey.currentState?.addResponse(response);
     domainListKey.currentState?.addResponse(response);
   }
@@ -173,7 +172,6 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
   ///添加响应
   addResponse(HttpResponse response) {
-    response.request?.response = response;
     var state = indexes.remove(response.request);
     state?.currentState?.change(response);
 

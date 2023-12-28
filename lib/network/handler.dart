@@ -37,7 +37,7 @@ import 'http_client.dart';
 abstract class EventListener {
   void onRequest(Channel channel, HttpRequest request);
 
-  void onResponse(Channel channel, HttpResponse response);
+  void onResponse(ChannelContext channelContext, HttpResponse response);
 
   void onMessage(Channel channel, HttpMessage message, WebSocketFrame frame) {}
 }
@@ -50,8 +50,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   HttpProxyChannelHandler({this.listener, this.requestRewrites});
 
   @override
-  void channelRead(Channel channel, HttpRequest msg) async {
-    channel.putAttribute(AttributeKeys.request, msg);
+  void channelRead(ChannelContext channelContext, Channel channel, HttpRequest msg) async {
     //下载证书
     if (msg.uri == 'http://proxy.pin/ssl' || msg.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
       ProxyHelper.crtDownload(channel, msg);
@@ -64,37 +63,36 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     }
 
     //代理转发请求
-    forward(channel, msg).catchError((error, trace) {
-      exceptionCaught(channel, error, trace: trace);
+    forward(channelContext, channel, msg).catchError((error, trace) {
+      exceptionCaught(channelContext, channel, error, trace: trace);
     });
   }
 
   @override
-  void exceptionCaught(Channel channel, error, {StackTrace? trace}) {
-    super.exceptionCaught(channel, error, trace: trace);
-    ProxyHelper.exceptionHandler(channel, listener, channel.getAttribute(AttributeKeys.request), error);
+  void exceptionCaught(ChannelContext channelContext, Channel channel, error, {StackTrace? trace}) {
+    super.exceptionCaught(channelContext, channel, error, trace: trace);
+    ProxyHelper.exceptionHandler(channelContext, channel, listener, channelContext.currentRequest, error);
   }
 
   @override
-  void channelInactive(Channel channel) {
-    Channel? remoteChannel = channel.getAttribute(channel.id);
+  void channelInactive(ChannelContext channelContext, Channel channel) {
+    Channel? remoteChannel = channelContext.serverChannel;
     remoteChannel?.close();
-    // log.i("[${channel.id}] close  ${channel.error}");
+    // log.d("[${channel.id}] close  ${channel.error}");
   }
 
   /// 转发请求
-  Future<void> forward(Channel channel, HttpRequest httpRequest) async {
-    // log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+  Future<void> forward(ChannelContext channelContext, Channel channel, HttpRequest httpRequest) async {
+    // log.d("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
     if (channel.error != null) {
-      ProxyHelper.exceptionHandler(channel, listener, httpRequest, channel.error);
+      ProxyHelper.exceptionHandler(channelContext, channel, listener, httpRequest, channel.error);
       return;
     }
 
     //获取远程连接
     Channel remoteChannel;
     try {
-      remoteChannel = await _getRemoteChannel(channel, httpRequest);
-      remoteChannel.putAttribute(remoteChannel.id, channel);
+      remoteChannel = await _getRemoteChannel(channelContext, channel, httpRequest);
     } catch (error) {
       channel.error = error; //记录异常
       //https代理新建连接请求
@@ -131,7 +129,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
       var uri = '${httpRequest.remoteDomain()}${httpRequest.path()}';
       String? redirectUrl = await requestRewrites?.getRedirectRule(uri);
       if (redirectUrl?.isNotEmpty == true) {
-        await redirect(channel, httpRequest, redirectUrl!);
+        await redirect(channelContext, channel, httpRequest, redirectUrl!);
         return;
       }
 
@@ -140,43 +138,45 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   }
 
   //重定向
-  Future<void> redirect(Channel channel, HttpRequest httpRequest, String redirectUrl) async {
+  Future<void> redirect(
+      ChannelContext channelContext, Channel channel, HttpRequest httpRequest, String redirectUrl) async {
     var proxyHandler = HttpResponseProxyHandler(channel, listener: listener, requestRewrites: requestRewrites);
 
     var redirectUri = UriBuild.build(redirectUrl, params: httpRequest.queries);
     httpRequest.uri = redirectUri.toString();
     httpRequest.headers.host = redirectUri.host;
-    var redirectChannel = await HttpClients.connect(Uri.parse(redirectUrl), proxyHandler);
+    var redirectChannel = await HttpClients.connect(Uri.parse(redirectUrl), proxyHandler, channelContext);
+    channelContext.serverChannel = redirectChannel;
     await redirectChannel.write(httpRequest);
   }
 
   /// 获取远程连接
-  Future<Channel> _getRemoteChannel(Channel clientChannel, HttpRequest httpRequest) async {
-    String clientId = clientChannel.id;
+  Future<Channel> _getRemoteChannel(
+      ChannelContext channelContext, Channel clientChannel, HttpRequest httpRequest) async {
     //客户端连接 作为缓存
-    Channel? remoteChannel = clientChannel.getAttribute(clientId);
+    Channel? remoteChannel = channelContext.serverChannel;
     if (remoteChannel != null) {
       return remoteChannel;
     }
 
     var hostAndPort = httpRequest.hostAndPort ?? getHostAndPort(httpRequest);
-    clientChannel.putAttribute(AttributeKeys.host, hostAndPort);
+    channelContext.host = hostAndPort;
 
     //远程转发
-    HostAndPort? remote = clientChannel.getAttribute(AttributeKeys.remote);
+    HostAndPort? remote = channelContext.getAttribute(AttributeKeys.remote);
     //外部代理
-    ProxyInfo? proxyInfo = clientChannel.getAttribute(AttributeKeys.proxyInfo);
+    ProxyInfo? proxyInfo = channelContext.getAttribute(AttributeKeys.proxyInfo);
 
     if (remote != null || proxyInfo != null) {
       HostAndPort connectHost = remote ?? HostAndPort.host(proxyInfo!.host, proxyInfo.port!);
-      var proxyChannel = await connectRemote(clientChannel, connectHost);
+      var proxyChannel = await connectRemote(channelContext, clientChannel, connectHost);
       if (httpRequest.method == HttpMethod.connect) {
         proxyChannel.write(httpRequest);
       }
       return proxyChannel;
     }
 
-    var proxyChannel = await connectRemote(clientChannel, hostAndPort);
+    var proxyChannel = await connectRemote(channelContext, clientChannel, hostAndPort);
     //https代理新建连接请求
     if (httpRequest.method == HttpMethod.connect) {
       await clientChannel.write(
@@ -186,16 +186,14 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   }
 
   /// 连接远程
-  Future<Channel> connectRemote(Channel clientChannel, HostAndPort connectHost) async {
+  Future<Channel> connectRemote(ChannelContext channelContext, Channel clientChannel, HostAndPort connectHost) async {
     var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
-    var proxyChannel = await HttpClients.startConnect(connectHost, proxyHandler);
-    proxyChannel.pipeline.listener = listener;
-    String clientId = clientChannel.id;
-    clientChannel.putAttribute(clientId, proxyChannel);
+    var proxyChannel = await channelContext.connectServerChannel(connectHost, proxyHandler);
 
     if (clientChannel.isSsl) {
-      proxyChannel.secureSocket = await SecureSocket.secure(proxyChannel.socket,
+      SecureSocket secureSocket = await SecureSocket.secure(proxyChannel.socket,
           host: connectHost.host, onBadCertificate: (certificate) => true);
+      proxyChannel.secureSocket(secureSocket, channelContext);
     }
     return proxyChannel;
   }
@@ -212,9 +210,11 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   HttpResponseProxyHandler(this.clientChannel, {this.listener, this.requestRewrites});
 
   @override
-  void channelRead(Channel channel, HttpResponse msg) async {
+  void channelRead(ChannelContext channelContext, Channel channel, HttpResponse msg) async {
+    var request = channelContext.currentRequest;
+
     //域名是否过滤
-    if (HostFilter.filter(msg.request?.hostAndPort?.host) || msg.request?.method == HttpMethod.connect) {
+    if (HostFilter.filter(request?.hostAndPort?.host) || request?.method == HttpMethod.connect) {
       await clientChannel.write(msg);
       return;
     }
@@ -237,13 +237,13 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     //重写响应
     await requestRewrites?.responseRewrite(msg.request?.requestUrl, msg);
 
-    listener?.onResponse(clientChannel, msg);
+    listener?.onResponse(channelContext, msg);
     //发送给客户端
     await clientChannel.write(msg);
   }
 
   @override
-  void channelInactive(Channel channel) {
+  void channelInactive(ChannelContext channelContext, Channel channel) {
     clientChannel.close();
   }
 }
@@ -254,29 +254,28 @@ class RelayHandler extends ChannelHandler<Object> {
   RelayHandler(this.remoteChannel);
 
   @override
-  void channelRead(Channel channel, Object msg) async {
+  void channelRead(ChannelContext channelContext, Channel channel, Object msg) async {
     //发送给客户端
     remoteChannel.write(msg);
   }
 
   @override
-  void channelInactive(Channel channel) {
+  void channelInactive(ChannelContext channelContext, Channel channel) {
     remoteChannel.close();
   }
 }
 
-//
+/// websocket处理器
 class WebSocketChannelHandler extends ChannelHandler<Uint8List> {
   final WebSocketDecoder decoder = WebSocketDecoder();
 
   final Channel proxyChannel;
   final HttpMessage message;
-  EventListener? listener;
 
-  WebSocketChannelHandler(this.proxyChannel, this.message, {this.listener});
+  WebSocketChannelHandler(this.proxyChannel, this.message);
 
   @override
-  void channelRead(Channel channel, Uint8List msg) {
+  void channelRead(ChannelContext channelContext, Channel channel, Uint8List msg) {
     proxyChannel.write(msg);
 
     var frame = decoder.decode(msg);
@@ -286,7 +285,7 @@ class WebSocketChannelHandler extends ChannelHandler<Uint8List> {
     frame.isFromClient = message is HttpRequest;
 
     message.messages.add(frame);
-    listener?.onMessage(channel, message, frame);
+    channelContext.listener?.onMessage(channel, message, frame);
     logger.d("socket channelRead ${frame.payloadLength} ${frame.fin} ${frame.payloadDataAsString}");
   }
 }

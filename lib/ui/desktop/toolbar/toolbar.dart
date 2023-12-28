@@ -10,7 +10,7 @@ import 'package:network_proxy/ui/launch/launch.dart';
 import 'package:network_proxy/utils/ip.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../left/domain.dart';
+import '../left/list.dart';
 
 class Toolbar extends StatefulWidget {
   final ProxyServer proxyServer;

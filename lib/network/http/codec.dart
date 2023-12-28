@@ -14,29 +14,21 @@
  * limitations under the License.
  */
 
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/body_reader.dart';
+import 'package:network_proxy/network/http/constants.dart';
+import 'package:network_proxy/network/http/h2/codec.dart';
 import 'package:network_proxy/network/http/http_parser.dart';
+import 'package:network_proxy/network/util/byte_buf.dart';
 
 import '../../utils/compress.dart';
 import 'http.dart';
 import 'http_headers.dart';
 
-class HttpConstants {
-  /// Line feed character /n
-  static const int lf = 10;
-
-  /// Carriage return /r
-  static const int cr = 13;
-
-  /// Horizontal space
-  static const int sp = 32;
-
-  /// Colon ':'
-  static const int colon = 58;
-}
 
 class ParserException implements Exception {
   final String message;
@@ -57,63 +49,20 @@ enum State {
   done,
 }
 
-///类似于netty ByteBuf
-class ByteBuf {
-  final BytesBuilder _buffer = BytesBuilder();
+class DecoderResult<T> {
+  bool isDone = true;
+  T? data;
 
-  int _readerIndex = 0;
+  //转发消息
+  List<int>? forward;
 
-  Uint8List get buffer => _buffer.toBytes();
-
-  int get length => _buffer.length;
-
-  ///添加
-  void add(List<int> bytes) {
-    _buffer.add(bytes);
-  }
-
-  ///清空
-  clear() {
-    _buffer.clear();
-    _readerIndex = 0;
-  }
-
-  ///读取索引
-  int get readerIndex => _readerIndex;
-
-  bool isReadable() => _readerIndex < _buffer.length;
-
-  ///可读字节数
-  int readableBytes() {
-    return _buffer.length - _readerIndex;
-  }
-
-  ///读取字节
-  Uint8List readBytes(int length) {
-    Uint8List bytes = buffer.sublist(_readerIndex, _readerIndex + length);
-    _readerIndex += length;
-    return bytes;
-  }
-
-  ///跳过
-  skipBytes(int length) {
-    _readerIndex += length;
-  }
-
-  ///读取字节
-  int read() {
-    return buffer[_readerIndex++];
-  }
-
-  int get(int index) {
-    return buffer[index];
-  }
+  DecoderResult({this.isDone = true});
 }
 
 /// 解码
 abstract interface class Decoder<T> {
   /// 解码 如果返回null说明数据不完整
-  T? decode(ByteBuf byteBuf, {bool resolveBody = true});
+  DecoderResult<T> decode(ChannelContext channelContext, ByteBuf byteBuf);
 }
 
 /// 编码
@@ -130,60 +79,76 @@ abstract class Codec<T> implements Decoder<T>, Encoder<T> {
 /// http编解码
 abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
   final HttpParse _httpParse = HttpParse();
+  Http2Codec<T>? _h2Codec;
   State _state = State.readInitial;
 
-  late T message;
+  late DecoderResult<T> result;
 
   BodyReader? bodyReader;
 
   T createMessage(List<String> reqLine);
 
+  Http2Codec<T> getH2Codec() {
+    return _h2Codec ??= (this is HttpRequestCodec ? Http2RequestDecoder() : Http2ResponseDecoder()) as Http2Codec<T>;
+  }
+
   @override
-  T? decode(ByteBuf data, {bool resolveBody = true}) {
+  DecoderResult<T> decode(ChannelContext channelContext, ByteBuf data) {
+    if (channelContext.serverChannel?.selectedProtocol == HttpConstants.h2) {
+      return getH2Codec().decode(channelContext, data);
+    }
+
     //请求行
     if (_state == State.readInitial) {
       init();
       var initialLine = _readInitialLine(data);
-      message = createMessage(initialLine);
+      result.data = createMessage(initialLine);
       _state = State.readHeader;
     }
 
     //请求头
     try {
       if (_state == State.readHeader) {
-        _readHeader(data, message);
+        _readHeader(data, result.data!);
       }
 
       //请求体
       if (_state == State.body) {
-        var result = resolveBody ? bodyReader!.readBody(data.readBytes(data.readableBytes())) : null;
-        if (!resolveBody || result?.isDone == true) {
+        bool resolveBody = channelContext.currentRequest?.method != HttpMethod.head;
+        var bodyResult = resolveBody ? bodyReader!.readBody(data.readAvailableBytes()) : null;
+        if (!resolveBody || bodyResult?.isDone == true) {
           _state = State.done;
-          message.body = result?.body;
+          result.data!.body = bodyResult?.body;
         }
       }
 
       if (_state == State.done) {
-        message.body = _convertBody(message.body);
+        result.data!.body = _convertBody(result.data!.body);
         _state = State.readInitial;
-        return message;
+        result.isDone = true;
+        return result;
       }
     } catch (e) {
       _state = State.readInitial;
       rethrow;
     }
 
-    return null;
+    return result;
   }
 
   void init() {
     bodyReader = null;
+    result = DecoderResult(isDone: false);
   }
 
   void initialLine(BytesBuilder buffer, T message);
 
   @override
   List<int> encode(T message) {
+    if (message.streamId != null) {
+      return getH2Codec().encode(message);
+    }
+
     BytesBuilder builder = BytesBuilder();
     //请求行
     initialLine(builder, message);
@@ -195,10 +160,13 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
 
     //请求头
     message.headers.remove(HttpHeaders.TRANSFER_ENCODING);
-    message.headers.remove(HttpHeaders.CONTENT_LENGTH);
+
     if (body != null && body.isNotEmpty) {
       message.headers.contentLength = body.length;
+    } else if (message.contentLength != 0){
+      message.headers.remove(HttpHeaders.CONTENT_LENGTH);
     }
+
     message.headers.forEach((key, values) {
       for (var v in values) {
         builder
@@ -227,7 +195,6 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
   //读取请求头
   void _readHeader(ByteBuf data, T message) {
     if (_httpParse.parseHeaders(data, message.headers)) {
-      message.contentLength = message.headers.contentLength;
       _state = State.body;
       bodyReader = BodyReader(message);
     }
@@ -238,7 +205,7 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     if (bytes == null) {
       return null;
     }
-    if (message.headers.isGzip) {
+    if (result.data!.headers.isGzip) {
       bytes = gzipDecode(bytes);
     }
     return bytes;

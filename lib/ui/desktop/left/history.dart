@@ -18,7 +18,7 @@ import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/utils/har.dart';
 
 import '../../content/panel.dart';
-import 'domain.dart';
+import 'list.dart';
 
 ///历史记录
 class HistoryPageWidget extends StatelessWidget {
@@ -59,7 +59,7 @@ class HistoryPageWidget extends StatelessWidget {
             )),
         body: futureWidget(HistoryStorage.instance.then((value) => value.getRequests(item)), (data) {
           print("START ${DateTime.now()}");
-          return DomainWidget(panel: panel, proxyServer: proxyServer, list: data, shrinkWrap: false);
+          return DomainList(panel: panel, proxyServer: proxyServer, list: data, shrinkWrap: false);
         }, loading: true));
   }
 }
@@ -287,7 +287,7 @@ class WriteTask extends EventListener {
   void onRequest(Channel channel, HttpRequest request) {}
 
   @override
-  void onResponse(Channel channel, HttpResponse response) {
+  void onResponse(ChannelContext channelContext, HttpResponse response) {
     if (response.request == null) {
       return;
     }

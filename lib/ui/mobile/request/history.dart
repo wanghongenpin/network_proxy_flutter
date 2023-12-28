@@ -251,7 +251,7 @@ class WriteTask extends EventListener {
   void onRequest(Channel channel, HttpRequest request) {}
 
   @override
-  void onResponse(Channel channel, HttpResponse response) {
+  void onResponse(ChannelContext channelContext, HttpResponse response) {
     if (response.request == null) {
       return;
     }

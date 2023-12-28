@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:network_proxy/network/http/codec.dart';
+import 'package:network_proxy/network/http/constants.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
+import 'package:network_proxy/network/util/byte_buf.dart';
 
 /// http解析器
 class HttpParse {
@@ -22,7 +24,7 @@ class HttpParse {
     }
 
     if (initialLine.length != 3) {
-      throw ParserException("parseLine error", String.fromCharCodes(data.buffer));
+      throw ParserException("parseLine error", String.fromCharCodes(data.bytes));
     }
 
     return initialLine;
