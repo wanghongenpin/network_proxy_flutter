@@ -468,8 +468,12 @@ class RequestRewriteRule {
   RequestRewriteRule({this.enabled = true, this.name, required this.url, required this.type, this.rewritePath})
       : _urlReg = RegExp(url.replaceAll("*", ".*"));
 
-  bool match(String url, [RuleType? type]) {
+  bool match(String url, {RuleType? type}) {
     return enabled && (type == null || this.type == type) && _urlReg.hasMatch(url);
+  }
+
+  bool matchUrl(String url, RuleType type) {
+    return this.type == type && _urlReg.hasMatch(url);
   }
 
   /// 从json中创建

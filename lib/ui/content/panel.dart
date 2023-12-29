@@ -5,6 +5,7 @@ import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/ui/component/share.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/utils/lang.dart';
+import 'package:network_proxy/utils/platform.dart';
 
 import 'body.dart';
 
@@ -101,7 +102,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       body: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
           child: TabBarView(
-            physics: const NeverScrollableScrollPhysics(), //禁止滑动
+            physics: Platforms.isDesktop() ? const NeverScrollableScrollPhysics() : null, //桌面禁止滑动
             controller: _tabController,
             children: [
               SelectionArea(child: general()),

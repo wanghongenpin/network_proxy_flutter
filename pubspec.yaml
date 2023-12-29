@@ -10,6 +10,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   crypto: ^3.0.3
   cupertino_icons: ^1.0.2
   basic_utils: ^5.7.0

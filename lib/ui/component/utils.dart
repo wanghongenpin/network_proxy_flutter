@@ -80,6 +80,7 @@ RelativeRect menuPosition(BuildContext context) {
 }
 
 Widget contextMenu(BuildContext context, EditableTextState editableTextState) {
+  Locale myLocale = Localizations.localeOf(context);
   List<ContextMenuButtonItem> list = [
     ContextMenuButtonItem(
       onPressed: () {
@@ -91,7 +92,7 @@ Widget contextMenu(BuildContext context, EditableTextState editableTextState) {
       type: ContextMenuButtonType.copy,
     ),
     ContextMenuButtonItem(
-      label: 'Copy Value',
+      label: myLocale == const Locale.fromSubtags(languageCode: 'zh') ? '复制值' : 'Copy Value',
       onPressed: () {
         unSelect(editableTextState);
         Clipboard.setData(ClipboardData(text: editableTextState.textEditingValue.text)).then((value) {

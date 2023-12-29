@@ -85,7 +85,7 @@ class MultiWindow {
 
   static bool _refreshRewrite = false;
 
-  static void _handleRefreshRewrite(Operation operation, Map<dynamic, dynamic> arguments) async {
+  static Future<void> _handleRefreshRewrite(Operation operation, Map<dynamic, dynamic> arguments) async {
     RequestRewrites requestRewrites = await RequestRewrites.instance;
 
     switch (operation) {
@@ -140,7 +140,7 @@ void registerMethodHandler() {
     }
 
     if (call.method == 'refreshRequestRewrite') {
-      MultiWindow._handleRefreshRewrite(Operation.of(call.arguments['operation']), call.arguments);
+      await MultiWindow._handleRefreshRewrite(Operation.of(call.arguments['operation']), call.arguments);
       return 'done';
     }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/ui/component/chinese_font.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
@@ -96,13 +97,21 @@ class FluentApp extends StatelessWidget {
         builder: (_, current, __) {
           uiConfiguration.theme = current;
           uiConfiguration.flushConfig();
-
           return MaterialApp(
             title: 'ProxyPin',
             debugShowCheckedModeBanner: false,
             theme: current.useMaterial3 ? material3Light : light,
             darkTheme: current.useMaterial3 ? material3Dark : darkTheme,
             themeMode: current.mode,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale.fromSubtags(languageCode: 'zh'),
+              Locale('en'), // English
+            ],
             home: home,
           );
         });

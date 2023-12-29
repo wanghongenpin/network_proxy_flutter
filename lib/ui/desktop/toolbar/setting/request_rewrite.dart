@@ -96,11 +96,13 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
                                     MultiWindow.invokeRefreshRewrite(Operation.enabled, enabled: value);
                                   }));
                         })),
+                const SizedBox(width: 10),
                 Expanded(
                     child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const SizedBox(width: 10),
+                    IconButton(onPressed: refresh, icon: const Icon(Icons.refresh, color: Colors.blue), tooltip: "刷新"),
+                    const SizedBox(width: 30),
                     FilledButton.icon(
                       icon: const Icon(Icons.add, size: 18),
                       label: const Text("添加", style: TextStyle(fontSize: 12)),
@@ -120,6 +122,12 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
               const SizedBox(height: 10),
               RequestRuleList(widget.requestRewrites, windowId: widget.windowId),
             ])));
+  }
+
+  //刷新
+  void refresh() async {
+    await widget.requestRewrites.reloadRequestRewrite();
+    setState(() {});
   }
 
   //导入js
@@ -470,8 +478,8 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
               text: '使用文档',
               style: const TextStyle(color: Colors.blue, fontSize: 14),
               recognizer: TapGestureRecognizer()
-                ..onTap = () => DesktopMultiWindow.invokeMethod(
-                    0, "launchUrl", 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%AF%B7%E6%B1%82%E9%87%8D%E5%86%99'))),
+                ..onTap = () => DesktopMultiWindow.invokeMethod(0, "launchUrl",
+                    'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%AF%B7%E6%B1%82%E9%87%8D%E5%86%99'))),
         ]),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         content: Container(

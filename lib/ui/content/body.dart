@@ -172,7 +172,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
     var ruleType = isRequest ? RuleType.requestReplace : RuleType.responseReplace;
     var url = '${request?.remoteDomain()}${request?.path()}';
     var rule = requestRewrites.rules
-        .firstWhere((it) => it.match(url, ruleType), orElse: () => RequestRewriteRule(type: ruleType, url: url));
+        .firstWhere((it) => it.matchUrl(url, ruleType), orElse: () => RequestRewriteRule(type: ruleType, url: url));
 
     var body = bodyKey.currentState?.body;
 
@@ -193,13 +193,6 @@ class HttpBodyState extends State<HttpBodyWidget> {
               builder: (BuildContext context) => RuleAddDialog(rule: rule, items: rewriteItems, newWindow: false))
           .then((value) {
         if (value is RequestRewriteRule) {
-          DesktopMultiWindow.getAllSubWindowIds().then((windowIds) async {
-            var items = await requestRewrites.getRewriteItems(value);
-            await requestRewrites.updateRule(requestRewrites.rules.indexOf(value), value, items);
-            for (var windowId in windowIds) {
-              DesktopMultiWindow.invokeMethod(windowId, "reloadRequestRewrite");
-            }
-          });
           FlutterToastr.show("保存请求重写规则成功", context);
         }
       });
