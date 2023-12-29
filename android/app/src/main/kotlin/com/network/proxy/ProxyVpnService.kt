@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.network.proxy.vpn.ProxyVpnThread
 import com.network.proxy.vpn.socket.ProtectSocket
 import com.network.proxy.vpn.socket.ProtectSocketHolder
 
@@ -21,6 +22,7 @@ import com.network.proxy.vpn.socket.ProtectSocketHolder
  */
 class ProxyVpnService : VpnService(), ProtectSocket {
     private var vpnInterface: ParcelFileDescriptor? = null
+    private var vpnThread: ProxyVpnThread? = null
 
     companion object {
         const val MAX_PACKET_LEN = 1500
@@ -86,6 +88,7 @@ class ProxyVpnService : VpnService(), ProtectSocket {
     }
 
     private fun disconnect() {
+        vpnThread?.run { stopThread() }
         vpnInterface?.close()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -111,6 +114,12 @@ class ProxyVpnService : VpnService(), ProtectSocket {
 
         ProtectSocketHolder.setProtectSocket(this)
         showServiceNotification()
+        vpnThread = ProxyVpnThread(
+            vpnInterface!!,
+            proxyHost,
+            proxyPort
+        )
+        vpnThread!!.start()
         isRunning = true
     }
 

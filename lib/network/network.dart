@@ -133,6 +133,7 @@ class Server extends Network {
   void ssl(ChannelContext channelContext, Channel channel, Uint8List data) async {
     var hostAndPort = channelContext.host;
     try {
+      hostAndPort?.scheme = HostAndPort.httpsScheme;
       if (hostAndPort == null && TLS.getDomain(data) != null) {
         hostAndPort = HostAndPort.host(TLS.getDomain(data)!, 443);
       }
@@ -140,7 +141,7 @@ class Server extends Network {
 
       Channel? remoteChannel = channelContext.serverChannel;
 
-      if (HostFilter.filter(hostAndPort?.host)) {
+      if (HostFilter.filter(hostAndPort?.host) || !configuration.enableSsl) {
         remoteChannel = remoteChannel ?? await channelContext.connectServerChannel(hostAndPort!, RelayHandler(channel));
         relay(channel, remoteChannel);
         channel.pipeline.channelRead(channelContext, channel, data);
