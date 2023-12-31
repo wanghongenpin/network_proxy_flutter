@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/http/http.dart';
@@ -46,6 +47,8 @@ class HttpBodyWidget extends StatefulWidget {
 class HttpBodyState extends State<HttpBodyWidget> {
   var bodyKey = GlobalKey<_BodyState>();
   int tabIndex = 0;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -124,32 +127,32 @@ class HttpBodyState extends State<HttpBodyWidget> {
       const SizedBox(width: 10),
       IconButton(
           icon: const Icon(Icons.copy, size: 18),
-          tooltip: '复制',
+          tooltip: localizations.copy,
           onPressed: () {
             var body = bodyKey.currentState?.body;
             if (body == null) {
               return;
             }
-            Clipboard.setData(ClipboardData(text: body)).then((value) => FlutterToastr.show("已复制到剪切板", context));
+            Clipboard.setData(ClipboardData(text: body)).then((value) => FlutterToastr.show(localizations.copied, context));
           }),
     ];
 
     if (!widget.hideRequestRewrite) {
       list.add(const SizedBox(width: 3));
       list.add(
-          IconButton(icon: const Icon(Icons.edit_document, size: 18), tooltip: '请求重写', onPressed: showRequestRewrite));
+          IconButton(icon: const Icon(Icons.edit_document, size: 18), tooltip: localizations.requestRewrite, onPressed: showRequestRewrite));
     }
 
     list.add(const SizedBox(width: 3));
     list.add(IconButton(
         icon: const Icon(Icons.abc, size: 20),
-        tooltip: '编码',
+        tooltip: localizations.encode,
         onPressed: () {
           encodeWindow(EncoderType.base64, context, bodyKey.currentState?.body);
         }));
     if (!inNewWindow) {
       list.add(const SizedBox(width: 3));
-      list.add(IconButton(icon: const Icon(Icons.open_in_new, size: 18), tooltip: '新窗口打开', onPressed: () => openNew()));
+      list.add(IconButton(icon: const Icon(Icons.open_in_new, size: 18), tooltip: localizations.newWindow, onPressed: () => openNew()));
     }
 
     return Wrap(
@@ -193,7 +196,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
               builder: (BuildContext context) => RuleAddDialog(rule: rule, items: rewriteItems, newWindow: false))
           .then((value) {
         if (value is RequestRewriteRule) {
-          FlutterToastr.show("保存请求重写规则成功", context);
+          FlutterToastr.show(localizations.saveSuccess, context);
         }
       });
     }
@@ -210,7 +213,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
         {'name': 'HttpBodyWidget', 'httpMessage': widget.httpMessage, 'inNewWindow': true},
       ));
       window
-        ..setTitle(widget.httpMessage is HttpRequest ? '请求体' : '响应体')
+        ..setTitle(widget.httpMessage is HttpRequest ? localizations.requestBody : localizations.responseBody)
         ..setFrame(const Offset(100, 100) & Size(800 * ratio, size.height * ratio))
         ..center()
         ..show();
@@ -380,7 +383,7 @@ class Tabs {
 
 enum ViewType {
   text("Text"),
-  formUrl("URL 解码"),
+  formUrl("URL Decode"),
   json("JSON"),
   jsonText("JSON Text"),
   html("HTML"),

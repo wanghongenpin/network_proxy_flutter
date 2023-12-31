@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 
 ///编码类型
@@ -35,12 +36,15 @@ class EncoderWidget extends StatefulWidget {
 
 class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateMixin {
   var tabs = const [
-    Tab(text: 'URL编码'),
-    Tab(text: ' Base64编码'),
-    Tab(text: ' MD5编码'),
+    Tab(text: 'URL'),
+    Tab(text: 'Base64'),
+    Tab(text: 'MD5'),
   ];
+
   late EncoderType type;
   late TabController tabController;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   String inputText = '';
   TextEditingController outputTextController = TextEditingController();
@@ -77,7 +81,7 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-          title: Text('${type.name.toUpperCase()}编码', style: const TextStyle(fontSize: 16)),
+          title: Text('${type.name.toUpperCase()}${localizations.encode}', style: const TextStyle(fontSize: 16)),
           centerTitle: true,
           bottom: TabBar(
             controller: tabController,
@@ -93,29 +97,27 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
         padding: const EdgeInsets.all(10),
         child: ListView(
           children: <Widget>[
-            const Text('输入要转换的内容'),
+            Text(localizations.encodeInput),
             const SizedBox(height: 5),
             TextFormField(
                 initialValue: inputText,
                 minLines: 5,
                 maxLines: 10,
                 onChanged: (text) => inputText = text,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: '请输入要转换的内容',
-                )),
+                decoration: const InputDecoration(border: OutlineInputBorder())),
             const SizedBox(height: 10),
             Wrap(
               alignment: WrapAlignment.center,
               children: [
-                FilledButton(onPressed: encode, child: Text('${type.name.toUpperCase()}编码')),
-                const SizedBox(width: 50),
+                FilledButton(onPressed: encode, child: Text('${type.name.toUpperCase()}${localizations.encode}')),
+                const SizedBox(width: 20),
                 type == EncoderType.md5
                     ? const SizedBox()
-                    : OutlinedButton(onPressed: decode, child: Text('${type.name.toUpperCase()}解码')),
+                    : OutlinedButton(
+                        onPressed: decode, child: Text('${type.name.toUpperCase()}${localizations.encode}')),
               ],
             ),
-            const Text('转换结果'),
+            Text(localizations.encodeResult),
             const SizedBox(height: 5),
             TextFormField(
               controller: outputTextController,
@@ -127,9 +129,9 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
             ElevatedButton(
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: outputTextController.text));
-                FlutterToastr.show('复制成功', context);
+                FlutterToastr.show(localizations.copied, context);
               },
-              child: const Text('复制'),
+              child: Text(localizations.copy),
             ),
           ],
         ),
@@ -150,7 +152,7 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
           result = md5.convert(inputText.codeUnits).toString();
       }
     } catch (e) {
-      FlutterToastr.show('编码失败', context);
+      FlutterToastr.show(localizations.encodeFail, context);
     }
     outputTextController.text = result;
   }
@@ -167,7 +169,7 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
         case EncoderType.md5:
       }
     } catch (e) {
-      FlutterToastr.show('解码失败', context);
+      FlutterToastr.show(localizations.decodeFail, context);
     }
     outputTextController.text = result;
   }

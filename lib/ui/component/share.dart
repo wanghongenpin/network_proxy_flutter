@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
@@ -19,43 +20,44 @@ class ShareWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppLocalizations localizations = AppLocalizations.of(context)!;
+
     return IconButton(
         icon: const Icon(Icons.share),
         onPressed: () {
           showMenu(context: context, position: menuPosition(context), items: [
             PopupMenuItem(
-              child: const Text('分享请求链接'),
+              child: Text(localizations.shareUrl),
               onTap: () {
                 if (request == null) {
-                  FlutterToastr.show("请求为空", context);
+                  FlutterToastr.show("Request is empty", context);
                   return;
                 }
-                Share.share(request!.requestUrl, subject: "ProxyPin全平台抓包软件");
+                Share.share(request!.requestUrl, subject: localizations.proxyPinSoftware);
               },
             ),
             PopupMenuItem(
-                child: const Text('分享请求和响应'),
+                child: Text(localizations.shareRequestResponse),
                 onTap: () {
                   if (request == null) {
-                    FlutterToastr.show("请求为空", context);
+                    FlutterToastr.show("Request is empty", context);
                     return;
                   }
                   var file = XFile.fromData(utf8.encode(copyRequest(request!, response)),
-                      name: "抓包详情", mimeType: "txt");
-                  Share.shareXFiles([file], text: "ProxyPin全平台抓包软件");
+                      name: localizations.captureDetail, mimeType: "txt");
+                  Share.shareXFiles([file], text: localizations.proxyPinSoftware);
                 }),
             PopupMenuItem(
-                child: const Text('分享 cURL 请求'),
+                child: Text(localizations.shareCurl),
                 onTap: () {
                   if (request == null) {
                     return;
                   }
-                  var file = XFile.fromData(utf8.encode(curlRequest(request!)),
-                      name: "cURL.txt", mimeType: "txt");
-                  Share.shareXFiles([file], text: "ProxyPin全平台抓包软件");
+                  var file = XFile.fromData(utf8.encode(curlRequest(request!)), name: "cURL.txt", mimeType: "txt");
+                  Share.shareXFiles([file], text: localizations.proxyPinSoftware);
                 }),
             PopupMenuItem(
-                child: const Text('编辑请求重放'),
+                child: Text(localizations.requestEdit),
                 onTap: () {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     Navigator.of(context).push(MaterialPageRoute(

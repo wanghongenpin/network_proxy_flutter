@@ -4,9 +4,10 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:network_proxy/network/http/http.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
+import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/utils.dart';
@@ -183,7 +184,8 @@ encodeWindow(EncoderType type, BuildContext context, [String? text]) async {
   final window = await DesktopMultiWindow.createWindow(jsonEncode(
     {'name': 'EncoderWidget', 'type': type.name, 'text': text},
   ));
-  window.setTitle('编码');
+  if (!context.mounted) return;
+  window.setTitle(AppLocalizations.of(context)!.encode);
   window
     ..setFrame(const Offset(80, 80) & Size(900 * ratio, 600 * ratio))
     ..center()
@@ -200,7 +202,9 @@ openScriptWindow() async {
   final window = await DesktopMultiWindow.createWindow(jsonEncode(
     {'name': 'ScriptWidget'},
   ));
-  window.setTitle('脚本');
+
+  // window.setTitle('script');
+  window.setTitle('Script');
   window
     ..setFrame(const Offset(30, 0) & Size(800 * ratio, 690 * ratio))
     ..center()
@@ -217,7 +221,8 @@ openRequestRewriteWindow() async {
   final window = await DesktopMultiWindow.createWindow(jsonEncode(
     {'name': 'RequestRewriteWidget'},
   ));
-  window.setTitle('请求重写');
+  // window.setTitle('请求重写');
+  window.setTitle('Request Rewrite');
   window
     ..setFrame(const Offset(50, 0) & Size(800 * ratio, 650 * ratio))
     ..center();

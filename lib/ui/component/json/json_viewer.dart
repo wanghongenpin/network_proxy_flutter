@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/ui/component/json/theme.dart';
 import 'package:network_proxy/ui/component/json/toast.dart';
 
@@ -243,6 +244,8 @@ String _getTypeName(dynamic content) {
 
 /// 复制值
 Widget _copyValue(BuildContext context, Widget child, Object? value) {
+  AppLocalizations localizations = AppLocalizations.of(context)!;
+
   return Flexible(
       child: InkWell(
           child: child,
@@ -259,15 +262,16 @@ Widget _copyValue(BuildContext context, Widget child, Object? value) {
                 items: [
                   PopupMenuItem(
                       height: 30,
-                      child: const Text('复制'),
+                      child: Text(localizations.copy),
                       onTap: () {
                         Clipboard.setData(ClipboardData(text: jsonEncode(value)))
-                            .then((value) => Toast.show('已复制到剪切板', context));
+                            .then((value) => Toast.show(localizations.copied, context));
                       })
                 ]);
           },
           onTap: () {
-            Clipboard.setData(ClipboardData(text: jsonEncode(value))).then((value) => Toast.show('已复制到剪切板', context));
+            Clipboard.setData(ClipboardData(text: jsonEncode(value)))
+                .then((value) => Toast.show(localizations.copied, context));
           }));
 }
 

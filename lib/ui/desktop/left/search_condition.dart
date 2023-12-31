@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/utils/lang.dart';
@@ -21,6 +22,7 @@ class SearchConditions extends StatefulWidget {
 }
 
 class SearchConditionsState extends State<SearchConditions> {
+
   final requestContentMap = {
     'JSON': ContentType.json,
     'FORM-URL': ContentType.formUrl,
@@ -38,6 +40,7 @@ class SearchConditionsState extends State<SearchConditions> {
   };
 
   late SearchModel searchModel;
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {

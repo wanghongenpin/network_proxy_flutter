@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/desktop/left/search_condition.dart';
@@ -104,8 +105,17 @@ class ContentTypeSelect extends StatefulWidget {
 }
 
 class ContentTypeState extends State<ContentTypeSelect> {
-  String value = "全部";
-  List<String> types = ["JSON", "HTML", "JS", "CSS", "TEXT", "IMAGE", "全部"];
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  late String value;
+  late List<String> types;
+
+  @override
+  void initState() {
+    super.initState();
+    value = localizations.all;
+    types = ["JSON", "HTML", "JS", "CSS", "TEXT", "IMAGE", localizations.all];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +123,7 @@ class ContentTypeState extends State<ContentTypeSelect> {
     return PopupMenuButton(
       initialValue: value,
       offset: Offset(-10, (types.length - types.indexOf(value)) * -30.0 - 10),
-      tooltip: '响应类型',
+      tooltip: localizations.responseType,
       constraints: const BoxConstraints(maxWidth: 75),
       child: Wrap(runAlignment: WrapAlignment.center, children: [
         Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
@@ -126,7 +136,7 @@ class ContentTypeState extends State<ContentTypeSelect> {
         setState(() {
           this.value = value;
         });
-        widget.onSelected(value == "全部" ? null : ContentType.valueOf(value));
+        widget.onSelected(value == localizations.all ? null : ContentType.valueOf(value));
       },
       itemBuilder: (BuildContext context) {
         return types.map(item).toList();

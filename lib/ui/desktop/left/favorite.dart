@@ -7,6 +7,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
@@ -30,6 +31,8 @@ class Favorites extends StatefulWidget {
 }
 
 class _FavoritesState extends State<Favorites> {
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -38,7 +41,7 @@ class _FavoritesState extends State<Favorites> {
           if (snapshot.hasData) {
             var favorites = snapshot.data ?? Queue();
             if (favorites.isEmpty) {
-              return const Center(child: Text("暂无收藏"));
+              return Center(child: Text(localizations.emptyFavorite));
             }
 
             return ListView.separated(
@@ -51,7 +54,7 @@ class _FavoritesState extends State<Favorites> {
                   panel: widget.panel,
                   onRemove: (Favorite favorite) {
                     FavoriteStorage.removeFavorite(favorite);
-                    FlutterToastr.show('已删除收藏', context);
+                    FlutterToastr.show(localizations.deleteFavoriteSuccess, context);
                     setState(() {});
                   },
                 );
@@ -83,6 +86,8 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
   bool selected = false;
   late HttpRequest request;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -121,34 +126,36 @@ class _FavoriteItemState extends State<_FavoriteItem> {
       context,
       details.globalPosition,
       items: <PopupMenuEntry>[
-        popupItem("复制请求链接", onTap: () {
+        popupItem(localizations.copyUrl, onTap: () {
           var requestUrl = request.requestUrl;
-          Clipboard.setData(ClipboardData(text: requestUrl)).then((value) => FlutterToastr.show('已复制到剪切板', context));
+          Clipboard.setData(ClipboardData(text: requestUrl))
+              .then((value) => FlutterToastr.show(localizations.copied, context));
         }),
-        popupItem("复制请求和响应", onTap: () {
+        popupItem(localizations.copyRequestResponse, onTap: () {
           Clipboard.setData(ClipboardData(text: copyRequest(request, request.response)))
-              .then((value) => FlutterToastr.show('已复制到剪切板', context));
+              .then((value) => FlutterToastr.show(localizations.copied, context));
         }),
-        popupItem("复制 cURL 请求", onTap: () {
+        popupItem(localizations.copyCurl, onTap: () {
           Clipboard.setData(ClipboardData(text: curlRequest(request)))
-              .then((value) => FlutterToastr.show('已复制到剪切板', context));
+              .then((value) => FlutterToastr.show(localizations.copied, context));
         }),
         const PopupMenuDivider(height: 0.3),
-        popupItem("重命名", onTap: () => rename(widget.favorite)),
-        popupItem("重放请求", onTap: () {
+        popupItem(localizations.rename, onTap: () => rename(widget.favorite)),
+        popupItem(localizations.repeat, onTap: () {
           var httpRequest = request.copy(uri: request.requestUrl);
-          var proxyInfo = widget.panel.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.panel.proxyServer.port) : null;
+          var proxyInfo =
+              widget.panel.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.panel.proxyServer.port) : null;
           HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo);
 
-          FlutterToastr.show('已重新发送请求', context);
+          FlutterToastr.show(localizations.reSendRequest, context);
         }),
-        popupItem("编辑请求重放", onTap: () {
+        popupItem(localizations.editRequest, onTap: () {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             requestEdit();
           });
         }),
         const PopupMenuDivider(height: 0.3),
-        popupItem("删除收藏", onTap: () {
+        popupItem(localizations.deleteFavorite, onTap: () {
           widget.onRemove?.call(widget.favorite);
         })
       ],
@@ -168,13 +175,13 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           return AlertDialog(
             content: TextFormField(
               initialValue: name,
-              decoration: const InputDecoration(label: Text("名称")),
+              decoration: InputDecoration(label: Text(localizations.name)),
               onChanged: (val) => name = val,
             ),
             actions: <Widget>[
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
               TextButton(
-                child: const Text('保存'),
+                child: Text(localizations.save),
                 onPressed: () {
                   Navigator.maybePop(context);
                   setState(() {
@@ -199,7 +206,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
     final window = await DesktopMultiWindow.createWindow(jsonEncode(
       {'name': 'RequestEditor', 'request': request},
     ));
-    window.setTitle('请求编辑');
+    window.setTitle(localizations.requestEdit);
     window
       ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
       ..center()

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
@@ -8,10 +9,11 @@ import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/content/panel.dart';
-import 'package:network_proxy/ui/desktop/left/list.dart';
 import 'package:network_proxy/ui/desktop/left/favorite.dart';
 import 'package:network_proxy/ui/desktop/left/history.dart';
+import 'package:network_proxy/ui/desktop/left/list.dart';
 import 'package:network_proxy/ui/desktop/toolbar/toolbar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../component/split_view.dart';
 
@@ -32,12 +34,25 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   late ProxyServer proxyServer = ProxyServer(widget.configuration);
   late NetworkTabController panel;
 
-  final List<NavigationRailDestination> destinations = const [
-    NavigationRailDestination(icon: Icon(Icons.workspaces), label: Text("抓包", style: TextStyle(fontSize: 12))),
-    NavigationRailDestination(icon: Icon(Icons.favorite), label: Text("收藏", style: TextStyle(fontSize: 12))),
-    NavigationRailDestination(icon: Icon(Icons.history), label: Text("历史", style: TextStyle(fontSize: 12))),
-    NavigationRailDestination(icon: Icon(Icons.construction), label: Text("工具箱", style: TextStyle(fontSize: 12))),
-  ];
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  List<NavigationRailDestination> get destinations => [
+        NavigationRailDestination(
+            padding: const EdgeInsets.only(bottom: 3),
+            icon: const Icon(Icons.workspaces),
+            label: Text(localizations.requests, style: Theme.of(context).textTheme.bodySmall)),
+        NavigationRailDestination(
+            padding: const EdgeInsets.only(bottom: 3),
+            icon: const Icon(Icons.favorite),
+            label: Text(localizations.favorites, style: Theme.of(context).textTheme.bodySmall)),
+        NavigationRailDestination(
+            padding: const EdgeInsets.only(bottom: 3),
+            icon: const Icon(Icons.history),
+            label: Text(localizations.history, style: Theme.of(context).textTheme.bodySmall)),
+        NavigationRailDestination(
+            icon: const Icon(Icons.construction),
+            label: Text(localizations.toolbox, style: Theme.of(context).textTheme.bodySmall)),
+      ];
 
   @override
   void onRequest(Channel channel, HttpRequest request) {
@@ -72,24 +87,12 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   @override
   Widget build(BuildContext context) {
     final domainWidget = DomainList(key: domainStateKey, proxyServer: proxyServer, panel: panel);
+
     return Scaffold(
         appBar: Tab(child: Toolbar(proxyServer, domainStateKey, sideNotifier: _selectIndex)),
         body: Row(
           children: [
-            ValueListenableBuilder(
-                valueListenable: _selectIndex,
-                builder: (_, index, __) {
-                  if (_selectIndex.value == -1) {
-                    return const SizedBox();
-                  }
-                  return Container(
-                      decoration: BoxDecoration(
-                          border: Border(
-                        right: BorderSide(color: Theme.of(context).dividerColor, width: 0.2),
-                      )),
-                      width: 55,
-                      child: leftNavigation(index));
-                }),
+            navigationBar(),
             Expanded(
               child: VerticalSplitView(
                   ratio: 0.3,
@@ -107,6 +110,49 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
             )
           ],
         ));
+  }
+
+  Widget navigationBar() {
+    return ValueListenableBuilder(
+        valueListenable: _selectIndex,
+        builder: (_, index, __) {
+          if (_selectIndex.value == -1) {
+            return const SizedBox();
+          }
+          return Container(
+            width: localizations.localeName == 'zh' ? 55 : 72,
+            decoration:
+                BoxDecoration(border: Border(right: BorderSide(color: Theme.of(context).dividerColor, width: 0.2))),
+            child: Column(children: <Widget>[
+              SizedBox(
+                height: 300,
+                child: leftNavigation(index),
+              ),
+              Expanded(
+                  child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  //偏好设置
+                  Tooltip(
+                      message: localizations.preference,
+                      preferBelow: false,
+                      child: IconButton(
+                          onPressed: () {}, icon: Icon(Icons.settings_outlined, color: Colors.grey.shade500))),
+                  const SizedBox(height: 5),
+                  Tooltip(
+                      preferBelow: true,
+                      message: localizations.feedback,
+                      child: IconButton(
+                        onPressed: () =>
+                            launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter/issues")),
+                        icon: Icon(Icons.feedback_outlined, color: Colors.grey.shade500),
+                      )),
+                  const SizedBox(height: 10),
+                ],
+              ))
+            ]),
+          );
+        });
   }
 
   Widget leftNavigation(int index) {

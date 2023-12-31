@@ -2,15 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/ui/component/chinese_font.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/desktop/desktop.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
-import 'package:network_proxy/ui/ui_configuration.dart';
+import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,21 +50,6 @@ void main(List<String> args) async {
   runApp(FluentApp(DesktopHomePage(configuration: await configuration), uiConfiguration: uiConfiguration));
 }
 
-class ThemeModel {
-  ThemeMode mode;
-  bool useMaterial3;
-
-  ThemeModel({this.mode = ThemeMode.system, this.useMaterial3 = true});
-
-  ThemeModel copy({ThemeMode? mode, bool? useMaterial3}) => ThemeModel(
-        mode: mode ?? this.mode,
-        useMaterial3: useMaterial3 ?? this.useMaterial3,
-      );
-}
-
-///主题
-late ValueNotifier<ThemeModel> themeNotifier;
-
 class FluentApp extends StatelessWidget {
   final Widget home;
   final UIConfiguration uiConfiguration;
@@ -77,8 +62,6 @@ class FluentApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    themeNotifier = ValueNotifier(uiConfiguration.theme);
-
     var light = lightTheme();
     var darkTheme = config(ThemeData.dark(useMaterial3: false));
 
@@ -92,26 +75,18 @@ class FluentApp extends StatelessWidget {
       darkTheme = darkTheme.useSystemChineseFont();
     }
 
-    return ValueListenableBuilder<ThemeModel>(
-        valueListenable: themeNotifier,
+    return ValueListenableBuilder<bool>(
+        valueListenable: uiConfiguration.globalChange,
         builder: (_, current, __) {
-          uiConfiguration.theme = current;
-          uiConfiguration.flushConfig();
           return MaterialApp(
             title: 'ProxyPin',
             debugShowCheckedModeBanner: false,
-            theme: current.useMaterial3 ? material3Light : light,
-            darkTheme: current.useMaterial3 ? material3Dark : darkTheme,
-            themeMode: current.mode,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale.fromSubtags(languageCode: 'zh'),
-              Locale('en'), // English
-            ],
+            theme: uiConfiguration.useMaterial3 ? material3Light : light,
+            darkTheme: uiConfiguration.useMaterial3 ? material3Dark : darkTheme,
+            themeMode: uiConfiguration.themeMode,
+            locale: uiConfiguration.language,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: home,
           );
         });

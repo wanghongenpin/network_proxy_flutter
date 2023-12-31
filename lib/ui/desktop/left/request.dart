@@ -17,6 +17,7 @@ import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 ///请求 URI
 class RequestWidget extends StatefulWidget {
@@ -46,6 +47,8 @@ class _RequestWidgetState extends State<RequestWidget> {
   static _RequestWidgetState? selectedState;
 
   bool selected = false;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   Widget build(BuildContext context) {
@@ -88,37 +91,37 @@ class _RequestWidgetState extends State<RequestWidget> {
       context,
       details.globalPosition,
       items: <PopupMenuEntry>[
-        popupItem("复制请求链接", onTap: () {
+        popupItem(localizations.copyUrl, onTap: () {
           var requestUrl = widget.request.requestUrl;
-          Clipboard.setData(ClipboardData(text: requestUrl)).then((value) => FlutterToastr.show('已复制到剪切板', context));
+          Clipboard.setData(ClipboardData(text: requestUrl)).then((value) => FlutterToastr.show(localizations.copied, context));
         }),
-        popupItem("复制请求和响应", onTap: () {
+        popupItem(localizations.copyRequestResponse, onTap: () {
           Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))
-              .then((value) => FlutterToastr.show('已复制到剪切板', context));
+              .then((value) => FlutterToastr.show(localizations.copied, context));
         }),
-        popupItem("复制 cURL 请求", onTap: () {
+        popupItem(localizations.copyCurl, onTap: () {
           Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
-              .then((value) => FlutterToastr.show('已复制到剪切板', context));
+              .then((value) => FlutterToastr.show(localizations.copied, context));
         }),
         const PopupMenuDivider(height: 0.3),
-        popupItem("重放请求", onTap: () {
+        popupItem(localizations.repeat, onTap: () {
           var request = widget.request.copy(uri: widget.request.requestUrl);
           var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
           HttpClients.proxyRequest(request, proxyInfo: proxyInfo);
 
-          FlutterToastr.show('已重新发送请求', context);
+          FlutterToastr.show(localizations.reSendRequest, context);
         }),
-        popupItem("编辑请求重放", onTap: () {
+        popupItem(localizations.editRequest, onTap: () {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             requestEdit();
           });
         }),
-        popupItem("收藏请求", onTap: () {
+        popupItem(localizations.favorite, onTap: () {
           FavoriteStorage.addFavorite(widget.request);
-          FlutterToastr.show('收藏成功', context);
+          FlutterToastr.show(localizations.operationSuccess, context);
         }),
         const PopupMenuDivider(height: 0.3),
-        popupItem("删除", onTap: () {
+        popupItem(localizations.delete, onTap: () {
           widget.remove?.call(widget);
         }),
       ],
@@ -140,7 +143,8 @@ class _RequestWidgetState extends State<RequestWidget> {
     final window = await DesktopMultiWindow.createWindow(jsonEncode(
       {'name': 'RequestEditor', 'request': widget.request, 'proxyPort': widget.proxyServer.port},
     ));
-    window.setTitle('请求编辑');
+
+    window.setTitle(localizations.requestEdit);
     window
       ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
       ..center()

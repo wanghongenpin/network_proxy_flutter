@@ -7,6 +7,7 @@ import 'package:network_proxy/native/app_lifecycle.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SocketLaunch extends StatefulWidget {
   static bool started = false;
@@ -35,6 +36,8 @@ class SocketLaunch extends StatefulWidget {
 }
 
 class _SocketLaunchState extends State<SocketLaunch> with WindowListener, WidgetsBindingObserver {
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -89,7 +92,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
   @override
   Widget build(BuildContext context) {
     return IconButton(
-        tooltip: SocketLaunch.started ? "停止" : "启动",
+        tooltip: SocketLaunch.started ? localizations.stop : localizations.start,
         icon: Icon(SocketLaunch.started ? Icons.stop : Icons.play_arrow_sharp,
             color: SocketLaunch.started ? Colors.red : Colors.green, size: widget.size.toDouble()),
         onPressed: () async {
@@ -130,7 +133,10 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
       });
       widget.onStart?.call();
     }).catchError((e) {
-      FlutterToastr.show("启动失败，请检查端口号${widget.proxyServer.port}是否被占用", context, duration: 3);
+      String message = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh')
+          ? '启动失败，请检查端口号${widget.proxyServer.port}是否被占用'
+          : 'Startup failed, please check the port number${widget.proxyServer.port} is occupied';
+      FlutterToastr.show(message, context, duration: 3);
     });
   }
 }

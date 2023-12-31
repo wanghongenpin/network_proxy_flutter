@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
@@ -25,11 +26,6 @@ class MobileRequestEditor extends StatefulWidget {
 }
 
 class RequestEditorState extends State<MobileRequestEditor> with SingleTickerProviderStateMixin {
-  var tabs = const [
-    Tab(text: "请求"),
-    Tab(text: "响应"),
-  ];
-
   final requestLineKey = GlobalKey<_RequestLineState>();
   final requestKey = GlobalKey<_HttpState>();
   final responseKey = GlobalKey<_HttpState>();
@@ -41,6 +37,13 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
   HttpRequest? request;
   HttpResponse? response;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  var tabs = const [
+    Tab(text: "请求"),
+    Tab(text: "响应"),
+  ];
+
   @override
   void dispose() {
     tabController.dispose();
@@ -51,6 +54,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
   @override
   void initState() {
     super.initState();
+
     tabController = TabController(length: tabs.length, vsync: this);
     request = widget.request;
     if (widget.request == null) {
@@ -69,23 +73,26 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
       showDialog(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(title: const Text('提示'), content: const Text('识别到剪切板内容是curl格式，是否转换为HTTP请求？'), actions: [
-            TextButton(child: const Text('取消'), onPressed: () => Navigator.of(context).pop()),
-            TextButton(
-                child: const Text('确定'),
-                onPressed: () {
-                  try {
-                    setState(() {
-                      request = parseCurl(text!);
-                      requestKey.currentState?.change(request!);
-                      requestLineKey.currentState?.change(request?.uri, request?.method.name);
-                    });
-                  } catch (e) {
-                    FlutterToastr.show('转换失败', context);
-                  }
-                  Navigator.of(context).pop();
-                }),
-          ]);
+          return AlertDialog(
+              title: Text(localizations.prompt),
+              content: Text(localizations.curlSchemeRequest),
+              actions: [
+                TextButton(child: Text(localizations.cancel), onPressed: () => Navigator.of(context).pop()),
+                TextButton(
+                    child: Text(localizations.confirm),
+                    onPressed: () {
+                      try {
+                        setState(() {
+                          request = parseCurl(text!);
+                          requestKey.currentState?.change(request!);
+                          requestLineKey.currentState?.change(request?.uri, request?.method.name);
+                        });
+                      } catch (e) {
+                        FlutterToastr.show(localizations.fail, context);
+                      }
+                      Navigator.of(context).pop();
+                    }),
+              ]);
         },
       );
     }
@@ -93,14 +100,25 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
 
   @override
   Widget build(BuildContext context) {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+    if (!isCN) {
+      tabs = [
+        Tab(text: localizations.request),
+        Tab(text: localizations.response),
+      ];
+    }
+
     return Scaffold(
         appBar: AppBar(
-            title: const Text("发起请求", style: TextStyle(fontSize: 16)),
+            title: Text(localizations.httpRequest, style: const TextStyle(fontSize: 16)),
             centerTitle: true,
+            leadingWidth: 72,
             leading: TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text("取消", style: Theme.of(context).textTheme.bodyMedium)),
-            actions: [TextButton.icon(icon: const Icon(Icons.send), label: const Text("发送"), onPressed: sendRequest)],
+                child: Text(localizations.cancel, style: Theme.of(context).textTheme.bodyMedium)),
+            actions: [
+              TextButton.icon(icon: const Icon(Icons.send), label: Text(localizations.send), onPressed: sendRequest)
+            ],
             bottom: TabBar(controller: tabController, tabs: tabs)),
         body: TabBarView(
           controller: tabController,
@@ -111,7 +129,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
                 builder: (_, value, __) => _HttpWidget(
                     key: responseKey,
                     title: Row(children: [
-                      const Text('状态码：', style: TextStyle(fontWeight: FontWeight.w500)),
+                      Text(localizations.statusCode, style: const TextStyle(fontWeight: FontWeight.w500)),
                       const SizedBox(width: 10),
                       Text(response?.status.toString() ?? "", style: const TextStyle(color: Colors.blue))
                     ]),
@@ -135,14 +153,14 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     var proxyInfo =
         Vpn.isVpnStarted && widget.proxyServer != null ? ProxyInfo.of("127.0.0.1", widget.proxyServer?.port) : null;
     HttpClients.proxyRequest(proxyInfo: proxyInfo, request).then((response) {
-      FlutterToastr.show('请求成功', context);
+      FlutterToastr.show(localizations.requestSuccess, context);
       this.response = response;
       this.response?.request = request;
       responseChange.value = !responseChange.value;
       responseKey.currentState?.change(response);
       tabController.animateTo(1);
     }).catchError((e) {
-      FlutterToastr.show('请求失败$e', context);
+      FlutterToastr.show('${localizations.fail}$e', context);
     });
   }
 }
@@ -165,6 +183,8 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
   HttpMessage? message;
   String? body;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -177,7 +197,6 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
     super.initState();
     message = widget.message;
     body = widget.message?.bodyAsString;
-    print("_HttpWidget initState");
   }
 
   change(HttpMessage message) {
@@ -195,7 +214,7 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
     super.build(context);
 
     if (message == null && widget.readOnly) {
-      return const Center(child: Text("无数据"));
+      return Center(child: Text(localizations.emptyData));
     }
 
     return SingleChildScrollView(
@@ -306,6 +325,8 @@ class Headers extends StatefulWidget {
 class HeadersState extends State<Headers> {
   Map<String, List<String>> headers = {};
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -354,7 +375,7 @@ class HeadersState extends State<Headers> {
                     onPressed: () {
                       modifyHeader("", "");
                     },
-                    child: const Text("添加Header", textAlign: TextAlign.center))) //添加按钮
+                    child: Text("${localizations.add}Header", textAlign: TextAlign.center))) //添加按钮
       ],
     );
   }
@@ -381,6 +402,8 @@ class HeadersState extends State<Headers> {
 
   /// 修改请求头
   modifyHeader(String key, String val) {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
     String headerName = key;
     showDialog(
         context: context,
@@ -388,14 +411,14 @@ class HeadersState extends State<Headers> {
           return AlertDialog(
             titlePadding: const EdgeInsets.only(left: 25, top: 10),
             actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
-            title: const Text("修改请求头", style: TextStyle(fontSize: 18)),
+            title: Text(isCN ? "修改请求头" : "Modify Header", style: const TextStyle(fontSize: 18)),
             content: Wrap(
               children: [
                 TextField(
                   minLines: 1,
                   maxLines: 3,
                   controller: TextEditingController(text: headerName),
-                  decoration: const InputDecoration(labelText: "请求头名称"),
+                  decoration: InputDecoration(labelText: isCN ? "请求头名称" : "Header Name"),
                   onChanged: (value) {
                     headerName = value;
                   },
@@ -404,7 +427,7 @@ class HeadersState extends State<Headers> {
                   minLines: 1,
                   maxLines: 8,
                   controller: TextEditingController(text: val),
-                  decoration: const InputDecoration(labelText: "请求头值"),
+                  decoration: InputDecoration(labelText: isCN ? "请求头值" : "Header Value"),
                   onChanged: (value) {
                     val = value;
                   },
@@ -416,7 +439,7 @@ class HeadersState extends State<Headers> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: const Text("取消")),
+                  child: Text(localizations.cancel)),
               TextButton(
                   onPressed: () {
                     setState(() {
@@ -428,7 +451,7 @@ class HeadersState extends State<Headers> {
                     });
                     Navigator.pop(context);
                   },
-                  child: const Text("修改")),
+                  child: Text(localizations.modify)),
             ],
           );
         });
@@ -436,17 +459,20 @@ class HeadersState extends State<Headers> {
 
   //删除
   deleteHeader(String key) {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
     showDialog(
         context: context,
         builder: (ctx) {
           return AlertDialog(
-            title: const Text("是否删除该请求头？", style: TextStyle(fontSize: 18)),
+            title: Text(isCN ? "是否删除该请求头？" : "Do you want to delete the request header?",
+                style: const TextStyle(fontSize: 18)),
             actions: [
               TextButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: const Text("取消")),
+                  child: Text(localizations.cancel)),
               TextButton(
                   onPressed: () {
                     setState(() {
@@ -454,7 +480,7 @@ class HeadersState extends State<Headers> {
                     });
                     Navigator.pop(context);
                   },
-                  child: const Text("删除")),
+                  child: Text(localizations.delete)),
             ],
           );
         });

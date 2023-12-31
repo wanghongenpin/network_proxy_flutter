@@ -9,6 +9,7 @@ import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Toolbox extends StatefulWidget {
   final ProxyServer? proxyServer;
@@ -22,6 +23,8 @@ class Toolbox extends StatefulWidget {
 }
 
 class _ToolboxState extends State<Toolbox> {
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -35,10 +38,13 @@ class _ToolboxState extends State<Toolbox> {
               onTap: httpRequest,
               child: Container(
                 padding: const EdgeInsets.all(10),
-                child: const Column(children: [Icon(Icons.http), Text('发起请求', style: TextStyle(fontSize: 14))]),
+                child: Column(children: [
+                  const Icon(Icons.http),
+                  Text(localizations.httpRequest, style: const TextStyle(fontSize: 14))
+                ]),
               )),
           const Divider(thickness: 0.3),
-          const Text('编码', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          Text(localizations.encode, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
           Row(
             children: [
               InkWell(
@@ -84,7 +90,7 @@ class _ToolboxState extends State<Toolbox> {
     final window = await DesktopMultiWindow.createWindow(jsonEncode(
       {'name': 'RequestEditor'},
     ));
-    window.setTitle('请求发送');
+    window.setTitle(localizations.httpRequest);
     window
       ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
       ..center()

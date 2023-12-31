@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class PhoneConnect extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -18,6 +19,8 @@ class _PhoneConnectState extends State<PhoneConnect> {
   late String host;
   late int port;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -30,16 +33,8 @@ class _PhoneConnectState extends State<PhoneConnect> {
     return AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         title: Row(children: [
-          const Text("手机连接", style: TextStyle(fontSize: 18)),
-          Expanded(
-              child: Align(
-                  alignment: Alignment.topRight,
-                  child: ElevatedButton.icon(
-                      icon: const Icon(Icons.close, size: 15),
-                      label: const Text("关闭"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      })))
+          Text(localizations.mobileConnect, style: const TextStyle(fontSize: 18)),
+          const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
         ]),
         contentPadding: const EdgeInsets.all(10),
         content: SizedBox(
@@ -56,7 +51,7 @@ class _PhoneConnectState extends State<PhoneConnect> {
                 ),
                 const SizedBox(height: 10),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Text("本机IP "),
+                  Text(localizations.localIP),
                   DropdownButton(
                       value: host,
                       isDense: true,
@@ -75,7 +70,7 @@ class _PhoneConnectState extends State<PhoneConnect> {
                       })
                 ]),
                 const SizedBox(height: 10),
-                const Text("请使用手机版扫描二维码", style: TextStyle(fontSize: 17)),
+                Text(localizations.mobileScan, style: const TextStyle(fontSize: 16)),
               ],
             )));
   }

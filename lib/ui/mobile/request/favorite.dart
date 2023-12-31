@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
@@ -26,17 +27,19 @@ class MobileFavorites extends StatefulWidget {
 }
 
 class _FavoritesState extends State<MobileFavorites> {
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("收藏请求", style: TextStyle(fontSize: 16)), centerTitle: true),
+        appBar: AppBar(title: Text(localizations.favorites, style: const TextStyle(fontSize: 16)), centerTitle: true),
         body: FutureBuilder(
             future: FavoriteStorage.favorites,
             builder: (BuildContext context, AsyncSnapshot<Queue<Favorite>> snapshot) {
               if (snapshot.hasData) {
                 var favorites = snapshot.data ?? Queue();
                 if (favorites.isEmpty) {
-                  return const Center(child: Text("暂无收藏"));
+                  return Center(child: Text(localizations.emptyFavorite));
                 }
 
                 return ListView.separated(
@@ -48,7 +51,6 @@ class _FavoritesState extends State<MobileFavorites> {
                       index: index,
                       onRemove: (Favorite favorite) {
                         FavoriteStorage.removeFavorite(favorite);
-                        FlutterToastr.show('已删除收藏', context);
                         setState(() {});
                       },
                       proxyServer: widget.proxyServer,
@@ -77,6 +79,8 @@ class _FavoriteItem extends StatefulWidget {
 
 class _FavoriteItemState extends State<_FavoriteItem> {
   late HttpRequest request;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -114,31 +118,32 @@ class _FavoriteItemState extends State<_FavoriteItem> {
       isScrollControlled: true,
       builder: (ctx) {
         return Wrap(alignment: WrapAlignment.center, children: [
-          menuItem("复制请求链接", () => request.requestUrl),
+          menuItem(localizations.copyUrl, () => request.requestUrl),
           const Divider(thickness: 0.5),
-          menuItem("复制 cURL 请求", () => curlRequest(request)),
+          menuItem(localizations.copyCurl, () => curlRequest(request)),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("重命名", textAlign: TextAlign.center)),
+              child: SizedBox(width: double.infinity, child: Text(localizations.rename, textAlign: TextAlign.center)),
               onPressed: () {
                 Navigator.of(context).pop();
                 rename(widget.favorite);
               }),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("请求重放", textAlign: TextAlign.center)),
+              child: SizedBox(width: double.infinity, child: Text(localizations.repeat, textAlign: TextAlign.center)),
               onPressed: () {
                 var httpRequest = request.copy(uri: request.requestUrl);
                 HttpClients.proxyRequest(
                     proxyInfo: widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null,
                     httpRequest);
 
-                FlutterToastr.show('已重新发送请求', context);
+                FlutterToastr.show(localizations.reSendRequest, context);
                 Navigator.of(context).pop();
               }),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("编辑请求重放", textAlign: TextAlign.center)),
+              child:
+                  SizedBox(width: double.infinity, child: Text(localizations.editRequest, textAlign: TextAlign.center)),
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(MaterialPageRoute(
@@ -146,10 +151,11 @@ class _FavoriteItemState extends State<_FavoriteItem> {
               }),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("删除收藏", textAlign: TextAlign.center)),
+              child: SizedBox(
+                  width: double.infinity, child: Text(localizations.deleteFavorite, textAlign: TextAlign.center)),
               onPressed: () {
                 widget.onRemove?.call(widget.favorite);
-                FlutterToastr.show('删除成功', context);
+                FlutterToastr.show(localizations.deleteSuccess, context);
                 Navigator.of(context).pop();
               }),
           Container(color: Theme.of(context).hoverColor, height: 8),
@@ -158,7 +164,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
                 height: 50,
                 width: double.infinity,
                 padding: const EdgeInsets.only(top: 10),
-                child: const Text("取消", textAlign: TextAlign.center)),
+                child: Text(localizations.cancel, textAlign: TextAlign.center)),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -173,7 +179,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         child: SizedBox(width: double.infinity, child: Text(title, textAlign: TextAlign.center)),
         onPressed: () {
           Clipboard.setData(ClipboardData(text: callback.call())).then((value) {
-            FlutterToastr.show('已复制到剪切板', context);
+            FlutterToastr.show(localizations.copied, context);
             Navigator.of(context).pop();
           });
         });
@@ -188,13 +194,13 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           return AlertDialog(
             content: TextFormField(
               initialValue: name,
-              decoration: const InputDecoration(label: Text("名称")),
+              decoration: InputDecoration(label: Text(localizations.name)),
               onChanged: (val) => name = val,
             ),
             actions: <Widget>[
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
               TextButton(
-                child: const Text('保存'),
+                child: Text(localizations.save),
                 onPressed: () {
                   Navigator.maybePop(context);
                   setState(() {
@@ -215,7 +221,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           proxyServer: widget.proxyServer,
           httpRequest: request,
           httpResponse: request.response,
-          title: const Text("抓包详情", style: TextStyle(fontSize: 16)));
+          title: Text(localizations.captureDetail, style: TextStyle(fontSize: 16)));
     }));
   }
 }

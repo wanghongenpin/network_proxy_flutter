@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
@@ -60,6 +61,8 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
   void changeState() {
     setState(() {});
   }
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/native/app_lifecycle.dart';
 import 'package:network_proxy/native/pip.dart';
@@ -21,7 +22,7 @@ import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/request/search.dart';
-import 'package:network_proxy/ui/ui_configuration.dart';
+import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 class MobileHomePage extends StatefulWidget {
@@ -36,15 +37,16 @@ class MobileHomePage extends StatefulWidget {
 }
 
 class MobileHomeState extends State<MobileHomePage> implements EventListener, LifecycleListener {
-  static final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
+  static GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
 
   late ProxyServer proxyServer;
-  ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void onUserLeaveHint() {
-    if (Vpn.isVpnStarted && !pictureInPictureNotifier.value) {
-      if (desktop.value.connect || !Platform.isAndroid || !widget.configuration.smallWindow) {
+    if (Vpn.isVpnStarted && !AppConfiguration.pictureInPictureNotifier.value) {
+      if (AppConfiguration.desktop.value.connect || !Platform.isAndroid || !widget.configuration.smallWindow) {
         return;
       }
 
@@ -54,18 +56,18 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   @override
   onPictureInPictureModeChanged(bool isInPictureInPictureMode) {
-    if (isInPictureInPictureMode && !pictureInPictureNotifier.value) {
+    if (isInPictureInPictureMode && !AppConfiguration.pictureInPictureNotifier.value) {
       while (Navigator.canPop(context)) {
         Navigator.pop(context);
       }
-      pictureInPictureNotifier.value = true;
+      AppConfiguration.pictureInPictureNotifier.value = true;
       return;
     }
 
-    if (!isInPictureInPictureMode && pictureInPictureNotifier.value) {
+    if (!isInPictureInPictureMode && AppConfiguration.pictureInPictureNotifier.value) {
       Vpn.isRunning().then((value) {
         Vpn.isVpnStarted = value;
-        pictureInPictureNotifier.value = false;
+        AppConfiguration.pictureInPictureNotifier.value = false;
       });
     }
   }
@@ -97,6 +99,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     proxyServer.start();
 
     //远程连接
+    final desktop = AppConfiguration.desktop;
     desktop.addListener(() {
       if (desktop.value.connect) {
         proxyServer.configuration.remoteHost = "http://${desktop.value.host}:${desktop.value.port}";
@@ -115,7 +118,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   @override
   void dispose() {
-    desktop.dispose();
+    AppConfiguration.desktop.dispose();
     AppLifecycleBinding.instance.removeListener(this);
     super.dispose();
   }
@@ -128,8 +131,10 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         canPop: false,
         onPopInvoked: (d) {
           if (DateTime.now().millisecondsSinceEpoch - exitTime > 2000) {
+            bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
             exitTime = DateTime.now().millisecondsSinceEpoch;
-            FlutterToastr.show("再按一次退出程序", context, rootNavigator: true, duration: FlutterToastr.lengthLong);
+            FlutterToastr.show(isCN ? "再按一次退出程序" : "Press again to exit the program", context,
+                rootNavigator: true, duration: FlutterToastr.lengthLong);
             return;
           }
 
@@ -137,7 +142,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
           SystemNavigator.pop();
         },
         child: ValueListenableBuilder<bool>(
-            valueListenable: pictureInPictureNotifier,
+            valueListenable: AppConfiguration.pictureInPictureNotifier,
             builder: (context, pip, _) {
               if (pip) {
                 return Scaffold(body: RequestListWidget(key: requestStateKey, proxyServer: proxyServer));
@@ -148,7 +153,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
                 drawer: DrawerWidget(proxyServer: proxyServer),
                 floatingActionButton: _floatingActionButton(),
                 body: ValueListenableBuilder(
-                    valueListenable: desktop,
+                    valueListenable: AppConfiguration.desktop,
                     builder: (context, value, _) {
                       return Column(children: [
                         value.connect ? remoteConnect(value) : const SizedBox(),
@@ -162,11 +167,11 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   AppBar appBar() {
     return AppBar(title: MobileSearch(onSearch: (val) => requestStateKey.currentState?.search(val)), actions: [
       IconButton(
-          tooltip: "清理",
+          tooltip: localizations.clear,
           icon: const Icon(Icons.cleaning_services_outlined),
           onPressed: () => requestStateKey.currentState?.clean()),
       const SizedBox(width: 2),
-      MoreMenu(proxyServer: proxyServer, desktop: desktop),
+      MoreMenu(proxyServer: proxyServer, desktop: AppConfiguration.desktop),
       const SizedBox(width: 10)
     ]);
   }
@@ -212,7 +217,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-            return ConnectRemote(desktop: desktop, proxyServer: proxyServer);
+            return ConnectRemote(desktop: AppConfiguration.desktop, proxyServer: proxyServer);
           })),
           child: Text("已连接${value.os?.toUpperCase()}，手机抓包已关闭", style: Theme.of(context).textTheme.titleMedium),
         ));
@@ -242,6 +247,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   checkConnectTask(BuildContext context) async {
     int retry = 0;
     Timer.periodic(const Duration(milliseconds: 3000), (timer) async {
+      var desktop = AppConfiguration.desktop;
       if (desktop.value.connect == false) {
         timer.cancel();
         return;

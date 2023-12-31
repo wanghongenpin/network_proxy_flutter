@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
@@ -255,6 +256,8 @@ class _DomainRequestsState extends State<DomainRequests> {
   late Configuration configuration;
   late bool selected;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -315,7 +318,7 @@ class _DomainRequestsState extends State<DomainRequests> {
             onTap: () {
               HostFilter.blacklist.add(Uri.parse(widget.domain).host);
               configuration.flushConfig();
-              FlutterToastr.show('添加成功', context);
+              FlutterToastr.show(localizations.addSuccess, context);
             }),
         CustomPopupMenuItem(
             height: 35,
@@ -323,7 +326,7 @@ class _DomainRequestsState extends State<DomainRequests> {
             onTap: () {
               HostFilter.whitelist.add(Uri.parse(widget.domain).host);
               configuration.flushConfig();
-              FlutterToastr.show('添加成功', context);
+              FlutterToastr.show(localizations.addSuccess, context);
             }),
         CustomPopupMenuItem(
             height: 35,
@@ -331,11 +334,11 @@ class _DomainRequestsState extends State<DomainRequests> {
             onTap: () {
               HostFilter.whitelist.remove(Uri.parse(widget.domain).host);
               configuration.flushConfig();
-              FlutterToastr.show('删除成功', context);
+              FlutterToastr.show(localizations.deleteSuccess, context);
             }),
         const PopupMenuDivider(height: 0.3),
         CustomPopupMenuItem(
-            height: 35, child: const Text("删除", style: TextStyle(fontSize: 13)), onTap: () => _delete()),
+            height: 35, child: Text(localizations.delete, style: const TextStyle(fontSize: 13)), onTap: () => _delete()),
       ],
     );
   }
@@ -344,6 +347,6 @@ class _DomainRequestsState extends State<DomainRequests> {
     widget.requestMap.clear();
     widget.body.clear();
     widget.onRemove?.call();
-    FlutterToastr.show('删除成功', context);
+    FlutterToastr.show(localizations.deleteSuccess, context);
   }
 }

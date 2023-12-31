@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
 
@@ -50,7 +51,7 @@ String getPackage(HttpMessage? message) {
 
 String copyRequest(HttpRequest request, HttpResponse? response) {
   var sb = StringBuffer();
-  sb.writeln("请求内容Request");
+  sb.writeln("Request");
   sb.writeln("${request.method.name} ${request.requestUrl} ${request.protocolVersion}");
   sb.writeln(request.headers.headerLines());
   sb.writeln();
@@ -58,7 +59,7 @@ String copyRequest(HttpRequest request, HttpResponse? response) {
 
   sb.writeln("--------------------------------------------------------");
   sb.writeln();
-  sb.writeln("响应内容Response");
+  sb.writeln("Response");
   sb.writeln("${response?.protocolVersion} ${response?.status.code}");
   sb.writeln(response?.headers.headerLines());
   sb.writeln(response?.bodyAsString);
@@ -80,23 +81,23 @@ RelativeRect menuPosition(BuildContext context) {
 }
 
 Widget contextMenu(BuildContext context, EditableTextState editableTextState) {
-  Locale myLocale = Localizations.localeOf(context);
   List<ContextMenuButtonItem> list = [
     ContextMenuButtonItem(
       onPressed: () {
         editableTextState.copySelection(SelectionChangedCause.tap);
-        FlutterToastr.show("已复制到剪切板", context);
+
+        FlutterToastr.show(AppLocalizations.of(context)!.copied, context);
         unSelect(editableTextState);
         editableTextState.hideToolbar();
       },
       type: ContextMenuButtonType.copy,
     ),
     ContextMenuButtonItem(
-      label: myLocale == const Locale.fromSubtags(languageCode: 'zh') ? '复制值' : 'Copy Value',
+      label: Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh') ? '复制值' : 'Copy Value',
       onPressed: () {
         unSelect(editableTextState);
         Clipboard.setData(ClipboardData(text: editableTextState.textEditingValue.text)).then((value) {
-          FlutterToastr.show("已复制到剪切板", context);
+          FlutterToastr.show(AppLocalizations.of(context)!.copied, context);
           editableTextState.hideToolbar();
         });
       },
@@ -162,24 +163,26 @@ Future showContextMenu(BuildContext context, Offset offset, {required List<Popup
       items: items);
 }
 
-showConfirmDialog(BuildContext context, {String title = '确认操作', String content = '是否确认此操作?', VoidCallback? onConfirm}) {
+showConfirmDialog(BuildContext context, {String? title, String? content, VoidCallback? onConfirm}) {
+  title ??= AppLocalizations.of(context)!.confirmTitle;
+  content ??= AppLocalizations.of(context)!.confirmContent;
   showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(title),
-          content: Text(content),
+          title: Text(title!),
+          content: Text(content!),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("取消"),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
                 if (onConfirm != null) onConfirm();
               },
-              child: const Text("确定"),
+              child: Text(AppLocalizations.of(context)!.confirm),
             ),
           ],
         );

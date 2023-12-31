@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:date_format/date_format.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
@@ -34,7 +36,7 @@ class HistoryPageWidget extends StatelessWidget {
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case "/domain":
-            return MaterialPageRoute(builder: (_) => domainWidget(settings.arguments as Map));
+            return MaterialPageRoute(builder: (_) => domainWidget(context, settings.arguments as Map));
           default:
             return MaterialPageRoute(
                 builder: (_) => futureWidget(
@@ -47,18 +49,22 @@ class HistoryPageWidget extends StatelessWidget {
     );
   }
 
-  Widget domainWidget(Map arguments) {
+  Widget domainWidget(BuildContext context, Map arguments) {
     HistoryItem item = arguments['item'];
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
     return Scaffold(
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(40),
             child: AppBar(
+              leadingWidth: 50,
               leading: BackButton(style: ButtonStyle(iconSize: MaterialStateProperty.all(15))),
               centerTitle: false,
-              title: Text('${item.name} 记录数 ${item.requestLength}', style: const TextStyle(fontSize: 14)),
+              title: Text(
+                  textAlign: TextAlign.start,
+                  '${item.name.substring(0, min(item.name.length, 25))} ${isCN ? "记录数" : "Records"} ${item.requestLength}',
+                  style: const TextStyle(fontSize: 14)),
             )),
         body: futureWidget(HistoryStorage.instance.then((value) => value.getRequests(item)), (data) {
-          print("START ${DateTime.now()}");
           return DomainList(panel: panel, proxyServer: proxyServer, list: data, shrinkWrap: false);
         }, loading: true));
   }
@@ -89,6 +95,8 @@ class _HistoryState extends State<_HistoryWidget> {
   late List<HttpRequest> container;
   late ProxyServer proxyServer;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -115,8 +123,8 @@ class _HistoryState extends State<_HistoryWidget> {
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(30),
             child: AppBar(
-              title: const Text("历史记录", style: TextStyle(fontSize: 14)),
-              actions: [TextButton(onPressed: import, child: const Text("导入"))],
+              title: Text(localizations.historyRecord, style: const TextStyle(fontSize: 14)),
+              actions: [TextButton(onPressed: import, child: Text(localizations.import))],
             )),
         body: ListView.separated(
           itemCount: children.length,
@@ -137,12 +145,12 @@ class _HistoryState extends State<_HistoryWidget> {
       var historyItem = await storage.addHarFile(file);
       setState(() {
         Navigator.pushNamed(context, '/domain', arguments: {'item': historyItem});
-        FlutterToastr.show("导入成功", context);
+        FlutterToastr.show(localizations.importSuccess, context);
       });
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
       if (context.mounted) {
-        FlutterToastr.show("导入失败 $e", context);
+        FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
   }
@@ -154,10 +162,10 @@ class _HistoryState extends State<_HistoryWidget> {
     return ListTile(
         dense: true,
         title: Text(name),
-        subtitle: Text("当前会话未保存 记录数 ${container.length}"),
+        subtitle: Text(localizations.historyUnSave(container.length)),
         trailing: TextButton.icon(
           icon: const Icon(Icons.save),
-          label: const Text("保存"),
+          label: Text(localizations.save),
           onPressed: () async {
             await _writeHarFile(container, name);
             setState(() {
@@ -174,15 +182,17 @@ class _HistoryState extends State<_HistoryWidget> {
         onSecondaryTapDown: (details) => {
               showContextMenu(rootContext, details.globalPosition, items: [
                 CustomPopupMenuItem(
-                    height: 35, child: const Text('导出', style: TextStyle(fontSize: 13)), onTap: () => export(item)),
+                    height: 35,
+                    child: Text(localizations.export, style: const TextStyle(fontSize: 13)),
+                    onTap: () => export(item)),
                 CustomPopupMenuItem(
                     height: 35,
-                    child: const Text("重命名", style: TextStyle(fontSize: 13)),
+                    child: Text(localizations.rename, style: const TextStyle(fontSize: 13)),
                     onTap: () => renameHistory(storage, item)),
                 const PopupMenuDivider(height: 0.3),
                 CustomPopupMenuItem(
                     height: 35,
-                    child: const Text('删除', style: TextStyle(fontSize: 13)),
+                    child: Text(localizations.delete, style: const TextStyle(fontSize: 13)),
                     onTap: () {
                       setState(() {
                         if (item == writeTask?.history) {
@@ -191,7 +201,7 @@ class _HistoryState extends State<_HistoryWidget> {
                           writeTask = null;
                         }
                         storage.removeHistory(index);
-                        FlutterToastr.show('删除成功', context);
+                        FlutterToastr.show(localizations.deleteSuccess, context);
                       });
                     }),
               ])
@@ -199,7 +209,7 @@ class _HistoryState extends State<_HistoryWidget> {
         child: ListTile(
             dense: true,
             title: Text(item.name),
-            subtitle: Text("记录数 ${item.requestLength}  文件 ${item.size}"),
+            subtitle: Text(localizations.historySubtitle(item.requestLength, item.size)),
             onTap: () {
               Navigator.pushNamed(context, '/domain', arguments: {'item': item})
                   .whenComplete(() => Future.delayed(const Duration(seconds: 60), () => item.requests = null));
@@ -215,16 +225,16 @@ class _HistoryState extends State<_HistoryWidget> {
           return AlertDialog(
             content: TextFormField(
               initialValue: name,
-              decoration: const InputDecoration(label: Text("名称")),
+              decoration: InputDecoration(label: Text(localizations.name)),
               onChanged: (val) => name = val,
             ),
             actions: <Widget>[
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
               TextButton(
-                child: const Text('保存'),
+                child: Text(localizations.save),
                 onPressed: () {
                   if (name.isEmpty) {
-                    FlutterToastr.show('名称不能为空', context, position: 2);
+                    FlutterToastr.show(localizations.historyEmptyName, context, position: 2);
                     return;
                   }
                   Navigator.maybePop(context);
@@ -253,7 +263,7 @@ class _HistoryState extends State<_HistoryWidget> {
     List<HttpRequest> requests = await storage.getRequests(item);
     var file = await File(result.path).create();
     await Har.writeFile(requests, file, title: item.name);
-    if (context.mounted) FlutterToastr.show("导出成功", context);
+    if (context.mounted) FlutterToastr.show(localizations.exportSuccess, context);
     Future.delayed(const Duration(seconds: 30), () => item.requests = null);
   }
 

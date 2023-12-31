@@ -1,6 +1,7 @@
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
@@ -39,6 +40,8 @@ class RequestRowState extends State<RequestRow> {
   late HttpRequest request;
   HttpResponse? response;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   change(HttpResponse response) {
     setState(() {
       this.response = response;
@@ -54,14 +57,14 @@ class RequestRowState extends State<RequestRow> {
 
   @override
   Widget build(BuildContext context) {
-    var title = Strings.autoLineString('${request.method.name} ${widget.displayDomain ? request.requestUrl : request.path()}');
+    var title =
+        Strings.autoLineString('${request.method.name} ${widget.displayDomain ? request.requestUrl : request.path()}');
 
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
     var contentType = response?.contentType.name.toUpperCase() ?? '';
     var packagesSize = getPackagesSize(request, response);
 
-    var subTitle =
-        '$time - [${response?.status.code ?? ''}] $contentType $packagesSize ${response?.costTime() ?? ''}';
+    var subTitle = '$time - [${response?.status.code ?? ''}] $contentType $packagesSize ${response?.costTime() ?? ''}';
 
     return ListTile(
         visualDensity: const VisualDensity(vertical: -4),
@@ -79,15 +82,17 @@ class RequestRowState extends State<RequestRow> {
         contentPadding: const EdgeInsets.only(left: 3),
         onLongPress: menu,
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(
-            settings: const RouteSettings(name: "NetworkTabController"),
-              builder: (context) {
-            return NetworkTabController(
-                proxyServer: widget.proxyServer,
-                httpRequest: request,
-                httpResponse: response,
-                title: const Text("抓包详情", style: TextStyle(fontSize: 16)));
-          }));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  settings: const RouteSettings(name: "NetworkTabController"),
+                  builder: (context) {
+                    return NetworkTabController(
+                        proxyServer: widget.proxyServer,
+                        httpRequest: request,
+                        httpResponse: response,
+                        title: Text(localizations.captureDetail, style: const TextStyle(fontSize: 16)));
+                  }));
         });
   }
 
@@ -100,24 +105,25 @@ class RequestRowState extends State<RequestRow> {
       enableDrag: true,
       builder: (ctx) {
         return Wrap(alignment: WrapAlignment.center, children: [
-          menuItem("复制请求链接", () => widget.request.requestUrl),
+          menuItem(localizations.copyUrl, () => widget.request.requestUrl),
           const Divider(thickness: 0.5),
-          menuItem("复制 cURL 请求", () => curlRequest(widget.request)),
+          menuItem(localizations.copyCurl, () => curlRequest(widget.request)),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("请求重放", textAlign: TextAlign.center)),
+              child: SizedBox(width: double.infinity, child: Text(localizations.repeat, textAlign: TextAlign.center)),
               onPressed: () {
                 var request = widget.request.copy(uri: widget.request.requestUrl);
                 HttpClients.proxyRequest(
                     proxyInfo: widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null,
                     request);
 
-                FlutterToastr.show('已重新发送请求', context);
+                FlutterToastr.show(localizations.reSendRequest, context);
                 Navigator.of(context).pop();
               }),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("编辑请求重放", textAlign: TextAlign.center)),
+              child:
+                  SizedBox(width: double.infinity, child: Text(localizations.editRequest, textAlign: TextAlign.center)),
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(MaterialPageRoute(
@@ -126,18 +132,18 @@ class RequestRowState extends State<RequestRow> {
               }),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("收藏请求", textAlign: TextAlign.center)),
+              child: SizedBox(width: double.infinity, child: Text(localizations.favorite, textAlign: TextAlign.center)),
               onPressed: () {
                 FavoriteStorage.addFavorite(widget.request);
-                FlutterToastr.show('收藏成功', context);
+                FlutterToastr.show(localizations.addSuccess, context);
                 Navigator.of(context).pop();
               }),
           const Divider(thickness: 0.5),
           TextButton(
-              child: const SizedBox(width: double.infinity, child: Text("删除", textAlign: TextAlign.center)),
+              child: SizedBox(width: double.infinity, child: Text(localizations.delete, textAlign: TextAlign.center)),
               onPressed: () {
                 widget.onRemove?.call(request);
-                FlutterToastr.show("删除成功", context);
+                FlutterToastr.show(localizations.deleteSuccess, context);
                 Navigator.of(context).pop();
               }),
           Container(
@@ -149,7 +155,7 @@ class RequestRowState extends State<RequestRow> {
                 height: 55,
                 width: double.infinity,
                 padding: const EdgeInsets.only(top: 10),
-                child: const Text("取消", textAlign: TextAlign.center)),
+                child: Text(localizations.cancel, textAlign: TextAlign.center)),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -164,7 +170,7 @@ class RequestRowState extends State<RequestRow> {
         child: SizedBox(width: double.infinity, child: Text(title, textAlign: TextAlign.center)),
         onPressed: () {
           Clipboard.setData(ClipboardData(text: callback.call())).then((value) {
-            FlutterToastr.show('已复制到剪切板', context);
+            FlutterToastr.show(localizations.copied, context);
             Navigator.of(context).pop();
           });
         });

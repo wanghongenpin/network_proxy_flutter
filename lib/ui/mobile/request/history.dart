@@ -17,6 +17,7 @@ import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../../utils/har.dart';
 
@@ -35,6 +36,8 @@ class _MobileHistoryState extends State<MobileHistory> {
   ///是否保存会话
   static bool _sessionSaved = false;
   static WriteTask? writeTask;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   Widget build(BuildContext context) {
@@ -55,12 +58,12 @@ class _MobileHistoryState extends State<MobileHistory> {
 
       return Scaffold(
           appBar: AppBar(
-            title: const Text("历史记录", style: TextStyle(fontSize: 16)),
+            title: Text(localizations.history, style: const TextStyle(fontSize: 16)),
             centerTitle: true,
-            actions: [TextButton(onPressed: () => import(data), child: const Text("导入"))],
+            actions: [TextButton(onPressed: () => import(data), child: Text(localizations.import))],
           ),
           body: children.isEmpty
-              ? const Center(child: Text("暂无历史记录"))
+              ? Center(child: Text(localizations.emptyData))
               : ListView.separated(
                   itemCount: children.length,
                   itemBuilder: (context, index) => children[index],
@@ -76,10 +79,10 @@ class _MobileHistoryState extends State<MobileHistory> {
     return ListTile(
         dense: true,
         title: Text(name),
-        subtitle: Text("当前会话未保存 记录数 ${container.length}"),
+        subtitle: Text(localizations.historyUnSave(container.length)),
         trailing: TextButton.icon(
           icon: const Icon(Icons.save),
-          label: const Text("保存"),
+          label: Text(localizations.save),
           onPressed: () async {
             await _writeHarFile(storage, container, name);
             setState(() {
@@ -92,7 +95,8 @@ class _MobileHistoryState extends State<MobileHistory> {
 
   //导入har
   import(HistoryStorage storage) async {
-    const XTypeGroup typeGroup = XTypeGroup(label: 'har', extensions: <String>['har'], uniformTypeIdentifiers: ["public.item"]);
+    const XTypeGroup typeGroup =
+        XTypeGroup(label: 'har', extensions: <String>['har'], uniformTypeIdentifiers: ["public.item"]);
     final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
     if (file == null) {
       return;
@@ -102,12 +106,12 @@ class _MobileHistoryState extends State<MobileHistory> {
       var historyItem = await storage.addHarFile(file);
       setState(() {
         Navigator.pushNamed(context, '/domain', arguments: {'item': historyItem});
-        FlutterToastr.show("导入成功", context);
+        FlutterToastr.show(localizations.importSuccess, context);
       });
     } catch (e, t) {
       logger.e("导入失败", error: e, stackTrace: t);
       if (context.mounted) {
-        FlutterToastr.show("导入失败 $e", context);
+        FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
   }
@@ -134,22 +138,24 @@ class _MobileHistoryState extends State<MobileHistory> {
         onTapDown: (detail) async {
           HapticFeedback.heavyImpact();
           showContextMenu(context, detail.globalPosition.translate(-50, index == 0 ? -100 : 100), items: [
-            PopupMenuItem(child: const Text("重命名"), onTap: () => renameHistory(storage, item)),
-            PopupMenuItem(child: const Text("分享"), onTap: () => export(storage, item)),
+            PopupMenuItem(child: Text(localizations.rename), onTap: () => renameHistory(storage, item)),
+            PopupMenuItem(child: Text(localizations.share), onTap: () => export(storage, item)),
             const PopupMenuDivider(height: 0.3),
-            PopupMenuItem(child: const Text("删除"), onTap: () => deleteHistory(storage, index))
+            PopupMenuItem(child: Text(localizations.delete), onTap: () => deleteHistory(storage, index))
           ]);
         },
         child: ListTile(
           dense: true,
           selected: selectIndex == index,
           title: Text(item.name),
-          subtitle: Text("记录数 ${item.requestLength}  文件 ${item.size}"),
+          subtitle: Text(localizations.historySubtitle(item.requestLength, item.size)),
           onTap: () {
             Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
+              bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
               return Scaffold(
                   appBar: AppBar(
-                      title: Text('${item.name} 记录数 ${item.requestLength}', style: const TextStyle(fontSize: 16))),
+                      title: Text('${item.name} ${isCN ? "记录数" : "Records"} ${item.requestLength}',
+                          style: const TextStyle(fontSize: 16))),
                   body: futureWidget(
                       loading: true,
                       storage.getRequests(item),
@@ -180,16 +186,16 @@ class _MobileHistoryState extends State<MobileHistory> {
         builder: (_) {
           return AlertDialog(
             content: TextField(
-              decoration: const InputDecoration(label: Text("名称")),
+              decoration: InputDecoration(label: Text(localizations.name)),
               onChanged: (val) => name = val,
             ),
             actions: <Widget>[
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
               TextButton(
-                child: const Text('保存'),
+                child: Text(localizations.save),
                 onPressed: () {
                   if (name.isEmpty) {
-                    FlutterToastr.show('名称不能为空', context, position: 2);
+                    FlutterToastr.show(localizations.historyEmptyName, context, position: 2);
                     return;
                   }
                   Navigator.of(context).pop();
@@ -210,9 +216,10 @@ class _MobileHistoryState extends State<MobileHistory> {
         context: context,
         builder: (ctx) {
           return AlertDialog(
-            title: const Text("是否删除该历史记录？", style: TextStyle(fontSize: 18)),
+            title:
+                Text(localizations.historyDeleteConfirm, style: const TextStyle(fontSize: 18)),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("取消")),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
               TextButton(
                   onPressed: () {
                     setState(() {
@@ -223,10 +230,10 @@ class _MobileHistoryState extends State<MobileHistory> {
                       }
                       storage.removeHistory(index);
                     });
-                    FlutterToastr.show('删除成功', context);
+                    FlutterToastr.show(localizations.deleteSuccess, context);
                     Navigator.pop(context);
                   },
-                  child: const Text("删除")),
+                  child: Text(localizations.delete)),
             ],
           );
         });

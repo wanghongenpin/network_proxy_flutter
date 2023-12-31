@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
+import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/external_proxy.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,6 +26,8 @@ class Setting extends StatefulWidget {
 
 class _SettingState extends State<Setting> {
   late Configuration configuration;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -48,7 +53,7 @@ class _SettingState extends State<Setting> {
       builder: (context, controller, child) {
         return IconButton(
             icon: const Icon(Icons.settings),
-            tooltip: "设置",
+            tooltip: localizations.setting,
             onPressed: () {
               if (controller.isOpen) {
                 controller.close();
@@ -59,7 +64,7 @@ class _SettingState extends State<Setting> {
       },
       menuChildren: [
         _ProxyMenu(proxyServer: widget.proxyServer),
-        const ThemeSetting(),
+        futureWidget(UIConfiguration.instance, (uiConfiguration) => ThemeSetting(uiConfiguration: uiConfiguration)),
         item("域名过滤", onPressed: hostFilter),
         item("请求重写", onPressed: requestRewrite),
         item("脚本", onPressed: () => openScriptWindow()),

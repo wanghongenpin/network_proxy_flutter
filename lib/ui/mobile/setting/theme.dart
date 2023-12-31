@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:network_proxy/main.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:network_proxy/ui/configuration.dart';
 
 class MobileThemeSetting extends StatelessWidget {
-  const MobileThemeSetting({super.key});
+  final UIConfiguration uiConfiguration;
+
+  const MobileThemeSetting({super.key, required this.uiConfiguration});
 
   @override
   Widget build(BuildContext context) {
+    AppLocalizations localizations = AppLocalizations.of(context)!;
+
     return PopupMenuButton(
-        tooltip: themeNotifier.value.mode.name,
+        tooltip: uiConfiguration.themeMode.name,
         surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
         offset: const Offset(150, 0),
         itemBuilder: (BuildContext context) {
@@ -17,39 +22,35 @@ class MobileThemeSetting extends StatelessWidget {
                     preferBelow: false,
                     message: "Material 3是谷歌开源设计系统的最新版本",
                     child: SwitchListTile(
-                      value: themeNotifier.value.useMaterial3,
+                      value: uiConfiguration.useMaterial3,
                       onChanged: (bool value) {
-                        themeNotifier.value = themeNotifier.value.copy(useMaterial3: value);
+                        uiConfiguration.useMaterial3 = value;
                         Navigator.of(context).pop();
                       },
                       dense: true,
                       title: const Text("Material3"),
                     ))),
             PopupMenuItem(
-                child: const ListTile(trailing: Icon(Icons.cached), dense: true, title: Text("跟随系统")),
-                onTap: () {
-                  themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.system);
-                }),
+                child:
+                    ListTile(trailing: const Icon(Icons.cached), dense: true, title: Text(localizations.followSystem)),
+                onTap: () => uiConfiguration.themeMode = ThemeMode.system),
             PopupMenuItem(
-                child: const ListTile(trailing: Icon(Icons.sunny), dense: true, title: Text("浅色")),
-                onTap: () {
-                  themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.light);
-                }),
+                child: ListTile(trailing: const Icon(Icons.sunny), dense: true, title: Text(localizations.themeLight)),
+                onTap: () => uiConfiguration.themeMode = ThemeMode.light),
             PopupMenuItem(
-                child: const ListTile(trailing: Icon(Icons.nightlight_outlined), dense: true, title: Text("深色")),
-                onTap: () {
-                  themeNotifier.value = themeNotifier.value.copy(mode: ThemeMode.dark);
-                }),
+                child: ListTile(
+                    trailing: const Icon(Icons.nightlight_outlined), dense: true, title: Text(localizations.themeDark)),
+                onTap: () => uiConfiguration.themeMode = ThemeMode.dark),
           ];
         },
         child: ListTile(
-          title: const Text("主题"),
+          title: Text(localizations.theme),
           trailing: getIcon(),
         ));
   }
 
   Icon getIcon() {
-    switch (themeNotifier.value.mode) {
+    switch (uiConfiguration.themeMode) {
       case ThemeMode.system:
         return const Icon(Icons.cached);
       case ThemeMode.dark:

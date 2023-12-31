@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
@@ -19,6 +20,8 @@ class SslWidget extends StatefulWidget {
 }
 
 class _SslState extends State<SslWidget> {
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     var surfaceTintColor =
@@ -27,7 +30,7 @@ class _SslState extends State<SslWidget> {
     return PopupMenuButton<String>(
       icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red),
       surfaceTintColor: surfaceTintColor,
-      tooltip: "HTTPS代理",
+      tooltip: localizations.httpsProxy,
       offset: const Offset(10, 30),
       itemBuilder: (context) {
         return [
@@ -278,11 +281,13 @@ class _Switch extends StatefulWidget {
 class _SwitchState extends State<_Switch> {
   bool changed = false;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     return SwitchListTile(
         hoverColor: Colors.transparent,
-        title: const Text("启用HTTPS代理", style: TextStyle(fontSize: 12)),
+        title: Text(localizations.enabledHttps, style: const TextStyle(fontSize: 12)),
         visualDensity: const VisualDensity(horizontal: -4),
         dense: true,
         value: widget.proxyServer.enableSsl,

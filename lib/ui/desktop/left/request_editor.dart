@@ -28,6 +28,7 @@ import 'package:network_proxy/ui/component/split_view.dart';
 import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/utils/curl.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class RequestEditor extends StatefulWidget {
   final WindowController? windowController;
@@ -49,6 +50,8 @@ class RequestEditorState extends State<RequestEditor> {
   HttpResponse? response;
 
   bool showCURLDialog = false;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -89,12 +92,12 @@ class RequestEditorState extends State<RequestEditor> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("发起请求", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          title: Text(localizations.httpRequest, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           toolbarHeight: Platform.isWindows ? 36 : null,
           centerTitle: true,
           actions: [
             TextButton.icon(
-                onPressed: () async => sendRequest(), icon: const Icon(Icons.send), label: const Text("发送")),
+                onPressed: () async => sendRequest(), icon: const Icon(Icons.send), label: Text(localizations.send)),
             const SizedBox(width: 10)
           ],
         ),
@@ -134,11 +137,11 @@ class RequestEditorState extends State<RequestEditor> {
     request.body = requestBody == null ? null : utf8.encode(requestBody);
 
     HttpClients.proxyRequest(request).then((response) {
-      FlutterToastr.show('请求成功', context);
+      FlutterToastr.show(localizations.requestSuccess, context);
       this.response = response;
       responseChange.value = !responseChange.value;
     }).catchError((e) {
-      FlutterToastr.show('请求失败$e', context);
+      FlutterToastr.show('${localizations.fail}$e', context);
     });
   }
 
@@ -154,22 +157,25 @@ class RequestEditorState extends State<RequestEditor> {
       showDialog(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(title: const Text('提示'), content: const Text('识别到curl格式，是否转换为HTTP请求？'), actions: [
-            TextButton(child: const Text('取消'), onPressed: () => Navigator.of(context).pop()),
-            TextButton(
-                child: const Text('确定'),
-                onPressed: () {
-                  try {
-                    setState(() {
-                      request = parseCurl(text!);
-                      requestLineKey.currentState?.change(request?.requestUrl, request?.method.name);
-                    });
-                  } catch (e) {
-                    FlutterToastr.show('转换失败', context);
-                  }
-                  Navigator.of(context).pop();
-                }),
-          ]);
+          return AlertDialog(
+              title: Text(localizations.prompt),
+              content: Text(localizations.curlSchemeRequest),
+              actions: [
+                TextButton(child: Text(localizations.cancel), onPressed: () => Navigator.of(context).pop()),
+                TextButton(
+                    child: Text(localizations.confirm),
+                    onPressed: () {
+                      try {
+                        setState(() {
+                          request = parseCurl(text!);
+                          requestLineKey.currentState?.change(request?.requestUrl, request?.method.name);
+                        });
+                      } catch (e) {
+                        FlutterToastr.show(localizations.fail, context);
+                      }
+                      Navigator.of(context).pop();
+                    }),
+              ]);
         },
       ).then((value) => showCURLDialog = false);
     }
@@ -194,6 +200,8 @@ class _HttpState extends State<_HttpWidget> {
   final headerKey = GlobalKey<HeadersState>();
   String? body;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   String? getBody() {
     return body;
   }
@@ -208,7 +216,7 @@ class _HttpState extends State<_HttpWidget> {
     headerKey.currentState?.refreshHeader(widget.message?.headers);
 
     if (widget.message == null && widget.readOnly) {
-      return Scaffold(appBar: AppBar(title: widget.title), body: const Center(child: Text("无数据")));
+      return Scaffold(appBar: AppBar(title: widget.title), body: Center(child: Text(localizations.emptyData)));
     }
 
     return SingleChildScrollView(
@@ -330,6 +338,8 @@ class Headers extends StatefulWidget {
 class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
   final Map<TextEditingController, List<TextEditingController>> _headers = {};
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -337,7 +347,7 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
   void initState() {
     super.initState();
     if (widget.headers == null && !widget.readOnly) {
-      _headers[TextEditingController(text: "User-Agent")] = [TextEditingController(text: "ProxyPin/1.0.2")];
+      _headers[TextEditingController(text: "User-Agent")] = [TextEditingController(text: "ProxyPin/1.0.8")];
       _headers[TextEditingController(text: "Accept")] = [TextEditingController(text: "*/*")];
       return;
     }
@@ -383,7 +393,7 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
 
     if (!widget.readOnly) {
       list.add(TextButton(
-        child: const Text("添加Header", textAlign: TextAlign.center),
+        child:  Text("${localizations.add}Header", textAlign: TextAlign.center),
         onPressed: () {
           setState(() {
             _headers[TextEditingController()] = [TextEditingController()];
