@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/host_port.dart';
 
@@ -20,6 +21,8 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
   final formKey = GlobalKey<FormState>();
   late ProxyInfo externalProxy;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -34,13 +37,13 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
     return AlertDialog(
         scrollable: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        title: const Text("外部代理设置", style: TextStyle(fontSize: 15)),
+        title: Text(localizations.externalProxy, style: const TextStyle(fontSize: 15)),
         actions: [
           TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text("取消")),
+              child: Text(localizations.cancel)),
           TextButton(
               onPressed: () async {
                 if (!formKey.currentState!.validate()) {
@@ -48,12 +51,11 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                 }
                 submit();
               },
-              child: const Text("确定"))
+              child: Text(localizations.confirm))
         ],
         content: Form(
             key: formKey,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const Text("如发现访问失败的外网请将加入域名过滤黑名单。", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
               const SizedBox(height: 10),
               Row(children: [
                 const Text("是否启用："),
@@ -75,7 +77,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                 ))
               ]),
               Row(children: [
-                const Text("端口："),
+                Text(localizations.port),
                 Expanded(
                     child: TextFormField(
                   initialValue: externalProxy.port?.toString() ?? '',
@@ -84,7 +86,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                     FilteringTextInputFormatter.allow(RegExp("[0-9]"))
                   ],
                   onChanged: (val) => externalProxy.port = int.parse(val),
-                  validator: (val) => val == null || val.isEmpty ? "端口不能为空" : null,
+                  validator: (val) => val == null || val.isEmpty ? "${localizations.port}不能为空" : null,
                   decoration: const InputDecoration(),
                 ))
               ]),
@@ -110,13 +112,13 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
-                          child: const Text("取消")),
+                          child: Text(localizations.cancel)),
                       TextButton(
                           onPressed: () {
                             setting = true;
                             Navigator.of(context).pop();
                           },
-                          child: const Text("确定"))
+                          child: Text(localizations.confirm))
                     ],
                   ));
         }

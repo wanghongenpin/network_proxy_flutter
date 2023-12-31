@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 ///类似于netty ByteBuf
 class ByteBuf {
-  BytesBuilder _buffer = BytesBuilder();
+  final BytesBuilder _buffer = BytesBuilder();
   int readerIndex = 0;
 
   Uint8List get bytes => _buffer.toBytes();

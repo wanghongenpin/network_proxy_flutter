@@ -107,26 +107,26 @@ class ContentTypeSelect extends StatefulWidget {
 class ContentTypeState extends State<ContentTypeSelect> {
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
-  late String value;
-  late List<String> types;
+  String? value;
+  List<String>? types;
 
   @override
   void initState() {
     super.initState();
-    value = localizations.all;
-    types = ["JSON", "HTML", "JS", "CSS", "TEXT", "IMAGE", localizations.all];
   }
 
   @override
   Widget build(BuildContext context) {
-    ContentType.json;
+    value ??= localizations.all;
+    types ??= ["JSON", "HTML", "JS", "CSS", "TEXT", "IMAGE", localizations.all];
+
     return PopupMenuButton(
       initialValue: value,
-      offset: Offset(-10, (types.length - types.indexOf(value)) * -30.0 - 10),
+      offset: Offset(-10, (types!.length - types!.indexOf(value!)) * -30.0 - 10),
       tooltip: localizations.responseType,
       constraints: const BoxConstraints(maxWidth: 75),
       child: Wrap(runAlignment: WrapAlignment.center, children: [
-        Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        Text(value!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
         const Icon(Icons.arrow_drop_up, size: 20)
       ]),
       onSelected: (String value) {
@@ -139,7 +139,7 @@ class ContentTypeState extends State<ContentTypeSelect> {
         widget.onSelected(value == localizations.all ? null : ContentType.valueOf(value));
       },
       itemBuilder: (BuildContext context) {
-        return types.map(item).toList();
+        return types!.map(item).toList();
       },
     );
   }

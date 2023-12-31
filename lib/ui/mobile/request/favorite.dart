@@ -221,7 +221,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           proxyServer: widget.proxyServer,
           httpRequest: request,
           httpResponse: request.response,
-          title: Text(localizations.captureDetail, style: TextStyle(fontSize: 16)));
+          title: Text(localizations.captureDetail, style: const TextStyle(fontSize: 16)));
     }));
   }
 }

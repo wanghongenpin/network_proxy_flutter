@@ -25,7 +25,6 @@ import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
 import 'package:network_proxy/network/util/tls.dart';
-import 'package:network_proxy/utils/platform.dart';
 
 import 'host_port.dart';
 
@@ -108,8 +107,7 @@ class Server extends Network {
     HostAndPort? hostAndPort = channelContext.host;
 
     //黑名单 或 没开启https 直接转发
-    if ((Platforms.isMobile() && HostFilter.filter(hostAndPort?.host)) ||
-        (hostAndPort?.isSsl() == true && configuration.enableSsl == false)) {
+    if ((HostFilter.filter(hostAndPort?.host)) || (hostAndPort?.isSsl() == true && configuration.enableSsl == false)) {
       var remoteChannel = channelContext.serverChannel ??
           await channelContext.connectServerChannel(hostAndPort!, RelayHandler(channel));
       relay(channel, remoteChannel);

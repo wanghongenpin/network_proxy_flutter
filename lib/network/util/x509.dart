@@ -1,4 +1,4 @@
-// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names, depend_on_referenced_packages
 
 import 'dart:convert';
 import 'dart:typed_data';

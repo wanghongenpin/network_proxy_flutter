@@ -6,6 +6,7 @@ import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProxySetting extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -19,15 +20,17 @@ class ProxySetting extends StatefulWidget {
 }
 
 class _ProxySettingState extends State<ProxySetting> {
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('代理设置', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+      appBar: AppBar(title:  Text(localizations.proxySetting, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
       body: ListView(children: [
         PortWidget(proxyServer: widget.proxyServer),
         const Divider(height: 20, thickness: 0.3),
         ListTile(
-          title: const Text('外部代理'),
+          title: Text(localizations.externalProxy),
           trailing: const Icon(Icons.keyboard_arrow_right),
           onTap: () {
             showDialog(
@@ -54,6 +57,8 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
   final formKey = GlobalKey<FormState>();
   late ProxyInfo externalProxy;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -67,13 +72,9 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
         scrollable: true,
-        title: const Text("外部代理设置", style: TextStyle(fontSize: 15)),
+        title: Text(localizations.externalProxy, style: const TextStyle(fontSize: 15)),
         actions: [
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text("取消")),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(localizations.cancel)),
           TextButton(
               onPressed: () async {
                 if (!formKey.currentState!.validate()) {
@@ -81,7 +82,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                 }
                 submit();
               },
-              child: const Text("确定"))
+              child: Text(localizations.confirm))
         ],
         content: Form(
             key: formKey,

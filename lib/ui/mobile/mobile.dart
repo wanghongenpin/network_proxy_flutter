@@ -16,19 +16,20 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/launch/launch.dart';
 import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/request/search.dart';
-import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 class MobileHomePage extends StatefulWidget {
   final Configuration configuration;
+  final AppConfiguration appConfiguration;
 
-  const MobileHomePage({super.key, required this.configuration});
+  const MobileHomePage(this.configuration, this.appConfiguration, {super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -36,17 +37,23 @@ class MobileHomePage extends StatefulWidget {
   }
 }
 
+///画中画
+final ValueNotifier<bool> pictureInPictureNotifier = ValueNotifier(false);
+
 class MobileHomeState extends State<MobileHomePage> implements EventListener, LifecycleListener {
   static GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
+
+  /// 远程连接
+  final ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
 
   late ProxyServer proxyServer;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
-  void onUserLeaveHint() {
-    if (Vpn.isVpnStarted && !AppConfiguration.pictureInPictureNotifier.value) {
-      if (AppConfiguration.desktop.value.connect || !Platform.isAndroid || !widget.configuration.smallWindow) {
+  void onUserLeaveHint() async {
+    if (Vpn.isVpnStarted && !pictureInPictureNotifier.value) {
+      if (desktop.value.connect || !Platform.isAndroid || !(await (AppConfiguration.instance)).smallWindow) {
         return;
       }
 
@@ -56,18 +63,18 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   @override
   onPictureInPictureModeChanged(bool isInPictureInPictureMode) {
-    if (isInPictureInPictureMode && !AppConfiguration.pictureInPictureNotifier.value) {
+    if (isInPictureInPictureMode && !pictureInPictureNotifier.value) {
       while (Navigator.canPop(context)) {
         Navigator.pop(context);
       }
-      AppConfiguration.pictureInPictureNotifier.value = true;
+      pictureInPictureNotifier.value = true;
       return;
     }
 
-    if (!isInPictureInPictureMode && AppConfiguration.pictureInPictureNotifier.value) {
+    if (!isInPictureInPictureMode && pictureInPictureNotifier.value) {
       Vpn.isRunning().then((value) {
         Vpn.isVpnStarted = value;
-        AppConfiguration.pictureInPictureNotifier.value = false;
+        pictureInPictureNotifier.value = false;
       });
     }
   }
@@ -99,7 +106,6 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     proxyServer.start();
 
     //远程连接
-    final desktop = AppConfiguration.desktop;
     desktop.addListener(() {
       if (desktop.value.connect) {
         proxyServer.configuration.remoteHost = "http://${desktop.value.host}:${desktop.value.port}";
@@ -109,7 +115,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
       }
     });
 
-    if (widget.configuration.upgradeNoticeV6) {
+    if (widget.appConfiguration.upgradeNoticeV7) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -118,7 +124,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   @override
   void dispose() {
-    AppConfiguration.desktop.dispose();
+    desktop.dispose();
     AppLifecycleBinding.instance.removeListener(this);
     super.dispose();
   }
@@ -142,7 +148,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
           SystemNavigator.pop();
         },
         child: ValueListenableBuilder<bool>(
-            valueListenable: AppConfiguration.pictureInPictureNotifier,
+            valueListenable: pictureInPictureNotifier,
             builder: (context, pip, _) {
               if (pip) {
                 return Scaffold(body: RequestListWidget(key: requestStateKey, proxyServer: proxyServer));
@@ -153,7 +159,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
                 drawer: DrawerWidget(proxyServer: proxyServer),
                 floatingActionButton: _floatingActionButton(),
                 body: ValueListenableBuilder(
-                    valueListenable: AppConfiguration.desktop,
+                    valueListenable: desktop,
                     builder: (context, value, _) {
                       return Column(children: [
                         value.connect ? remoteConnect(value) : const SizedBox(),
@@ -171,7 +177,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
           icon: const Icon(Icons.cleaning_services_outlined),
           onPressed: () => requestStateKey.currentState?.clean()),
       const SizedBox(width: 2),
-      MoreMenu(proxyServer: proxyServer, desktop: AppConfiguration.desktop),
+      MoreMenu(proxyServer: proxyServer, desktop: desktop),
       const SizedBox(width: 10)
     ]);
   }
@@ -195,17 +201,23 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   }
 
   showUpgradeNotice() {
-    String content = '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-        '1. 请求重写增加 修改请求，可根据增则替换；\n'
-        '2. 请求重写批量导入、导出；\n'
-        '3. 支持WebSocket抓包；\n'
-        '4. 安卓支持小窗口模式；\n'
-        '5. 优化curl导入；\n'
-        '6. 支持head请求，修复手机端请求重写切换应用恢复原始的请求问题；\n'
-        '';
-    showAlertDialog('更新内容V1.0.6', content, () {
-      widget.configuration.upgradeNoticeV6 = false;
-      widget.configuration.flushConfig();
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
+    String content = isCN
+        ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
+            '1. 请求重写增加 修改请求，可根据正则替换；\n'
+            '2. 请求重写批量导入、导出；\n'
+            '3. 支持WebSocket抓包；\n'
+            '4. 安卓支持小窗口模式；\n'
+            '5. 优化curl导入；\n'
+            '6. 支持head请求，修复手机端请求重写切换应用恢复原始的请求问题；'
+        : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
+            '1. Increase multilingual support；\n'
+            '2. Details page Headers Expanded Config；\n'
+           ;
+    showAlertDialog(isCN ? '更新内容V1.0.6' : "Update content V1.0.6", content, () {
+      widget.appConfiguration.upgradeNoticeV7 = false;
+      widget.appConfiguration.flushConfig();
     });
   }
 
@@ -217,7 +229,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-            return ConnectRemote(desktop: AppConfiguration.desktop, proxyServer: proxyServer);
+            return ConnectRemote(desktop: desktop, proxyServer: proxyServer);
           })),
           child: Text("已连接${value.os?.toUpperCase()}，手机抓包已关闭", style: Theme.of(context).textTheme.titleMedium),
         ));
@@ -247,7 +259,6 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   checkConnectTask(BuildContext context) async {
     int retry = 0;
     Timer.periodic(const Duration(milliseconds: 3000), (timer) async {
-      var desktop = AppConfiguration.desktop;
       if (desktop.value.connect == false) {
         timer.cancel();
         return;

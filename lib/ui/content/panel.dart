@@ -5,6 +5,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/ui/component/share.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/platform.dart';
 
@@ -270,7 +271,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     Widget headerWidget = ExpansionTile(
         tilePadding: const EdgeInsets.only(left: 0),
         title: Text("$type Headers", style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-        initiallyExpanded: true,
+        initiallyExpanded: AppConfiguration.current?.headerExpanded ?? true,
         shape: const Border(),
         children: headers);
 

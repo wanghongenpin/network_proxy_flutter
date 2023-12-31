@@ -2,17 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:path_provider/path_provider.dart';
-
-class AppConfiguration {
-  ///画中画
-  static final ValueNotifier<bool> pictureInPictureNotifier = ValueNotifier(false);
-
-  /// 远程连接
-  static final ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
-}
 
 class ThemeModel {
   ThemeMode mode;
@@ -20,31 +11,43 @@ class ThemeModel {
 
   ThemeModel({this.mode = ThemeMode.system, this.useMaterial3 = true});
 
-  ThemeModel copy({ThemeMode? mode, bool? useMaterial3}) => ThemeModel(
+  ThemeModel copy({ThemeMode? mode, bool? useMaterial3}) =>
+      ThemeModel(
         mode: mode ?? this.mode,
         useMaterial3: useMaterial3 ?? this.useMaterial3,
       );
 }
 
-class UIConfiguration {
+class AppConfiguration {
   ValueNotifier<bool> globalChange = ValueNotifier(false);
 
   ThemeModel _theme = ThemeModel();
   Locale? _language;
 
-  UIConfiguration._();
+  //是否显示更新内容公告
+  bool upgradeNoticeV7 = true;
+
+  /// 是否启用小窗口
+  bool smallWindow = false;
+
+  ///
+  bool headerExpanded = true;
+
+  AppConfiguration._();
 
   /// 单例
-  static UIConfiguration? _instance;
+  static AppConfiguration? _instance;
 
-  static Future<UIConfiguration> get instance async {
+  static Future<AppConfiguration> get instance async {
     if (_instance == null) {
-      UIConfiguration configuration = UIConfiguration._();
+      AppConfiguration configuration = AppConfiguration._();
       await configuration.initConfig();
       _instance = configuration;
     }
     return _instance!;
   }
+
+  static AppConfiguration? get current => _instance;
 
   ThemeMode get themeMode => _theme.mode;
 
@@ -106,9 +109,12 @@ class UIConfiguration {
     try {
       Map<String, dynamic> config = jsonDecode(json);
       var mode =
-          ThemeMode.values.firstWhere((element) => element.name == config['mode'], orElse: () => ThemeMode.system);
+      ThemeMode.values.firstWhere((element) => element.name == config['mode'], orElse: () => ThemeMode.system);
       _theme = ThemeModel(mode: mode, useMaterial3: config['useMaterial3'] ?? true);
+      upgradeNoticeV7 = config['upgradeNoticeV7'] ?? true;
       _language = config['language'] == null ? null : Locale.fromSubtags(languageCode: config['language']);
+      smallWindow = config['smallWindow'] ?? Platform.isAndroid;
+      headerExpanded = config['headerExpanded'] ?? true;
     } catch (e) {
       print(e);
     }
@@ -127,6 +133,13 @@ class UIConfiguration {
   }
 
   Map<String, dynamic> toJson() {
-    return {'mode': _theme.mode.name, 'useMaterial3': _theme.useMaterial3, "language": _language?.languageCode};
+    return {
+      'mode': _theme.mode.name,
+      'useMaterial3': _theme.useMaterial3,
+      'upgradeNoticeV7': upgradeNoticeV7,
+      "language": _language?.languageCode,
+      'smallWindow': smallWindow,
+      "headerExpanded": headerExpanded
+    };
   }
 }

@@ -3,9 +3,9 @@ import 'package:network_proxy/ui/configuration.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ThemeSetting extends StatelessWidget {
-  final UIConfiguration uiConfiguration;
+  final AppConfiguration appConfiguration;
 
-  const ThemeSetting({super.key, required this.uiConfiguration});
+  const ThemeSetting({super.key, required this.appConfiguration});
 
   @override
   Widget build(BuildContext context) {
@@ -28,32 +28,32 @@ class ThemeSetting extends StatelessWidget {
                 message: "Material 3是谷歌开源设计系统的最新版本",
                 child: SwitchListTile(
                   contentPadding: const EdgeInsets.only(left: 32, right: 5),
-                  value: uiConfiguration.useMaterial3,
-                  onChanged: (bool value) => uiConfiguration.useMaterial3 = value,
+                  value: appConfiguration.useMaterial3,
+                  onChanged: (bool value) => appConfiguration.useMaterial3 = value,
                   dense: true,
                   title: const Text("Material3"),
                 ))),
         MenuItemButton(
-            leadingIcon: uiConfiguration.themeMode == ThemeMode.system
+            leadingIcon: appConfiguration.themeMode == ThemeMode.system
                 ? const Icon(Icons.check, size: 15)
                 : const SizedBox(width: 18),
             trailingIcon: const Icon(Icons.cached),
             child: Text(localizations.followSystem),
-            onPressed: () => uiConfiguration.themeMode = ThemeMode.system),
+            onPressed: () => appConfiguration.themeMode = ThemeMode.system),
         MenuItemButton(
-            leadingIcon: uiConfiguration.themeMode == ThemeMode.dark
+            leadingIcon: appConfiguration.themeMode == ThemeMode.dark
                 ? const Icon(Icons.check, size: 15)
                 : const SizedBox(width: 15),
             trailingIcon: const Icon(Icons.nightlight_outlined),
             child: Text(localizations.themeDark),
-            onPressed: () => uiConfiguration.themeMode = ThemeMode.dark),
+            onPressed: () => appConfiguration.themeMode = ThemeMode.dark),
         MenuItemButton(
-            leadingIcon: uiConfiguration.themeMode == ThemeMode.light
+            leadingIcon: appConfiguration.themeMode == ThemeMode.light
                 ? const Icon(Icons.check, size: 15)
                 : const SizedBox(width: 15),
             trailingIcon: const Icon(Icons.sunny),
             child: Text(localizations.themeLight),
-            onPressed: () => uiConfiguration.themeMode = ThemeMode.light),
+            onPressed: () => appConfiguration.themeMode = ThemeMode.light),
       ],
       child: Padding(
           padding: const EdgeInsets.only(left: 10),

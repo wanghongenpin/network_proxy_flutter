@@ -80,8 +80,8 @@ class DrawerWidget extends StatelessWidget {
             leading: const Icon(Icons.settings),
             onTap: () => navigator(
                 context,
-                futureWidget(UIConfiguration.instance,
-                    (uiConfiguration) => SettingMenu(proxyServer: proxyServer, uiConfiguration: uiConfiguration)))),
+                futureWidget(AppConfiguration.instance,
+                    (appConfiguration) => SettingMenu(proxyServer: proxyServer, appConfiguration: appConfiguration)))),
         ListTile(
             title: Text(localizations.about),
             leading: const Icon(Icons.info_outline),
@@ -103,9 +103,9 @@ navigator(BuildContext context, Widget widget) {
 ///设置
 class SettingMenu extends StatelessWidget {
   final ProxyServer proxyServer;
-  final UIConfiguration uiConfiguration;
+  final AppConfiguration appConfiguration;
 
-  const SettingMenu({super.key, required this.proxyServer, required this.uiConfiguration});
+  const SettingMenu({super.key, required this.proxyServer, required this.appConfiguration});
 
   @override
   Widget build(BuildContext context) {
@@ -125,18 +125,27 @@ class SettingMenu extends StatelessWidget {
                 trailing: const Icon(Icons.arrow_right),
                 onTap: () => _language(context),
               ),
-              MobileThemeSetting(uiConfiguration: uiConfiguration),
+              MobileThemeSetting(appConfiguration: appConfiguration),
               Platform.isIOS
                   ? const SizedBox()
                   : ListTile(
                       title: Text(localizations.windowMode),
                       subtitle: Text(localizations.windowModeSubTitle, style: const TextStyle(fontSize: 12)),
                       trailing: SwitchWidget(
-                          value: proxyServer.configuration.smallWindow,
+                          value: appConfiguration.smallWindow,
                           onChanged: (value) {
-                            proxyServer.configuration.smallWindow = value;
-                            proxyServer.configuration.flushConfig();
+                            appConfiguration.smallWindow = value;
+                            appConfiguration.flushConfig();
                           })),
+              ListTile(
+                  title: Text(localizations.headerExpanded),
+                  subtitle: Text(localizations.headerExpandedSubtitle, style: const TextStyle(fontSize: 12)),
+                  trailing: SwitchWidget(
+                      value: appConfiguration.headerExpanded,
+                      onChanged: (value) {
+                        appConfiguration.headerExpanded = value;
+                        appConfiguration.flushConfig();
+                      }))
             ])));
   }
 
@@ -154,14 +163,14 @@ class SettingMenu extends StatelessWidget {
               children: [
                 TextButton(
                     onPressed: () {
-                      uiConfiguration.language = null;
+                      appConfiguration.language = null;
                       Navigator.of(context).pop();
                     },
                     child: Text(localizations.followSystem)),
                 const Divider(thickness: 0.5, height: 0),
                 TextButton(
                     onPressed: () {
-                      uiConfiguration.language = const Locale.fromSubtags(languageCode: 'zh');
+                      appConfiguration.language = const Locale.fromSubtags(languageCode: 'zh');
                       Navigator.of(context).pop();
                     },
                     child: const Text("简体中文")),
@@ -169,7 +178,7 @@ class SettingMenu extends StatelessWidget {
                 TextButton(
                     child: const Text("English"),
                     onPressed: () {
-                      uiConfiguration.language = const Locale.fromSubtags(languageCode: 'en');
+                      appConfiguration.language = const Locale.fromSubtags(languageCode: 'en');
                       Navigator.of(context).pop();
                     }),
                 const Divider(thickness: 0.5),

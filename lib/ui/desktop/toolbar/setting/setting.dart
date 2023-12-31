@@ -64,11 +64,11 @@ class _SettingState extends State<Setting> {
       },
       menuChildren: [
         _ProxyMenu(proxyServer: widget.proxyServer),
-        futureWidget(UIConfiguration.instance, (uiConfiguration) => ThemeSetting(uiConfiguration: uiConfiguration)),
-        item("域名过滤", onPressed: hostFilter),
-        item("请求重写", onPressed: requestRewrite),
-        item("脚本", onPressed: () => openScriptWindow()),
-        item("外部代理设置", onPressed: setExternalProxy),
+        futureWidget(AppConfiguration.instance, (appConfiguration) => ThemeSetting(appConfiguration: appConfiguration)),
+        item(localizations.domainFilter, onPressed: hostFilter),
+        item(localizations.requestRewrite, onPressed: requestRewrite),
+        item(localizations.script, onPressed: () => openScriptWindow()),
+        item(localizations.externalProxy, onPressed: setExternalProxy),
         item("Github", onPressed: () => launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"))),
       ],
     );
@@ -129,6 +129,8 @@ class _ProxyMenuState extends State<_ProxyMenu> {
 
   late Configuration configuration;
   bool changed = false;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -203,7 +205,9 @@ class _ProxyMenuState extends State<_ProxyMenu> {
                 minLines: 1)),
         const SizedBox(height: 10),
       ],
-      child: const Padding(padding: EdgeInsets.only(left: 10), child: Text("代理", style: TextStyle(fontSize: 14))),
+      child: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: Text(localizations.proxy, style: const TextStyle(fontSize: 14))),
     );
   }
 
@@ -211,7 +215,7 @@ class _ProxyMenuState extends State<_ProxyMenu> {
   Widget setSystemProxy() {
     return SwitchListTile(
         hoverColor: Colors.transparent,
-        title: const Text("设置为系统代理", maxLines: 1),
+        title:  Text(localizations.systemProxy, maxLines: 1),
         dense: true,
         value: configuration.enableSystemProxy,
         onChanged: (val) {
@@ -239,6 +243,8 @@ class PortWidget extends StatefulWidget {
 class _PortState extends State<PortWidget> {
   final textController = TextEditingController();
   final FocusNode portFocus = FocusNode();
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -269,7 +275,7 @@ class _PortState extends State<PortWidget> {
   Widget build(BuildContext context) {
     return Row(children: [
       const Padding(padding: EdgeInsets.only(left: 15)),
-      Text("端口号：", style: widget.textStyle),
+      Text(localizations.port, style: widget.textStyle),
       SizedBox(
           width: 80,
           child: TextFormField(

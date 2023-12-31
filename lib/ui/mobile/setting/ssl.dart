@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -18,6 +19,8 @@ class MobileSslWidget extends StatefulWidget {
 class _MobileSslState extends State<MobileSslWidget> {
   bool changed = false;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void dispose() {
     if (changed) {
@@ -30,13 +33,13 @@ class _MobileSslState extends State<MobileSslWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("HTTPS代理", style: TextStyle(fontSize: 16)),
+          title: Text(localizations.httpsProxy, style: const TextStyle(fontSize: 16)),
           centerTitle: true,
         ),
         body: ListView(children: [
           SwitchListTile(
               hoverColor: Colors.transparent,
-              title: const Text("启用HTTPS代理"),
+              title: Text(localizations.enabledHttps),
               value: widget.proxyServer.enableSsl,
               onChanged: (val) {
                 widget.proxyServer.enableSsl = val;
@@ -52,21 +55,21 @@ class _MobileSslState extends State<MobileSslWidget> {
 
   Widget ios() {
     return ExpansionTile(
-        title: const Text("安装根证书"),
+        title: Text(localizations.profileDownload),
         initiallyExpanded: true,
         childrenPadding: const EdgeInsets.only(left: 20),
         expandedAlignment: Alignment.topLeft,
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         shape: const Border(),
         children: [
-          TextButton(onPressed: () => _downloadCert(), child: const Text("1. 点击下载根证书")),
-          TextButton(onPressed: () {}, child: const Text("2. 安装根证书 -> 信任证书")),
-          TextButton(onPressed: () {}, child: const Text("2.1 安装根证书 设置 > 已下载描述文件 > 安装")),
+          TextButton(onPressed: () => _downloadCert(), child: Text("1. ${localizations.downloadRootCa}")),
+          TextButton(onPressed: () {}, child: Text("2. ${localizations.installRootCa} -> ${localizations.trustCa}")),
+          TextButton(onPressed: () {}, child: Text("2.1 ${localizations.installCaDescribe}")),
           Padding(
               padding: const EdgeInsets.only(left: 15),
               child: Image.network("https://foruda.gitee.com/images/1689346516243774963/c56bc546_1073801.png",
                   height: 400)),
-          TextButton(onPressed: () {}, child: const Text("2.2 信任根证书 设置 > 通用 > 关于本机 -> 证书信任设置")),
+          TextButton(onPressed: () {}, child: Text("2.2 ${localizations.trustCaDescribe}")),
           Padding(
               padding: const EdgeInsets.only(left: 15),
               child: Image.network("https://foruda.gitee.com/images/1689346614916658100/fd9b9e41_1073801.png",
@@ -76,26 +79,25 @@ class _MobileSslState extends State<MobileSslWidget> {
 
   Widget android() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text("安装根证书"),
+      Text(localizations.installRootCa),
       ExpansionTile(
-          title: const Text("ROOT用户: 安装到系统证书", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          title: Text(localizations.androidRoot, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
           tilePadding: const EdgeInsets.only(left: 0),
           expandedAlignment: Alignment.topLeft,
           initiallyExpanded: true,
           shape: const Border(),
           children: [
-            const Text("针对安卓Root用户做了个Magisk模块ProxyPinCA系统证书，安装完重启手机即可。"),
+            Text(localizations.androidRootMagisk),
             TextButton(
                 child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
                 onPressed: () {
                   launchUrl(Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
                 }),
-            const SelectableText("模块不生效可以根据网上教程安装系统根证书, 根证书命名成 243f0bfb.0"),
+            SelectableText(localizations.androidRootRename),
           ]),
       const SizedBox(height: 20),
       ExpansionTile(
-          title:
-              const Text("非ROOT用户: 安装到用户证书(很多软件不会信任用户证书)", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          title: Text(localizations.androidUserCA, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
           tilePadding: const EdgeInsets.only(left: 0),
           expandedAlignment: Alignment.topLeft,
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
@@ -105,16 +107,16 @@ class _MobileSslState extends State<MobileSslWidget> {
             TextButton(
                 onPressed: () => _downloadCert(),
                 child: Text.rich(TextSpan(children: [
-                  const TextSpan(text: "1. 点击下载根证书   "),
+                  TextSpan(text: "1. ${localizations.downloadRootCa}   "),
                   WidgetSpan(child: SelectableText("http://127.0.0.1:${widget.proxyServer.port}/ssl"))
                 ]))),
-            TextButton(onPressed: () {}, child: const Text("2. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书")),
+            TextButton(onPressed: () {}, child: Text("2. ${localizations.androidUserCAInstall}")),
             TextButton(
                 onPressed: () {
                   launchUrl(Uri.parse(
                       "https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E5%AE%89%E5%8D%93%E6%97%A0ROOT%E4%BD%BF%E7%94%A8Xposed%E6%A8%A1%E5%9D%97%E6%8A%93%E5%8C%85"));
                 },
-                child: const Text("推荐使用Xposed模块抓包(无需ROOT), 点击查看wiki")),
+                child: Text(localizations.androidUserXposed)),
             ClipRRect(
                 child: Align(
                     alignment: Alignment.topCenter,

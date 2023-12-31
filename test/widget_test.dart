@@ -17,8 +17,8 @@ void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     Configuration configuration = await Configuration.instance;
-    UIConfiguration uiConfiguration = await UIConfiguration.instance;
-    await tester.pumpWidget(FluentApp(DesktopHomePage(configuration: configuration), uiConfiguration: uiConfiguration));
+    AppConfiguration appConfiguration = await AppConfiguration.instance;
+    await tester.pumpWidget(FluentApp(DesktopHomePage(configuration, appConfiguration), appConfiguration));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

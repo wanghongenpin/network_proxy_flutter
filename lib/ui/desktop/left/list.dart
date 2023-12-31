@@ -314,7 +314,7 @@ class _DomainRequestsState extends State<DomainRequests> {
       items: <PopupMenuEntry>[
         CustomPopupMenuItem(
             height: 35,
-            child: const Text("添加黑名单", style: TextStyle(fontSize: 13)),
+            child: Text(localizations.domainBlacklist, style: const TextStyle(fontSize: 13)),
             onTap: () {
               HostFilter.blacklist.add(Uri.parse(widget.domain).host);
               configuration.flushConfig();
@@ -322,7 +322,7 @@ class _DomainRequestsState extends State<DomainRequests> {
             }),
         CustomPopupMenuItem(
             height: 35,
-            child: const Text("添加白名单", style: TextStyle(fontSize: 13)),
+            child: Text(localizations.domainWhitelist, style: const TextStyle(fontSize: 13)),
             onTap: () {
               HostFilter.whitelist.add(Uri.parse(widget.domain).host);
               configuration.flushConfig();
@@ -330,7 +330,7 @@ class _DomainRequestsState extends State<DomainRequests> {
             }),
         CustomPopupMenuItem(
             height: 35,
-            child: const Text("删除白名单", style: TextStyle(fontSize: 13)),
+            child: Text(localizations.deleteWhitelist, style: const TextStyle(fontSize: 13)),
             onTap: () {
               HostFilter.whitelist.remove(Uri.parse(widget.domain).host);
               configuration.flushConfig();
@@ -338,7 +338,9 @@ class _DomainRequestsState extends State<DomainRequests> {
             }),
         const PopupMenuDivider(height: 0.3),
         CustomPopupMenuItem(
-            height: 35, child: Text(localizations.delete, style: const TextStyle(fontSize: 13)), onTap: () => _delete()),
+            height: 35,
+            child: Text(localizations.delete, style: const TextStyle(fontSize: 13)),
+            onTap: () => _delete()),
       ],
     );
   }

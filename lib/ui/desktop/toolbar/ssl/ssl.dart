@@ -37,18 +37,15 @@ class _SslState extends State<SslWidget> {
           PopupMenuItem(child: _Switch(proxyServer: widget.proxyServer, onEnableChange: (val) => setState(() {}))),
           PopupMenuItem(
               child: ListTile(
-            dense: true,
-            hoverColor: Colors.transparent,
-            focusColor: Colors.transparent,
-            title: const Text("安装根证书到本机"),
-            trailing: const Icon(Icons.arrow_right),
-            onTap: () {
-              pcCer();
-            },
-          )),
+                  dense: true,
+                  hoverColor: Colors.transparent,
+                  focusColor: Colors.transparent,
+                  title: Text(localizations.installCaLocal),
+                  trailing: const Icon(Icons.arrow_right),
+                  onTap: pcCer)),
           PopupMenuItem<String>(
             child: ListTile(
-                title: const Text("安装根证书到 iOS"),
+                title: Text("${localizations.installRootCa} iOS"),
                 dense: true,
                 hoverColor: Colors.transparent,
                 focusColor: Colors.transparent,
@@ -59,7 +56,7 @@ class _SslState extends State<SslWidget> {
           ),
           PopupMenuItem<String>(
             child: ListTile(
-                title: const Text("安装根证书到 Android"),
+                title: Text("${localizations.installRootCa} Android"),
                 dense: true,
                 hoverColor: Colors.transparent,
                 focusColor: Colors.transparent,
@@ -70,7 +67,7 @@ class _SslState extends State<SslWidget> {
           ),
           PopupMenuItem<String>(
             child: ListTile(
-                title: const Text("下载根证书"),
+                title: Text(localizations.downloadRootCa),
                 dense: true,
                 hoverColor: Colors.transparent,
                 focusColor: Colors.transparent,
@@ -89,12 +86,17 @@ class _SslState extends State<SslWidget> {
   }
 
   void pcCer() async {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
     List<Widget> list = [];
     if (Platform.isMacOS || Platform.isWindows) {
       list = [
-        Text(" 安装证书到本系统，${Platform.isMacOS ? "“安装完双击选择“始终信任此证书”。 如安装打开失败，请下载证书拖拽到系统证书里" : "选择“受信任的根证书颁发机构”"}"),
+        isCN
+            ? Text(" 安装证书到本系统，${Platform.isMacOS ? "安装完双击选择“始终信任此证书”。 如安装打开失败，请下载证书拖拽到系统证书里" : "选择“受信任的根证书颁发机构”"}")
+            : Text(" Install certificate to this system，${Platform.isMacOS ? "After installation, double-click to select “Always Trust”。\n"
+                " If installation and opening fail，Please download the certificate and drag it to the system certificate" : "choice“Trusted Root Certificate Authority”"}"),
         const SizedBox(height: 10),
-        FilledButton(onPressed: _installCert, child: const Text("安装证书")),
+        FilledButton(onPressed: _installCert, child: Text(localizations.installRootCa)),
         const SizedBox(height: 10),
         Platform.isMacOS
             ? Image.network("https://foruda.gitee.com/images/1689323260158189316/c2d881a4_1073801.png",
@@ -125,12 +127,14 @@ class _SslState extends State<SslWidget> {
 
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return SimpleDialog(
               contentPadding: const EdgeInsets.all(16),
-              title: const Row(children: [
-                Text("电脑HTTPS抓包配置", style: TextStyle(fontSize: 16)),
-                Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
+              title: Row(children: [
+                Text(isCN ? "电脑HTTPS抓包配置" : "Computer HTTPS Packet Capture Configuration",
+                    style: const TextStyle(fontSize: 16)),
+                const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
               ]),
               alignment: Alignment.center,
               children: list);
@@ -140,6 +144,7 @@ class _SslState extends State<SslWidget> {
   void iosCer(String host) {
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return SimpleDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -160,18 +165,18 @@ class _SslState extends State<SslWidget> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text("3. 安装根证书并信任证书"),
+                 Text("3. ${localizations.installRootCa} -> ${localizations.trustCa}"),
                 const SizedBox(height: 10),
                 Row(children: [
                   Column(children: [
-                    const Text("3.1 安装证书 设置 > 已下载描述文件 > 安装", style: TextStyle(fontSize: 12)),
+                    Text("3.1 ${localizations.installCaDescribe}", style: const TextStyle(fontSize: 12)),
                     const SizedBox(height: 10),
                     Image.network("https://foruda.gitee.com/images/1689346516243774963/c56bc546_1073801.png",
                         height: 270, width: 300)
                   ]),
                   const SizedBox(width: 10),
                   Column(children: [
-                    const Text("3.2 信任证书 设置 > 通用 > 关于本机 > 证书信任设置", style: TextStyle(fontSize: 12)),
+                    Text("3.2 ${localizations.trustCaDescribe}", style: const TextStyle(fontSize: 12)),
                     const SizedBox(height: 10),
                     Image.network("https://foruda.gitee.com/images/1689346614916658100/fd9b9e41_1073801.png",
                         height: 270, width: 300)
@@ -184,6 +189,7 @@ class _SslState extends State<SslWidget> {
   void androidCer(String host) {
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -197,8 +203,8 @@ class _SslState extends State<SslWidget> {
                   width: 600,
                   child: ListView(children: [
                     ExpansionTile(
-                        title:
-                            const Text("ROOT用户: 安装到系统证书", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                        title: Text(localizations.androidRoot,
+                            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
                         tilePadding: const EdgeInsets.only(left: 0),
                         expandedCrossAxisAlignment: CrossAxisAlignment.start,
                         expandedAlignment: Alignment.topLeft,
@@ -206,18 +212,18 @@ class _SslState extends State<SslWidget> {
                         initiallyExpanded: true,
                         shape: const Border(),
                         children: [
-                          const Text("针对安卓ROOT用户做了个Magisk模块ProxyPinCA系统证书，安装完重启手机即可。"),
+                          Text(localizations.androidRootMagisk),
                           TextButton(
                               child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
                               onPressed: () {
                                 launchUrl(Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
                               }),
-                          const SelectableText("模块不生效可以根据网上教程安装系统根证书, 根证书命名成 243f0bfb.0"),
+                          SelectableText(localizations.androidRootRename),
                         ]),
                     const SizedBox(height: 10),
                     ExpansionTile(
-                      title: const Text("非ROOT用户: 安装到用户证书(很多软件不会信任用户证书)",
-                          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                      title: Text(localizations.androidUserCA,
+                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
                       tilePadding: const EdgeInsets.only(left: 0),
                       expandedCrossAxisAlignment: CrossAxisAlignment.start,
                       childrenPadding: const EdgeInsets.only(left: 20),
@@ -235,14 +241,14 @@ class _SslState extends State<SslWidget> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        const Text("3. 打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书"),
+                        Text("3. ${localizations.androidUserCAInstall}"),
                         const SizedBox(height: 10),
                         TextButton(
                             onPressed: () {
                               launchUrl(Uri.parse(
                                   "https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E5%AE%89%E5%8D%93%E6%97%A0ROOT%E4%BD%BF%E7%94%A8Xposed%E6%A8%A1%E5%9D%97%E6%8A%93%E5%8C%85"));
                             },
-                            child: const Text(" 推荐使用Xposed模块抓包(无需ROOT), 点击查看wiki")),
+                            child: Text(" ${localizations.androidUserXposed}")),
                         ClipRRect(
                             child: Align(
                                 alignment: Alignment.topCenter,

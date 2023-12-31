@@ -36,17 +36,11 @@ class Configuration {
   //代理忽略域名
   String proxyPassDomains = SystemProxy.proxyPassDomains;
 
-  //是否显示更新内容公告
-  bool upgradeNoticeV6 = true;
-
   //外部代理
   ProxyInfo? externalProxy;
 
   //白名单应用
   List<String> appWhitelist = [];
-
-  /// 是否启用小窗口
-  bool smallWindow = false;
 
   //远程连接 不持久化保存
   String? remoteHost;
@@ -77,14 +71,12 @@ class Configuration {
     enableSsl = config['enableSsl'] == true;
     enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
     proxyPassDomains = config['proxyPassDomains'] ?? SystemProxy.proxyPassDomains;
-    upgradeNoticeV6 = config['upgradeNoticeV6'] ?? true;
     if (config['externalProxy'] != null) {
       externalProxy = ProxyInfo.fromJson(config['externalProxy']);
     }
     appWhitelist = List<String>.from(config['appWhitelist'] ?? []);
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
-    smallWindow = config['smallWindow'] ?? Platform.isAndroid;
   }
 
   /// 配置文件
@@ -123,7 +115,6 @@ class Configuration {
 
   Map<String, dynamic> toJson() {
     return {
-      'upgradeNoticeV6': upgradeNoticeV6,
       'port': port,
       'enableSsl': enableSsl,
       'enableSystemProxy': enableSystemProxy,
@@ -132,7 +123,6 @@ class Configuration {
       'appWhitelist': appWhitelist,
       'whitelist': HostFilter.whitelist.toJson(),
       'blacklist': HostFilter.blacklist.toJson(),
-      'smallWindow': smallWindow,
     };
   }
 }

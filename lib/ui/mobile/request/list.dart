@@ -11,8 +11,8 @@ import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
+import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
-import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 class RequestListWidget extends StatefulWidget {
@@ -46,7 +46,7 @@ class RequestListState extends State<RequestListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (AppConfiguration.pictureInPictureNotifier.value) {
+    if (pictureInPictureNotifier.value) {
       if (container.isEmpty) {
         return Center(child: Text(localizations.emptyData, style: const TextStyle(color: Colors.grey)));
       }
@@ -85,7 +85,7 @@ class RequestListState extends State<RequestListWidget> {
 
   ///添加请求
   add(Channel channel, HttpRequest request) {
-    if (AppConfiguration.pictureInPictureNotifier.value) {
+    if (pictureInPictureNotifier.value) {
       setState(() {
         container.add(request);
       });

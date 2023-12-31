@@ -9,7 +9,11 @@
   "filter": "Filter",
   "script": "Script",
   "share": "Share",
+  "port": "Port: ",
   "proxy": "Proxy",
+  "externalProxy": "External proxy",
+  "proxySetting": "Proxy Setting",
+  "systemProxy": "Set as System Proxy",
 
   "start": "Start",
   "stop": "Stop",
@@ -55,15 +59,16 @@
   "statusCode": "Status code: ",
 
   "sequence": "All Requests",
-  "domainList":"Domain List",
+  "domainList": "Domain List",
   "domainWhitelist": "Domain Whitelist",
   "domainBlacklist": "Domain Blacklist",
+  "domainFilter": "Domain Filter",
   "appWhitelist": "App Whitelist",
   "scanCode": "Scan Code Connect",
-  "addBlacklist":"Add Filter Blacklist",
-  "addWhitelist":"Add Filter Whitelist",
-  "deleteWhitelist":"Delete Filter Whitelist",
-  "domainListSubtitle":"Last Request Time: {time},  Count: {count}",
+  "addBlacklist": "Add Filter Blacklist",
+  "addWhitelist": "Add Filter Whitelist",
+  "deleteWhitelist": "Delete Filter Whitelist",
+  "domainListSubtitle": "Last Request Time: {time},  Count: {count}",
 
   "copy": "Copy",
   "copyUrl": "Copy URL",
@@ -73,12 +78,12 @@
   "rename": "Rename",
   "repeat": "Repeat Request",
   "editRequest": "Edit and Request",
-  "reSendRequest" :"The request has been resent",
+  "reSendRequest": "The request has been resent",
 
   "favorite": "Favorite",
   "deleteFavorite": "Delete Favorite",
-  "emptyFavorite":"Empty Favorite",
-  "deleteFavoriteSuccess":"Favorite deleted",
+  "emptyFavorite": "Empty Favorite",
+  "deleteFavoriteSuccess": "Favorite deleted",
   "name": "Name",
 
   "historyRecord": "History",
@@ -96,6 +101,20 @@
   "httpRequest": "HTTP Request",
 
   "enabledHttps": "Enable HTTPS Proxy",
+  "installRootCa": "Install Certificate",
+  "installCaLocal": "Install Certificate to This PC",
+  "downloadRootCa": "Download Certificate",
+  "trustCa": "Trust Certificate",
+  "profileDownload": "Profile Download",
+  "install": "Install",
+  "installCaDescribe": "Install CA Setting > Profile Download > Install",
+  "trustCaDescribe": "Trust CA Setting > General > About > Certificate Trust Setting",
+  "androidRoot": "ROOT User: Install to system certificate",
+  "androidRootMagisk": "For Android ROOT users, a Magisk module ProxyPinCA system certificate has been made, restart the phone after installation.",
+  "androidRootRename": "If the module does not take effect, you can install the system root certificate according to the online tutorial, and name the root certificate 243f0bfb.0",
+  "androidUserCA": "Non-ROOT User: Install to user certificate (many apps will not trust user certificates)",
+  "androidUserCAInstall": "Open settings -> Security -> Encryption and credentials -> Install certificate -> CA certificate",
+  "androidUserXposed": "It is recommended to use the Xposed module for packet capture (no need for ROOT), click to view wiki",
 
   "localIP": "Local IP ",
   "mobileScan": "Scan with Mobile App",
@@ -115,7 +134,8 @@
   "curlSchemeRequest": "If the curl format is recognized, should it be converted into an HTTP request?",
 
   "windowMode": "Window Mode",
-  "windowModeSubTitle": "Enabled Packet Capture, Enter the background, Display a small window"
-
+  "windowModeSubTitle": "Enabled Packet Capture, Enter the background, Display a small window",
+  "headerExpanded": "Headers Expanded",
+  "headerExpandedSubtitle": "Details page Headers column is expanded by default"
 
 }

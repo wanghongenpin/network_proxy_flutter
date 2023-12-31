@@ -9,7 +9,11 @@
   "filter": "过滤",
   "script": "脚本",
   "share": "分享",
+  "port": "端口号: ",
   "proxy": "代理",
+  "externalProxy": "外部代理设置",
+  "proxySetting": "代理设置",
+  "systemProxy": "设置为系统代理",
 
   "start": "开始",
   "stop": "停止",
@@ -54,15 +58,16 @@
   "statusCode": "状态码：",
 
   "sequence": "全部请求",
-  "domainList":"域名列表",
+  "domainList": "域名列表",
   "domainWhitelist": "域名白名单",
   "domainBlacklist" :"域名黑名单",
   "appWhitelist":"应用白名单",
+  "domainFilter":"域名过滤",
   "scanCode": "扫码连接",
-  "addBlacklist":"添加黑名单",
-  "addWhitelist":"添加白名单",
-  "deleteWhitelist":"删除白名单",
-  "domainListSubtitle":"最后请求时间: {time},  次数: {count}",
+  "addBlacklist": "添加黑名单",
+  "addWhitelist": "添加白名单",
+  "deleteWhitelist": "删除白名单",
+  "domainListSubtitle": "最后请求时间: {time},  次数: {count}",
 
   "copy": "复制",
   "copyUrl": "复制请求连接",
@@ -72,12 +77,12 @@
   "rename": "重命名",
   "repeat": "重放请求",
   "editRequest": "编辑请求重放",
-  "reSendRequest" :"已重新发送请求",
+  "reSendRequest": "已重新发送请求",
 
   "favorite": "收藏请求",
-  "deleteFavorite":"删除收藏",
-  "emptyFavorite":"暂无收藏",
-  "deleteFavoriteSuccess":"已删除收藏",
+  "deleteFavorite": "删除收藏",
+  "emptyFavorite": "暂无收藏",
+  "deleteFavoriteSuccess": "已删除收藏",
   "name": "名称",
 
   "historyRecord": "历史记录",
@@ -95,6 +100,21 @@
   "httpRequest": "HTTP请求",
 
   "enabledHttps": "启用HTTPS代理",
+  "installRootCa": "安装根证书",
+  "installCaLocal": "安装根证书到本机",
+  "downloadRootCa": "下载根证书",
+  "trustCa": "信任证书",
+  "profileDownload": "已下载描述文件",
+  "install": "安装",
+  "installCaDescribe": "安装证书 设置 > 已下载描述文件 > 安装",
+  "trustCaDescribe": "信任证书 设置 > 通用 > 关于本机 > 证书信任设置",
+  "androidRoot": "ROOT用户: 安装到系统证书",
+  "androidRootMagisk": "针对安卓ROOT用户做了个Magisk模块ProxyPinCA系统证书，安装完重启手机即可。",
+  "androidRootRename": "模块不生效可以根据网上教程安装系统根证书, 根证书命名成 243f0bfb.0",
+  "androidUserCA": "非ROOT用户: 安装到用户证书(很多软件不会信任用户证书)",
+  "androidUserCAInstall": "打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书",
+  "androidUserXposed": "推荐使用Xposed模块抓包(无需ROOT), 点击查看wiki",
+
 
   "localIP": "本地IP ",
   "mobileScan": "请使用手机版扫描二维码",
@@ -114,6 +134,7 @@
   "curlSchemeRequest": "识别到curl格式，是否转换为HTTP请求？",
 
   "windowMode": "窗口模式",
-  "windowModeSubTitle": "开启抓包后 如果应用退回到后台，显示一个小窗口"
-
+  "windowModeSubTitle": "开启抓包后 如果应用退回到后台，显示一个小窗口",
+  "headerExpanded": "Headers默认展开",
+  "headerExpandedSubtitle": "详情页Headers栏是否默认展开"
 }
