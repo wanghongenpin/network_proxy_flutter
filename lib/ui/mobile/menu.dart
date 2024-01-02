@@ -333,7 +333,9 @@ class MoreMenu extends StatelessWidget {
               hostname: response.headers.get("hostname"));
 
           if (context.mounted && Navigator.canPop(context)) {
-            FlutterToastr.show("${localizations.success}${Vpn.isVpnStarted ? '' : ',手机需要开启抓包才可以抓取请求哦'}", context,
+            FlutterToastr.show(
+                "${localizations.connectSuccess}${Vpn.isVpnStarted ? '' : ', ${localizations.remoteConnectSuccessTips}'}",
+                context,
                 duration: 3);
             Navigator.pop(context);
           }
@@ -344,14 +346,14 @@ class MoreMenu extends StatelessWidget {
           showDialog(
               context: context,
               builder: (BuildContext context) {
-                return const AlertDialog(content: Text("连接失败，请检查是否在同一局域网"));
+                return AlertDialog(content: Text(localizations.remoteConnectFail));
               });
         }
       }
       return;
     }
     if (context.mounted) {
-      FlutterToastr.show("无法识别的二维码", context);
+      FlutterToastr.show(localizations.invalidQRCode, context);
     }
   }
 
@@ -365,7 +367,7 @@ class MoreMenu extends StatelessWidget {
           return AlertDialog(
             contentPadding: const EdgeInsets.only(top: 5),
             actionsPadding: const EdgeInsets.only(bottom: 5),
-            title: const Text("远程连接，将请求转发到其他终端", style: TextStyle(fontSize: 16)),
+            title: Text(localizations.remoteConnectForward, style: const TextStyle(fontSize: 16)),
             content: SizedBox(
                 height: 240,
                 width: 300,

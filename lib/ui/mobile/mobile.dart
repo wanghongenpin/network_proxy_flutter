@@ -137,9 +137,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         canPop: false,
         onPopInvoked: (d) {
           if (DateTime.now().millisecondsSinceEpoch - exitTime > 2000) {
-            bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
             exitTime = DateTime.now().millisecondsSinceEpoch;
-            FlutterToastr.show(isCN ? "再按一次退出程序" : "Press again to exit the program", context,
+            FlutterToastr.show(localizations.appExitTips, context,
                 rootNavigator: true, duration: FlutterToastr.lengthLong);
             return;
           }
@@ -211,9 +210,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             '1. Increase multilingual support；\n'
             '2. Request Rewrite support file selection；\n'
-            '3. Details page Headers Expanded Config；\n'
-    ;
-    showAlertDialog(isCN ? '更新内容V1.0.6' : "Update content V1.0.6", content, () {
+            '3. Details page Headers Expanded Config；\n';
+    showAlertDialog(isCN ? '更新内容V1.0.7' : "Update content V1.0.7", content, () {
       widget.appConfiguration.upgradeNoticeV7 = false;
       widget.appConfiguration.flushConfig();
     });
@@ -223,13 +221,14 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   Widget remoteConnect(RemoteModel value) {
     return Container(
         margin: const EdgeInsets.only(top: 5, bottom: 5),
-        height: 50,
+        height: 55,
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
             return ConnectRemote(desktop: desktop, proxyServer: proxyServer);
           })),
-          child: Text("已连接${value.os?.toUpperCase()}，手机抓包已关闭", style: Theme.of(context).textTheme.titleMedium),
+          child: Text(localizations.remoteConnected(desktop.value.os ?? ''),
+              style: Theme.of(context).textTheme.titleMedium),
         ));
   }
 
@@ -277,7 +276,10 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         timer.cancel();
         desktop.value = RemoteModel(connect: false);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("检查远程连接失败，已断开")));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(localizations.remoteConnectDisconnect),
+              action: SnackBarAction(
+                  label: localizations.reconnect, onPressed: () => desktop.value = RemoteModel(connect: true))));
         }
       }
     });

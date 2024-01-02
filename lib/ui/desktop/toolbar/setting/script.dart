@@ -23,11 +23,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:highlight/languages/javascript.dart';
-import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 
@@ -56,6 +57,8 @@ class ScriptWidget extends StatefulWidget {
 }
 
 class _ScriptWidgetState extends State<ScriptWidget> {
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -82,7 +85,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
     return Scaffold(
         backgroundColor: Theme.of(context).dialogBackgroundColor,
         appBar: AppBar(
-            title: const Text("脚本", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            title: Text(localizations.script, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             toolbarHeight: 36,
             centerTitle: true),
         body: Padding(
@@ -98,8 +101,8 @@ class _ScriptWidgetState extends State<ScriptWidget> {
                             SizedBox(
                                 width: 300,
                                 child: SwitchWidget(
-                                  title: '启用脚本工具',
-                                  subtitle: "使用 JavaScript 修改请求和响应",
+                                  title: localizations.enableScript,
+                                  subtitle: localizations.scriptUseDescribe,
                                   value: data.enabled,
                                   onChanged: (value) {
                                     data.enabled = value;
@@ -114,13 +117,13 @@ class _ScriptWidgetState extends State<ScriptWidget> {
                                 FilledButton(
                                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
                                   onPressed: scriptEdit,
-                                  child: const Text("添加"),
+                                  child: Text(localizations.add),
                                 ),
                                 const SizedBox(width: 10),
                                 OutlinedButton(
                                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
                                   onPressed: import,
-                                  child: const Text("导入"),
+                                  child: Text(localizations.import),
                                 )
                               ],
                             )),
@@ -140,8 +143,10 @@ class _ScriptWidgetState extends State<ScriptWidget> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     Container(
-                                        width: 200, padding: const EdgeInsets.only(left: 10), child: const Text("名称")),
-                                    const SizedBox(width: 50, child: Text("启用", textAlign: TextAlign.center)),
+                                        width: 200,
+                                        padding: const EdgeInsets.only(left: 10),
+                                        child: Text(localizations.name)),
+                                    SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
                                     const VerticalDivider(),
                                     const Expanded(child: Text("URL")),
                                   ],
@@ -166,13 +171,13 @@ class _ScriptWidgetState extends State<ScriptWidget> {
       (await ScriptManager.instance).addScript(scriptItem, json['script']);
       _refreshScript();
       if (context.mounted) {
-        FlutterToastr.show("导入成功", context);
+        FlutterToastr.show(localizations.importSuccess, context);
       }
       setState(() {});
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
       if (context.mounted) {
-        FlutterToastr.show("导入失败 $e", context);
+        FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
   }
@@ -203,6 +208,8 @@ class _ScriptEditState extends State<ScriptEdit> {
   late TextEditingController nameController;
   late TextEditingController urlController;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -227,10 +234,10 @@ class _ScriptEditState extends State<ScriptEdit> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         titlePadding: const EdgeInsets.only(left: 15, top: 5, right: 15),
         title: Row(children: [
-          const Text("编辑脚本", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          Text(localizations.scriptEdit, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(width: 10),
           Text.rich(TextSpan(
-              text: '使用文档',
+              text: localizations.useGuide,
               style: const TextStyle(color: Colors.blue, fontSize: 14),
               recognizer: TapGestureRecognizer()
                 ..onTap = () => DesktopMultiWindow.invokeMethod(
@@ -239,11 +246,12 @@ class _ScriptEditState extends State<ScriptEdit> {
         ]),
         actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
         actions: [
-          ElevatedButton(onPressed: () => Navigator.of(context).pop(), child: const Text("取消")),
+          ElevatedButton(onPressed: () => Navigator.of(context).pop(), child: Text(localizations.cancel)),
           FilledButton(
               onPressed: () async {
                 if (!(formKey.currentState as FormState).validate()) {
-                  FlutterToastr.show("名称和URL不能为空", context, position: FlutterToastr.top);
+                  FlutterToastr.show("${localizations.name} URL ${localizations.cannotBeEmpty}", context,
+                      position: FlutterToastr.top);
                   return;
                 }
                 //新增
@@ -262,18 +270,18 @@ class _ScriptEditState extends State<ScriptEdit> {
                   Navigator.of(context).maybePop(true);
                 }
               },
-              child: const Text("保存")),
+              child: Text(localizations.save)),
         ],
         content: Form(
             key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                textField("名称:", nameController, "请输入名称"),
+                textField("${localizations.name}:", nameController, localizations.pleaseEnter),
                 const SizedBox(height: 10),
                 textField("URL:", urlController, "github.com/api/*", keyboardType: TextInputType.url),
                 const SizedBox(height: 10),
-                const Text("脚本:"),
+                Text("${localizations.script}:"),
                 const SizedBox(height: 5),
                 SizedBox(
                     width: 850,
@@ -323,6 +331,8 @@ class ScriptList extends StatefulWidget {
 
 class _ScriptListState extends State<ScriptList> {
   int selected = -1;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   Widget build(BuildContext context) {
@@ -392,7 +402,7 @@ class _ScriptListState extends State<ScriptList> {
     showContextMenu(context, details.globalPosition, items: [
       PopupMenuItem(
           height: 35,
-          child: const Text("编辑"),
+          child: Text(localizations.edit),
           onTap: () async {
             String script = await (await ScriptManager.instance).getScript(widget.scripts[index]);
             if (!context.mounted) {
@@ -407,21 +417,21 @@ class _ScriptListState extends State<ScriptList> {
               }
             });
           }),
-      PopupMenuItem(height: 35, child: const Text("导出"), onTap: () => export(widget.scripts[index])),
+      PopupMenuItem(height: 35, child: Text(localizations.export), onTap: () => export(widget.scripts[index])),
       PopupMenuItem(
           height: 35,
-          child: widget.scripts[index].enabled ? const Text("禁用") : const Text("启用"),
+          child: widget.scripts[index].enabled ? Text(localizations.disabled) : Text(localizations.enable),
           onTap: () {
             widget.scripts[index].enabled = !widget.scripts[index].enabled;
           }),
       const PopupMenuDivider(),
       PopupMenuItem(
           height: 35,
-          child: const Text("删除"),
+          child: Text(localizations.delete),
           onTap: () async {
             (await ScriptManager.instance).removeScript(index);
             _refreshScript();
-            if (context.mounted) FlutterToastr.show('删除成功', context);
+            if (context.mounted) FlutterToastr.show(localizations.deleteSuccess, context);
           }),
     ]).then((value) {
       setState(() {
@@ -444,6 +454,6 @@ class _ScriptListState extends State<ScriptList> {
     json['script'] = await (await ScriptManager.instance).getScript(item);
     final XFile xFile = XFile.fromData(utf8.encode(jsonEncode(json)), mimeType: 'json');
     await xFile.saveTo(saveLocation);
-    if (context.mounted) FlutterToastr.show("导出成功", context);
+    if (context.mounted) FlutterToastr.show(localizations.exportSuccess, context);
   }
 }

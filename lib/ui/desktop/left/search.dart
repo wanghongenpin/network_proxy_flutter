@@ -69,27 +69,31 @@ class _SearchState extends State<Search> {
     if (!searched) {
       searchModel.searchOptions = {Option.url};
     }
+    bool isCN = AppLocalizations.of(context)!.localeName == 'zh';
     var height = MediaQuery.of(context).size.height;
-    showMenu(context: context, position: RelativeRect.fromLTRB(10, height - 410, 10, height - 410), items: [
-      PopupMenuItem(
-          padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
-          enabled: false,
-          child: DefaultTextStyle.merge(
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
-              child: SizedBox(
-                  width: 500,
-                  height: 350,
-                  child: SearchConditions(
-                      searchModel: searchModel,
-                      onSearch: (val) {
-                        setState(() {
-                          searchModel = val;
-                          searched = searchModel.isNotEmpty;
-                          keywordController.text = searchModel.keyword ?? '';
-                          widget.onSearch?.call(searchModel);
-                        });
-                      }))))
-    ]);
+    height = isCN ? height - 400 : height - 430;
+    showMenu(
+        context: context,
+        position: RelativeRect.fromLTRB(10, height, 10, height),
+        constraints: const BoxConstraints(minWidth: 260, maxWidth: 330),
+        items: [
+          PopupMenuItem(
+              padding: const EdgeInsets.only(left: 15, right: 15, top: 10, bottom: 5),
+              enabled: false,
+              child: DefaultTextStyle.merge(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
+                  child: SizedBox(
+                      child: SearchConditions(
+                          searchModel: searchModel,
+                          onSearch: (val) {
+                            setState(() {
+                              searchModel = val;
+                              searched = searchModel.isNotEmpty;
+                              keywordController.text = searchModel.keyword ?? '';
+                              widget.onSearch?.call(searchModel);
+                            });
+                          }))))
+        ]);
   }
 }
 

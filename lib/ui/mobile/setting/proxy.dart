@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProxySetting extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -25,7 +25,8 @@ class _ProxySettingState extends State<ProxySetting> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title:  Text(localizations.proxySetting, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+      appBar: AppBar(
+          title: Text(localizations.proxySetting, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
       body: ListView(children: [
         PortWidget(proxyServer: widget.proxyServer),
         const Divider(height: 20, thickness: 0.3),
@@ -89,7 +90,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const SizedBox(height: 10),
               Row(children: [
-                const Expanded(flex: 2, child: Text("是否启用：")),
+                Expanded(flex: 2, child: Text("${localizations.enable}：")),
                 Expanded(
                     child: Switch(
                   value: externalProxy.enabled,
@@ -99,7 +100,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                 ))
               ]),
               Row(children: [
-                const Expanded(flex: 2, child: Text("手机端是否展示抓包：")),
+                Expanded(flex: 2, child: Text(localizations.mobileDisplayPacketCapture)),
                 Expanded(
                     child: Switch(
                   value: externalProxy.capturePacket,
@@ -109,16 +110,16 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                 ))
               ]),
               Row(children: [
-                const Text("地址："),
+                const Text("Host："),
                 Expanded(
                     child: TextFormField(
                   initialValue: externalProxy.host,
-                  validator: (val) => val == null || val.isEmpty ? "地址不能为空" : null,
+                  validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
                   onChanged: (val) => externalProxy.host = val,
                 ))
               ]),
               Row(children: [
-                const Text("端口："),
+                const Text("Port："),
                 Expanded(
                     child: TextFormField(
                   initialValue: externalProxy.port?.toString() ?? '',
@@ -127,7 +128,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                     FilteringTextInputFormatter.allow(RegExp("[0-9]"))
                   ],
                   onChanged: (val) => externalProxy.port = int.parse(val),
-                  validator: (val) => val == null || val.isEmpty ? "端口不能为空" : null,
+                  validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
                   decoration: const InputDecoration(),
                 ))
               ]),
@@ -146,20 +147,16 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
           await showDialog(
               context: context,
               builder: (_) => AlertDialog(
-                    title: const Text("外部代理连接失败"),
-                    content: const Text('网络不通所有接口将会访问失败，是否继续设置外部代理。', style: TextStyle(fontSize: 12)),
+                    title: Text(localizations.externalProxyConnectFailure),
+                    content: Text(localizations.externalProxyFailureConfirm, style: const TextStyle(fontSize: 12)),
                     actions: [
-                      TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text("取消")),
+                      TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(localizations.cancel)),
                       TextButton(
                           onPressed: () {
                             setting = true;
                             Navigator.of(context).pop();
                           },
-                          child: const Text("确定"))
+                          child: Text(localizations.confirm))
                     ],
                   ));
         }

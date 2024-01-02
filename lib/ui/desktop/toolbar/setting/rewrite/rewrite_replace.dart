@@ -207,7 +207,7 @@ class _RewriteReplaceState extends State<RewriteReplaceDialog> {
       const SizedBox(width: 10),
       FilledButton(
           onPressed: () async {
-            var path = await DesktopMultiWindow.invokeMethod(0, "openFile", '');
+            var path = await DesktopMultiWindow.invokeMethod(0, "openFile", '*');
             if (path == null) {
               return;
             }

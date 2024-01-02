@@ -2,12 +2,12 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/native/app_lifecycle.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SocketLaunch extends StatefulWidget {
   static bool started = false;
@@ -133,9 +133,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
       });
       widget.onStart?.call();
     }).catchError((e) {
-      String message = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh')
-          ? '启动失败，请检查端口号${widget.proxyServer.port}是否被占用'
-          : 'Startup failed, please check the port number${widget.proxyServer.port} is occupied';
+      String message = localizations.proxyPortRepeat(widget.proxyServer.port);
       FlutterToastr.show(message, context, duration: 3);
     });
   }

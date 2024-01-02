@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class FilterDialog extends StatefulWidget {
   final Configuration configuration;
@@ -13,6 +14,8 @@ class FilterDialog extends StatefulWidget {
 
 class _FilterDialogState extends State<FilterDialog> {
   final ValueNotifier<bool> hostEnableNotifier = ValueNotifier(false);
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void dispose() {
@@ -27,21 +30,21 @@ class _FilterDialogState extends State<FilterDialog> {
         titlePadding: const EdgeInsets.only(left: 20, top: 10, right: 15),
         contentPadding: const EdgeInsets.only(left: 20, right: 20),
         scrollable: true,
-        title: const Row(children: [
-          Text("域名过滤", style: TextStyle(fontSize: 18)),
-          Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
+        title: Row(children: [
+          Text(localizations.domainFilter, style: const TextStyle(fontSize: 18)),
+          const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
         ]),
         content: SizedBox(
           width: 680,
-          height: 450,
+          height: 460,
           child: Flex(
             direction: Axis.horizontal,
             children: [
               Expanded(
                   flex: 1,
                   child: DomainFilter(
-                      title: "白名单",
-                      subtitle: "只代理白名单中的域名, 白名单启用黑名单将会失效",
+                      title: localizations.domainWhitelist,
+                      subtitle: localizations.domainWhitelistDescribe,
                       hostList: HostFilter.whitelist,
                       configuration: widget.configuration,
                       hostEnableNotifier: hostEnableNotifier)),
@@ -49,8 +52,8 @@ class _FilterDialogState extends State<FilterDialog> {
               Expanded(
                   flex: 1,
                   child: DomainFilter(
-                      title: "黑名单",
-                      subtitle: "黑名单中的域名不会代理",
+                      title: localizations.domainBlacklist,
+                      subtitle: localizations.domainBlacklistDescribe,
                       hostList: HostFilter.blacklist,
                       configuration: widget.configuration,
                       hostEnableNotifier: hostEnableNotifier)),
@@ -85,6 +88,8 @@ class _DomainFilterState extends State<DomainFilter> {
   late DomainList domainList;
   bool changed = false;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     domainList = DomainList(widget.hostList);
@@ -101,7 +106,7 @@ class _DomainFilterState extends State<DomainFilter> {
             valueListenable: widget.hostEnableNotifier,
             builder: (_, bool enable, __) {
               return SwitchListTile(
-                  title: const Text('是否启用'),
+                  title: Text(localizations.enable),
                   dense: true,
                   value: widget.hostList.enabled,
                   onChanged: (value) {
@@ -116,11 +121,11 @@ class _DomainFilterState extends State<DomainFilter> {
               onPressed: () {
                 add();
               },
-              label: const Text("增加", style: TextStyle(fontSize: 12))),
+              label: Text(localizations.add, style: const TextStyle(fontSize: 12))),
           const SizedBox(width: 10),
           TextButton.icon(
               icon: const Icon(Icons.remove, size: 14),
-              label: const Text("删除", style: TextStyle(fontSize: 12)),
+              label: Text(localizations.delete, style: const TextStyle(fontSize: 12)),
               onPressed: () {
                 if (domainList.selected().isEmpty) {
                   return;
@@ -164,7 +169,7 @@ class _DomainFilterState extends State<DomainFilter> {
                       ]))),
               actions: [
                 FilledButton(
-                    child: const Text("添加"),
+                    child: Text(localizations.add),
                     onPressed: () {
                       (formKey.currentState as FormState).save();
                       if (host != null && host!.isNotEmpty) {
@@ -179,7 +184,7 @@ class _DomainFilterState extends State<DomainFilter> {
                       Navigator.of(context).pop();
                     }),
                 ElevatedButton(
-                    child: const Text("关闭"),
+                    child:  Text(localizations.close),
                     onPressed: () {
                       Navigator.of(context).pop();
                     })
@@ -211,6 +216,7 @@ class DomainList extends StatefulWidget {
 
 class _DomainListState extends State<DomainList> {
   late Map<int, bool> selected = {};
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   Widget build(BuildContext context) {
@@ -220,8 +226,8 @@ class _DomainListState extends State<DomainList> {
         child: SingleChildScrollView(
             child: DataTable(
           border: TableBorder.symmetric(outside: BorderSide(width: 1, color: Theme.of(context).highlightColor)),
-          columns: const <DataColumn>[
-            DataColumn(label: Text('域名')),
+          columns:  <DataColumn>[
+            DataColumn(label: Text(localizations.domain)),
           ],
           rows: List.generate(
               widget.hostList.list.length,

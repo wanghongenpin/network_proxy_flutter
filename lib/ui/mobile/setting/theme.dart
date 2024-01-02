@@ -20,7 +20,7 @@ class MobileThemeSetting extends StatelessWidget {
             PopupMenuItem(
                 child: Tooltip(
                     preferBelow: false,
-                    message: "Material 3是谷歌开源设计系统的最新版本",
+                    message: localizations.material3,
                     child: SwitchListTile(
                       value: appConfiguration.useMaterial3,
                       onChanged: (bool value) {

@@ -58,7 +58,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const SizedBox(height: 10),
               Row(children: [
-                const Text("是否启用："),
+                Text("${localizations.enable}："),
                 Expanded(
                     child: Switch(
                   value: externalProxy.enabled,
@@ -68,16 +68,16 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                 ))
               ]),
               Row(children: [
-                const Text("地址："),
+                const SizedBox(width: 60, child: Text("Host：")),
                 Expanded(
                     child: TextFormField(
                   initialValue: externalProxy.host,
-                  validator: (val) => val == null || val.isEmpty ? "地址不能为空" : null,
+                  validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
                   onChanged: (val) => externalProxy.host = val,
                 ))
               ]),
               Row(children: [
-                Text(localizations.port),
+                SizedBox(width: 60, child: Text(localizations.port)),
                 Expanded(
                     child: TextFormField(
                   initialValue: externalProxy.port?.toString() ?? '',
@@ -86,7 +86,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                     FilteringTextInputFormatter.allow(RegExp("[0-9]"))
                   ],
                   onChanged: (val) => externalProxy.port = int.parse(val),
-                  validator: (val) => val == null || val.isEmpty ? "${localizations.port}不能为空" : null,
+                  validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
                   decoration: const InputDecoration(),
                 ))
               ]),
@@ -105,8 +105,11 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
           await showDialog(
               context: context,
               builder: (_) => AlertDialog(
-                    title: const Text("外部代理连接失败"),
-                    content: const Text('网络不通所有接口将会访问失败，是否继续设置外部代理。', style: TextStyle(fontSize: 12)),
+                    title: Text(localizations.externalProxyConnectFailure),
+                    content: SizedBox(
+                        width: 230,
+                        child: Text(localizations.externalProxyFailureConfirm,
+                            style: const TextStyle(fontSize: 12), maxLines: 3)),
                     actions: [
                       TextButton(
                           onPressed: () {

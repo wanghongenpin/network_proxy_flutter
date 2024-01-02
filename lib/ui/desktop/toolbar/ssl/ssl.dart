@@ -149,23 +149,24 @@ class _SslState extends State<SslWidget> {
           return SimpleDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
               contentPadding: const EdgeInsets.all(16),
-              title: const Row(children: [
-                Text("iOS根证书安装指南", style: TextStyle(fontSize: 16)),
-                Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
+              title: Row(children: [
+                Text("iOS ${localizations.caInstallGuide}", style: const TextStyle(fontSize: 16)),
+                const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
               ]),
               alignment: Alignment.center,
               children: [
-                SelectableText.rich(TextSpan(text: "1. 配置手机Wi-Fi代理 Host：$host  Port：${widget.proxyServer.port}")),
+                SelectableText.rich(
+                    TextSpan(text: "1. ${localizations.configWifiProxy} Host：$host  Port：${widget.proxyServer.port}")),
                 const SizedBox(height: 10),
-                const Row(
+                Row(
                   children: [
-                    Text("2. 在 iOS 设备上打开 Safari访问：\t"),
-                    SelectableText.rich(
+                    Text("2. ${localizations.caIosBrowser}\t"),
+                    const SelectableText.rich(
                         TextSpan(text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
                   ],
                 ),
                 const SizedBox(height: 10),
-                 Text("3. ${localizations.installRootCa} -> ${localizations.trustCa}"),
+                Text("3. ${localizations.installRootCa} -> ${localizations.trustCa}"),
                 const SizedBox(height: 10),
                 Row(children: [
                   Column(children: [
@@ -194,9 +195,9 @@ class _SslState extends State<SslWidget> {
           return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
               contentPadding: const EdgeInsets.all(16),
-              title: const Row(children: [
-                Text("Android根证书安装指南", style: TextStyle(fontSize: 16)),
-                Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
+              title: Row(children: [
+                Text("Android ${localizations.caInstallGuide}", style: const TextStyle(fontSize: 16)),
+                const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
               ]),
               alignment: Alignment.center,
               content: SizedBox(
@@ -230,13 +231,13 @@ class _SslState extends State<SslWidget> {
                       initiallyExpanded: true,
                       shape: const Border(),
                       children: [
-                        SelectableText.rich(
-                            TextSpan(text: "1. 配置手机Wi-Fi代理 Host：$host  Port：${widget.proxyServer.port}")),
+                        SelectableText.rich(TextSpan(
+                            text: "1. ${localizations.configWifiProxy} Host：$host  Port：${widget.proxyServer.port}")),
                         const SizedBox(height: 10),
-                        const Row(
+                        Row(
                           children: [
-                            Text("2. 在 Android 设备上打开浏览器访问：\t"),
-                            SelectableText.rich(TextSpan(
+                            Text("2. ${localizations.caIosBrowser}\t"),
+                            const SelectableText.rich(TextSpan(
                                 text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
                           ],
                         ),

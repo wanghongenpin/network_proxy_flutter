@@ -56,7 +56,7 @@
   "responseType": "响应类型",
   "request": "请求",
   "response": "响应",
-  "statusCode": "状态码：",
+  "statusCode": "状态码",
 
   "done": "完成",
   "type": "类型",
@@ -118,6 +118,11 @@
   "editRequest": "编辑请求重放",
   "reSendRequest": "已重新发送请求",
 
+  "clearSearch": "清除搜索",
+  "requestType": "请求类型",
+  "keyword": "关键词",
+  "keywordSearchScope": "关键词搜索范围: ",
+
   "favorite": "收藏请求",
   "deleteFavorite": "删除收藏",
   "emptyFavorite": "暂无收藏",
@@ -153,7 +158,10 @@
   "androidUserCA": "非ROOT用户: 安装到用户证书(很多软件不会信任用户证书)",
   "androidUserCAInstall": "打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书",
   "androidUserXposed": "推荐使用Xposed模块抓包(无需ROOT), 点击查看wiki",
-
+  "configWifiProxy": "配置手机Wi-Fi代理",
+  "caInstallGuide": "证书安装指南",
+  "caAndroidBrowser": "在 Android 设备上打开浏览器访问：",
+  "caIosBrowser": "在 iOS 设备上打开 Safari访问：",
 
   "localIP": "本地IP ",
   "mobileScan": "请使用手机版扫描二维码",
@@ -171,9 +179,38 @@
 
   "prompt": "提示",
   "curlSchemeRequest": "识别到curl格式，是否转换为HTTP请求？",
+  "appExitTips": "再按一次退出程序",
+  "remoteConnectDisconnect": "检查远程连接失败，已断开",
+  "reconnect": "重新连接",
+  "remoteConnected": "已连接{os}，手机抓包已关闭",
+  "remoteConnectForward": "远程连接，将请求转发到其他终端",
+  "connectSuccess": "连接成功",
+  "connectedRemote": "已连接远程",
+  "connected": "已连接",
+  "disconnect": "断开连接",
+  "syncConfig": "同步配置",
+  "pullConfigFail": "拉取配置失败, 请检查网络连接",
+  "sync": "同步",
+  "invalidQRCode": "无法识别的二维码",
+  "remoteConnectFail": "连接失败，请检查是否在同一局域网和防火墙是否允许",
+  "remoteConnectSuccessTips": "手机需要开启抓包才可以抓取请求哦",
 
   "windowMode": "窗口模式",
   "windowModeSubTitle": "开启抓包后 如果应用退回到后台，显示一个小窗口",
   "headerExpanded": "Headers默认展开",
-  "headerExpandedSubtitle": "详情页Headers栏是否默认展开"
+  "headerExpandedSubtitle": "详情页Headers栏是否默认展开",
+
+  "externalProxyConnectFailure": "外部代理连接失败",
+  "externalProxyFailureConfirm": "网络不通所有接口将会访问失败，是否继续设置外部代理。",
+  "mobileDisplayPacketCapture":"手机端是否展示抓包:",
+  "proxyPortRepeat": "启动失败，请检查端口号{port}是否被占用",
+  "reset": "重置",
+  "proxyIgnoreDomain": "代理忽略域名",
+  "domainWhitelistDescribe": "只代理白名单中的域名, 白名单启用黑名单将会失效",
+  "domainBlacklistDescribe": "黑名单中的域名不会代理",
+  "domain": "域名",
+  "enableScript": "启用脚本工具",
+  "scriptUseDescribe": "使用 JavaScript 修改请求和响应",
+  "scriptEdit": "编辑脚本",
+  "material3": "Material3是谷歌开源设计系统的最新版本"
 }

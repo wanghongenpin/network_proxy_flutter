@@ -119,6 +119,11 @@
   "editRequest": "Edit and Request",
   "reSendRequest": "The request has been resent",
 
+  "clearSearch": "Clear Search",
+  "requestType": "Request type",
+  "keyword": "Keyword",
+  "keywordSearchScope": "Keyword search scope: ",
+
   "favorite": "Favorite",
   "deleteFavorite": "Delete Favorite",
   "emptyFavorite": "Empty Favorite",
@@ -154,6 +159,11 @@
   "androidUserCA": "Non-ROOT User: Install to user certificate (many apps will not trust user certificates)",
   "androidUserCAInstall": "Open settings -> Security -> Encryption and credentials -> Install certificate -> CA certificate",
   "androidUserXposed": "It is recommended to use the Xposed module for packet capture (no need for ROOT), click to view wiki",
+  "configWifiProxy": "Configure mobile Wi-Fi proxy",
+  "installGuide": "Installation Guide",
+  "caInstallGuide": "Certificate Installation Guide",
+  "caAndroidBrowser": "Open Google Browser on Android devices：",
+  "caIosBrowser": "Open Safari on iOS devices：",
 
   "localIP": "Local IP ",
   "mobileScan": "Scan with Mobile App",
@@ -171,10 +181,39 @@
 
   "prompt": "Prompt",
   "curlSchemeRequest": "If the curl format is recognized, should it be converted into an HTTP request?",
+  "appExitTips": "Press again to exit the program",
+  "remoteConnectDisconnect": "Check remote connection failed, disconnected",
+  "reconnect": "Reconnect",
+  "remoteConnected": "Connected {os}，Mobile packet capture is turned off",
+  "remoteConnectForward": "Remote connection, forwarding requests to other terminals",
+  "connectSuccess": "Connect successful",
+  "connectedRemote": "Connected to remote",
+  "connected": "Connected",
+  "disconnect": "Disconnect",
+  "syncConfig": "Sync configuration",
+  "pullConfigFail": "Failed to pull configuration, please check the network connection",
+  "sync": "Sync",
+  "invalidQRCode": "Unrecognized QR code",
+  "remoteConnectFail": "connection failed，Please check if it is allowed on the same LAN and firewall",
+  "remoteConnectSuccessTips": "Your phone needs to enable packet capture in order to capture requests",
 
   "windowMode": "Window Mode",
   "windowModeSubTitle": "Enabled Packet Capture, Enter the background, Display a small window",
   "headerExpanded": "Headers Expanded",
-  "headerExpandedSubtitle": "Details page Headers column is expanded by default"
+  "headerExpandedSubtitle": "Details page Headers column is expanded by default",
+
+  "externalProxyConnectFailure": "External Proxy Connect failure",
+  "externalProxyFailureConfirm": "Access to all http will fail due to network connectivity issues，Do you want to continue setting up external proxies。",
+  "mobileDisplayPacketCapture": "Mobile Display Packet Capture:",
+  "proxyPortRepeat": "Startup failed, please check the port number {port} is occupied。",
+  "reset": "Reset",
+  "proxyIgnoreDomain": "Proxy ignores domain",
+  "domainWhitelistDescribe": "Only proxy domain names on the whitelist. If the whitelist is enabled, the blacklist will be invalid",
+  "domainBlacklistDescribe": "Domain names on the blacklist will not be proxied",
+  "domain": "Host",
+  "enableScript": "Enable Script",
+  "scriptUseDescribe": "Use JavaScript to modify requests and responses",
+  "scriptEdit": "Edit script",
+  "material3": "Material 3 is the latest version of Google’s open-source design system"
 
 }

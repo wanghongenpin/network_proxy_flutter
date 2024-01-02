@@ -1,6 +1,7 @@
 ﻿import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:installed_apps/app_info.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:network_proxy/native/vpn.dart';
@@ -22,6 +23,8 @@ class _AppWhitelistState extends State<AppWhitelist> {
 
   bool changed = false;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -39,16 +42,18 @@ class _AppWhitelistState extends State<AppWhitelist> {
 
   @override
   Widget build(BuildContext context) {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
     var appWhitelist = <Future<AppInfo>>[];
     for (var element in configuration.appWhitelist) {
       appWhitelist.add(InstalledApps.getAppInfo(element).catchError((e) {
-        return AppInfo.create({"name": "未知应用", "package_name": element});
+        return AppInfo.create({"name": isCN ? "未知应用" : "Unknown app", "package_name": element});
       }));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("应用白名单", style: TextStyle(fontSize: 16)),
+        title: Text(localizations.appWhitelist, style: const TextStyle(fontSize: 16)),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -77,8 +82,12 @@ class _AppWhitelistState extends State<AppWhitelist> {
             print(snapshot.data);
             if (snapshot.hasData) {
               if (snapshot.data!.isEmpty) {
-                return const Center(
-                  child: Text("未设置白名单应用时会对所有应用抓包", style: TextStyle(color: Colors.grey)),
+                return Center(
+                  child: Text(
+                      isCN
+                          ? "未设置白名单应用时会对所有应用抓包"
+                          : "When no whitelist application is set, all applications will be captured",
+                      style: const TextStyle(color: Colors.grey)),
                 );
               }
 
@@ -127,11 +136,13 @@ class _InstalledAppsWidgetState extends State<InstalledAppsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
     return Scaffold(
       appBar: AppBar(
         title: TextField(
-          decoration: const InputDecoration(
-            hintText: "请输入应用名或包名",
+          decoration: InputDecoration(
+            hintText: isCN ? "请输入应用名或包名" : "Please enter the application or package name",
             border: InputBorder.none,
           ),
           onChanged: (String value) {

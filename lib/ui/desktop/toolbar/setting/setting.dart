@@ -176,7 +176,7 @@ class _ProxyMenuState extends State<_ProxyMenu> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("代理忽略域名", style: TextStyle(fontSize: 14)),
+                  Text(localizations.proxyIgnoreDomain, style: const TextStyle(fontSize: 14)),
                   const SizedBox(height: 3),
                   Text("多个使用;分割", style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                 ],
@@ -184,7 +184,7 @@ class _ProxyMenuState extends State<_ProxyMenu> {
               Padding(
                   padding: const EdgeInsets.only(left: 35),
                   child: TextButton(
-                    child: const Text("重置"),
+                    child: Text(localizations.reset),
                     onPressed: () {
                       textEditingController.text = SystemProxy.proxyPassDomains;
                     },
@@ -215,7 +215,7 @@ class _ProxyMenuState extends State<_ProxyMenu> {
   Widget setSystemProxy() {
     return SwitchListTile(
         hoverColor: Colors.transparent,
-        title:  Text(localizations.systemProxy, maxLines: 1),
+        title: Text(localizations.systemProxy, maxLines: 1),
         dense: true,
         value: configuration.enableSystemProxy,
         onChanged: (val) {
@@ -256,8 +256,8 @@ class _PortState extends State<PortWidget> {
         widget.proxyServer.configuration.port = int.parse(textController.text);
 
         if (widget.proxyServer.isRunning) {
-          widget.proxyServer.restart().catchError(
-              (e) => FlutterToastr.show("启动失败，请检查端口号${widget.proxyServer.port}是否被占用", context, duration: 3));
+          String message = localizations.proxyPortRepeat(widget.proxyServer.port);
+          widget.proxyServer.restart().catchError((e) => FlutterToastr.show(message, context, duration: 3));
         }
         widget.proxyServer.configuration.flushConfig();
       }

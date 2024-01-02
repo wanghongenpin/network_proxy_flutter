@@ -1,12 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
-import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
+import 'package:network_proxy/network/http_client.dart';
 
 class RemoteModel {
   final bool connect;
@@ -39,25 +40,28 @@ class ConnectRemote extends StatefulWidget {
 class ConnectRemoteState extends State<ConnectRemote> {
   bool syncConfig = false;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('已连接远程', style: TextStyle(fontSize: 16))),
+      appBar: AppBar(title: Text(localizations.connectedRemote, style: const TextStyle(fontSize: 16))),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('已连接：${widget.desktop.value.hostname}', style: Theme.of(context).textTheme.titleMedium),
+            Text('${localizations.connected}：${widget.desktop.value.hostname}',
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 10),
             OutlinedButton(
-                child: const Text('断开连接'),
+                child: Text(localizations.disconnect),
                 onPressed: () {
                   widget.desktop.value = RemoteModel(connect: false);
                   Navigator.pop(context);
                 }),
             const SizedBox(height: 10),
             OutlinedButton(
-              child: const Text('同步配置'),
+              child: Text(localizations.syncConfig),
               onPressed: () {
                 pullConfig();
               },
@@ -83,7 +87,7 @@ class ConnectRemoteState extends State<ConnectRemote> {
       }
     }).onError((error, stackTrace) {
       print(error);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('拉取配置失败, 请检查网络连接')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(localizations.pullConfigFail)));
     });
   }
 }
@@ -106,17 +110,19 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
   bool syncRewrite = true;
   bool syncScript = true;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('同步配置', style: TextStyle(fontSize: 16)),
+      title: Text(localizations.syncConfig, style: const TextStyle(fontSize: 16)),
       content: SizedBox(
           height: 260,
           child: Column(
             children: [
               SwitchListTile(
                   dense: true,
-                  subtitle: const Text("同步白名单过滤"),
+                  subtitle: Text("${localizations.sync}${localizations.domainWhitelist}"),
                   value: syncWhiteList,
                   onChanged: (val) {
                     setState(() {
@@ -125,7 +131,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
                   }),
               SwitchListTile(
                   dense: true,
-                  subtitle: const Text("同步黑名单过滤"),
+                  subtitle: Text("${localizations.sync}${localizations.domainBlacklist}"),
                   value: syncBlackList,
                   onChanged: (val) {
                     setState(() {
@@ -134,7 +140,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
                   }),
               SwitchListTile(
                   dense: true,
-                  subtitle: const Text("同步请求重写"),
+                  subtitle: Text("${localizations.sync}${localizations.requestRewrite}"),
                   value: syncRewrite,
                   onChanged: (val) {
                     setState(() {
@@ -143,7 +149,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
                   }),
               SwitchListTile(
                   dense: true,
-                  subtitle: const Text("同步脚本"),
+                  subtitle: Text("${localizations.sync}${localizations.script}"),
                   value: syncScript,
                   onChanged: (val) {
                     setState(() {
@@ -154,12 +160,12 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
           )),
       actions: [
         TextButton(
-            child: const Text('取消'),
+            child: Text(localizations.cancel),
             onPressed: () {
               Navigator.pop(context);
             }),
         TextButton(
-            child: const Text('开始同步'),
+            child: Text('${localizations.start}${localizations.sync}'),
             onPressed: () async {
               if (syncWhiteList) {
                 HostFilter.whitelist.load(widget.config['whitelist']);
@@ -186,7 +192,8 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
 
               if (mounted) {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('同步成功')));
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text('${localizations.sync}${localizations.success}')));
               }
             }),
       ],

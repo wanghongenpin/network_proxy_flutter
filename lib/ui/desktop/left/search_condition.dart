@@ -7,7 +7,6 @@ import 'package:network_proxy/utils/lang.dart';
 
 /// @author wanghongen
 /// 2023/8/6
-
 class SearchConditions extends StatefulWidget {
   final SearchModel searchModel;
   final Function(SearchModel searchModel)? onSearch;
@@ -22,24 +21,23 @@ class SearchConditions extends StatefulWidget {
 }
 
 class SearchConditionsState extends State<SearchConditions> {
-
-  final requestContentMap = {
+  final Map<String, ContentType?> requestContentMap = {
     'JSON': ContentType.json,
     'FORM-URL': ContentType.formUrl,
     'FORM-DATA': ContentType.formData,
-    '全部': null
   };
-  final responseContentMap = {
+
+  final Map<String, ContentType?> responseContentMap = {
     'JSON': ContentType.json,
     'HTML': ContentType.html,
     'JS': ContentType.js,
     'CSS': ContentType.css,
     'TEXT': ContentType.text,
-    'IMAGE': ContentType.image,
-    '全部': null
+    'IMAGE': ContentType.image
   };
 
   late SearchModel searchModel;
+
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
@@ -50,6 +48,9 @@ class SearchConditionsState extends State<SearchConditions> {
 
   @override
   Widget build(BuildContext context) {
+    requestContentMap[localizations.all] = null;
+    responseContentMap[localizations.all] = null;
+
     return Container(
         padding: widget.padding,
         child: Column(
@@ -58,60 +59,57 @@ class SearchConditionsState extends State<SearchConditions> {
             TextFormField(
               initialValue: searchModel.keyword,
               onChanged: (val) => searchModel.keyword = val,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 isCollapsed: true,
-                contentPadding: EdgeInsets.all(10),
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
-                hintText: '关键词',
+                contentPadding: const EdgeInsets.all(10),
+                border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+                hintText: localizations.keyword,
               ),
             ),
             const SizedBox(height: 15),
-            const Text("关键词搜索范围:"),
+            Text(localizations.keywordSearchScope),
             const SizedBox(height: 10),
-            Row(
+            Wrap(
               children: [
                 options('URL', Option.url),
-                options('请求头', Option.requestHeader),
-                options('请求体', Option.requestBody),
+                options(localizations.requestHeader, Option.requestHeader),
+                options(localizations.requestBody, Option.requestBody),
+                options(localizations.responseHeader, Option.responseHeader),
+                options(localizations.responseBody, Option.responseBody)
               ],
-            ),
-            Row(
-              children: [options('响应头', Option.responseHeader), options('响应体', Option.responseBody)],
             ),
             const SizedBox(height: 15),
             row(
-                const Text('请求方法:'),
+                Text('${localizations.requestMethod}:'),
                 DropdownMenu(
-                    initialValue: searchModel.requestMethod?.name ?? '全部',
-                    items: HttpMethod.values.map((e) => e.name).toList()..insert(0, '全部'),
+                    initialValue: searchModel.requestMethod?.name ?? localizations.all,
+                    items: HttpMethod.values.map((e) => e.name).toList()..insert(0, localizations.all),
                     onSelected: (String value) {
-                      searchModel.requestMethod = value == '全部' ? null : HttpMethod.valueOf(value);
+                      searchModel.requestMethod = value == localizations.all ? null : HttpMethod.valueOf(value);
                     })),
             const SizedBox(height: 15),
             row(
-                const Text('请求类型:'),
+                Text('${localizations.requestType}:'),
                 DropdownMenu(
-                    initialValue: Maps.getKey(requestContentMap, searchModel.requestContentType) ?? '全部',
+                    initialValue: Maps.getKey(requestContentMap, searchModel.requestContentType) ?? localizations.all,
                     items: requestContentMap.keys,
                     onSelected: (String value) {
                       searchModel.requestContentType = requestContentMap[value];
                     })),
             const SizedBox(height: 15),
             row(
-                const Text('响应类型:'),
+                Text('${localizations.responseType}:'),
                 DropdownMenu(
-                    initialValue: Maps.getKey(responseContentMap, searchModel.responseContentType) ?? '全部',
+                    initialValue: Maps.getKey(responseContentMap, searchModel.responseContentType) ?? localizations.all,
                     items: responseContentMap.keys,
                     onSelected: (String value) {
                       searchModel.responseContentType = responseContentMap[value];
                     })),
             row(
-              const Text('   状态码:'),
+              Text("${localizations.statusCode}: "),
               TextFormField(
                 initialValue: searchModel.statusCode?.toString(),
-                onChanged: (val) {
-                  searchModel.statusCode = int.tryParse(val);
-                },
+                onChanged: (val) => searchModel.statusCode = int.tryParse(val),
                 inputFormatters: <TextInputFormatter>[
                   LengthLimitingTextInputFormatter(5),
                   FilteringTextInputFormatter.allow(RegExp('[-0-9]'))
@@ -127,22 +125,20 @@ class SearchConditionsState extends State<SearchConditions> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('取消', style: TextStyle(fontSize: 14))),
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(localizations.cancel, style: const TextStyle(fontSize: 14))),
                 TextButton(
                     onPressed: () {
                       widget.onSearch?.call(SearchModel());
                       Navigator.pop(context);
                     },
-                    child: const Text('清除搜索', style: TextStyle(fontSize: 14))),
+                    child: Text(localizations.clearSearch, style: const TextStyle(fontSize: 14))),
                 TextButton(
                     onPressed: () {
                       widget.onSearch?.call(searchModel);
                       Navigator.pop(context);
                     },
-                    child: const Text('确定', style: TextStyle(fontSize: 14))),
+                    child: Text(localizations.confirm, style: const TextStyle(fontSize: 14))),
               ],
             )
           ],
@@ -150,20 +146,26 @@ class SearchConditionsState extends State<SearchConditions> {
   }
 
   Widget options(String title, Option option) {
-    return Row(children: [
-      Text(title, style: const TextStyle(fontSize: 12)),
-      Checkbox(
-          value: searchModel.searchOptions.contains(option),
-          onChanged: (val) {
-            setState(() {
-              val == true ? searchModel.searchOptions.add(option) : searchModel.searchOptions.remove(option);
-            });
-          })
-    ]);
+    bool isCN = localizations.localeName == 'zh';
+    return Container(
+        constraints: BoxConstraints(maxWidth: isCN ? 100 : 150, minWidth: 100, maxHeight: 33),
+        child: Row(children: [
+          Text(title, style: const TextStyle(fontSize: 12)),
+          Checkbox(
+              value: searchModel.searchOptions.contains(option),
+              onChanged: (val) {
+                setState(() {
+                  val == true ? searchModel.searchOptions.add(option) : searchModel.searchOptions.remove(option);
+                });
+              })
+        ]));
   }
 
   Widget row(Widget child, Widget child2) {
-    return Row(children: [Expanded(flex: 3, child: child), Expanded(flex: 7, child: child2)]);
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [Expanded(flex: 5, child: child), Expanded(flex: 6, child: child2)]);
   }
 }
 

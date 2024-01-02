@@ -25,7 +25,7 @@ class ThemeSetting extends StatelessWidget {
             height: 38,
             child: Tooltip(
                 preferBelow: false,
-                message: "Material 3是谷歌开源设计系统的最新版本",
+                message: localizations.material3,
                 child: SwitchListTile(
                   contentPadding: const EdgeInsets.only(left: 32, right: 5),
                   value: appConfiguration.useMaterial3,
@@ -36,7 +36,7 @@ class ThemeSetting extends StatelessWidget {
         MenuItemButton(
             leadingIcon: appConfiguration.themeMode == ThemeMode.system
                 ? const Icon(Icons.check, size: 15)
-                : const SizedBox(width: 18),
+                : const SizedBox(width: 15),
             trailingIcon: const Icon(Icons.cached),
             child: Text(localizations.followSystem),
             onPressed: () => appConfiguration.themeMode = ThemeMode.system),
