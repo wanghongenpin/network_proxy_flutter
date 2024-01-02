@@ -30,4 +30,28 @@ class FileRead {
     return rootBundle.load(file).then((bateData) => bateData.buffer.asUint8List());
     // return File(file).readAsBytes();
   }
+
+  static String? _uuid;
+
+  static Future<String> get iosUuid async {
+    if (_uuid == null) {
+      var applicationPath = (await getApplicationSupportDirectory()).path;
+      var uuidPattern = RegExp(r'/Application/([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})/');
+      var match = uuidPattern.firstMatch(applicationPath);
+
+      _uuid = match?.group(1);
+    }
+    return _uuid!;
+  }
+
+  static Future<Uint8List> readFile(String path) async {
+    if (Platform.isIOS) {
+      var uuid = await iosUuid;
+      //ios替换uuid
+      var uuidPattern = RegExp(r'/Application/[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/');
+      path = path.replaceAll(uuidPattern, '/Application/$uuid/');
+    }
+
+    return File(path).readAsBytes();
+  }
 }

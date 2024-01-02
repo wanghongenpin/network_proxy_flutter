@@ -6,6 +6,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/util/logger.dart';
@@ -30,18 +31,13 @@ class RequestRewriteWidget extends StatefulWidget {
 class RequestRewriteState extends State<RequestRewriteWidget> {
   late ValueNotifier<bool> enableNotifier;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
     RawKeyboard.instance.addListener(onKeyEvent);
     enableNotifier = ValueNotifier(widget.requestRewrites.enabled == true);
-    DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
-      print("call.method: ${call.method}");
-      if (call.method == 'reloadRequestRewrite') {
-        await widget.requestRewrites.reloadRequestRewrite();
-        setState(() {});
-      }
-    });
   }
 
   @override
@@ -73,7 +69,8 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
     return Scaffold(
         backgroundColor: Theme.of(context).dialogBackgroundColor,
         appBar: AppBar(
-            title: const Text("请求重写", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            title:
+                Text(localizations.requestRewrite, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
             toolbarHeight: 34,
             centerTitle: true),
         body: Padding(
@@ -89,7 +86,7 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
                               scale: 0.8,
                               child: SwitchListTile(
                                   contentPadding: const EdgeInsets.only(left: 2),
-                                  title: const Text('是否启用请求重写'),
+                                  title: Text(localizations.requestRewriteEnable),
                                   value: enableNotifier.value,
                                   onChanged: (value) {
                                     enableNotifier.value = value;
@@ -101,11 +98,14 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
                     child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    IconButton(onPressed: refresh, icon: const Icon(Icons.refresh, color: Colors.blue), tooltip: "刷新"),
+                    IconButton(
+                        onPressed: refresh,
+                        icon: const Icon(Icons.refresh, color: Colors.blue),
+                        tooltip: localizations.refresh),
                     const SizedBox(width: 30),
                     FilledButton.icon(
                       icon: const Icon(Icons.add, size: 18),
-                      label: const Text("添加", style: TextStyle(fontSize: 12)),
+                      label: Text(localizations.add, style: const TextStyle(fontSize: 12)),
                       onPressed: add,
                     ),
                     const SizedBox(width: 20),
@@ -113,7 +113,7 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
                       icon: const Icon(Icons.input_rounded, size: 18),
                       style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
                       onPressed: import,
-                      label: const Text("导入"),
+                      label: Text(localizations.import),
                     )
                   ],
                 )),
@@ -149,13 +149,13 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
       }
 
       if (context.mounted) {
-        FlutterToastr.show("导入成功", context);
+        FlutterToastr.show(localizations.importSuccess, context);
       }
       setState(() {});
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
       if (context.mounted) {
-        FlutterToastr.show("导入失败 $e", context);
+        FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
   }
@@ -182,6 +182,8 @@ class RequestRuleList extends StatefulWidget {
 class _RequestRuleListState extends State<RequestRuleList> {
   Map<int, bool> selected = {};
   late List<RequestRewriteRule> rules;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   initState() {
@@ -223,11 +225,11 @@ class _RequestRuleListState extends State<RequestRuleList> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Container(width: 130, padding: const EdgeInsets.only(left: 10), child: const Text("名称")),
-                      const SizedBox(width: 50, child: Text("启用", textAlign: TextAlign.center)),
+                      Container(width: 130, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
+                      SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
                       const VerticalDivider(),
                       const Expanded(child: Text("URL")),
-                      const SizedBox(width: 100, child: Text("行为", textAlign: TextAlign.center)),
+                      SizedBox(width: 100, child: Text(localizations.action, textAlign: TextAlign.center)),
                     ],
                   ),
                   const Divider(thickness: 0.5),
@@ -249,18 +251,20 @@ class _RequestRuleListState extends State<RequestRuleList> {
 
   showGlobalMenu(Offset offset) {
     showContextMenu(context, offset, items: [
-      PopupMenuItem(height: 35, child: const Text("新建"), onTap: () => showEdit()),
-      PopupMenuItem(height: 35, child: const Text("导出"), onTap: () => export(selected.keys.toList())),
+      PopupMenuItem(height: 35, child: Text(localizations.newBuilt), onTap: () => showEdit()),
+      PopupMenuItem(height: 35, child: Text(localizations.export), onTap: () => export(selected.keys.toList())),
       const PopupMenuDivider(),
-      PopupMenuItem(height: 35, child: const Text("启用选择"), onTap: () => enableStatus(true)),
-      PopupMenuItem(height: 35, child: const Text("禁用选择"), onTap: () => enableStatus(false)),
+      PopupMenuItem(height: 35, child: Text(localizations.enableSelect), onTap: () => enableStatus(true)),
+      PopupMenuItem(height: 35, child: Text(localizations.disableSelect), onTap: () => enableStatus(false)),
       const PopupMenuDivider(),
-      PopupMenuItem(height: 35, child: const Text("删除选择"), onTap: () => removeRewrite(selected.keys.toList())),
+      PopupMenuItem(
+          height: 35, child: Text(localizations.deleteSelect), onTap: () => removeRewrite(selected.keys.toList())),
     ]);
   }
 
   List<Widget> rows(List<RequestRewriteRule> list) {
     var primaryColor = Theme.of(context).primaryColor;
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
     return List.generate(list.length, (index) {
       return InkWell(
@@ -317,7 +321,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                           Text(list[index].url, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
                   SizedBox(
                       width: 100,
-                      child: Text(list[index].type.label,
+                      child: Text(isCN ? list[index].type.label : list[index].type.name,
                           textAlign: TextAlign.center, style: const TextStyle(fontSize: 13))),
                 ],
               )));
@@ -346,13 +350,14 @@ class _RequestRuleListState extends State<RequestRuleList> {
 
     final XFile xFile = XFile.fromData(utf8.encode(jsonEncode(list)), mimeType: 'json');
     await xFile.saveTo(saveLocation);
-    if (context.mounted) FlutterToastr.show("导出成功", context);
+    if (context.mounted) FlutterToastr.show(localizations.exportSuccess, context);
   }
 
   //删除
   Future<void> removeRewrite(List<int> indexes) async {
     if (indexes.isEmpty) return;
-    return showConfirmDialog(context, content: '是否删除${indexes.length}条规则?', onConfirm: () async {
+    return showConfirmDialog(context, content: localizations.requestRewriteDeleteConfirm(indexes.length),
+        onConfirm: () async {
       var list = indexes.toList();
       list.sort((a, b) => b.compareTo(a));
       for (var value in list) {
@@ -363,7 +368,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
       setState(() {
         selected.clear();
       });
-      if (mounted) FlutterToastr.show('删除成功', context);
+      if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
     });
   }
 
@@ -398,11 +403,11 @@ class _RequestRuleListState extends State<RequestRuleList> {
       selected[index] = true;
     });
     showContextMenu(context, details.globalPosition, items: [
-      PopupMenuItem(height: 35, child: const Text("编辑"), onTap: () => showEdit(index)),
-      PopupMenuItem(height: 35, onTap: () => export([index]), child: const Text("导出")),
+      PopupMenuItem(height: 35, child: Text(localizations.edit), onTap: () => showEdit(index)),
+      PopupMenuItem(height: 35, onTap: () => export([index]), child: Text(localizations.export)),
       PopupMenuItem(
           height: 35,
-          child: rules[index].enabled ? const Text("禁用") : const Text("启用"),
+          child: rules[index].enabled ? Text(localizations.disabled) : Text(localizations.enable),
           onTap: () {
             rules[index].enabled = !rules[index].enabled;
             MultiWindow.invokeRefreshRewrite(Operation.update, index: index, rule: rules[index]);
@@ -410,7 +415,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
       const PopupMenuDivider(),
       PopupMenuItem(
           height: 35,
-          child: const Text("删除"),
+          child: Text(localizations.delete),
           onTap: () async {
             await widget.requestRewrites.removeIndex([index]);
             MultiWindow.invokeRefreshRewrite(Operation.delete, index: index);
@@ -446,6 +451,8 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
   late TextEditingController nameInput;
   late TextEditingController urlInput;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -468,14 +475,15 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
   @override
   Widget build(BuildContext context) {
     GlobalKey formKey = GlobalKey<FormState>();
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
     return AlertDialog(
         scrollable: true,
         title: Row(children: [
-          const Text("添加请求重写规则", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          Text(localizations.requestRewriteRule, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
           const SizedBox(width: 20),
           Text.rich(TextSpan(
-              text: '使用文档',
+              text: localizations.useGuide,
               style: const TextStyle(color: Colors.blue, fontSize: 14),
               recognizer: TapGestureRecognizer()
                 ..onTap = () => DesktopMultiWindow.invokeMethod(0, "launchUrl",
@@ -495,19 +503,19 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                           builder: (_, bool enable, __) {
                             return SwitchListTile(
                                 contentPadding: const EdgeInsets.only(left: 0),
-                                title: const Text('是否启用', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                                title: Text(localizations.enable),
                                 value: enable,
                                 onChanged: (value) => enableNotifier.value = value);
                           }),
                       const SizedBox(height: 5),
-                      textField('名称:', nameInput, '请输入名称'),
+                      textField('${localizations.name}:', nameInput, localizations.pleaseEnter),
                       const SizedBox(height: 10),
                       textField('URL:', urlInput, 'http://www.example.com/api/*', required: true),
                       const SizedBox(height: 10),
                       Row(children: [
-                        const SizedBox(width: 60, child: Text('行为:')),
+                        SizedBox(width: 60, child: Text('${localizations.action}:')),
                         SizedBox(
-                            width: 100,
+                            width: 150,
                             height: 33,
                             child: DropdownButtonFormField<RuleType>(
                               onSaved: (val) => rule.type = val!,
@@ -520,7 +528,8 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                                   border: const OutlineInputBorder()),
                               items: RuleType.values
                                   .map((e) => DropdownMenuItem(
-                                      value: e, child: Text(e.label, style: const TextStyle(fontSize: 13))))
+                                      value: e,
+                                      child: Text(isCN ? e.label : e.name, style: const TextStyle(fontSize: 13))))
                                   .toList(),
                               onChanged: (val) {
                                 ruleType = val!;
@@ -528,18 +537,18 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                               },
                             )),
                         const SizedBox(width: 10),
-                        TextButton(onPressed: () => showEdit(rule), child: const Text("点击编辑")),
+                        TextButton(onPressed: () => showEdit(rule), child: Text(localizations.clickEdit)),
                       ]),
                       const SizedBox(height: 10),
                       Padding(padding: const EdgeInsets.only(left: 60), child: getDescribe()),
                     ]))),
         actions: [
-          ElevatedButton(child: const Text("关闭"), onPressed: () => Navigator.of(context).pop()),
+          ElevatedButton(child: Text(localizations.close), onPressed: () => Navigator.of(context).pop()),
           FilledButton(
-              child: const Text("保存"),
+              child: Text(localizations.save),
               onPressed: () async {
                 if (!(formKey.currentState as FormState).validate()) {
-                  FlutterToastr.show("缺少配置", context, position: FlutterToastr.center);
+                  FlutterToastr.show(localizations.cannotBeEmpty, context, position: FlutterToastr.center);
                   return;
                 }
 
@@ -568,13 +577,16 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
   }
 
   Widget getDescribe() {
+    bool isCN = localizations.localeName == 'zh';
+
     if (items?.isNotEmpty == true && (ruleType == RuleType.requestReplace || ruleType == RuleType.responseReplace)) {
-      return Text("替换: ${items?.where((it) => it.enabled).map((e) => e.type.label).join(" ")}",
+      return Text(
+          "${localizations.replace}: ${items?.where((it) => it.enabled).map((e) => e.type.getDescribe(isCN)).join(" ")}",
           style: const TextStyle(color: Colors.grey));
     }
 
     if (ruleType == RuleType.requestUpdate || ruleType == RuleType.responseUpdate) {
-      return Text("${items?.length}条修改", style: const TextStyle(color: Colors.grey));
+      return Text(localizations.itemUpdate(items?.length ?? 0), style: const TextStyle(color: Colors.grey));
     }
     return const SizedBox();
   }

@@ -164,9 +164,7 @@ extension VpnManager{
         }
         
         loadProviderManager{
-            print("stopVPNTunnel")
             $0?.connection.stopVPNTunnel()
-           
         }
     }
     

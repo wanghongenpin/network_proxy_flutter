@@ -32,7 +32,7 @@ class RequestListState extends State<RequestListWidget> {
   final GlobalKey<DomainListState> domainListKey = GlobalKey<DomainListState>();
 
   //请求列表容器
-  static List<HttpRequest> container = [];
+  List<HttpRequest> container = [];
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 

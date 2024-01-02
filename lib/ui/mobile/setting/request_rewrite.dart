@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/util/logger.dart';
@@ -27,6 +28,8 @@ class MobileRequestRewrite extends StatefulWidget {
 class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
   bool enabled = false;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -46,25 +49,27 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(centerTitle: true, title: const Text("请求重写列表", style: TextStyle(fontSize: 16))),
+        appBar: AppBar(
+            centerTitle: true, title: Text(localizations.requestRewriteList, style: const TextStyle(fontSize: 16))),
         body: Container(
             padding: const EdgeInsets.all(10),
             child: Column(
               children: [
                 Row(
                   children: [
-                    const Text("是否启用请求重写"),
+                    Text(localizations.requestRewriteEnable),
                     SwitchWidget(value: enabled, scale: 0.8, onChanged: (val) => enabled = val),
                   ],
                 ),
                 Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                  FilledButton.icon(icon: const Icon(Icons.add, size: 18), onPressed: add, label: const Text("添加")),
+                  FilledButton.icon(
+                      icon: const Icon(Icons.add, size: 18), onPressed: add, label: Text(localizations.add)),
                   const SizedBox(width: 10),
                   FilledButton.icon(
                     icon: const Icon(Icons.input_rounded, size: 18),
                     style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
                     onPressed: import,
-                    label: const Text("导入"),
+                    label: Text(localizations.import),
                   ),
                 ]),
                 const SizedBox(height: 10),
@@ -86,18 +91,18 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
       for (var item in json) {
         var rule = RequestRewriteRule.formJson(item);
         var items = (item['items'] as List).map((e) => RewriteItem.fromJson(e)).toList();
-        widget.requestRewrites.addRule(rule, items);
+        await widget.requestRewrites.addRule(rule, items);
       }
       widget.requestRewrites.flushRequestRewriteConfig();
 
       if (context.mounted) {
-        FlutterToastr.show("导入成功", context);
+        FlutterToastr.show(localizations.importSuccess, context);
       }
       setState(() {});
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
       if (context.mounted) {
-        FlutterToastr.show("导入失败 $e", context);
+        FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
   }
@@ -127,6 +132,8 @@ class _RequestRuleListState extends State<RequestRuleList> {
   bool changed = false;
 
   bool multiple = false;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   initState() {
@@ -159,11 +166,11 @@ class _RequestRuleListState extends State<RequestRuleList> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Container(width: 80, padding: const EdgeInsets.only(left: 10), child: const Text("名称")),
-                    const SizedBox(width: 30, child: Text("启用", textAlign: TextAlign.center)),
+                    Container(width: 80, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
+                    SizedBox(width: 46, child: Text(localizations.enable, textAlign: TextAlign.center)),
                     const VerticalDivider(),
                     const Expanded(child: Text("URL")),
-                    const SizedBox(width: 60, child: Text("行为", textAlign: TextAlign.center)),
+                    SizedBox(width: 60, child: Text(localizations.action, textAlign: TextAlign.center)),
                   ],
                 ),
                 const Divider(thickness: 0.5),
@@ -199,12 +206,12 @@ class _RequestRuleListState extends State<RequestRuleList> {
                           });
                         },
                         icon: const Icon(Icons.share, size: 18),
-                        label: const Text("导出")),
+                        label: Text(localizations.export)),
                     const SizedBox(width: 15),
                     TextButton.icon(
                         onPressed: () => removeRewrite(),
                         icon: const Icon(Icons.delete, size: 18),
-                        label: const Text("删除")),
+                        label: Text(localizations.delete)),
                     const SizedBox(width: 15),
                     TextButton.icon(
                         onPressed: () {
@@ -214,14 +221,14 @@ class _RequestRuleListState extends State<RequestRuleList> {
                           });
                         },
                         icon: const Icon(Icons.cancel, size: 18),
-                        label: const Text("取消")),
+                        label: Text(localizations.cancel)),
                   ]))))
     ]);
   }
 
   List<Widget> rows(List<RequestRewriteRule> list) {
     var primaryColor = Theme.of(context).primaryColor;
-
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
     return List.generate(list.length, (index) {
       return InkWell(
           highlightColor: Colors.transparent,
@@ -263,7 +270,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                       child: Text(list[index].name ?? "",
                           overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
                   SizedBox(
-                      width: 20,
+                      width: 35,
                       child: SwitchWidget(
                           scale: 0.65,
                           value: list[index].enabled,
@@ -275,7 +282,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                   Expanded(child: Text(list[index].url, style: const TextStyle(fontSize: 13))),
                   SizedBox(
                       width: 60,
-                      child: Text(list[index].type.label,
+                      child: Text(isCN ? list[index].type.label : list[index].type.name,
                           textAlign: TextAlign.center, style: const TextStyle(fontSize: 13))),
                 ],
               )));
@@ -295,7 +302,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
         builder: (ctx) {
           return Wrap(alignment: WrapAlignment.center, children: [
             BottomSheetItem(
-                text: '多选',
+                text: localizations.multiple,
                 onPressed: () {
                   setState(() {
                     multiple = true;
@@ -303,7 +310,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                 }),
             const Divider(thickness: 0.5),
             BottomSheetItem(
-                text: "编辑",
+                text: localizations.edit,
                 onPressed: () async {
                   var rule = widget.requestRewrites.rules[index];
                   var rewriteItems = await widget.requestRewrites.getRewriteItems(rule);
@@ -318,21 +325,21 @@ class _RequestRuleListState extends State<RequestRuleList> {
                   });
                 }),
             const Divider(thickness: 0.5),
-            BottomSheetItem(text: "分享", onPressed: () => export([index])),
+            BottomSheetItem(text: localizations.share, onPressed: () => export([index])),
             const Divider(thickness: 0.5, height: 1),
             BottomSheetItem(
-                text: rules[index].enabled ? "禁用" : "启用",
+                text: rules[index].enabled ? localizations.disabled : localizations.enable,
                 onPressed: () {
                   rules[index].enabled = !rules[index].enabled;
                   changed = true;
                 }),
             const Divider(thickness: 0.5),
             BottomSheetItem(
-                text: "删除",
+                text: localizations.delete,
                 onPressed: () async {
                   await widget.requestRewrites.removeIndex([index]);
                   widget.requestRewrites.flushRequestRewriteConfig();
-                  if (mounted) FlutterToastr.show('删除成功', context);
+                  if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
                 }),
             Container(color: Theme.of(context).hoverColor, height: 8),
             TextButton(
@@ -340,7 +347,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                     height: 50,
                     width: double.infinity,
                     padding: const EdgeInsets.only(top: 10),
-                    child: const Text("取消", textAlign: TextAlign.center)),
+                    child: Text(localizations.cancel, textAlign: TextAlign.center)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 }),
@@ -377,7 +384,8 @@ class _RequestRuleListState extends State<RequestRuleList> {
   //删除
   Future<void> removeRewrite() async {
     if (selected.isEmpty) return;
-    return showConfirmDialog(context, content: '是否删除${selected.length}条规则?', onConfirm: () async {
+    return showConfirmDialog(context, content: localizations.requestRewriteDeleteConfirm(selected.length),
+        onConfirm: () async {
       var list = selected.toList();
       list.sort((a, b) => b.compareTo(a));
       for (var value in list) {
@@ -388,7 +396,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
         multiple = false;
         selected.clear();
       });
-      if (mounted) FlutterToastr.show('删除成功', context);
+      if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
     });
   }
 }
@@ -414,6 +422,8 @@ class _RewriteRuleState extends State<RewriteRule> {
   late TextEditingController nameInput;
   late TextEditingController urlInput;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -437,15 +447,15 @@ class _RewriteRuleState extends State<RewriteRule> {
   @override
   Widget build(BuildContext context) {
     GlobalKey formKey = GlobalKey<FormState>();
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
         title: Row(children: [
-          const Text("请求重写规则", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-          const SizedBox(width: 20),
+          Text(localizations.requestRewrite, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          const SizedBox(width: 15),
           Text.rich(TextSpan(
-              text: '使用文档',
+              text: localizations.useGuide,
               style: const TextStyle(color: Colors.blue, fontSize: 14),
               recognizer: TapGestureRecognizer()
                 ..onTap = () => launchUrl(Uri.parse(
@@ -453,10 +463,10 @@ class _RewriteRuleState extends State<RewriteRule> {
         ]),
         actions: [
           TextButton(
-              child: const Text("保存"),
+              child: Text(localizations.save),
               onPressed: () async {
                 if (!(formKey.currentState as FormState).validate()) {
-                  FlutterToastr.show("缺少配置", context, position: FlutterToastr.center);
+                  FlutterToastr.show(localizations.cannotBeEmpty, context, position: FlutterToastr.center);
                   return;
                 }
 
@@ -475,7 +485,7 @@ class _RewriteRuleState extends State<RewriteRule> {
                 }
                 requestRewrites.flushRequestRewriteConfig();
                 if (mounted) {
-                  FlutterToastr.show("保存请求重写规则成功", context);
+                  FlutterToastr.show(localizations.saveSuccess, context);
                   Navigator.of(context).pop(rule);
                 }
               })
@@ -491,19 +501,20 @@ class _RewriteRuleState extends State<RewriteRule> {
                     builder: (_, bool enable, __) {
                       return SwitchListTile(
                           contentPadding: const EdgeInsets.only(left: 0),
-                          title: const Text('是否启用',
-                              style: TextStyle(fontWeight: FontWeight.w500), textAlign: TextAlign.start),
+                          title: Text(localizations.enable, textAlign: TextAlign.start),
                           value: enable,
                           onChanged: (value) => enableNotifier.value = value);
                     }),
-                textField('名称:', nameInput, '请输入名称'),
+                textField('${localizations.name}:', nameInput, localizations.pleaseEnter),
                 textField('URL:', urlInput, 'http://www.example.com/api/*',
                     required: true, keyboardType: TextInputType.url),
                 Row(children: [
-                  const SizedBox(
-                      width: 50, child: Text('行为:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
                   SizedBox(
-                      width: 110,
+                      width: 58,
+                      child: Text('${localizations.action}:',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+                  SizedBox(
+                      width: 165,
                       height: 50,
                       child: DropdownButtonFormField<RuleType>(
                         onSaved: (val) => rule.type = val!,
@@ -511,9 +522,11 @@ class _RewriteRuleState extends State<RewriteRule> {
                         value: ruleType,
                         decoration: const InputDecoration(
                           errorStyle: TextStyle(height: 0, fontSize: 0),
-                          contentPadding: EdgeInsets.only(left: 7, right: 7),
+                          contentPadding: EdgeInsets.only(),
                         ),
-                        items: RuleType.values.map((e) => DropdownMenuItem(value: e, child: Text(e.label))).toList(),
+                        items: RuleType.values
+                            .map((e) => DropdownMenuItem(value: e, child: Text(isCN ? e.label : e.name)))
+                            .toList(),
                         onChanged: (val) {
                           ruleType = val!;
                           items = ruleType == widget.rule?.type ? widget.items : [];
@@ -521,7 +534,8 @@ class _RewriteRuleState extends State<RewriteRule> {
                       )),
                   const SizedBox(width: 10),
                   TextButton(
-                      onPressed: () => showEdit(rule), child: const Text("点击编辑", style: TextStyle(fontSize: 16))),
+                      onPressed: () => showEdit(rule),
+                      child: Text(localizations.clickEdit, style: const TextStyle(fontSize: 16))),
                 ]),
                 const SizedBox(height: 10),
                 Padding(padding: const EdgeInsets.only(left: 60), child: getDescribe()),
@@ -530,13 +544,15 @@ class _RewriteRuleState extends State<RewriteRule> {
   }
 
   Widget getDescribe() {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
     if (items?.isNotEmpty == true && (ruleType == RuleType.requestReplace || ruleType == RuleType.responseReplace)) {
-      return Text("替换: ${items?.where((it) => it.enabled).map((e) => e.type.label).join(" ")}",
+      return Text(
+          "${localizations.replace}: ${items?.where((it) => it.enabled).map((e) => e.type.getDescribe(isCN)).join(" ")}",
           style: const TextStyle(color: Colors.grey));
     }
 
     if (ruleType == RuleType.requestUpdate || ruleType == RuleType.responseUpdate) {
-      return Text("${items?.length}条修改", style: const TextStyle(color: Colors.grey));
+      return Text(localizations.itemUpdate(items?.length ?? 0), style: const TextStyle(color: Colors.grey));
     }
     return const SizedBox();
   }
@@ -560,7 +576,7 @@ class _RewriteRuleState extends State<RewriteRule> {
   Widget textField(String label, TextEditingController controller, String hint,
       {bool required = false, TextInputType? keyboardType, FormFieldSetter<String>? onSaved}) {
     return Row(children: [
-      SizedBox(width: 50, child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+      SizedBox(width: 58, child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
       Expanded(
           child: TextFormField(
         controller: controller,

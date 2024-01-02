@@ -1,5 +1,7 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
@@ -21,6 +23,8 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
   final _headerKey = GlobalKey<HeadersState>();
 
   List<RewriteItem> items = [];
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   initState() {
@@ -53,11 +57,13 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
 
   @override
   Widget build(BuildContext context) {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
     return Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
             title: ListTile(
-                title: Text(widget.ruleType.label,
+                title: Text(isCN ? widget.ruleType.name : widget.ruleType.name,
                     textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w500)),
                 subtitle: Text(widget.subtitle,
                     maxLines: 1,
@@ -76,7 +82,7 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
                     }
                     Navigator.of(context).pop(items);
                   },
-                  child: const Text("完成", style: TextStyle(fontSize: 16))),
+                  child: Text(localizations.done, style: const TextStyle(fontSize: 16))),
             ]),
         body: rewriteWidgets());
   }
@@ -89,7 +95,9 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
 
     if (widget.ruleType == RuleType.responseReplace || widget.ruleType == RuleType.requestReplace) {
       bool requestEdited = widget.ruleType == RuleType.requestReplace;
-      List<String> tabs = requestEdited ? ["请求行", "请求头", "请求体"] : ["状态码", "响应头", "响应体"];
+      List<String> tabs = requestEdited
+          ? [localizations.requestLine, localizations.requestHeader, localizations.requestBody]
+          : [localizations.statusCode, localizations.responseHeader, localizations.responseBody];
 
       return DefaultTabController(
           length: tabs.length,
@@ -114,12 +122,13 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
   //tabBar
   TabBar tabBar(List<String> tabs) {
     return TabBar(
+        labelPadding: const EdgeInsets.symmetric(horizontal: 0),
         tabs: tabs
             .map((label) => Tab(
                 height: 38,
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  const SizedBox(width: 5),
+                  Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 3),
                   Dot(color: items[tabs.indexOf(label)].enabled ? const Color(0xFF00FF00) : Colors.grey)
                 ])))
             .toList());
@@ -127,15 +136,34 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
 
   //body
   Widget body() {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
     var rewriteItem = items.firstWhere(
         (item) => item.type == RewriteType.replaceRequestBody || item.type == RewriteType.replaceResponseBody);
 
     return ListView(children: [
       Row(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.center, children: [
-        const SizedBox(width: 10),
+        const SizedBox(width: 5),
+        Text("${localizations.type}: "),
+        SizedBox(
+            width: 90,
+            child: DropdownButtonFormField<String>(
+                value: rewriteItem.bodyType ?? ReplaceBodyType.text.name,
+                focusColor: Colors.transparent,
+                itemHeight: 48,
+                decoration:
+                    const InputDecoration(contentPadding: EdgeInsets.all(10), isDense: true, border: InputBorder.none),
+                items: ReplaceBodyType.values
+                    .map((e) => DropdownMenuItem(
+                        value: e.name,
+                        child: Text(isCN ? e.label : e.name.toUpperCase(),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))))
+                    .toList(),
+                onChanged: (val) => setState(() {
+                      rewriteItem.bodyType = val!;
+                    }))),
         Expanded(
             child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          const Text('启用'),
+          Text(localizations.enable),
           const SizedBox(width: 10),
           SwitchWidget(
               value: rewriteItem.enabled,
@@ -145,13 +173,49 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
                   }))
         ]))
       ]),
+      const SizedBox(height: 10),
+      if (rewriteItem.bodyType == ReplaceBodyType.file.name)
+        fileBodyEdit(rewriteItem)
+      else
+        TextFormField(
+            initialValue: rewriteItem.body,
+            style: const TextStyle(fontSize: 14),
+            maxLines: 15,
+            decoration: decoration(localizations.replaceBodyWith,
+                hintText: '${localizations.example} {"code":"200","data":{}}'),
+            onChanged: (val) => rewriteItem.body = val)
+    ]);
+  }
+
+  Widget fileBodyEdit(RewriteItem item) {
+    return Column(children: [
       const SizedBox(height: 5),
-      TextFormField(
-          initialValue: rewriteItem.body,
-          style: const TextStyle(fontSize: 14),
-          maxLines: 15,
-          decoration: decoration('消息体替换为:', hintText: '示例: {"code":"200","data":{}}'),
-          onChanged: (val) => rewriteItem.body = val)
+      Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        FilledButton(
+            onPressed: () async {
+              FilePickerResult? result = await FilePicker.platform.pickFiles();
+              if (result == null) {
+                return;
+              }
+              item.bodyFile = result.files.single.path;
+              setState(() {});
+            },
+            child: Text(localizations.selectFile, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
+        const SizedBox(width: 10),
+        FilledButton(
+            onPressed: () {
+              setState(() {
+                item.bodyFile = null;
+              });
+            },
+            child: Text(localizations.delete, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
+      ]),
+      const SizedBox(height: 10),
+      if (item.bodyFile != null)
+        Container(
+            padding: const EdgeInsets.all(8),
+            foregroundDecoration: BoxDecoration(border: Border.all(color: Theme.of(context).primaryColor, width: 1)),
+            child: Text(item.bodyFile ?? ''))
     ]);
   }
 
@@ -162,11 +226,11 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
 
     return Column(children: [
       Row(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.center, children: [
-        const Text('Header列表'),
+        const Text('Header'),
         const SizedBox(width: 10),
         Expanded(
             child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          const Text('启用'),
+          Text(localizations.enable),
           const SizedBox(width: 10),
           SwitchWidget(
               value: rewriteItem.enabled,
@@ -186,7 +250,7 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
     return Column(
       children: [
         Row(children: [
-          const Text('请求方法'),
+          Text(localizations.requestMethod),
           const SizedBox(width: 10),
           SizedBox(
               width: 120,
@@ -207,7 +271,7 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
                   })),
           Expanded(
               child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            const Text('启用'),
+            Text(localizations.enable),
             const SizedBox(width: 10),
             SwitchWidget(
                 value: rewriteItem.enabled,
@@ -220,9 +284,11 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
           ])),
         ]),
         const SizedBox(height: 15),
-        textField("Path", rewriteItem.path, "示例: /api/v1/user", onChanged: (val) => rewriteItem.values['path'] = val),
+        textField("Path", rewriteItem.path, "${localizations.example} /api/v1/user",
+            onChanged: (val) => rewriteItem.values['path'] = val),
         const SizedBox(height: 15),
-        textField("URL参数", rewriteItem.queryParam, "示例: id=1&name=2", onChanged: (val) => rewriteItem.queryParam = val),
+        textField("URL${localizations.param}", rewriteItem.queryParam, "${localizations.example} id=1&name=2",
+            onChanged: (val) => rewriteItem.queryParam = val),
       ],
     );
   }
@@ -230,13 +296,13 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
   //重定向
   Widget redirectEdit(RewriteItem rewriteItem) {
     return TextFormField(
-        decoration: decoration('重定向到:', hintText: 'http://www.example.com/api'),
+        decoration: decoration(localizations.redirectTo, hintText: 'http://www.example.com/api'),
         maxLines: 5,
         initialValue: rewriteItem.redirectUrl,
         onChanged: (val) => rewriteItem.redirectUrl = val,
         validator: (val) {
           if (val == null || val.trim().isEmpty) {
-            return '重定向URL不能为空';
+            return '${localizations.redirect} URL ${localizations.cannotBeEmpty}';
           }
           return null;
         });
@@ -267,7 +333,7 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
         padding: const EdgeInsets.all(10),
         child: Column(children: [
           Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            const Text('状态码'),
+            Text(localizations.statusCode),
             const SizedBox(width: 10),
             SizedBox(
                 width: 100,
@@ -284,7 +350,7 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
                 )),
             Expanded(
                 child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-              const Text('启用'),
+              Text(localizations.enable),
               const SizedBox(width: 10),
               SwitchWidget(
                   value: rewriteItem.enabled,
@@ -331,6 +397,8 @@ class Headers extends StatefulWidget {
 class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
   final Map<TextEditingController, TextEditingController> _headers = {};
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -366,7 +434,7 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
     ];
 
     list.add(TextButton(
-      child: const Text("添加Header", textAlign: TextAlign.center),
+      child: Text("${localizations.add}Header", textAlign: TextAlign.center),
       onPressed: () {
         setState(() {
           _headers[TextEditingController()] = TextEditingController();

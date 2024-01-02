@@ -105,7 +105,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
-      // log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+      log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
       if (HostFilter.filter(httpRequest.hostAndPort?.host)) {
         await remoteChannel.write(httpRequest);
         return;
@@ -225,6 +225,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     try {
       HttpResponse? response = await scriptManager.runResponseScript(msg);
       if (response == null) {
+        channel.close();
         return;
       }
       msg = response;
@@ -235,11 +236,21 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     }
 
     //重写响应
-    await requestRewrites?.responseRewrite(msg.request?.requestUrl, msg);
-
+    try {
+      await requestRewrites?.responseRewrite(msg.request?.requestUrl, msg);
+    } catch (e, t) {
+      msg.body = "$e".codeUnits;
+      log.e('[${clientChannel.id}] 响应重写异常 ', error: e, stackTrace: t);
+    }
     listener?.onResponse(channelContext, msg);
     //发送给客户端
     await clientChannel.write(msg);
+  }
+
+  @override
+  void exceptionCaught(ChannelContext channelContext, Channel channel, error, {StackTrace? trace}) {
+    super.exceptionCaught(channelContext, channel, error, trace: trace);
+    ProxyHelper.exceptionHandler(channelContext, channel, listener, channelContext.currentRequest, error);
   }
 
   @override

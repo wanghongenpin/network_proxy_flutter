@@ -15,6 +15,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -44,7 +45,7 @@ class _MobileHistoryState extends State<MobileHistory> {
     return futureWidget(HistoryStorage.instance, (data) {
       List<Widget> children = [];
 
-      var container = RequestListState.container;
+      var container = MobileHomeState.requestStateKey.currentState!.container;
       if (container.isNotEmpty == true && !_sessionSaved) {
         //当前会话未保存，是否保存当前会话
         children.add(buildSaveSession(data, container));

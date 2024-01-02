@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
@@ -17,6 +18,8 @@ class RewriteUpdateWidget extends StatefulWidget {
 class _RewriteUpdateState extends State<RewriteUpdateWidget> {
   List<RewriteItem> items = [];
 
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -31,16 +34,18 @@ class _RewriteUpdateState extends State<RewriteUpdateWidget> {
 
   @override
   Widget build(BuildContext context) {
+    bool isCN = Localizations.localeOf(context).languageCode == "zh";
     return Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: Text(widget.ruleType.label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          title: Text(isCN ? widget.ruleType.label : widget.ruleType.name,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           actions: [
             TextButton(
                 onPressed: () {
                   Navigator.of(context).pop(items);
                 },
-                child: const Text("完成")),
+                child: Text(i18n.done)),
             const SizedBox(width: 10)
           ],
         ),
@@ -92,6 +97,8 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
   GlobalKey formKey = GlobalKey<FormState>();
   late RewriteItem rewriteItem;
 
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -108,31 +115,31 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
     String keyTips = "";
     String valueTips = "";
     if (isDelete) {
-      keyTips = "匹配规则";
-      valueTips = "为空表示匹配全部";
+      keyTips = i18n.matchRule;
+      valueTips = i18n.emptyMatchAll;
     } else if (rewriteType == RewriteType.updateQueryParam || rewriteType == RewriteType.updateHeader) {
       keyTips = rewriteType == RewriteType.updateQueryParam ? "name=123" : "Content-Type: application/json";
       valueTips = rewriteType == RewriteType.updateQueryParam ? "name=456" : "Content-Type: application/xml";
     }
 
     var typeList = widget.ruleType == RuleType.requestUpdate ? RewriteType.updateRequest : RewriteType.updateResponse;
-
+    bool isCN = Localizations.localeOf(context).languageCode == "zh";
     return AlertDialog(
-        title: const Text("添加修改",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+        title: Text(i18n.add,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("取消")),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(i18n.cancel)),
           TextButton(
               onPressed: () {
                 if (!(formKey.currentState as FormState).validate()) {
-                  FlutterToastr.show("缺少配置", context, position: FlutterToastr.center);
+                  FlutterToastr.show(i18n.cannotBeEmpty, context, position: FlutterToastr.center);
                   return;
                 }
                 (formKey.currentState as FormState).save();
                 rewriteItem.type = rewriteType;
                 Navigator.of(context).pop(rewriteItem);
               },
-              child: const Text("确定")),
+              child: Text(i18n.confirm)),
         ],
         content: SizedBox(
             width: 320,
@@ -142,10 +149,10 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
                 child: ListView(children: [
                   Row(
                     children: [
-                      const Text('类型'),
+                      Text(i18n.type),
                       const SizedBox(width: 15),
                       SizedBox(
-                          width: 120,
+                          width: 140,
                           child: DropdownButtonFormField<RewriteType>(
                               value: rewriteType,
                               focusColor: Colors.transparent,
@@ -155,7 +162,7 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
                               items: typeList
                                   .map((e) => DropdownMenuItem(
                                       value: e,
-                                      child: Text(e.label,
+                                      child: Text(e.getDescribe(isCN),
                                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))))
                                   .toList(),
                               onChanged: (val) {
@@ -166,17 +173,17 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
                     ],
                   ),
                   const SizedBox(height: 15),
-                  textField(isUpdate ? "匹配" : "名称", rewriteItem.key, keyTips,
+                  textField(isUpdate ? i18n.match : i18n.name, rewriteItem.key, keyTips,
                       required: !isDelete, onSaved: (val) => rewriteItem.key = val),
                   const SizedBox(height: 15),
-                  textField(isUpdate ? "替换" : "值", rewriteItem.value, valueTips,
+                  textField(isUpdate ? i18n.replace : i18n.value, rewriteItem.value, valueTips,
                       onSaved: (val) => rewriteItem.value = val),
                 ]))));
   }
 
   Widget textField(String label, String? val, String hint, {bool required = false, FormFieldSetter<String>? onSaved}) {
     return Row(children: [
-      SizedBox(width: 50, child: Text(label)),
+      SizedBox(width: 55, child: Text(label)),
       Expanded(
           child: TextFormField(
         initialValue: val,
@@ -211,6 +218,8 @@ class UpdateList extends StatefulWidget {
 }
 
 class _UpdateListState extends State<UpdateList> {
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -231,10 +240,10 @@ class _UpdateListState extends State<UpdateList> {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Container(width: 130, padding: const EdgeInsets.only(left: 10), child: const Text("类型")),
-              const SizedBox(width: 50, child: Text("启用", textAlign: TextAlign.center)),
+              Container(width: 130, padding: const EdgeInsets.only(left: 10), child: Text(i18n.type)),
+              SizedBox(width: 50, child: Text(i18n.enable, textAlign: TextAlign.center)),
               const VerticalDivider(),
-              const Expanded(child: Text("修改")),
+              Expanded(child: Text(i18n.modify)),
             ],
           ),
           const Divider(thickness: 0.5),
@@ -269,7 +278,10 @@ class _UpdateListState extends State<UpdateList> {
               padding: const EdgeInsets.all(5),
               child: Row(
                 children: [
-                  SizedBox(width: 130, child: Text(list[index].type.label, style: const TextStyle(fontSize: 13))),
+                  SizedBox(
+                      width: 130,
+                      child: Text(list[index].type.getDescribe(i18n.localeName == 'zh'),
+                          style: const TextStyle(fontSize: 13))),
                   SizedBox(
                       width: 40,
                       child: SwitchWidget(
@@ -307,7 +319,7 @@ class _UpdateListState extends State<UpdateList> {
         builder: (ctx) {
           return Wrap(alignment: WrapAlignment.center, children: [
             BottomSheetItem(
-                text: "编辑",
+                text: i18n.modify,
                 onPressed: () async {
                   showDialog(
                       context: context,
@@ -321,14 +333,14 @@ class _UpdateListState extends State<UpdateList> {
                 }),
             const Divider(thickness: 0.5),
             BottomSheetItem(
-                text: widget.items[index].enabled ? "禁用" : "启用",
+                text: widget.items[index].enabled ? i18n.disabled : i18n.enable,
                 onPressed: () => widget.items[index].enabled = !widget.items[index].enabled),
             const Divider(thickness: 0.5),
             BottomSheetItem(
-                text: "删除",
+                text: i18n.delete,
                 onPressed: () async {
                   widget.items.removeAt(index);
-                  if (mounted) FlutterToastr.show('删除成功', context);
+                  if (mounted) FlutterToastr.show(i18n.deleteSuccess, context);
                 }),
             Container(color: Theme.of(context).hoverColor, height: 8),
             TextButton(
@@ -336,7 +348,7 @@ class _UpdateListState extends State<UpdateList> {
                     height: 50,
                     width: double.infinity,
                     padding: const EdgeInsets.only(top: 10),
-                    child: const Text("取消", textAlign: TextAlign.center)),
+                    child: Text(i18n.cancel, textAlign: TextAlign.center)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 }),

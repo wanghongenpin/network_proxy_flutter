@@ -269,7 +269,11 @@ class RequestRewrites {
 
     if (rewriteRule?.type == RuleType.requestReplace) {
       var rewriteItems = await getRewriteItems(rewriteRule!);
-      rewriteItems.where((item) => item.enabled).forEach((item) => _replaceRequest(request, item));
+      for (var item in rewriteItems) {
+        if (item.enabled) {
+          await _replaceRequest(request, item);
+        }
+      }
       return;
     }
 
@@ -321,13 +325,13 @@ class RequestRewrites {
   }
 
   //替换请求
-  _replaceRequest(HttpRequest request, RewriteItem item) {
+  Future<void> _replaceRequest(HttpRequest request, RewriteItem item) async {
     if (item.type == RewriteType.replaceRequestLine) {
       request.method = item.method ?? request.method;
       request.uri = Uri.parse(request.requestUrl).replace(path: item.path, query: item.queryParam).toString();
       return;
     }
-    _replaceHttpMessage(request, item);
+    await _replaceHttpMessage(request, item);
   }
 
   /// 查找重写规则
@@ -339,7 +343,11 @@ class RequestRewrites {
 
     if (rewriteRule.type == RuleType.responseReplace) {
       var rewriteItems = await getRewriteItems(rewriteRule);
-      rewriteItems.where((item) => item.enabled).forEach((item) => _replaceResponse(response, item));
+      for (var item in rewriteItems) {
+        if (item.enabled) {
+          await _replaceResponse(response, item);
+        }
+      }
       // logger.d('rewrite response $response');
       return;
     }
@@ -393,24 +401,33 @@ class RequestRewrites {
   }
 
   //替换相应
-  _replaceResponse(HttpResponse response, RewriteItem item) {
+  Future<void> _replaceResponse(HttpResponse response, RewriteItem item) async {
     if (item.type == RewriteType.replaceResponseStatus && item.statusCode != null) {
       response.status = HttpStatus.valueOf(item.statusCode!);
       return;
     }
-    _replaceHttpMessage(response, item);
+    await _replaceHttpMessage(response, item);
   }
 
-  _replaceHttpMessage(HttpMessage message, RewriteItem item) {
+  Future<void> _replaceHttpMessage(HttpMessage message, RewriteItem item) async {
     if (item.type == RewriteType.replaceResponseHeader && item.headers != null) {
       item.headers?.forEach((key, value) => message.headers.set(key, value));
       return;
     }
 
-    if (item.body != null &&
-        (item.type == RewriteType.replaceResponseBody || item.type == RewriteType.replaceRequestBody)) {
-      message.body = utf8.encode(item.body!);
-      message.headers.contentLength = message.body!.length;
+    if (item.type == RewriteType.replaceResponseBody || item.type == RewriteType.replaceRequestBody) {
+      if (item.bodyType == ReplaceBodyType.file.name) {
+        if (item.bodyFile == null) return;
+
+        message.body = await FileRead.readFile(item.bodyFile!);
+        message.headers.contentLength = message.body!.length;
+        return;
+      }
+
+      if (item.body != null) {
+        message.body = utf8.encode(item.body!);
+        message.headers.contentLength = message.body!.length;
+      }
       return;
     }
   }
@@ -501,6 +518,15 @@ class RequestRewriteRule {
   }
 }
 
+enum ReplaceBodyType {
+  text("文本"),
+  file("文件");
+
+  final String label;
+
+  const ReplaceBodyType(this.label);
+}
+
 class RewriteItem {
   bool enabled;
   RewriteType type;
@@ -559,6 +585,14 @@ class RewriteItem {
 
   set body(String? body) => values['body'] = body;
 
+  String? get bodyType => values['bodyType'];
+
+  set bodyType(String? bodyType) => values['bodyType'] = bodyType;
+
+  String? get bodyFile => values['bodyFile'];
+
+  set bodyFile(String? bodyFile) => values['bodyFile'] = bodyFile;
+
   Map<String, dynamic> toJson() {
     return {
       'enabled': enabled,
@@ -613,5 +647,13 @@ enum RewriteType {
 
   static RewriteType fromName(String name) {
     return values.firstWhere((element) => element.name == name);
+  }
+
+  String getDescribe(bool isCN) {
+    if (isCN) {
+      return label;
+    }
+
+    return name.replaceFirst("replace", "").replaceFirst("Query", "");
   }
 }

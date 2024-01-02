@@ -129,7 +129,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
                 builder: (_, value, __) => _HttpWidget(
                     key: responseKey,
                     title: Row(children: [
-                      Text(localizations.statusCode, style: const TextStyle(fontWeight: FontWeight.w500)),
+                      Text("${localizations.statusCode}: ", style: const TextStyle(fontWeight: FontWeight.w500)),
                       const SizedBox(width: 10),
                       Text(response?.status.toString() ?? "", style: const TextStyle(color: Colors.blue))
                     ]),

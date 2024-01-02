@@ -205,16 +205,14 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-            '1. 请求重写增加 修改请求，可根据正则替换；\n'
-            '2. 请求重写批量导入、导出；\n'
-            '3. 支持WebSocket抓包；\n'
-            '4. 安卓支持小窗口模式；\n'
-            '5. 优化curl导入；\n'
-            '6. 支持head请求，修复手机端请求重写切换应用恢复原始的请求问题；'
+            '1. 增加多语言支持；\n'
+            '2. 请求重写支持文件选择；\n'
+            '3. 抓包详情页面Headers默认展开配置；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             '1. Increase multilingual support；\n'
-            '2. Details page Headers Expanded Config；\n'
-           ;
+            '2. Request Rewrite support file selection；\n'
+            '3. Details page Headers Expanded Config；\n'
+    ;
     showAlertDialog(isCN ? '更新内容V1.0.6' : "Update content V1.0.6", content, () {
       widget.appConfiguration.upgradeNoticeV7 = false;
       widget.appConfiguration.flushConfig();
@@ -248,7 +246,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
                       onClose.call();
                       Navigator.pop(context);
                     },
-                    child: const Text('关闭'))
+                    child: Text(localizations.cancel))
               ],
               title: Text(title, style: const TextStyle(fontSize: 18)),
               content: Text(content));

@@ -34,17 +34,31 @@ import NetworkExtension
 
 
     override func applicationDidEnterBackground(_ application: UIApplication) {
-//        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(timerAction), userInfo: nil, repeats: true)
-//        RunLoop.current.add(timer!, forMode: RunLoop.Mode.common)
-//               bgTask = application.beginBackgroundTask(expirationHandler: nil)
+        if (!VpnManager.shared.isRunning()) {
+            return
+        }
+        timer = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(timerAction), userInfo: nil, repeats: true)
+        RunLoop.current.add(timer!, forMode: RunLoop.Mode.common)
+               bgTask = application.beginBackgroundTask(expirationHandler: nil)
     }
 
     @objc func timerAction() {
-      print(UIApplication.shared.backgroundTimeRemaining )
-      if UIApplication.shared.backgroundTimeRemaining < 60.0 {
-          let application = UIApplication.shared
-          bgTask = application.beginBackgroundTask(expirationHandler: nil)
-      }
+        print(UIApplication.shared.backgroundTimeRemaining)
+        let application = UIApplication.shared
+        if (bgTask != nil) {
+            application.endBackgroundTask(bgTask!);
+            bgTask = nil;
+        }
+        
+        if (UIApplication.shared.backgroundTimeRemaining < 60 && VpnManager.shared.isRunning()) {
+            bgTask = application.beginBackgroundTask(expirationHandler: nil)
+        }
+            
+        if (application.backgroundTimeRemaining <= 0 || application.applicationState == .active) {
+            timer?.invalidate();
+            timer = nil;
+        }
+   
     }
 
     override func applicationWillResignActive(_ application: UIApplication) {

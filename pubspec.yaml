@@ -2,7 +2,7 @@ name: network_proxy
 description: ProxyPin
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.6+6
+version: 1.0.6+7
 
 environment:
   sdk: '>=3.0.2 <4.0.0'
@@ -37,6 +37,8 @@ dependencies:
   file_selector: ^1.0.1
   flutter_js: ^0.8.0
   flutter_code_editor:
+  file_picker: ^6.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

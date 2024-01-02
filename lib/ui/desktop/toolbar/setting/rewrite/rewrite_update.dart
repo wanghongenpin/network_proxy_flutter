@@ -3,6 +3,7 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class RewriteUpdateDialog extends StatefulWidget {
   final String subtitle;
@@ -18,6 +19,8 @@ class RewriteUpdateDialog extends StatefulWidget {
 class _RewriteUpdateState extends State<RewriteUpdateDialog> {
   List<RewriteItem> items = [];
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -32,19 +35,21 @@ class _RewriteUpdateState extends State<RewriteUpdateDialog> {
 
   @override
   Widget build(BuildContext context) {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
     return AlertDialog(
         titlePadding: const EdgeInsets.all(0),
         actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
         contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 5),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("关闭")),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(localizations.cancel)),
           TextButton(
               onPressed: () {
                 Navigator.of(context).pop(items);
               },
-              child: const Text("完成")),
+              child: Text(localizations.done)),
         ],
-        title: ListTile(title: Text(widget.ruleType.label, textAlign: TextAlign.center)),
+        title: ListTile(title: Text(isCN ? widget.ruleType.label : widget.ruleType.name, textAlign: TextAlign.center)),
         content: SizedBox(
             height: 380,
             child: Column(
@@ -90,6 +95,8 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
   GlobalKey formKey = GlobalKey<FormState>();
   late RewriteItem rewriteItem;
 
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -106,8 +113,8 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
     String keyTips = "";
     String valueTips = "";
     if (isDelete) {
-      keyTips = "匹配规则";
-      valueTips = "为空表示匹配全部";
+      keyTips = localizations.matchRule;
+      valueTips = localizations.emptyMatchAll;
     } else if (rewriteType == RewriteType.updateQueryParam || rewriteType == RewriteType.updateHeader) {
       keyTips = rewriteType == RewriteType.updateQueryParam ? "name=123" : "Content-Type: application/json";
       valueTips = rewriteType == RewriteType.updateQueryParam ? "name=456" : "Content-Type: application/xml";
@@ -116,21 +123,21 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
     var typeList = widget.ruleType == RuleType.requestUpdate ? RewriteType.updateRequest : RewriteType.updateResponse;
 
     return AlertDialog(
-        title: const Text("添加修改",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+        title: Text(localizations.add,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("取消")),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(localizations.cancel)),
           TextButton(
               onPressed: () {
                 if (!(formKey.currentState as FormState).validate()) {
-                  FlutterToastr.show("缺少配置", context, position: FlutterToastr.center);
+                  FlutterToastr.show(localizations.cannotBeEmpty, context, position: FlutterToastr.center);
                   return;
                 }
                 (formKey.currentState as FormState).save();
                 rewriteItem.type = rewriteType;
                 Navigator.of(context).pop(rewriteItem);
               },
-              child: const Text("确定")),
+              child: Text(localizations.confirm)),
         ],
         content: SizedBox(
             width: 320,
@@ -140,10 +147,10 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
                 child: Column(children: [
                   Row(
                     children: [
-                      const Text('类型'),
-                      const SizedBox(width: 15),
+                      Text(localizations.type),
+                      const SizedBox(width: 20),
                       SizedBox(
-                          width: 120,
+                          width: 140,
                           child: DropdownButtonFormField<RewriteType>(
                               value: rewriteType,
                               focusColor: Colors.transparent,
@@ -153,7 +160,7 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
                               items: typeList
                                   .map((e) => DropdownMenuItem(
                                       value: e,
-                                      child: Text(e.label,
+                                      child: Text(e.getDescribe(localizations.localeName == 'zh'),
                                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))))
                                   .toList(),
                               onChanged: (val) {
@@ -164,17 +171,17 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
                     ],
                   ),
                   const SizedBox(height: 15),
-                  textField(isUpdate ? "匹配" : "名称", rewriteItem.key, keyTips,
+                  textField(isUpdate ? localizations.match : localizations.name, rewriteItem.key, keyTips,
                       required: !isDelete, onSaved: (val) => rewriteItem.key = val),
                   const SizedBox(height: 15),
-                  textField(isUpdate ? "替换" : "值", rewriteItem.value, valueTips,
+                  textField(isUpdate ? localizations.replace : localizations.value, rewriteItem.value, valueTips,
                       onSaved: (val) => rewriteItem.value = val),
                 ]))));
   }
 
   Widget textField(String label, String? val, String hint, {bool required = false, FormFieldSetter<String>? onSaved}) {
     return Row(children: [
-      SizedBox(width: 50, child: Text(label)),
+      SizedBox(width: 60, child: Text(label)),
       Expanded(
           child: TextFormField(
         initialValue: val,
@@ -209,6 +216,8 @@ class UpdateList extends StatefulWidget {
 }
 
 class _UpdateListState extends State<UpdateList> {
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -229,10 +238,10 @@ class _UpdateListState extends State<UpdateList> {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Container(width: 130, padding: const EdgeInsets.only(left: 10), child: const Text("类型")),
-              const SizedBox(width: 50, child: Text("启用", textAlign: TextAlign.center)),
+              Container(width: 130, padding: const EdgeInsets.only(left: 10), child: Text(localizations.type)),
+              SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
               const VerticalDivider(),
-              const Expanded(child: Text("修改")),
+              Expanded(child: Text(localizations.modify)),
             ],
           ),
           const Divider(thickness: 0.5),
@@ -244,6 +253,7 @@ class _UpdateListState extends State<UpdateList> {
 
   List<Widget> rows(List<RewriteItem> list) {
     var primaryColor = Theme.of(context).primaryColor;
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
     return List.generate(list.length, (index) {
       return InkWell(
@@ -267,7 +277,9 @@ class _UpdateListState extends State<UpdateList> {
               padding: const EdgeInsets.all(5),
               child: Row(
                 children: [
-                  SizedBox(width: 130, child: Text(list[index].type.label, style: const TextStyle(fontSize: 13))),
+                  SizedBox(
+                      width: 130,
+                      child: Text(list[index].type.getDescribe(isCN), style: const TextStyle(fontSize: 13))),
                   SizedBox(
                       width: 40,
                       child: SwitchWidget(
@@ -301,7 +313,7 @@ class _UpdateListState extends State<UpdateList> {
     showContextMenu(context, details.globalPosition, items: [
       PopupMenuItem(
           height: 35,
-          child: const Text("编辑"),
+          child: Text(localizations.edit),
           onTap: () async {
             showDialog(
                 context: context,
@@ -315,15 +327,15 @@ class _UpdateListState extends State<UpdateList> {
           }),
       PopupMenuItem(
           height: 35,
-          child: widget.items[index].enabled ? const Text("禁用") : const Text("启用"),
+          child: widget.items[index].enabled ? Text(localizations.disabled) : Text(localizations.enable),
           onTap: () => widget.items[index].enabled = !widget.items[index].enabled),
       const PopupMenuDivider(),
       PopupMenuItem(
           height: 35,
-          child: const Text("删除"),
+          child: Text(localizations.delete),
           onTap: () async {
             widget.items.removeAt(index);
-            if (mounted) FlutterToastr.show('删除成功', context);
+            if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
           }),
     ]).then((value) {
       setState(() {
