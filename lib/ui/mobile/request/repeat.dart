@@ -85,7 +85,7 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
 
     return Row(
       children: [
-        SizedBox(width: 90, child: Text("$label :")),
+        SizedBox(width: 95, child: Text("$label :")),
         Expanded(
           child: TextFormField(
             controller: controller,

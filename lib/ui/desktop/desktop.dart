@@ -205,13 +205,15 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                           '3. 抓包详情页面Headers默认展开配置；\n'
                           '4. 请求编辑URL参数支持表单编辑；\n'
                           '5. 增加高级重放；\n'
+                          '6. 域名过滤支持批量导出&编辑；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
                           '1. Increase multilingual support；\n'
                           '2. Request Rewrite support file selection；\n'
                           '3. Details page Headers Expanded Config；\n'
                           '4. Request Edit URL parameter support for form editing；\n'
-                          '5. Support advanced replay；\n',
+                          '5. Support advanced replay；\n'
+                          '6. Domain name filtering supports batch export&editing；\n',
                   style: const TextStyle(fontSize: 14)));
         });
   }

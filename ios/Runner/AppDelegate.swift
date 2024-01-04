@@ -58,6 +58,13 @@ import NetworkExtension
             timer?.invalidate();
             timer = nil;
         }
+        
+        if (!AudioManager.shared.openBackgroundAudioAutoplay) {
+            AudioManager.shared.openBackgroundAudioAutoplay = true
+            self.backgroundUpdateTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+                self.endBackgroundUpdateTask()
+            })
+        }
    
     }
 

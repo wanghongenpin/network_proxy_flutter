@@ -184,6 +184,7 @@ class RequestRuleList extends StatefulWidget {
 class _RequestRuleListState extends State<RequestRuleList> {
   Map<int, bool> selected = {};
   late List<RequestRewriteRule> rules;
+  bool isPress = false;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
@@ -193,7 +194,6 @@ class _RequestRuleListState extends State<RequestRuleList> {
     rules = widget.requestRewrites.rules;
   }
 
-  bool isPress = false;
 
   @override
   Widget build(BuildContext context) {
