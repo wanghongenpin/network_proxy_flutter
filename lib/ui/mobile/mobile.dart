@@ -212,7 +212,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '1. Increase multilingual support；\n'
             '2. Request Rewrite support file selection；\n'
             '3. Details page Headers Expanded Config；\n';
-            '3. Request Edit URL parameter support for form editing；\n';
+            '5. Request Edit URL parameter support for form editing；\n';
     showAlertDialog(isCN ? '更新内容V1.0.7' : "Update content V1.0.7", content, () {
       widget.appConfiguration.upgradeNoticeV7 = false;
       widget.appConfiguration.flushConfig();

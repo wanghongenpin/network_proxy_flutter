@@ -195,7 +195,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                     },
                     child: Text(localizations.cancel))
               ],
-              title: Text(isCN ? '更新内容V1.0.6' : "Update content V1.0.6", style: const TextStyle(fontSize: 18)),
+              title: Text(isCN ? '更新内容V1.0.7' : "Update content V1.0.7", style: const TextStyle(fontSize: 18)),
               content: Text(
                   isCN
                       ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
@@ -203,11 +203,13 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                           '1. 增加多语言支持；\n'
                           '2. 请求重写支持文件选择；\n'
                           '3. 抓包详情页面Headers默认展开配置；\n'
+                          '4. 请求编辑URL参数支持表单编辑；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
                           '1. Increase multilingual support；\n'
                           '2. Request Rewrite support file selection；\n'
-                          '3. Details page Headers Expanded Config；\n',
+                          '3. Details page Headers Expanded Config；\n'
+                          '4. Request Edit URL parameter support for form editing；\n',
                   style: const TextStyle(fontSize: 14)));
         });
   }
