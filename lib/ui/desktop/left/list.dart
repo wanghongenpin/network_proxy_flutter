@@ -16,7 +16,9 @@ import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/desktop/left/request.dart';
 import 'package:network_proxy/ui/desktop/left/search.dart';
 
-///左侧域名
+/// 左侧域名
+/// @author wanghongen
+/// 2023/10/8
 class DomainList extends StatefulWidget {
   final NetworkTabController panel;
   final ProxyServer proxyServer;

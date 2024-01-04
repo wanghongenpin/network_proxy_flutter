@@ -3,6 +3,8 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+/// @author wanghongen
+/// 2023/10/8
 class PhoneConnect extends StatefulWidget {
   final ProxyServer proxyServer;
   final List<String> hosts;

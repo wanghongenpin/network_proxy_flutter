@@ -207,10 +207,12 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '1. 增加多语言支持；\n'
             '2. 请求重写支持文件选择；\n'
             '3. 抓包详情页面Headers默认展开配置；\n'
+            '4. 请求编辑URL参数支持表单编辑；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             '1. Increase multilingual support；\n'
             '2. Request Rewrite support file selection；\n'
             '3. Details page Headers Expanded Config；\n';
+            '3. Request Edit URL parameter support for form editing；\n';
     showAlertDialog(isCN ? '更新内容V1.0.7' : "Update content V1.0.7", content, () {
       widget.appConfiguration.upgradeNoticeV7 = false;
       widget.appConfiguration.flushConfig();

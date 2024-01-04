@@ -5,6 +5,8 @@ import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+/// @author wanghongen
+/// 2023/10/8
 class RewriteUpdateDialog extends StatefulWidget {
   final String subtitle;
   final RuleType ruleType;

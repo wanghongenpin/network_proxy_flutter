@@ -22,7 +22,9 @@ import 'package:network_proxy/utils/har.dart';
 import '../../content/panel.dart';
 import 'list.dart';
 
-///历史记录
+/// 历史记录
+/// @author wanghongen
+/// 2023/10/8
 class HistoryPageWidget extends StatelessWidget {
   final ProxyServer proxyServer;
   final GlobalKey<DomainWidgetState> domainWidgetState;

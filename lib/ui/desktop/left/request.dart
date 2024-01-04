@@ -19,7 +19,9 @@ import 'package:network_proxy/utils/lang.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-///请求 URI
+/// 请求 URI
+/// @author wanghongen
+/// 2023/10/8
 class RequestWidget extends StatefulWidget {
   final Color? color;
   final HttpRequest request;
@@ -93,7 +95,8 @@ class _RequestWidgetState extends State<RequestWidget> {
       items: <PopupMenuEntry>[
         popupItem(localizations.copyUrl, onTap: () {
           var requestUrl = widget.request.requestUrl;
-          Clipboard.setData(ClipboardData(text: requestUrl)).then((value) => FlutterToastr.show(localizations.copied, context));
+          Clipboard.setData(ClipboardData(text: requestUrl))
+              .then((value) => FlutterToastr.show(localizations.copied, context));
         }),
         popupItem(localizations.copyRequestResponse, onTap: () {
           Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))

@@ -86,9 +86,11 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
     List<Widget> list = [
       widget.inNewWindow ? const SizedBox() : titleWidget(),
+      const SizedBox(height: 3),
       SizedBox(
           height: 36,
           child: TabBar(
+              labelPadding: const EdgeInsets.only(left: 3, right: 5),
               tabs: tabs.tabList(),
               onTap: (index) {
                 tabIndex = index;
@@ -133,14 +135,17 @@ class HttpBodyState extends State<HttpBodyWidget> {
             if (body == null) {
               return;
             }
-            Clipboard.setData(ClipboardData(text: body)).then((value) => FlutterToastr.show(localizations.copied, context));
+            Clipboard.setData(ClipboardData(text: body))
+                .then((value) => FlutterToastr.show(localizations.copied, context));
           }),
     ];
 
     if (!widget.hideRequestRewrite) {
       list.add(const SizedBox(width: 3));
-      list.add(
-          IconButton(icon: const Icon(Icons.edit_document, size: 18), tooltip: localizations.requestRewrite, onPressed: showRequestRewrite));
+      list.add(IconButton(
+          icon: const Icon(Icons.edit_document, size: 18),
+          tooltip: localizations.requestRewrite,
+          onPressed: showRequestRewrite));
     }
 
     list.add(const SizedBox(width: 3));
@@ -152,7 +157,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
         }));
     if (!inNewWindow) {
       list.add(const SizedBox(width: 3));
-      list.add(IconButton(icon: const Icon(Icons.open_in_new, size: 18), tooltip: localizations.newWindow, onPressed: () => openNew()));
+      list.add(IconButton(
+          icon: const Icon(Icons.open_in_new, size: 18), tooltip: localizations.newWindow, onPressed: () => openNew()));
     }
 
     return Wrap(

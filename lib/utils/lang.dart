@@ -1,6 +1,8 @@
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 
+/// @author wanghongen
+/// 2023/10/8
 extension ListFirstWhere<T> on Iterable<T> {
   T? firstWhereOrNull(bool Function(T) test) {
     try {
@@ -62,9 +64,19 @@ class Strings {
 /// 当中英文混合，或者中文与数字或者特殊符号，或则英文单词时，文本会被自动换行，
 /// 这样会导致，换行时上一行可能会留很大的空白区域
 /// 把每个字符插入一个0宽的字符， \u{200B}
-extension FixAutoLines on String {
+extension StringEnhance on String {
   String fixAutoLines() {
     return Characters(this).join('\u{200B}');
+  }
+
+  List<String> splitFirst(int code) {
+    var index = codeUnits.indexOf(code);
+    if (index == -1) {
+      return [this];
+    }
+    var key = substring(0, index).trim();
+    var value = substring(index + 1).trim();
+    return [key, value];
   }
 }
 

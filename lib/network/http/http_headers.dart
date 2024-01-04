@@ -171,6 +171,10 @@ class HttpHeaders {
     return json;
   }
 
+  Map<String, List<String>> getHeaders() {
+    return _headers;
+  }
+
   ///从json解析
   factory HttpHeaders.fromJson(Map<String, dynamic> json) {
     HttpHeaders headers = HttpHeaders();

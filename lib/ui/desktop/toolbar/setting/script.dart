@@ -47,6 +47,8 @@ void _refreshScript() {
   });
 }
 
+/// @author wanghongen
+/// 2023/10/8
 class ScriptWidget extends StatefulWidget {
   final int windowId;
 

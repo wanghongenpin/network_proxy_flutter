@@ -5,14 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// @author wanghongen
+/// 2024/1/1
 class ThemeModel {
   ThemeMode mode;
   bool useMaterial3;
 
   ThemeModel({this.mode = ThemeMode.system, this.useMaterial3 = true});
 
-  ThemeModel copy({ThemeMode? mode, bool? useMaterial3}) =>
-      ThemeModel(
+  ThemeModel copy({ThemeMode? mode, bool? useMaterial3}) => ThemeModel(
         mode: mode ?? this.mode,
         useMaterial3: useMaterial3 ?? this.useMaterial3,
       );
@@ -109,7 +110,7 @@ class AppConfiguration {
     try {
       Map<String, dynamic> config = jsonDecode(json);
       var mode =
-      ThemeMode.values.firstWhere((element) => element.name == config['mode'], orElse: () => ThemeMode.system);
+          ThemeMode.values.firstWhere((element) => element.name == config['mode'], orElse: () => ThemeMode.system);
       _theme = ThemeModel(mode: mode, useMaterial3: config['useMaterial3'] ?? true);
       upgradeNoticeV7 = config['upgradeNoticeV7'] ?? true;
       _language = config['language'] == null ? null : Locale.fromSubtags(languageCode: config['language']);

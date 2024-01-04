@@ -6,6 +6,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/host_port.dart';
 
+/// @author wanghongen
+/// 2023/10/8
 class ExternalProxyDialog extends StatefulWidget {
   final Configuration configuration;
 

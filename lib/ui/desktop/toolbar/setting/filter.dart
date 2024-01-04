@@ -3,6 +3,8 @@ import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+/// @author wanghongen
+/// 2023/10/8
 class FilterDialog extends StatefulWidget {
   final Configuration configuration;
 

@@ -3,6 +3,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
 
+/// @author wanghongen
+/// 2024/1/2
 class Preference extends StatelessWidget {
   final AppConfiguration appConfiguration;
 

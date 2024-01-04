@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+/// @author wanghongen
+/// 2023/6/17
 class ThemeSetting extends StatelessWidget {
   final AppConfiguration appConfiguration;
 

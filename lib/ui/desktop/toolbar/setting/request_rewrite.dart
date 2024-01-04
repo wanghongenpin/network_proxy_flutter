@@ -16,6 +16,8 @@ import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/rewrite/rewrite_replace.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/rewrite/rewrite_update.dart';
 
+/// @author wanghongen
+/// 2023/10/8
 class RequestRewriteWidget extends StatefulWidget {
   final int windowId;
   final RequestRewrites requestRewrites;
@@ -263,7 +265,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
   }
 
   List<Widget> rows(List<RequestRewriteRule> list) {
-    var primaryColor = Theme.of(context).primaryColor;
+    var primaryColor = Theme.of(context).colorScheme.primary;
     bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
     return List.generate(list.length, (index) {

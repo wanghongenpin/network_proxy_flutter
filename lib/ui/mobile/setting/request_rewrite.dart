@@ -196,7 +196,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
           child: Center(
               child: TextButton(
                   onPressed: () {},
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                     TextButton.icon(
                         onPressed: () {
                           export(selected.toList());
@@ -206,13 +206,11 @@ class _RequestRuleListState extends State<RequestRuleList> {
                           });
                         },
                         icon: const Icon(Icons.share, size: 18),
-                        label: Text(localizations.export)),
-                    const SizedBox(width: 15),
+                        label: Text(localizations.export, style: const TextStyle(fontSize: 14))),
                     TextButton.icon(
                         onPressed: () => removeRewrite(),
                         icon: const Icon(Icons.delete, size: 18),
-                        label: Text(localizations.delete)),
-                    const SizedBox(width: 15),
+                        label: Text(localizations.delete, style: const TextStyle(fontSize: 14))),
                     TextButton.icon(
                         onPressed: () {
                           setState(() {
@@ -221,13 +219,13 @@ class _RequestRuleListState extends State<RequestRuleList> {
                           });
                         },
                         icon: const Icon(Icons.cancel, size: 18),
-                        label: Text(localizations.cancel)),
+                        label: Text(localizations.cancel, style: const TextStyle(fontSize: 14))),
                   ]))))
     ]);
   }
 
   List<Widget> rows(List<RequestRewriteRule> list) {
-    var primaryColor = Theme.of(context).primaryColor;
+    var primaryColor = Theme.of(context).colorScheme.primary;
     bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
     return List.generate(list.length, (index) {
       return InkWell(

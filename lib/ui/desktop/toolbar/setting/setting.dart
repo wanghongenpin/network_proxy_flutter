@@ -15,6 +15,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'filter.dart';
 
 ///设置菜单
+/// @author wanghongen
+/// 2023/10/8
 class Setting extends StatefulWidget {
   final ProxyServer proxyServer;
 

@@ -97,6 +97,11 @@
   "disableSelect": "Disable Select",
   "deleteSelect": "Delete Select",
 
+  "modifyRequestHeader": "Modify Header",
+  "headerName": "Header Name",
+  "headerValue": "Header Value",
+  "deleteHeaderConfirm": "Do you want to delete the request header?",
+
   "sequence": "All Requests",
   "domainList": "Domain List",
   "domainWhitelist": "Domain Whitelist",
@@ -160,7 +165,6 @@
   "androidUserCAInstall": "Open settings -> Security -> Encryption and credentials -> Install certificate -> CA certificate",
   "androidUserXposed": "It is recommended to use the Xposed module for packet capture (no need for ROOT), click to view wiki",
   "configWifiProxy": "Configure mobile Wi-Fi proxy",
-  "installGuide": "Installation Guide",
   "caInstallGuide": "Certificate Installation Guide",
   "caAndroidBrowser": "Open Google Browser on Android devices：",
   "caIosBrowser": "Open Safari on iOS devices：",

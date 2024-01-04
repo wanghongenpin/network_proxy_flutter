@@ -19,6 +19,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../component/split_view.dart';
 
+/// @author wanghongen
+/// 2023/10/8
 class DesktopHomePage extends StatefulWidget {
   final Configuration configuration;
   final AppConfiguration appConfiguration;

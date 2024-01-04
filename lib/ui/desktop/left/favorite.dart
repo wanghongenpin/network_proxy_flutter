@@ -19,6 +19,8 @@ import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:window_manager/window_manager.dart';
 
+/// @author wanghongen
+/// 2023/10/8
 class Favorites extends StatefulWidget {
   final NetworkTabController panel;
 

@@ -4,6 +4,8 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/desktop/left/search_condition.dart';
 
+/// @author wanghongen
+/// 2023/10/8
 class Search extends StatefulWidget {
   final Function(SearchModel searchModel)? onSearch;
 

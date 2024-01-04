@@ -12,7 +12,8 @@ import 'package:window_manager/window_manager.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../left/list.dart';
-
+/// @author wanghongen
+/// 2023/10/8
 class Toolbar extends StatefulWidget {
   final ProxyServer proxyServer;
   final GlobalKey<DomainWidgetState> domainStateKey;

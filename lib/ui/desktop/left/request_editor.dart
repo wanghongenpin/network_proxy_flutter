@@ -20,6 +20,7 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
@@ -28,8 +29,9 @@ import 'package:network_proxy/ui/component/split_view.dart';
 import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/utils/curl.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:network_proxy/utils/lang.dart';
 
+/// @author wanghongen
 class RequestEditor extends StatefulWidget {
   final WindowController? windowController;
   final HttpRequest? request;
@@ -43,8 +45,11 @@ class RequestEditor extends StatefulWidget {
 }
 
 class RequestEditorState extends State<RequestEditor> {
+  final UrlQueryNotifier _queryNotifier = UrlQueryNotifier();
   final requestLineKey = GlobalKey<_RequestLineState>();
   final requestKey = GlobalKey<_HttpState>();
+  final responseKey = GlobalKey<_HttpState>();
+
   ValueNotifier responseChange = ValueNotifier<bool>(false);
   HttpRequest? request;
   HttpResponse? response;
@@ -102,17 +107,20 @@ class RequestEditorState extends State<RequestEditor> {
           ],
         ),
         body: Column(children: [
-          _RequestLine(key: requestLineKey, request: request),
+          _RequestLine(key: requestLineKey, request: request, urlQueryNotifier: _queryNotifier),
           Expanded(
               child: VerticalSplitView(
             ratio: 0.53,
             left: _HttpWidget(
-                key: requestKey,
-                title: const Text("Request", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                message: request),
+              key: requestKey,
+              title: const Text("Request", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+              message: request,
+              urlQueryNotifier: _queryNotifier,
+            ),
             right: ValueListenableBuilder(
                 valueListenable: responseChange,
                 builder: (_, value, __) => _HttpWidget(
+                    key: responseKey,
                     title: Row(children: [
                       const Text("Response", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                       const Spacer(),
@@ -131,15 +139,15 @@ class RequestEditorState extends State<RequestEditor> {
     var requestBody = requestKey.currentState?.getBody();
 
     HttpRequest request =
-        HttpRequest(HttpMethod.valueOf(currentState.requestMethod), Uri.encodeFull(currentState.requestUrl));
+        HttpRequest(HttpMethod.valueOf(currentState.requestMethod), Uri.encodeFull(currentState.requestUrl.text));
     request.headers.addAll(headers);
-
     request.body = requestBody == null ? null : utf8.encode(requestBody);
 
     HttpClients.proxyRequest(request).then((response) {
       FlutterToastr.show(localizations.requestSuccess, context);
       this.response = response;
       responseChange.value = !responseChange.value;
+      responseKey.currentState?.change(response);
     }).catchError((e) {
       FlutterToastr.show('${localizations.fail}$e', context);
     });
@@ -168,6 +176,7 @@ class RequestEditorState extends State<RequestEditor> {
                       try {
                         setState(() {
                           request = parseCurl(text!);
+                          requestKey.currentState?.change(request!);
                           requestLineKey.currentState?.change(request?.requestUrl, request?.method.name);
                         });
                       } catch (e) {
@@ -182,12 +191,28 @@ class RequestEditorState extends State<RequestEditor> {
   }
 }
 
+typedef ParamCallback = void Function(String param);
+
+class UrlQueryNotifier {
+  ParamCallback? _urlNotifier;
+  ParamCallback? _paramNotifier;
+
+  urlListener(ParamCallback listener) => _urlNotifier = listener;
+
+  paramListener(ParamCallback listener) => _paramNotifier = listener;
+
+  onUrlChange(String url) => _urlNotifier?.call(url);
+
+  onParamChange(String param) => _paramNotifier?.call(param);
+}
+
 class _HttpWidget extends StatefulWidget {
   final HttpMessage? message;
   final bool readOnly;
   final Widget title;
+  final UrlQueryNotifier? urlQueryNotifier;
 
-  const _HttpWidget({this.message, this.readOnly = false, super.key, required this.title});
+  const _HttpWidget({this.message, this.readOnly = false, super.key, required this.title, this.urlQueryNotifier});
 
   @override
   State<StatefulWidget> createState() {
@@ -196,25 +221,46 @@ class _HttpWidget extends StatefulWidget {
 }
 
 class _HttpState extends State<_HttpWidget> {
-  final tabs = ['Header', 'Body'];
-  final headerKey = GlobalKey<HeadersState>();
-  String? body;
+  List<String> tabs = ['Header', 'Body'];
+  final headerKey = GlobalKey<KeyValState>();
+  Map<String, List<String>> initHeader = {};
+  HttpMessage? message;
+  TextEditingController? body;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   String? getBody() {
-    return body;
+    return body?.text;
   }
 
   HttpHeaders? getHeaders() {
-    return headerKey.currentState?.getHeaders();
+    return HttpHeaders.fromJson(headerKey.currentState?.getParams() ?? {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.urlQueryNotifier != null) {
+      tabs.insert(0, "URL Params");
+    }
+
+    message = widget.message;
+    body = TextEditingController(text: widget.message?.bodyAsString);
+    if (widget.message?.headers == null && !widget.readOnly) {
+      initHeader["User-Agent"] = ["ProxyPin/1.0.8"];
+      initHeader["Accept"] = ["*/*"];
+      return;
+    }
+  }
+
+  change(HttpMessage message) {
+    this.message = message;
+    body?.text = message.bodyAsString;
+    headerKey.currentState?.refreshParam(message.headers.getHeaders());
   }
 
   @override
   Widget build(BuildContext context) {
-    body = widget.message?.bodyAsString;
-    headerKey.currentState?.refreshHeader(widget.message?.headers);
-
     if (widget.message == null && widget.readOnly) {
       return Scaffold(appBar: AppBar(title: widget.title), body: Center(child: Text(localizations.emptyData)));
     }
@@ -236,7 +282,16 @@ class _HttpState extends State<_HttpWidget> {
                       padding: const EdgeInsets.only(left: 10),
                       child: TabBarView(
                         children: [
-                          Headers(key: headerKey, headers: widget.message?.headers, readOnly: widget.readOnly),
+                          if (tabs.length == 3)
+                            KeyValWidget(
+                                paramNotifier: widget.urlQueryNotifier,
+                                params: message is HttpRequest
+                                    ? (message as HttpRequest).requestUri?.queryParametersAll
+                                    : null),
+                          KeyValWidget(
+                              key: headerKey,
+                              params: message?.headers.getHeaders() ?? initHeader,
+                              readOnly: widget.readOnly),
                           _body()
                         ],
                       )),
@@ -246,26 +301,19 @@ class _HttpState extends State<_HttpWidget> {
   Widget _body() {
     if (widget.readOnly) {
       return KeepAliveWrapper(
-          child: SingleChildScrollView(child: HttpBodyWidget(httpMessage: widget.message, hideRequestRewrite: true)));
+          child: SingleChildScrollView(child: HttpBodyWidget(httpMessage: message, hideRequestRewrite: true)));
     }
 
-    return TextField(
-        autofocus: true,
-        controller: TextEditingController(text: body),
-        readOnly: widget.readOnly,
-        onChanged: (value) {
-          body = value;
-        },
-        minLines: 20,
-        maxLines: 20);
+    return TextFormField(autofocus: true, controller: body, readOnly: widget.readOnly, minLines: 20, maxLines: 20);
   }
 }
 
 ///请求行
 class _RequestLine extends StatefulWidget {
   final HttpRequest? request;
+  final UrlQueryNotifier? urlQueryNotifier;
 
-  const _RequestLine({super.key, this.request});
+  const _RequestLine({super.key, this.request, this.urlQueryNotifier});
 
   @override
   State<StatefulWidget> createState() {
@@ -274,30 +322,56 @@ class _RequestLine extends StatefulWidget {
 }
 
 class _RequestLineState extends State<_RequestLine> {
-  String requestUrl = "";
   String requestMethod = HttpMethod.get.name;
+  TextEditingController requestUrl = TextEditingController(text: "");
 
   @override
   void initState() {
     super.initState();
+    widget.urlQueryNotifier?.paramListener((param) => onQueryChange(param));
     if (widget.request == null) {
-      requestUrl = 'https://';
+      requestUrl.text = 'https://';
       return;
     }
 
     var request = widget.request!;
-    requestUrl = request.requestUrl;
+    requestUrl.text = request.requestUrl;
     requestMethod = request.method.name;
   }
 
+  @override
+  dispose() {
+    requestUrl.dispose();
+    super.dispose();
+  }
+
   change(String? requestUrl, String? requestMethod) {
-    this.requestUrl = requestUrl ?? this.requestUrl;
+    this.requestUrl.text = requestUrl ?? this.requestUrl.text;
     this.requestMethod = requestMethod ?? this.requestMethod;
+
+    urlNotifier();
+  }
+
+  urlNotifier() {
+    var splitFirst = requestUrl.text.splitFirst("?".codeUnits.first);
+    widget.urlQueryNotifier?.onUrlChange(splitFirst.length > 1 ? splitFirst.last : '');
+  }
+
+  onQueryChange(String query) {
+    var url = requestUrl.text;
+    var indexOf = url.indexOf("?");
+    if (indexOf == -1) {
+      requestUrl.text = "$url?$query";
+    } else {
+      requestUrl.text = "${url.substring(0, indexOf)}?$query";
+    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+        controller: requestUrl,
         decoration: InputDecoration(
             prefix: DropdownButton(
               padding: const EdgeInsets.only(right: 10),
@@ -315,28 +389,34 @@ class _RequestLineState extends State<_RequestLine> {
             isDense: true,
             border: const OutlineInputBorder(borderSide: BorderSide()),
             enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.grey, width: 0.3))),
-        controller: TextEditingController(text: requestUrl),
         onChanged: (value) {
-          requestUrl = value;
+          urlNotifier();
         });
   }
 }
 
-///请求头
-class Headers extends StatefulWidget {
-  final HttpHeaders? headers;
-  final bool readOnly; //只读
+class KeyVal {
+  bool enabled = true;
+  TextEditingController key;
+  TextEditingController value;
 
-  const Headers({super.key, this.headers, this.readOnly = false});
-
-  @override
-  State<StatefulWidget> createState() {
-    return HeadersState();
-  }
+  KeyVal(this.key, this.value);
 }
 
-class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
-  final Map<TextEditingController, List<TextEditingController>> _headers = {};
+///key value
+class KeyValWidget extends StatefulWidget {
+  final Map<String, List<String>>? params;
+  final bool readOnly; //只读
+  final UrlQueryNotifier? paramNotifier;
+
+  const KeyValWidget({super.key, this.params, this.readOnly = false, this.paramNotifier});
+
+  @override
+  State<StatefulWidget> createState() => KeyValState();
+}
+
+class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin {
+  final List<KeyVal> _params = [];
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
@@ -346,40 +426,91 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-    if (widget.headers == null && !widget.readOnly) {
-      _headers[TextEditingController(text: "User-Agent")] = [TextEditingController(text: "ProxyPin/1.0.8")];
-      _headers[TextEditingController(text: "Accept")] = [TextEditingController(text: "*/*")];
+    widget.paramNotifier?.urlListener((url) => onChange(url));
+    if (widget.params == null) {
+      var keyVal = KeyVal(TextEditingController(), TextEditingController());
+      _params.add(keyVal);
       return;
     }
-    widget.headers?.forEach((name, values) {
-      _headers[TextEditingController(text: name)] = values.map((it) => TextEditingController(text: it)).toList();
+
+    widget.params?.forEach((name, values) {
+      for (var val in values) {
+        var keyVal = KeyVal(TextEditingController(text: name), TextEditingController(text: val));
+        _params.add(keyVal);
+      }
     });
   }
 
-  //刷新header
-  refreshHeader(HttpHeaders? headers) {
-    _headers.clear();
+  @override
+  dispose() {
+    clear();
+    super.dispose();
+  }
+
+  //监听url发生变化 更改表单
+  onChange(String value) {
+    var query = value.split("&");
+    int index = 0;
+    while (index < query.length) {
+      var splitFirst = query[index].splitFirst('='.codeUnits.first);
+      String key = splitFirst.first;
+      String? val = splitFirst.length == 1 ? null : splitFirst.last;
+      if (_params.length <= index) {
+        _params.add(KeyVal(TextEditingController(text: key), TextEditingController(text: val)));
+        continue;
+      }
+
+      var keyVal = _params[index++];
+      keyVal.key.text = key;
+      keyVal.value.text = val ?? '';
+    }
+
+    _params.length = index;
+    setState(() {});
+  }
+
+  notifierChange() {
+    if (widget.paramNotifier == null) return;
+    String query = _params
+        .where((e) => e.enabled && e.key.text.isNotEmpty)
+        .map((e) => "${e.key.text}=${e.value.text}".replaceAll("&", "%26"))
+        .join("&");
+    widget.paramNotifier?.onParamChange(query);
+  }
+
+  clear() {
+    for (var element in _params) {
+      element.key.dispose();
+      element.value.dispose();
+    }
+    _params.clear();
+  }
+
+  //刷新param
+  refreshParam(Map<String, List<String>>? headers) {
+    clear();
     setState(() {
       headers?.forEach((name, values) {
-        _headers[TextEditingController(text: name)] = values.map((it) => TextEditingController(text: it)).toList();
+        for (var val in values) {
+          var keyVal = KeyVal(TextEditingController(text: name), TextEditingController(text: val));
+          _params.add(keyVal);
+        }
       });
     });
   }
 
   ///获取所有请求头
-  HttpHeaders getHeaders() {
-    var headers = HttpHeaders();
-    _headers.forEach((name, values) {
-      if (name.text.isEmpty) {
-        return;
+  Map<String, List<String>> getParams() {
+    Map<String, List<String>> map = {};
+    for (var keVal in _params) {
+      if (keVal.key.text.isEmpty || !keVal.enabled) {
+        continue;
       }
-      for (var element in values) {
-        if (element.text.isNotEmpty) {
-          headers.add(name.text, element.text);
-        }
-      }
-    });
-    return headers;
+      map[keVal.key.text] ??= [];
+      map[keVal.key.text]!.add(keVal.value.text);
+    }
+
+    return map;
   }
 
   @override
@@ -387,16 +518,20 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
     super.build(context);
 
     var list = [
-      _row(const Text('Key'), const Text('Value'), const Text('')),
+      const Row(children: [
+        SizedBox(width: 38),
+        Expanded(flex: 4, child: Text('Key')),
+        Expanded(flex: 5, child: Text('Value'))
+      ]),
       ..._buildRows(),
     ];
 
     if (!widget.readOnly) {
       list.add(TextButton(
-        child:  Text("${localizations.add}Header", textAlign: TextAlign.center),
+        child: Text(localizations.add, textAlign: TextAlign.center),
         onPressed: () {
           setState(() {
-            _headers[TextEditingController()] = [TextEditingController()];
+            _params.add(KeyVal(TextEditingController(), TextEditingController()));
           });
         },
       ));
@@ -413,25 +548,24 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
 
   List<Widget> _buildRows() {
     List<Widget> list = [];
-
-    _headers.forEach((key, values) {
-      for (var val in values) {
-        list.add(_row(
-            _cell(key, isKey: true),
-            _cell(val),
-            widget.readOnly
-                ? null
-                : Padding(
-                    padding: const EdgeInsets.only(right: 15),
-                    child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _headers.remove(key);
-                          });
-                        },
-                        child: const Icon(Icons.remove_circle, size: 16)))));
-      }
-    });
+    for (var keyVal in _params) {
+      list.add(_row(
+          keyVal,
+          widget.readOnly
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.only(right: 15),
+                  child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _params.remove(keyVal);
+                          keyVal.key.dispose();
+                          keyVal.value.dispose();
+                        });
+                        notifierChange();
+                      },
+                      child: const Icon(Icons.remove_circle, size: 16)))));
+    }
 
     return list;
   }
@@ -441,14 +575,39 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
         padding: const EdgeInsets.only(right: 5),
         child: TextFormField(
             readOnly: widget.readOnly,
-            style: TextStyle(fontSize: 12, fontWeight: isKey ? FontWeight.w500 : null),
+            style: TextStyle(fontSize: 13, fontWeight: isKey ? FontWeight.w500 : null),
             controller: val,
+            onChanged: (val) => notifierChange(),
             minLines: 1,
             maxLines: 3,
-            decoration: InputDecoration(isDense: true, border: InputBorder.none, hintText: isKey ? "Key" : "Value")));
+            decoration: InputDecoration(
+                isDense: true,
+                hintStyle: const TextStyle(color: Colors.grey),
+                contentPadding: const EdgeInsets.fromLTRB(5, 13, 5, 13),
+                focusedBorder: widget.readOnly
+                    ? null
+                    : OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1.5)),
+                border: InputBorder.none,
+                hintText: isKey ? "Key" : "Value")));
   }
 
-  Widget _row(Widget key, Widget val, Widget? op) {
-    return Row(children: [Expanded(flex: 4, child: key), Expanded(flex: 6, child: val), op ?? const SizedBox()]);
+  Widget _row(KeyVal keyVal, Widget? op) {
+    return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+      if (op != null)
+        Checkbox(
+            value: keyVal.enabled,
+            onChanged: (val) {
+              setState(() {
+                keyVal.enabled = val!;
+              });
+              notifierChange();
+            }),
+      Container(width: 5),
+      Expanded(flex: 4, child: _cell(keyVal.key, isKey: true)),
+      const Text(":", style: TextStyle(color: Colors.deepOrangeAccent)),
+      const SizedBox(width: 8),
+      Expanded(flex: 6, child: _cell(keyVal.value)),
+      op ?? const SizedBox()
+    ]);
   }
 }
