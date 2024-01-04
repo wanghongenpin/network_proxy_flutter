@@ -188,7 +188,7 @@ class _ScriptEditState extends State<ScriptEdit> {
     return Scaffold(
         appBar: AppBar(
             title: Row(children: [
-              Text(localizations.scriptEdit, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Text(localizations.scriptEdit, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(width: 10),
               Text.rich(TextSpan(
                   text: localizations.useGuide,

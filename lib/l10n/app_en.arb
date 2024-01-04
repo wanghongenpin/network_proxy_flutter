@@ -120,7 +120,11 @@
   "copyCurl": "Copy cURL",
   "delete": "Delete",
   "rename": "Rename",
-  "repeat": "Resend Request",
+  "repeat": "Repeat",
+  "customRepeat": "Custom Repeat",
+  "repeatCount": "Iterations",
+  "repeatInterval": "Interval(ms)",
+  "repeatDelay": "Delay(ms)",
   "editRequest": "Edit and Request",
   "reSendRequest": "The request has been resent",
 

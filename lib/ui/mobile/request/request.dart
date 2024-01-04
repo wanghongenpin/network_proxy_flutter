@@ -10,6 +10,7 @@ import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/storage/favorites.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/panel.dart';
+import 'package:network_proxy/ui/mobile/request/repeat.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
@@ -106,21 +107,21 @@ class RequestRowState extends State<RequestRow> {
       builder: (ctx) {
         return Wrap(alignment: WrapAlignment.center, children: [
           menuItem(localizations.copyUrl, () => widget.request.requestUrl),
-          const Divider(thickness: 0.5),
+          const Divider(thickness: 0.5, height: 5),
           menuItem(localizations.copyCurl, () => curlRequest(widget.request)),
-          const Divider(thickness: 0.5),
+          const Divider(thickness: 0.5, height: 5),
           TextButton(
               child: SizedBox(width: double.infinity, child: Text(localizations.repeat, textAlign: TextAlign.center)),
               onPressed: () {
-                var request = widget.request.copy(uri: widget.request.requestUrl);
-                HttpClients.proxyRequest(
-                    proxyInfo: widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null,
-                    request);
-
-                FlutterToastr.show(localizations.reSendRequest, context);
+                onRepeat(widget.request);
                 Navigator.of(context).pop();
               }),
-          const Divider(thickness: 0.5),
+          const Divider(thickness: 0.5, height: 5),
+          TextButton(
+              child: SizedBox(
+                  width: double.infinity, child: Text(localizations.customRepeat, textAlign: TextAlign.center)),
+              onPressed: () => showCustomRepeat(widget.request)),
+          const Divider(thickness: 0.5, height: 5),
           TextButton(
               child:
                   SizedBox(width: double.infinity, child: Text(localizations.editRequest, textAlign: TextAlign.center)),
@@ -130,7 +131,7 @@ class RequestRowState extends State<RequestRow> {
                     builder: (context) =>
                         MobileRequestEditor(request: widget.request, proxyServer: widget.proxyServer)));
               }),
-          const Divider(thickness: 0.5),
+          const Divider(thickness: 0.5, height: 5),
           TextButton(
               child: SizedBox(width: double.infinity, child: Text(localizations.favorite, textAlign: TextAlign.center)),
               onPressed: () {
@@ -138,7 +139,7 @@ class RequestRowState extends State<RequestRow> {
                 FlutterToastr.show(localizations.addSuccess, context);
                 Navigator.of(context).pop();
               }),
-          const Divider(thickness: 0.5),
+          const Divider(thickness: 0.5, height: 5),
           TextButton(
               child: SizedBox(width: double.infinity, child: Text(localizations.delete, textAlign: TextAlign.center)),
               onPressed: () {
@@ -163,6 +164,23 @@ class RequestRowState extends State<RequestRow> {
         ]);
       },
     );
+  }
+
+  //显示高级重发
+  showCustomRepeat(HttpRequest request) {
+    Navigator.of(context).pop();
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => MobileCustomRepeat(onRepeat: () => onRepeat(request))));
+  }
+
+  onRepeat(HttpRequest request) {
+    var httpRequest = request.copy(uri: request.requestUrl);
+    var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
+    HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo);
+
+    if (mounted) {
+      FlutterToastr.show(localizations.reSendRequest, context);
+    }
   }
 
   Widget menuItem(String title, String Function() callback) {

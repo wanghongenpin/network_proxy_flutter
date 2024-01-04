@@ -120,7 +120,11 @@
   "copyCurl": "复制 cURL 请求",
   "delete": "删除",
   "rename": "重命名",
-  "repeat": "重放请求",
+  "repeat": "重放",
+  "customRepeat": "高级重放",
+  "repeatCount": "次数",
+  "repeatInterval": "间隔(ms)",
+  "repeatDelay": "延时(ms)",
   "editRequest": "编辑请求重放",
   "reSendRequest": "已重新发送请求",
 

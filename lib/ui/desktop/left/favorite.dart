@@ -16,6 +16,7 @@ import 'package:network_proxy/storage/favorites.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
+import 'package:network_proxy/ui/desktop/left/repeat.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -143,14 +144,8 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         }),
         const PopupMenuDivider(height: 0.3),
         popupItem(localizations.rename, onTap: () => rename(widget.favorite)),
-        popupItem(localizations.repeat, onTap: () {
-          var httpRequest = request.copy(uri: request.requestUrl);
-          var proxyInfo =
-              widget.panel.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.panel.proxyServer.port) : null;
-          HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo);
-
-          FlutterToastr.show(localizations.reSendRequest, context);
-        }),
+        popupItem(localizations.repeat, onTap: () => onRepeat(request)),
+        popupItem(localizations.customRepeat, onTap: () => showCustomRepeat(request)),
         popupItem(localizations.editRequest, onTap: () {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             requestEdit();
@@ -162,6 +157,26 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         })
       ],
     );
+  }
+
+  //显示高级重发
+  showCustomRepeat(HttpRequest request) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return CustomRepeatDialog(onRepeat: () => onRepeat(request));
+        });
+  }
+
+  onRepeat(HttpRequest request) {
+    var httpRequest = request.copy(uri: request.requestUrl);
+    var proxyInfo =
+        widget.panel.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.panel.proxyServer.port) : null;
+    HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo);
+
+    if (mounted) {
+      FlutterToastr.show(localizations.reSendRequest, context);
+    }
   }
 
   PopupMenuItem popupItem(String text, {VoidCallback? onTap}) {
