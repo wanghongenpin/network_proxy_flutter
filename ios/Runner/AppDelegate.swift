@@ -4,6 +4,9 @@ import NetworkExtension
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
+    
+  var backgroundAudioEnable: Bool = false
+    
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -18,6 +21,7 @@ import NetworkExtension
                   VpnManager.shared.disconnect()
               } else {
                   let arguments = call.arguments as? Dictionary<String, AnyObject>
+                  self.backgroundAudioEnable = (arguments!["backgroundAudioEnable"]) as! Bool
                   VpnManager.shared.connect(host: arguments?["proxyHost"] as? String ,port: arguments?["proxyPort"] as? Int)
               }
           })
@@ -54,23 +58,30 @@ import NetworkExtension
             bgTask = application.beginBackgroundTask(expirationHandler: nil)
         }
             
-        if (application.backgroundTimeRemaining <= 0 || application.applicationState == .active) {
+        if (application.backgroundTimeRemaining <= 0 || application.applicationState == .active || AudioManager.shared.openBackgroundAudioAutoplay) {
             timer?.invalidate();
             timer = nil;
         }
         
-        if (!AudioManager.shared.openBackgroundAudioAutoplay) {
-            AudioManager.shared.openBackgroundAudioAutoplay = true
-            self.backgroundUpdateTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-                self.endBackgroundUpdateTask()
-            })
+        if (application.backgroundTimeRemaining <= 10) {
+            self.backgroundAudio()
         }
-   
+
     }
 
     override func applicationWillResignActive(_ application: UIApplication) {
-        if (!VpnManager.shared.isRunning()) {
+        self.backgroundAudio();
+    }
+    override  func applicationDidBecomeActive(_ application: UIApplication) {
+        self.endBackgroundUpdateTask()
+    }
+    
+    private func backgroundAudio() {
+        if (!VpnManager.shared.isRunning() || !self.backgroundAudioEnable) {
             return
+        }
+        if (AudioManager.shared.openBackgroundAudioAutoplay) {
+            return;
         }
         
         AudioManager.shared.openBackgroundAudioAutoplay = true
@@ -78,13 +89,10 @@ import NetworkExtension
             self.endBackgroundUpdateTask()
         })
     }
-    override  func applicationDidBecomeActive(_ application: UIApplication) {
-        self.endBackgroundUpdateTask()
-    }
     
     var backgroundUpdateTask: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier(rawValue: 0)
     func endBackgroundUpdateTask() {
-        if (!VpnManager.shared.isRunning()) {
+        if (!VpnManager.shared.isRunning() || !AudioManager.shared.openBackgroundAudioAutoplay) {
             return
         }
         

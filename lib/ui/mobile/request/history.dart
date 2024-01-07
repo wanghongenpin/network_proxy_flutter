@@ -1,3 +1,18 @@
+/*
+ * Copyright 2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -106,7 +121,7 @@ class _MobileHistoryState extends State<MobileHistory> {
     try {
       var historyItem = await storage.addHarFile(file);
       setState(() {
-        Navigator.pushNamed(context, '/domain', arguments: {'item': historyItem});
+        toRequestsView(historyItem, storage);
         FlutterToastr.show(localizations.importSuccess, context);
       });
     } catch (e, t) {
@@ -150,20 +165,28 @@ class _MobileHistoryState extends State<MobileHistory> {
           selected: selectIndex == index,
           title: Text(item.name),
           subtitle: Text(localizations.historySubtitle(item.requestLength, item.size)),
-          onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-              bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
-              return Scaffold(
-                  appBar: AppBar(
-                      title: Text('${item.name} ${isCN ? "记录数" : "Records"} ${item.requestLength}',
-                          style: const TextStyle(fontSize: 16))),
-                  body: futureWidget(
-                      loading: true,
-                      storage.getRequests(item),
-                      (data) => RequestListWidget(proxyServer: widget.proxyServer, list: data)));
-            })).then((value) => Future.delayed(const Duration(seconds: 60), () => item.requests = null));
-          },
+          onTap: () => toRequestsView(item, storage),
         ));
+  }
+
+  toRequestsView(HistoryItem item, HistoryStorage storage) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
+      bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+      return Scaffold(
+          appBar: AppBar(
+              title: Text('${item.name} ${isCN ? "记录数" : "Records"} ${item.requestLength}',
+                  style: const TextStyle(fontSize: 16))),
+          body: futureWidget(
+              loading: true,
+              storage.getRequests(item),
+              (data) => RequestListWidget(proxyServer: widget.proxyServer, list: data)));
+    })).then((value) async {
+      if (item != writeTask?.history && item.requests != null && item.requestLength != item.requests?.length) {
+        await storage.flushRequests(item, item.requests!);
+        setState(() {});
+      }
+      Future.delayed(const Duration(seconds: 60), () => item.requests = null);
+    });
   }
 
   //导出har
@@ -217,8 +240,7 @@ class _MobileHistoryState extends State<MobileHistory> {
         context: context,
         builder: (ctx) {
           return AlertDialog(
-            title:
-                Text(localizations.historyDeleteConfirm, style: const TextStyle(fontSize: 18)),
+            title: Text(localizations.historyDeleteConfirm, style: const TextStyle(fontSize: 18)),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
               TextButton(

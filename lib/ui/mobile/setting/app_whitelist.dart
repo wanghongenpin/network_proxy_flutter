@@ -7,6 +7,7 @@ import 'package:installed_apps/installed_apps.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/configuration.dart';
 
 //应用白名单 目前只支持安卓 ios没办法获取安装的列表
 class AppWhitelist extends StatefulWidget {
@@ -34,7 +35,9 @@ class _AppWhitelistState extends State<AppWhitelist> {
   @override
   void dispose() {
     if (changed && widget.proxyServer.isRunning) {
-      Vpn.restartVpn("127.0.0.1", widget.proxyServer.port, configuration.appWhitelist);
+      Vpn.restartVpn("127.0.0.1", widget.proxyServer.port,
+          appList: configuration.appWhitelist,
+          backgroundAudioEnable: AppConfiguration.current?.iosVpnBackgroundAudioEnable);
       configuration.flushConfig();
     }
     super.dispose();

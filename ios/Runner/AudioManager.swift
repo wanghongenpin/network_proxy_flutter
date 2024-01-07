@@ -50,7 +50,7 @@ class AudioManager: NSObject {
             debugPrint("\(type(of:self)):\(error)")
         }
         self.backgroundAudioPlayer?.numberOfLoops = -1
-        self.backgroundAudioPlayer?.volume = 1
+        self.backgroundAudioPlayer?.volume = 0
         self.backgroundAudioPlayer?.delegate = self
     }
     

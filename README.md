@@ -19,8 +19,6 @@
 
 国内下载地址： https://gitee.com/wanghongenpin/network-proxy-flutter/releases
 
-iOS美版香港AppStore下载地址或直接搜ProxyPin： https://apps.apple.com/app/proxypin/id6450932949
-
 iOS国内TF下载地址(有1万名额限制，满了会清理不使用的用户)： https://testflight.apple.com/join/gURGH6B4
 
 TG: https://t.me/proxypin_tg

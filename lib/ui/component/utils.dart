@@ -163,10 +163,10 @@ Future showContextMenu(BuildContext context, Offset offset, {required List<Popup
       items: items);
 }
 
-showConfirmDialog(BuildContext context, {String? title, String? content, VoidCallback? onConfirm}) {
+Future<T?> showConfirmDialog<T>(BuildContext context, {String? title, String? content, VoidCallback? onConfirm}) {
   title ??= AppLocalizations.of(context)!.confirmTitle;
   content ??= AppLocalizations.of(context)!.confirmContent;
-  showDialog(
+  return showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(

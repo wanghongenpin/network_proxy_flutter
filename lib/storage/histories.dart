@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:date_format/date_format.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/utils/files.dart';
 import 'package:network_proxy/utils/har.dart';
 import 'package:path_provider/path_provider.dart';
@@ -120,6 +121,23 @@ class HistoryStorage {
     }
 
     return history.requests!;
+  }
+
+  ///刷新requests
+  Future<void> flushRequests(HistoryItem history, List<HttpRequest> requests) async {
+    logger.i("刷新历史记录 $history");
+    final homePath = await _homePath();
+    String path = '$homePath${Platform.pathSeparator}${Files.getName(history.path)}';
+    var file = File(path);
+    for (int i = 0; i < requests.length; i++) {
+      var request = requests[i];
+      var har = Har.toHar(request);
+      await file.writeAsString("${jsonEncode(har)},\n", mode: i == 0 ? FileMode.write : FileMode.append);
+    }
+
+    history.requestLength = requests.length;
+    await file.length().then((size) => history.fileSize = size);
+    (await _path).writeAsString(jsonEncode(_histories));
   }
 
   //添加历史

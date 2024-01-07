@@ -46,7 +46,7 @@ class _FilterDialogState extends State<FilterDialog> {
         ]),
         content: SizedBox(
           width: 680,
-          height: 520,
+          height: 510,
           child: Flex(
             direction: Axis.horizontal,
             children: [

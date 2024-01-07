@@ -118,10 +118,10 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
   }
 
   ///启动代理服务器
-  start() {
+  start() async {
     if (!widget.serverLaunch) {
+      await widget.onStart?.call();
       setState(() {
-        widget.onStart?.call();
         SocketLaunch.started = true;
       });
       return;

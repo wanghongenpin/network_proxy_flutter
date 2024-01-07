@@ -222,5 +222,6 @@
   "enableScript": "启用脚本工具",
   "scriptUseDescribe": "使用 JavaScript 修改请求和响应",
   "scriptEdit": "编辑脚本",
-  "material3": "Material3是谷歌开源设计系统的最新版本"
+  "material3": "Material3是谷歌开源设计系统的最新版本",
+  "iosVpnBackgroundAudio": "开启抓包后，退出到后台。为了维护主UI线程的网络通信，将启用静音音频播放以保持主线程运行。否则，它将只在后台运行30秒。您同意在启用抓包后在后台播放音频吗?"
 }

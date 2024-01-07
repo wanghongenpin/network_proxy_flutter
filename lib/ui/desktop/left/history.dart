@@ -43,7 +43,7 @@ class HistoryPageWidget extends StatelessWidget {
             return MaterialPageRoute(
                 builder: (_) => futureWidget(
                       HistoryStorage.instance,
-                      (storage) => _HistoryWidget(storage,
+                      (storage) => _HistoryListWidget(storage,
                           container: domainWidgetState.currentState!.container, proxyServer: proxyServer),
                     ));
         }
@@ -72,21 +72,20 @@ class HistoryPageWidget extends StatelessWidget {
   }
 }
 
-class _HistoryWidget extends StatefulWidget {
+///历史记录列表
+class _HistoryListWidget extends StatefulWidget {
   // 存储
   final HistoryStorage storage;
   final List<HttpRequest> container;
   final ProxyServer proxyServer;
 
-  const _HistoryWidget(this.storage, {required this.container, required this.proxyServer});
+  const _HistoryListWidget(this.storage, {required this.container, required this.proxyServer});
 
   @override
-  State<StatefulWidget> createState() {
-    return _HistoryState();
-  }
+  State<StatefulWidget> createState() => _HistoryListState();
 }
 
-class _HistoryState extends State<_HistoryWidget> {
+class _HistoryListState extends State<_HistoryListWidget> {
   ///是否保存会话
   static bool _sessionSaved = false;
   static WriteTask? writeTask;
@@ -146,7 +145,7 @@ class _HistoryState extends State<_HistoryWidget> {
     try {
       var historyItem = await storage.addHarFile(file);
       setState(() {
-        Navigator.pushNamed(context, '/domain', arguments: {'item': historyItem});
+        toRequestsView(historyItem);
         FlutterToastr.show(localizations.importSuccess, context);
       });
     } catch (e, t) {
@@ -212,10 +211,17 @@ class _HistoryState extends State<_HistoryWidget> {
             dense: true,
             title: Text(item.name),
             subtitle: Text(localizations.historySubtitle(item.requestLength, item.size)),
-            onTap: () {
-              Navigator.pushNamed(context, '/domain', arguments: {'item': item})
-                  .whenComplete(() => Future.delayed(const Duration(seconds: 60), () => item.requests = null));
-            }));
+            onTap: () => toRequestsView(item)));
+  }
+
+  toRequestsView(HistoryItem item) {
+    Navigator.pushNamed(context, '/domain', arguments: {'item': item}).whenComplete(() async {
+      if (item != writeTask?.history &&item.requests != null && item.requestLength != item.requests?.length) {
+        await widget.storage.flushRequests(item, item.requests!);
+        setState(() {});
+      }
+      Future.delayed(const Duration(seconds: 60), () => item.requests = null);
+    });
   }
 
   //重命名
@@ -316,9 +322,7 @@ class WriteTask extends EventListener {
     if (writeList.isEmpty) {
       return;
     }
-
     int length = history.requestLength;
-
     while (writeList.isNotEmpty) {
       var request = writeList.removeFirst();
       var har = Har.toHar(request);
@@ -332,6 +336,7 @@ class WriteTask extends EventListener {
 
     history.requestLength = length;
     history.fileSize = await open.length();
+    history.requests = null;
     await historyStorage.refresh();
     callback?.call();
   }

@@ -19,9 +19,9 @@
 import 'dart:collection';
 
 class HttpHeaders {
-  static const CONTENT_LENGTH = "Content-Length";
-  static const CONTENT_ENCODING = "Content-Encoding";
-  static const CONTENT_TYPE = "Content-Type";
+  static const String CONTENT_LENGTH = "Content-Length";
+  static const String CONTENT_ENCODING = "Content-Encoding";
+  static const String CONTENT_TYPE = "Content-Type";
   static const String HOST = "Host";
   static const String TRANSFER_ENCODING = "Transfer-Encoding";
   static const String Cookie = "Cookie";
@@ -110,11 +110,11 @@ class HttpHeaders {
 
   set contentLength(int contentLength) => set(CONTENT_LENGTH, contentLength.toString());
 
-  String? get contentEncoding => get(HttpHeaders.CONTENT_ENCODING);
+  String? get contentEncoding => get(HttpHeaders.CONTENT_ENCODING)?.toLowerCase();
 
   bool get isGzip => contentEncoding == "gzip";
 
-  bool get isChunked => get(HttpHeaders.TRANSFER_ENCODING) == "chunked";
+  bool get isChunked => get(HttpHeaders.TRANSFER_ENCODING)?.toLowerCase() == "chunked";
 
   String get cookie => get(Cookie) ?? "";
 

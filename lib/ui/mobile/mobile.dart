@@ -192,8 +192,19 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             size: 36,
             startup: false,
             serverLaunch: false,
-            onStart: () => Vpn.startVpn(
-                Platform.isAndroid ? data : "127.0.0.1", proxyServer.port, proxyServer.configuration.appWhitelist),
+            onStart: () async {
+              // if (Platform.isIOS && widget.appConfiguration.iosVpnBackgroundAudioEnable == null) {
+              //   widget.appConfiguration.iosVpnBackgroundAudioEnable = false;
+              //   await showConfirmDialog(context, content: localizations.iosVpnBackgroundAudio, onConfirm: () {
+              //     widget.appConfiguration.iosVpnBackgroundAudioEnable = true;
+              //     widget.appConfiguration.flushConfig();
+              //   });
+              // }
+
+              Vpn.startVpn(Platform.isAndroid ? data : "127.0.0.1", proxyServer.port,
+                  backgroundAudioEnable: widget.appConfiguration.iosVpnBackgroundAudioEnable,
+                  appList: proxyServer.configuration.appWhitelist);
+            },
             onStop: () => Vpn.stopVpn());
       })),
     );

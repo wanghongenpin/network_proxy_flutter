@@ -60,11 +60,16 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
       var host = request.remoteDomain()!;
       DomainRequests? domainRequests = containerMap[host];
       if (domainRequests == null) {
-        domainRequests = DomainRequests(host, proxyServer: widget.panel.proxyServer, onRemove: () => remove(host));
+        domainRequests = DomainRequests(host, proxyServer: widget.panel.proxyServer, onRemove: () {
+          widget.list?.removeWhere((it) => it.remoteDomain() == host);
+          remove(host);
+        });
         containerMap[host] = domainRequests;
       }
-      var listURI = RequestWidget(request, widget.panel,
-          proxyServer: widget.panel.proxyServer, remove: (it) => domainRequests!.remove(it));
+      var listURI = RequestWidget(request, widget.panel, proxyServer: widget.panel.proxyServer, remove: (it) {
+        widget.list?.remove(it.request);
+        domainRequests!.remove(it);
+      });
       domainRequests.addBody(null, listURI);
     });
   }
@@ -87,7 +92,7 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
 
     Widget body = widget.shrinkWrap
         ? SingleChildScrollView(child: Column(children: list.toList()))
-        : ListView.builder(itemCount: list.length, cacheExtent: 1000, itemBuilder: (_, index) => list.elementAt(index));
+        : ListView.builder(itemCount: list.length, itemBuilder: (_, index) => list.elementAt(index));
 
     return Scaffold(
         body: body,

@@ -34,6 +34,8 @@ class AppConfiguration {
   ///
   bool headerExpanded = true;
 
+  bool? iosVpnBackgroundAudioEnable;
+
   AppConfiguration._();
 
   /// 单例
@@ -116,6 +118,7 @@ class AppConfiguration {
       _language = config['language'] == null ? null : Locale.fromSubtags(languageCode: config['language']);
       smallWindow = config['smallWindow'] ?? Platform.isAndroid;
       headerExpanded = config['headerExpanded'] ?? true;
+      iosVpnBackgroundAudioEnable = config['iosVpnBackgroundAudioEnable'];
     } catch (e) {
       print(e);
     }
@@ -140,7 +143,8 @@ class AppConfiguration {
       'upgradeNoticeV7': upgradeNoticeV7,
       "language": _language?.languageCode,
       'smallWindow': smallWindow,
-      "headerExpanded": headerExpanded
+      "headerExpanded": headerExpanded,
+      "iosVpnBackgroundAudioEnable": iosVpnBackgroundAudioEnable == false ? null : iosVpnBackgroundAudioEnable
     };
   }
 }
