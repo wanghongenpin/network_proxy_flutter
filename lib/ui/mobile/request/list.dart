@@ -40,7 +40,7 @@ class RequestListState extends State<RequestListWidget> {
   void initState() {
     super.initState();
     if (widget.list != null) {
-      container.addAll(widget.list!);
+      container = widget.list!;
     }
   }
 

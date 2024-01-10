@@ -90,7 +90,8 @@ class SearchModel {
       var entries = option == Option.requestHeader ? request.headers.entries : response?.headers.entries ?? [];
 
       for (var entry in entries) {
-        if (entry.value.any((element) => element.contains(keyword))) {
+        if (entry.key.toLowerCase() == keyword.toLowerCase() ||
+            entry.value.any((element) => element.contains(keyword))) {
           return true;
         }
       }

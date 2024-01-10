@@ -14,8 +14,8 @@ import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
-import 'package:network_proxy/ui/mobile/about.dart';
-import 'package:network_proxy/ui/mobile/connect_remote.dart';
+import 'package:network_proxy/ui/mobile/widgets/about.dart';
+import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
 import 'package:network_proxy/ui/mobile/request/history.dart';
 import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
@@ -126,15 +126,13 @@ class SettingMenu extends StatelessWidget {
                 onTap: () => _language(context),
               ),
               MobileThemeSetting(appConfiguration: appConfiguration),
-              Platform.isIOS
-                  ? const SizedBox()
-                  : ListTile(
+             ListTile(
                       title: Text(localizations.windowMode),
                       subtitle: Text(localizations.windowModeSubTitle, style: const TextStyle(fontSize: 12)),
                       trailing: SwitchWidget(
-                          value: appConfiguration.smallWindow,
+                          value: appConfiguration.pipEnabled,
                           onChanged: (value) {
-                            appConfiguration.smallWindow = value;
+                            appConfiguration.pipEnabled = value;
                             appConfiguration.flushConfig();
                           })),
               ListTile(

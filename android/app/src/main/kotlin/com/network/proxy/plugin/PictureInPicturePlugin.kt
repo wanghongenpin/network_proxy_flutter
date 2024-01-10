@@ -22,6 +22,8 @@ import androidx.core.content.ContextCompat
 class PictureInPicturePlugin : AndroidFlutterPlugin() {
     private var registerBroadcast = false
     var channel: MethodChannel? = null
+    var proxyHost: String? = null
+    var proxyPort: Int? = null
 
     ///广播事件接受者
     private val vpnBroadcastReceiver = object : BroadcastReceiver() {
@@ -41,7 +43,7 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
             if (isRunning) {
                 activity.startService(ProxyVpnService.stopVpnIntent(activity))
             } else {
-                activity.startService(ProxyVpnService.startVpnIntent(activity))
+                activity.startService(ProxyVpnService.startVpnIntent(activity, proxyHost, proxyPort))
             }
 
             //设置画中画参数
@@ -63,8 +65,10 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
             when (call.method) {
                 "enterPictureInPictureMode" -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        val param = updatePictureInPictureParams(ProxyVpnService.isRunning)
+                        proxyHost = call.argument<String>("proxyHost")
+                        proxyPort = call.argument<Int>("proxyPort")
 
+                        val param = updatePictureInPictureParams(ProxyVpnService.isRunning)
                         if (!registerBroadcast) {
                             registerBroadcast = true
                             ContextCompat.registerReceiver(

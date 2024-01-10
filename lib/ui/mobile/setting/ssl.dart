@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
+import 'package:network_proxy/ui/mobile/setting/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MobileSslWidget extends StatefulWidget {
@@ -54,27 +55,39 @@ class _MobileSslState extends State<MobileSslWidget> {
   }
 
   Widget ios() {
-    return ExpansionTile(
-        title: Text(localizations.profileDownload),
-        initiallyExpanded: true,
-        childrenPadding: const EdgeInsets.only(left: 20),
-        expandedAlignment: Alignment.topLeft,
-        expandedCrossAxisAlignment: CrossAxisAlignment.start,
-        shape: const Border(),
-        children: [
-          TextButton(onPressed: () => _downloadCert(), child: Text("1. ${localizations.downloadRootCa}")),
-          TextButton(onPressed: () {}, child: Text("2. ${localizations.installRootCa} -> ${localizations.trustCa}")),
-          TextButton(onPressed: () {}, child: Text("2.1 ${localizations.installCaDescribe}")),
-          Padding(
-              padding: const EdgeInsets.only(left: 15),
-              child: Image.network("https://foruda.gitee.com/images/1689346516243774963/c56bc546_1073801.png",
-                  height: 400)),
-          TextButton(onPressed: () {}, child: Text("2.2 ${localizations.trustCaDescribe}")),
-          Padding(
-              padding: const EdgeInsets.only(left: 15),
-              child: Image.network("https://foruda.gitee.com/images/1689346614916658100/fd9b9e41_1073801.png",
-                  height: 270)),
-        ]);
+    return Column(children: [
+      if (localizations.localeName != 'zh')
+        ExpansionTile(
+          title: Text(localizations.useGuide),
+          shape: const Border(),
+          maintainState: true,
+          children: [
+            Container(
+                height: 350, padding: const EdgeInsets.only(left: 15, right: 15), child: const VideoPlayerScreen())
+          ],
+        ),
+      ExpansionTile(
+          title: Text(localizations.installRootCa),
+          initiallyExpanded: true,
+          childrenPadding: const EdgeInsets.only(left: 20),
+          expandedAlignment: Alignment.topLeft,
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          shape: const Border(),
+          children: [
+            TextButton(onPressed: () => _downloadCert(), child: Text("1. ${localizations.downloadRootCa}")),
+            TextButton(onPressed: () {}, child: Text("2. ${localizations.installRootCa} -> ${localizations.trustCa}")),
+            TextButton(onPressed: () {}, child: Text("2.1 ${localizations.installCaDescribe}")),
+            Padding(
+                padding: const EdgeInsets.only(left: 15),
+                child: Image.network("https://foruda.gitee.com/images/1689346516243774963/c56bc546_1073801.png",
+                    height: 400)),
+            TextButton(onPressed: () {}, child: Text("2.2 ${localizations.trustCaDescribe}")),
+            Padding(
+                padding: const EdgeInsets.only(left: 15),
+                child: Image.network("https://foruda.gitee.com/images/1689346614916658100/fd9b9e41_1073801.png",
+                    height: 270)),
+          ])
+    ]);
   }
 
   Widget android() {

@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:network_proxy/network/http/codec.dart';
 import 'package:network_proxy/network/http/constants.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/byte_buf.dart';
@@ -12,7 +11,7 @@ class HttpParse {
   /// 解析请求行
   List<String> parseInitialLine(ByteBuf data, int size) {
     List<String> initialLine = [];
-
+    var startIndex = data.readerIndex;
     for (int i = data.readerIndex; i < size; i++) {
       if (_isLineEnd(data, i)) {
         //请求行结束
@@ -23,11 +22,16 @@ class HttpParse {
       }
     }
 
-    if (initialLine.length != 3) {
-      throw ParserException("parseLine error", String.fromCharCodes(data.bytes));
+    if (initialLine.length == 3) {
+      return initialLine;
     }
 
-    return initialLine;
+    if (data.length > defaultMaxLength) {
+      throw Exception("request line too long");
+    }
+
+    data.readerIndex = startIndex;
+    return [];
   }
 
   //分割行

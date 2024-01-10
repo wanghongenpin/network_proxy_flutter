@@ -148,7 +148,7 @@ class SearchConditionsState extends State<SearchConditions> {
   Widget options(String title, Option option) {
     bool isCN = localizations.localeName == 'zh';
     return Container(
-        constraints: BoxConstraints(maxWidth: isCN ? 100 : 150, minWidth: 100, maxHeight: 33),
+        constraints: BoxConstraints(maxWidth: isCN ? 100 : 152, minWidth: 100, maxHeight: 33),
         child: Row(children: [
           Text(title, style: const TextStyle(fontSize: 12)),
           Checkbox(

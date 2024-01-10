@@ -15,14 +15,14 @@ import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/http_client.dart';
-import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/launch/launch.dart';
-import 'package:network_proxy/ui/mobile/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/request/search.dart';
+import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
+import 'package:network_proxy/ui/mobile/widgets/pip.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 class MobileHomePage extends StatefulWidget {
@@ -53,16 +53,16 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   @override
   void onUserLeaveHint() async {
     if (Vpn.isVpnStarted && !pictureInPictureNotifier.value) {
-      if (desktop.value.connect || !Platform.isAndroid || !(await (AppConfiguration.instance)).smallWindow) {
+      if (desktop.value.connect || !Platform.isAndroid || !(await (AppConfiguration.instance)).pipEnabled) {
         return;
       }
 
-      PictureInPicture.enterPictureInPictureMode();
+      PictureInPicture.enterPictureInPictureMode(Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port);
     }
   }
 
   @override
-  onPictureInPictureModeChanged(bool isInPictureInPictureMode) {
+  onPictureInPictureModeChanged(bool isInPictureInPictureMode) async {
     if (isInPictureInPictureMode && !pictureInPictureNotifier.value) {
       while (Navigator.canPop(context)) {
         Navigator.pop(context);
@@ -81,6 +81,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   @override
   void onRequest(Channel channel, HttpRequest request) {
+    PictureInPicture.addData(request.requestUrl);
     requestStateKey.currentState!.add(channel, request);
   }
 
@@ -154,18 +155,21 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
               }
 
               return Scaffold(
-                appBar: appBar(),
-                drawer: DrawerWidget(proxyServer: proxyServer),
-                floatingActionButton: _floatingActionButton(),
-                body: ValueListenableBuilder(
-                    valueListenable: desktop,
-                    builder: (context, value, _) {
-                      return Column(children: [
-                        value.connect ? remoteConnect(value) : const SizedBox(),
-                        Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
-                      ]);
-                    }),
-              );
+                  floatingActionButton:
+                      widget.appConfiguration.pipEnabled ? PictureInPictureWindow(proxyServer) : const SizedBox(),
+                  body: Scaffold(
+                    appBar: appBar(),
+                    drawer: DrawerWidget(proxyServer: proxyServer),
+                    floatingActionButton: _launchActionButton(),
+                    body: ValueListenableBuilder(
+                        valueListenable: desktop,
+                        builder: (context, value, _) {
+                          return Column(children: [
+                            value.connect ? remoteConnect(value) : const SizedBox(),
+                            Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
+                          ]);
+                        }),
+                  ));
             }));
   }
 
@@ -177,36 +181,25 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
           onPressed: () => requestStateKey.currentState?.clean()),
       const SizedBox(width: 2),
       MoreMenu(proxyServer: proxyServer, desktop: desktop),
-      const SizedBox(width: 10)
+      const SizedBox(width: 10),
     ]);
   }
 
-  FloatingActionButton _floatingActionButton() {
+  FloatingActionButton _launchActionButton() {
     return FloatingActionButton(
       onPressed: null,
       child: Center(
-          child: futureWidget(localIp(), (data) {
-        SocketLaunch.started = Vpn.isVpnStarted;
-        return SocketLaunch(
-            proxyServer: proxyServer,
-            size: 36,
-            startup: false,
-            serverLaunch: false,
-            onStart: () async {
-              // if (Platform.isIOS && widget.appConfiguration.iosVpnBackgroundAudioEnable == null) {
-              //   widget.appConfiguration.iosVpnBackgroundAudioEnable = false;
-              //   await showConfirmDialog(context, content: localizations.iosVpnBackgroundAudio, onConfirm: () {
-              //     widget.appConfiguration.iosVpnBackgroundAudioEnable = true;
-              //     widget.appConfiguration.flushConfig();
-              //   });
-              // }
-
-              Vpn.startVpn(Platform.isAndroid ? data : "127.0.0.1", proxyServer.port,
-                  backgroundAudioEnable: widget.appConfiguration.iosVpnBackgroundAudioEnable,
-                  appList: proxyServer.configuration.appWhitelist);
-            },
-            onStop: () => Vpn.stopVpn());
-      })),
+          child: SocketLaunch(
+              proxyServer: proxyServer,
+              size: 36,
+              startup: Vpn.isVpnStarted,
+              serverLaunch: false,
+              onStart: () async {
+                Vpn.startVpn(Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port,
+                    backgroundAudioEnable: widget.appConfiguration.iosVpnBackgroundAudioEnable,
+                    appList: proxyServer.configuration.appWhitelist);
+              },
+              onStop: () => Vpn.stopVpn())),
     );
   }
 
@@ -215,19 +208,21 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-            '1. 增加多语言支持；\n'
-            '2. 请求重写支持文件选择；\n'
-            '3. 抓包详情页面Headers默认展开配置；\n'
-            '4. 请求编辑URL参数支持表单编辑；\n'
-            '5. 增加高级重放；\n'
-            '6. 域名过滤支持批量导出&编辑；\n'
+            '1. 支持画中画模式，可在设置中关闭；\n'
+            '2. 增加多语言支持；\n'
+            '3. 请求重写支持文件选择；\n'
+            '4. 抓包详情页面Headers默认展开配置；\n'
+            '5. 请求编辑URL参数支持表单编辑；\n'
+            '6. 增加高级重放；\n'
+            '7. 域名过滤支持批量导出&编辑；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
-            '1. Increase multilingual support；\n'
-            '2. Request Rewrite support file selection；\n'
-            '3. Details page Headers Expanded Config；\n'
-            '4. Request Edit URL parameter support for form editing；\n'
-            '5. Support advanced replay；\n'
-            '6. Domain name filtering supports batch export&editing；\n';
+            '1. Supports picture in picture mode, which can be turned off in settings;\n'
+            '2. Increase multilingual support；\n'
+            '3. Request Rewrite support file selection；\n'
+            '4. Details page Headers Expanded Config；\n'
+            '5. Request Edit URL parameter support for form editing；\n'
+            '6. Support advanced replay；\n'
+            '7. Domain name filtering supports batch export&editing；\n';
     showAlertDialog(isCN ? '更新内容V1.0.7' : "Update content V1.0.7", content, () {
       widget.appConfiguration.upgradeNoticeV7 = false;
       widget.appConfiguration.flushConfig();

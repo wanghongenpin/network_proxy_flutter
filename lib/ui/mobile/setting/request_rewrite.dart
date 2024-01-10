@@ -444,8 +444,9 @@ class _RewriteRuleState extends State<RewriteRule> {
               text: localizations.useGuide,
               style: const TextStyle(color: Colors.blue, fontSize: 14),
               recognizer: TapGestureRecognizer()
-                ..onTap = () => launchUrl(Uri.parse(
-                    'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%AF%B7%E6%B1%82%E9%87%8D%E5%86%99')))),
+                ..onTap = () => launchUrl(Uri.parse(isCN
+                    ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%AF%B7%E6%B1%82%E9%87%8D%E5%86%99'
+                    : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Request-Rewrite')))),
         ]),
         actions: [
           TextButton(

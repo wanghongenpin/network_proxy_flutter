@@ -28,8 +28,8 @@ class AppConfiguration {
   //是否显示更新内容公告
   bool upgradeNoticeV7 = true;
 
-  /// 是否启用小窗口
-  bool smallWindow = false;
+  /// 是否启用画中画
+  bool pipEnabled = true;
 
   ///
   bool headerExpanded = true;
@@ -116,7 +116,7 @@ class AppConfiguration {
       _theme = ThemeModel(mode: mode, useMaterial3: config['useMaterial3'] ?? true);
       upgradeNoticeV7 = config['upgradeNoticeV7'] ?? true;
       _language = config['language'] == null ? null : Locale.fromSubtags(languageCode: config['language']);
-      smallWindow = config['smallWindow'] ?? Platform.isAndroid;
+      pipEnabled = config['pipEnabled'] ?? true;
       headerExpanded = config['headerExpanded'] ?? true;
       iosVpnBackgroundAudioEnable = config['iosVpnBackgroundAudioEnable'];
     } catch (e) {
@@ -142,7 +142,7 @@ class AppConfiguration {
       'useMaterial3': _theme.useMaterial3,
       'upgradeNoticeV7': upgradeNoticeV7,
       "language": _language?.languageCode,
-      'smallWindow': smallWindow,
+      'pipEnabled': pipEnabled,
       "headerExpanded": headerExpanded,
       "iosVpnBackgroundAudioEnable": iosVpnBackgroundAudioEnable == false ? null : iosVpnBackgroundAudioEnable
     };

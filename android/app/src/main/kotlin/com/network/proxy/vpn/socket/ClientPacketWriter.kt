@@ -28,7 +28,7 @@ class ClientPacketWriter(private val clientWriter: FileOutputStream) : Runnable 
     }
 
     override fun run() {
-        while (!this.shutdown) {
+        while (!this.shutdown && clientWriter.channel.isOpen) {
             try {
                 val data: ByteArray = this.packetQueue.take()
                 try {
@@ -36,7 +36,7 @@ class ClientPacketWriter(private val clientWriter: FileOutputStream) : Runnable 
                 } catch (e: IOException) {
                     Log.e(TAG, "Error writing $shutdown data.length bytes to the VPN")
                     e.printStackTrace()
-                    this.packetQueue.addFirst(data) // Put the data back, so it's resent
+//                    this.packetQueue.addFirst(data) // Put the data back, so it's resent
                     Thread.sleep(10) // Add an arbitrary tiny pause, in case that helps
                 }
             } catch (ignored: InterruptedException) {

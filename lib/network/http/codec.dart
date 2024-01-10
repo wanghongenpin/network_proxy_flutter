@@ -101,6 +101,9 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     //请求行
     if (_state == State.readInitial) {
       init();
+      if (data.readableBytes() < 128) {
+        return result;
+      }
       var initialLine = _readInitialLine(data);
       result.data = createMessage(initialLine);
       _state = State.readHeader;

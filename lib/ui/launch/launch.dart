@@ -4,13 +4,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:network_proxy/native/app_lifecycle.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
 class SocketLaunch extends StatefulWidget {
-  static bool started = false;
+  static ValueNotifier<ValueWrap<bool>> startStatus = ValueNotifier(ValueWrap());
 
   final ProxyServer proxyServer;
   final int size;
@@ -30,20 +30,18 @@ class SocketLaunch extends StatefulWidget {
       this.serverLaunch = true});
 
   @override
-  State<StatefulWidget> createState() {
-    return _SocketLaunchState();
-  }
+  State<StatefulWidget> createState() => _SocketLaunchState();
 }
 
 class _SocketLaunchState extends State<SocketLaunch> with WindowListener, WidgetsBindingObserver {
   AppLocalizations get localizations => AppLocalizations.of(context)!;
+  bool started = false;
 
   @override
   void initState() {
     super.initState();
     windowManager.addListener(this);
     WidgetsBinding.instance.addObserver(this);
-    AppLifecycleBinding.ensureInitialized();
     //启动代理服务器
     if (widget.startup) {
       start();
@@ -51,6 +49,11 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
     if (Platforms.isDesktop()) {
       windowManager.setPreventClose(true);
     }
+    SocketLaunch.startStatus.addListener(() {
+      setState(() {
+        started = SocketLaunch.startStatus.value.get() ?? started;
+      });
+    });
   }
 
   @override
@@ -68,7 +71,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
 
   Future<void> appExit() async {
     await widget.proxyServer.stop();
-    SocketLaunch.started = false;
+    started = false;
     await windowManager.destroy();
     exit(0);
   }
@@ -85,22 +88,22 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
       print('AppLifecycleState.detached');
       widget.onStop?.call();
       widget.proxyServer.stop();
-      SocketLaunch.started = false;
+      started = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
-        tooltip: SocketLaunch.started ? localizations.stop : localizations.start,
-        icon: Icon(SocketLaunch.started ? Icons.stop : Icons.play_arrow_sharp,
-            color: SocketLaunch.started ? Colors.red : Colors.green, size: widget.size.toDouble()),
+        tooltip: started ? localizations.stop : localizations.start,
+        icon: Icon(started ? Icons.stop : Icons.play_arrow_sharp,
+            color: started ? Colors.red : Colors.green, size: widget.size.toDouble()),
         onPressed: () async {
-          if (SocketLaunch.started) {
+          if (started) {
             if (!widget.serverLaunch) {
               setState(() {
                 widget.onStop?.call();
-                SocketLaunch.started = !SocketLaunch.started;
+                started = !started;
               });
               return;
             }
@@ -108,7 +111,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
             widget.proxyServer.stop().then((value) {
               widget.onStop?.call();
               setState(() {
-                SocketLaunch.started = !SocketLaunch.started;
+                started = !started;
               });
             });
           } else {
@@ -122,14 +125,14 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
     if (!widget.serverLaunch) {
       await widget.onStart?.call();
       setState(() {
-        SocketLaunch.started = true;
+        started = true;
       });
       return;
     }
 
     widget.proxyServer.start().then((value) {
       setState(() {
-        SocketLaunch.started = true;
+        started = true;
       });
       widget.onStart?.call();
     }).catchError((e) {

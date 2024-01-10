@@ -15,7 +15,7 @@ class VpnManager{
     var activeVPN: NETunnelProviderManager?;
     
     public var proxyHost: String = "127.0.0.01"
-    public var proxyPort: Int = 8888
+    public var proxyPort: Int = 9099
 
     static let shared = VpnManager()
     var observerAdded: Bool = false
