@@ -53,22 +53,26 @@ class HttpBodyState extends State<HttpBodyWidget> {
   @override
   void initState() {
     super.initState();
-    RawKeyboard.instance.addListener(onKeyEvent);
+    if (widget.windowController != null) {
+      HardwareKeyboard.instance.addHandler(onKeyEvent);
+    }
   }
 
   /// 按键事件
-  void onKeyEvent(RawKeyEvent event) {
-    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
-        event.isKeyPressed(LogicalKeyboardKey.keyW)) {
-      RawKeyboard.instance.removeListener(onKeyEvent);
+  bool onKeyEvent(KeyEvent event) {
+    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+        event.logicalKey == LogicalKeyboardKey.keyW) {
+      HardwareKeyboard.instance.removeHandler(onKeyEvent);
       widget.windowController?.close();
-      return;
+      return true;
     }
+
+    return false;
   }
 
   @override
   void dispose() {
-    RawKeyboard.instance.removeListener(onKeyEvent);
+    HardwareKeyboard.instance.removeHandler(onKeyEvent);
     super.dispose();
   }
 

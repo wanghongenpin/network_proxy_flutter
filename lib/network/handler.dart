@@ -248,12 +248,6 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   }
 
   @override
-  void exceptionCaught(ChannelContext channelContext, Channel channel, error, {StackTrace? trace}) {
-    super.exceptionCaught(channelContext, channel, error, trace: trace);
-    ProxyHelper.exceptionHandler(channelContext, channel, listener, channelContext.currentRequest, error);
-  }
-
-  @override
   void channelInactive(ChannelContext channelContext, Channel channel) {
     clientChannel.close();
   }

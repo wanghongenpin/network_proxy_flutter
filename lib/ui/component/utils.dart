@@ -6,17 +6,17 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/http/http.dart';
 
-Icon getIcon(HttpResponse? response) {
-  var map = {
-    ContentType.json: Icons.data_object,
-    ContentType.html: Icons.html,
-    ContentType.js: Icons.javascript,
-    ContentType.image: Icons.image,
-    ContentType.text: Icons.text_fields,
-    ContentType.css: Icons.css,
-    ContentType.font: Icons.font_download,
-  };
+const contentMap = {
+  ContentType.json: Icons.data_object,
+  ContentType.html: Icons.html,
+  ContentType.js: Icons.javascript,
+  ContentType.image: Icons.image,
+  ContentType.text: Icons.text_fields,
+  ContentType.css: Icons.css,
+  ContentType.font: Icons.font_download,
+};
 
+Icon getIcon(HttpResponse? response) {
   if (response == null) {
     return const Icon(Icons.question_mark, size: 16, color: Colors.green);
   }
@@ -25,7 +25,7 @@ Icon getIcon(HttpResponse? response) {
   }
 
   var contentType = response.contentType;
-  return Icon(map[contentType] ?? Icons.http, size: 16, color: Colors.green);
+  return Icon(contentMap[contentType] ?? Icons.http, size: 16, color: Colors.green);
 }
 
 //展示报文大小

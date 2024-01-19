@@ -27,7 +27,12 @@ class _PictureInPictureState extends State<PictureInPictureWindow> {
 
   @override
   Widget build(BuildContext context) {
-    size ??= MediaQuery.of(context).size;
+    size ??= MediaQuery.sizeOf(context);
+    if (size == null || size!.isEmpty) {
+      size = null;
+      return const SizedBox();
+    }
+
     if (xPosition == -1) {
       xPosition = size!.width * 0.9;
       yPosition = size!.height * 0.35;

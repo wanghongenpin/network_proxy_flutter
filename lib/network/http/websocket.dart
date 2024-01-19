@@ -16,6 +16,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 class WebSocketFrame {
@@ -133,7 +134,7 @@ class WebSocketDecoder {
       payloadStart += 4;
     }
 
-    var payloadData = data.sublist(payloadStart, payloadStart + payloadLength);
+    var payloadData = data.sublist(payloadStart, min(payloadStart + payloadLength, data.length));
 
     //根据maskKey解密内容
     if (mask == 1) {

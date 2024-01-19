@@ -12,6 +12,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../left/list.dart';
+
 /// @author wanghongen
 /// 2023/10/8
 class Toolbar extends StatefulWidget {
@@ -28,37 +29,38 @@ class Toolbar extends StatefulWidget {
 }
 
 class _ToolbarState extends State<Toolbar> {
-
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {
     super.initState();
-    RawKeyboard.instance.addListener(onKeyEvent);
+    HardwareKeyboard.instance.addHandler(onKeyEvent);
   }
 
-  void onKeyEvent(RawKeyEvent event) {
-    if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
+  bool onKeyEvent(KeyEvent event) {
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
       if (ModalRoute.of(context)?.isCurrent == false) {
         Navigator.of(context).pop();
       }
-      return;
+      return true;
     }
 
-    if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyW)) {
+    if (HardwareKeyboard.instance.isMetaPressed && event.logicalKey == LogicalKeyboardKey.keyW) {
       windowManager.blur();
-      return;
+      return true;
     }
 
-    if (event.isKeyPressed(LogicalKeyboardKey.metaLeft) && event.isKeyPressed(LogicalKeyboardKey.keyQ)) {
+    if (HardwareKeyboard.instance.isMetaPressed && event.logicalKey == LogicalKeyboardKey.keyQ) {
       windowManager.close();
-      return;
+      return true;
     }
+
+    return false;
   }
 
   @override
   void dispose() {
-    RawKeyboard.instance.removeListener(onKeyEvent);
+    HardwareKeyboard.instance.removeHandler(onKeyEvent);
     super.dispose();
   }
 

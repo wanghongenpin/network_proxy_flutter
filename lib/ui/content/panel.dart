@@ -159,7 +159,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: message.isFromClient ? Colors.green[100] : Colors.blue[100],
+                            color: message.isFromClient ? Colors.green.withOpacity(0.26) : Colors.blue.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(message.payloadDataAsString),
