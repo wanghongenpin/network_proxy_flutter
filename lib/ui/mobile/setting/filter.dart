@@ -131,13 +131,13 @@ class _DomainFilterState extends State<DomainFilter> {
       }
 
       changed = true;
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show(localizations.importSuccess, context);
       }
       setState(() {});
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }

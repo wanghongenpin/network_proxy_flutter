@@ -62,33 +62,35 @@ class RequestEditorState extends State<RequestEditor> {
   void initState() {
     super.initState();
     request = widget.request;
-    RawKeyboard.instance.addListener(onKeyEvent);
+    HardwareKeyboard.instance.addHandler(onKeyEvent);
     if (widget.request == null) {
       curlParse();
     }
   }
 
-  void onKeyEvent(RawKeyEvent event) {
+  bool onKeyEvent(KeyEvent event) {
     //cmd+w 关闭窗口
-    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
-        event.isKeyPressed(LogicalKeyboardKey.keyW)) {
-      RawKeyboard.instance.removeListener(onKeyEvent);
+    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+        event.logicalKey == LogicalKeyboardKey.keyW) {
+      HardwareKeyboard.instance.removeHandler(onKeyEvent);
       responseChange.dispose();
       widget.windowController?.close();
-      return;
+      return true;
     }
 
     //粘贴
-    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
-        event.data.logicalKey == LogicalKeyboardKey.keyV) {
+    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+        event.logicalKey == LogicalKeyboardKey.keyV) {
       curlParse();
-      return;
+      return true;
     }
+
+    return false;
   }
 
   @override
   void dispose() {
-    RawKeyboard.instance.removeListener(onKeyEvent);
+    HardwareKeyboard.instance.removeHandler(onKeyEvent);
     responseChange.dispose();
     super.dispose();
   }
@@ -160,7 +162,7 @@ class RequestEditorState extends State<RequestEditor> {
     }
 
     var text = data.text;
-    if (text?.trimLeft().startsWith('curl') == true && context.mounted && !showCURLDialog) {
+    if (text?.trimLeft().startsWith('curl') == true && mounted && !showCURLDialog) {
       showCURLDialog = true;
       showDialog(
         context: context,

@@ -72,7 +72,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
       return;
     }
     var text = data.text;
-    if (text?.trimLeft().startsWith('curl') == true && context.mounted) {
+    if (text?.trimLeft().startsWith('curl') == true && mounted) {
       showDialog(
         context: context,
         builder: (BuildContext context) {

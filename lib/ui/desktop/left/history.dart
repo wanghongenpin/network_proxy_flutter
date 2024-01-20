@@ -150,7 +150,7 @@ class _HistoryListState extends State<_HistoryListWidget> {
       });
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
@@ -271,7 +271,7 @@ class _HistoryListState extends State<_HistoryListWidget> {
     List<HttpRequest> requests = await storage.getRequests(item);
     var file = await File(result.path).create();
     await Har.writeFile(requests, file, title: item.name);
-    if (context.mounted) FlutterToastr.show(localizations.exportSuccess, context);
+    if (mounted) FlutterToastr.show(localizations.exportSuccess, context);
     Future.delayed(const Duration(seconds: 30), () => item.requests = null);
   }
 
@@ -280,7 +280,11 @@ class _HistoryListState extends State<_HistoryListWidget> {
     var file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
     RandomAccessFile open = await file.open(mode: FileMode.append);
     HistoryItem item = await storage.addHistory(name, file, 0);
-    writeTask = WriteTask(item, open, storage, callback: () => setState(() {}));
+    writeTask = WriteTask(item, open, storage, callback: () {
+      if (mounted) {
+        setState(() {});
+      }
+    });
     writeTask?.writeList.addAll(container);
     proxyServer.addListener(writeTask!);
     await writeTask?.writeTask();

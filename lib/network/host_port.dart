@@ -33,6 +33,8 @@ class HostAndPort {
   static const String wsScheme = "ws://";
   static const String wssScheme = "wss://";
 
+  static const schemes = [httpsScheme, httpScheme, wssScheme, wsScheme];
+
   String scheme;
   String host;
   final int port;
@@ -52,9 +54,9 @@ class HostAndPort {
     String domain = url;
     String? scheme;
     //域名格式 直接解析
-    if (url.startsWith(httpScheme) || url.startsWith(httpsScheme)) {
+    if (schemes.any((scheme) => url.startsWith(scheme))) {
       //httpScheme
-      scheme = url.startsWith(httpsScheme) ? httpsScheme : httpScheme;
+      scheme = schemes.firstWhere((element) => url.startsWith(element),orElse: () => httpScheme);
       domain = url.substring(scheme.length).split("/")[0];
       //说明支持ipv6
       if (domain.startsWith('[') && domain.endsWith(']')) {

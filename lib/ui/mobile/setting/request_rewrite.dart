@@ -95,13 +95,13 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
       }
       widget.requestRewrites.flushRequestRewriteConfig();
 
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show(localizations.importSuccess, context);
       }
       setState(() {});
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
@@ -472,8 +472,8 @@ class _RewriteRuleState extends State<RewriteRule> {
                 }
                 requestRewrites.flushRequestRewriteConfig();
                 if (mounted) {
-                  FlutterToastr.show(localizations.saveSuccess, context);
-                  Navigator.of(context).pop(rule);
+                  FlutterToastr.show(localizations.saveSuccess, this.context);
+                  Navigator.of(this.context).pop(rule);
                 }
               })
         ],

@@ -126,7 +126,7 @@ class _MobileHistoryState extends State<MobileHistory> {
       });
     } catch (e, t) {
       logger.e("导入失败", error: e, stackTrace: t);
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }

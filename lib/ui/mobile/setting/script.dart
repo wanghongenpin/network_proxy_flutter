@@ -126,13 +126,13 @@ class _MobileScriptState extends State<MobileScript> {
       var scriptItem = ScriptItem.fromJson(json);
       (await ScriptManager.instance).addScript(scriptItem, json['script']);
       _refreshScript();
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show(localizations.importSuccess, context);
       }
       setState(() {});
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
@@ -296,7 +296,7 @@ class _ScriptListState extends State<ScriptList> {
           splashColor: primaryColor.withOpacity(0.3),
           onTap: () async {
             String script = await (await ScriptManager.instance).getScript(list[index]);
-            if (!context.mounted) {
+            if (!mounted) {
               return;
             }
             Navigator.of(context)

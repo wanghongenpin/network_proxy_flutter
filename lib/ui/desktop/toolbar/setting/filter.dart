@@ -160,13 +160,13 @@ class _DomainFilterState extends State<DomainFilter> {
       }
 
       changed = true;
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show(localizations.importSuccess, context);
       }
       setState(() {});
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
@@ -265,8 +265,8 @@ class _DomainListState extends State<DomainList> {
           if (selected.isEmpty) {
             return;
           }
-          if (RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.metaLeft) ||
-              RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.control)) {
+
+          if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
             return;
           }
           setState(() {
@@ -314,8 +314,7 @@ class _DomainListState extends State<DomainList> {
             }
           },
           onTap: () {
-            if (RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.metaLeft) ||
-                RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.control)) {
+            if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
               setState(() {
                 selected[index] = !(selected[index] ?? false);
               });
@@ -364,7 +363,10 @@ class _DomainListState extends State<DomainList> {
 
     final XFile xFile = XFile.fromData(utf8.encode(jsonEncode(list)), mimeType: 'json');
     await xFile.saveTo(saveLocation);
-    if (context.mounted) FlutterToastr.show(localizations.exportSuccess, context);
+
+    if (mounted) {
+      FlutterToastr.show(localizations.exportSuccess, context);
+    }
   }
 
   //删除

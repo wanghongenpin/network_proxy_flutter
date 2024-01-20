@@ -143,7 +143,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
         socket.destroy();
       } on SocketException catch (_) {
         setting = false;
-        if (context.mounted) {
+        if (mounted) {
           await showDialog(
               context: context,
               builder: (_) => AlertDialog(
@@ -168,6 +168,6 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
       widget.configuration.flushConfig();
     }
 
-    if (context.mounted) Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop();
   }
 }

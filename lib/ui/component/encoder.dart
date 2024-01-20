@@ -56,24 +56,26 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
     inputText = widget.text ?? '';
 
     tabController = TabController(initialIndex: type.index, length: tabs.length, vsync: this);
-    RawKeyboard.instance.addListener(onKeyEvent);
+    HardwareKeyboard.instance.addHandler(onKeyEvent);
   }
 
   @override
   void dispose() {
     tabController.dispose();
-    RawKeyboard.instance.removeListener(onKeyEvent);
+    HardwareKeyboard.instance.removeHandler(onKeyEvent);
     super.dispose();
   }
 
-  void onKeyEvent(RawKeyEvent event) async {
-    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
-        event.isKeyPressed(LogicalKeyboardKey.keyW)) {
-      RawKeyboard.instance.removeListener(onKeyEvent);
+  bool onKeyEvent(KeyEvent event) {
+    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+        event.logicalKey == LogicalKeyboardKey.keyW) {
+      HardwareKeyboard.instance.removeHandler(onKeyEvent);
       tabController.dispose();
       widget.windowController?.close();
-      return;
+      return true;
     }
+
+    return false;
   }
 
   @override

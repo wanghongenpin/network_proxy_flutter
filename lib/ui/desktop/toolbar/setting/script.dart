@@ -64,22 +64,23 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   @override
   void initState() {
     super.initState();
-    RawKeyboard.instance.addListener(onKeyEvent);
+    HardwareKeyboard.instance.addHandler(onKeyEvent);
   }
 
   @override
   void dispose() {
-    RawKeyboard.instance.removeListener(onKeyEvent);
+    HardwareKeyboard.instance.removeHandler(onKeyEvent);
     super.dispose();
   }
 
-  void onKeyEvent(RawKeyEvent event) async {
-    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
-        event.isKeyPressed(LogicalKeyboardKey.keyW)) {
-      RawKeyboard.instance.removeListener(onKeyEvent);
+  bool onKeyEvent(KeyEvent event) {
+    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+        event.logicalKey == LogicalKeyboardKey.keyW) {
+      HardwareKeyboard.instance.removeHandler(onKeyEvent);
       WindowController.fromWindowId(widget.windowId).close();
-      return;
+      return true;
     }
+    return false;
   }
 
   @override
@@ -172,13 +173,13 @@ class _ScriptWidgetState extends State<ScriptWidget> {
       var scriptItem = ScriptItem.fromJson(json);
       (await ScriptManager.instance).addScript(scriptItem, json['script']);
       _refreshScript();
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show(localizations.importSuccess, context);
       }
       setState(() {});
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
@@ -355,7 +356,7 @@ class _ScriptListState extends State<ScriptList> {
           hoverColor: primaryColor.withOpacity(0.3),
           onDoubleTap: () async {
             String script = await (await ScriptManager.instance).getScript(list[index]);
-            if (!context.mounted) {
+            if (!mounted) {
               return;
             }
             showDialog(
@@ -407,7 +408,7 @@ class _ScriptListState extends State<ScriptList> {
           child: Text(localizations.edit),
           onTap: () async {
             String script = await (await ScriptManager.instance).getScript(widget.scripts[index]);
-            if (!context.mounted) {
+            if (!mounted) {
               return;
             }
             showDialog(
@@ -433,7 +434,7 @@ class _ScriptListState extends State<ScriptList> {
           onTap: () async {
             (await ScriptManager.instance).removeScript(index);
             _refreshScript();
-            if (context.mounted) FlutterToastr.show(localizations.deleteSuccess, context);
+            if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
           }),
     ]).then((value) {
       setState(() {
@@ -456,6 +457,6 @@ class _ScriptListState extends State<ScriptList> {
     json['script'] = await (await ScriptManager.instance).getScript(item);
     final XFile xFile = XFile.fromData(utf8.encode(jsonEncode(json)), mimeType: 'json');
     await xFile.saveTo(saveLocation);
-    if (context.mounted) FlutterToastr.show(localizations.exportSuccess, context);
+    if (mounted) FlutterToastr.show(localizations.exportSuccess, context);
   }
 }

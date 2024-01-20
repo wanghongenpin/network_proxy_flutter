@@ -191,8 +191,8 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
               }
 
               if (mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context)
+                Navigator.pop(this.context);
+                ScaffoldMessenger.of(this.context)
                     .showSnackBar(SnackBar(content: Text('${localizations.sync}${localizations.success}')));
               }
             }),

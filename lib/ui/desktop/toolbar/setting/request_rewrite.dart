@@ -38,32 +38,34 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
   @override
   void initState() {
     super.initState();
-    RawKeyboard.instance.addListener(onKeyEvent);
+    HardwareKeyboard.instance.addHandler(onKeyEvent);
     enableNotifier = ValueNotifier(widget.requestRewrites.enabled == true);
   }
 
   @override
   void dispose() {
-    RawKeyboard.instance.removeListener(onKeyEvent);
+    HardwareKeyboard.instance.removeHandler(onKeyEvent);
     super.dispose();
   }
 
-  void onKeyEvent(RawKeyEvent event) async {
-    if (event.isKeyPressed(LogicalKeyboardKey.escape) && Navigator.canPop(context)) {
+  bool onKeyEvent(KeyEvent event) {
+    if (event.logicalKey == LogicalKeyboardKey.escape && Navigator.canPop(context)) {
       Navigator.maybePop(context);
-      return;
+      return true;
     }
 
-    if ((event.isKeyPressed(LogicalKeyboardKey.metaLeft) || event.isControlPressed) &&
-        event.isKeyPressed(LogicalKeyboardKey.keyW)) {
+    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+        event.logicalKey == LogicalKeyboardKey.keyW) {
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
-        return;
+        return true;
       }
-      RawKeyboard.instance.removeListener(onKeyEvent);
+      HardwareKeyboard.instance.removeHandler(onKeyEvent);
       WindowController.fromWindowId(widget.windowId).close();
-      return;
+      return true;
     }
+
+    return false;
   }
 
   @override
@@ -150,13 +152,13 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
         await MultiWindow.invokeRefreshRewrite(Operation.add, rule: rule, items: items);
       }
 
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show(localizations.importSuccess, context);
       }
       setState(() {});
     } catch (e, t) {
       logger.e('导入失败 $file', error: e, stackTrace: t);
-      if (context.mounted) {
+      if (mounted) {
         FlutterToastr.show("${localizations.importFailed} $e", context);
       }
     }
@@ -202,8 +204,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
           if (selected.isEmpty) {
             return;
           }
-          if (RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.metaLeft) ||
-              RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.control)) {
+          if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
             return;
           }
           setState(() {
@@ -282,8 +283,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
             }
           },
           onTap: () {
-            if (RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.metaLeft) ||
-                RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.control)) {
+            if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
               setState(() {
                 selected[index] = !(selected[index] ?? false);
               });
@@ -351,7 +351,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
 
     final XFile xFile = XFile.fromData(utf8.encode(jsonEncode(list)), mimeType: 'json');
     await xFile.saveTo(saveLocation);
-    if (context.mounted) FlutterToastr.show(localizations.exportSuccess, context);
+    if (mounted) FlutterToastr.show(localizations.exportSuccess, context);
   }
 
   //删除
@@ -575,7 +575,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                   MultiWindow.invokeRefreshRewrite(Operation.add, rule: rule, items: items);
                 }
                 if (mounted) {
-                  Navigator.of(context).pop(rule);
+                  Navigator.of(this.context).pop(rule);
                 }
               })
         ]);
