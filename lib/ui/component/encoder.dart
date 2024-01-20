@@ -116,7 +116,7 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
                 type == EncoderType.md5
                     ? const SizedBox()
                     : OutlinedButton(
-                        onPressed: decode, child: Text('${type.name.toUpperCase()}${localizations.encode}')),
+                        onPressed: decode, child: Text('${type.name.toUpperCase()}${localizations.decode}')),
               ],
             ),
             Text(localizations.encodeResult),

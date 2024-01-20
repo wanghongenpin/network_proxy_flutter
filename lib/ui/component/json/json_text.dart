@@ -11,7 +11,7 @@ class JsonText extends StatelessWidget {
   final String indent;
   final ScrollController? scrollController;
 
-  const JsonText({super.key, required this.json, this.indent = '    ', required this.colorTheme, this.scrollController});
+  const JsonText({super.key, required this.json, this.indent = '  ', required this.colorTheme, this.scrollController});
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +106,7 @@ class JsnParser {
 
       var textSpan = TextSpan(text: prefix, children: [
         TextSpan(text: '"${entry.key}"', style: TextStyle(color: colorTheme.propertyKey)),
-        const TextSpan(text: ':  '),
+        const TextSpan(text: ': '),
         getBasicValue(entry.value, postfix),
       ]);
       result.add(Text.rich(textSpan));

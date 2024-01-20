@@ -27,6 +27,8 @@ class _PictureInPictureState extends State<PictureInPictureWindow> {
 
   @override
   Widget build(BuildContext context) {
+    if (Platform.isAndroid) return const SizedBox();
+
     size ??= MediaQuery.sizeOf(context);
     if (size == null || size!.isEmpty) {
       size = null;

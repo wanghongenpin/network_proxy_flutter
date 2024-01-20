@@ -147,6 +147,7 @@
 
   "requestEdit": "请求编辑",
   "encode": "编码",
+  "decode": "解码",
   "requestBody": "请求体",
   "responseBody": "响应体",
   "requestRewrite": "请求重写",

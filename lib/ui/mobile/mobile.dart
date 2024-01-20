@@ -51,14 +51,20 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
-  void onUserLeaveHint() async {
+  void onUserLeaveHint() {
+    enterPictureInPicture();
+  }
+
+  Future<bool> enterPictureInPicture() async {
     if (Vpn.isVpnStarted && !pictureInPictureNotifier.value) {
       if (desktop.value.connect || !Platform.isAndroid || !(await (AppConfiguration.instance)).pipEnabled) {
-        return;
+        return false;
       }
 
-      PictureInPicture.enterPictureInPictureMode(Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port);
+      return PictureInPicture.enterPictureInPictureMode(
+          Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port);
     }
+    return false;
   }
 
   @override
@@ -136,11 +142,17 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   Widget build(BuildContext context) {
     return PopScope(
         canPop: false,
-        onPopInvoked: (d) {
+        onPopInvoked: (d) async {
+          if (await enterPictureInPicture()) {
+            return;
+          }
+
           if (DateTime.now().millisecondsSinceEpoch - exitTime > 2000) {
             exitTime = DateTime.now().millisecondsSinceEpoch;
-            FlutterToastr.show(localizations.appExitTips, context,
-                rootNavigator: true, duration: FlutterToastr.lengthLong);
+            if (mounted) {
+              FlutterToastr.show(localizations.appExitTips, this.context,
+                  rootNavigator: true, duration: FlutterToastr.lengthLong);
+            }
             return;
           }
 

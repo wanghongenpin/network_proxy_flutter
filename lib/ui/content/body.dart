@@ -334,6 +334,7 @@ class _BodyState extends State<_Body> {
         var jsonObject = json.decode(message!.bodyAsString);
         return JsonText(
             json: jsonObject,
+            indent: Platforms.isDesktop() ? '    ' : '  ',
             colorTheme: ColorTheme.of(Theme.of(context).brightness),
             scrollController: widget.scrollController);
       }

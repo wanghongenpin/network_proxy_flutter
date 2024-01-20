@@ -176,6 +176,7 @@
   "localIP": "Local IP ",
   "mobileScan": "Scan with Mobile App",
 
+  "decode": "Decode",
   "encodeInput": "Enter the content to be converted",
   "encodeResult": "Conversion Result",
   "encodeFail": "Encoding failed",
