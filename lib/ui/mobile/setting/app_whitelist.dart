@@ -2,8 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:installed_apps/app_info.dart';
-import 'package:installed_apps/installed_apps.dart';
+import 'package:network_proxy/native/installed_apps.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
@@ -50,7 +49,7 @@ class _AppWhitelistState extends State<AppWhitelist> {
     var appWhitelist = <Future<AppInfo>>[];
     for (var element in configuration.appWhitelist) {
       appWhitelist.add(InstalledApps.getAppInfo(element).catchError((e) {
-        return AppInfo.create({"name": isCN ? "未知应用" : "Unknown app", "package_name": element});
+        return AppInfo.formJson({"name": isCN ? "未知应用" : "Unknown app", "package_name": element});
       }));
     }
 
@@ -133,7 +132,7 @@ class InstalledAppsWidget extends StatefulWidget {
 }
 
 class _InstalledAppsWidgetState extends State<InstalledAppsWidget> {
-  static Future<List<AppInfo>> apps = InstalledApps.getInstalledApps(true, true);
+  static Future<List<AppInfo>> apps = InstalledApps.getInstalledApps(true);
 
   String? keyword;
 

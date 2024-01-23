@@ -2,8 +2,8 @@ package com.network.proxy
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.os.Bundle
 import com.network.proxy.plugin.AppLifecyclePlugin
+import com.network.proxy.plugin.InstalledAppsPlugin
 import com.network.proxy.plugin.PictureInPicturePlugin
 import com.network.proxy.plugin.VpnServicePlugin
 import io.flutter.embedding.android.FlutterActivity
@@ -12,10 +12,6 @@ import io.flutter.embedding.engine.FlutterEngine
 
 class MainActivity : FlutterActivity() {
     private val lifecycleChannel: AppLifecyclePlugin = AppLifecyclePlugin()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -42,6 +38,7 @@ class MainActivity : FlutterActivity() {
         flutterEngine.plugins.add(VpnServicePlugin())
         flutterEngine.plugins.add(PictureInPicturePlugin())
         flutterEngine.plugins.add(lifecycleChannel)
+        flutterEngine.plugins.add(InstalledAppsPlugin())
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

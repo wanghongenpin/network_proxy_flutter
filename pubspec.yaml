@@ -33,7 +33,7 @@ dependencies:
   flutter_toastr: ^1.0.3
   share_plus: ^7.2.1
   brotli: ^0.6.0
-  installed_apps: ^1.4.0
+
   file_selector: ^1.0.1
   flutter_js: ^0.8.0
   flutter_code_editor:
