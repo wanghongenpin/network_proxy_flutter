@@ -17,7 +17,7 @@ Download： https://github.com/wanghongenpin/network_proxy_flutter/releases
 
 iOS TestFlight Download APP(Limited by quota)： https://testflight.apple.com/join/gURGH6B4
 
-TG: https://t.me/proxypin_tg
+TG: https://t.me/proxypin_en
 
 **We will continue to improve the features and experience, as well as optimize the UI.**
 
