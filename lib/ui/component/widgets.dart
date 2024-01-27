@@ -112,18 +112,15 @@ class BottomSheetItem extends StatelessWidget {
 
 class IconText extends StatelessWidget {
   final GestureTapCallback? onTap;
-  final IconData? icon;
+  final Icon icon;
   final String text;
 
-  const IconText({super.key, this.onTap, this.icon, required this.text});
+  const IconText({super.key, this.onTap, required this.text, required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
-          child: Column(children: [Icon(icon), Text(text)]),
-        ));
+        child: Row(children: [icon, const SizedBox(width: 8), Text(text)]));
   }
 }

@@ -127,7 +127,9 @@
   "repeatDelay": "Delay(ms)",
   "editRequest": "Edit and Request",
   "reSendRequest": "The request has been resent",
+  "viewExport": "View Export",
 
+  "search": "Search",
   "clearSearch": "Clear Search",
   "requestType": "Request type",
   "keyword": "Keyword",
@@ -140,6 +142,7 @@
   "name": "Name",
 
   "historyRecord": "History",
+  "historyRecordTitle": "{name} Records {length}",
   "historyEmptyName": "Name cannot be empty",
   "historySubtitle": "Records {requestLength}  file {size}",
   "historyUnSave": "Current not saved Records {length}",

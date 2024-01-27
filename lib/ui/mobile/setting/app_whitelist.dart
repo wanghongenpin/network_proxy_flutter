@@ -33,11 +33,13 @@ class _AppWhitelistState extends State<AppWhitelist> {
 
   @override
   void dispose() {
-    if (changed && widget.proxyServer.isRunning) {
-      Vpn.restartVpn("127.0.0.1", widget.proxyServer.port,
-          appList: configuration.appWhitelist,
-          backgroundAudioEnable: AppConfiguration.current?.iosVpnBackgroundAudioEnable);
+    if (changed) {
       configuration.flushConfig();
+      if (Vpn.isVpnStarted) {
+        Vpn.restartVpn("127.0.0.1", widget.proxyServer.port,
+            appList: configuration.appWhitelist,
+            backgroundAudioEnable: AppConfiguration.current?.iosVpnBackgroundAudioEnable);
+      }
     }
     super.dispose();
   }
@@ -148,7 +150,7 @@ class _InstalledAppsWidgetState extends State<InstalledAppsWidget> {
             border: InputBorder.none,
           ),
           onChanged: (String value) {
-            keyword = value;
+            keyword = value.toLowerCase();
             setState(() {});
           },
         ),
@@ -158,9 +160,11 @@ class _InstalledAppsWidgetState extends State<InstalledAppsWidget> {
         builder: (BuildContext context, AsyncSnapshot<List<AppInfo>> snapshot) {
           if (snapshot.hasData) {
             List<AppInfo> appInfoList = snapshot.data!;
-            if (keyword != null && keyword!.isNotEmpty) {
+            if (keyword != null && keyword!.trim().isNotEmpty) {
               appInfoList = appInfoList
-                  .where((element) => element.name!.contains(keyword!) || element.packageName!.contains(keyword!))
+                  .where((element) =>
+                      element.name!.toLowerCase().contains(keyword!) ||
+                      element.packageName!.toLowerCase().contains(keyword!))
                   .toList();
             }
 

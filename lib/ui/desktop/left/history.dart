@@ -53,7 +53,7 @@ class HistoryPageWidget extends StatelessWidget {
 
   Widget domainWidget(BuildContext context, Map arguments) {
     HistoryItem item = arguments['item'];
-    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+    var localizations = AppLocalizations.of(context)!;
     return Scaffold(
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(40),
@@ -63,7 +63,8 @@ class HistoryPageWidget extends StatelessWidget {
               centerTitle: false,
               title: Text(
                   textAlign: TextAlign.start,
-                  '${item.name.substring(0, min(item.name.length, 25))} ${isCN ? "记录数" : "Records"} ${item.requestLength}',
+                  localizations.historyRecordTitle(
+                      item.requestLength, item.name.substring(0, min(item.name.length, 25))),
                   style: const TextStyle(fontSize: 14)),
             )),
         body: futureWidget(HistoryStorage.instance.then((value) => value.getRequests(item)), (data) {
@@ -122,10 +123,27 @@ class _HistoryListState extends State<_HistoryListWidget> {
 
     return Scaffold(
         appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(30),
+            preferredSize: const Size.fromHeight(32),
             child: AppBar(
               title: Text(localizations.historyRecord, style: const TextStyle(fontSize: 14)),
-              actions: [TextButton(onPressed: import, child: Text(localizations.import))],
+              actions: [
+                IconButton(onPressed: import, icon: const Icon(Icons.input, size: 18), tooltip: localizations.import),
+                const SizedBox(width: 3),
+                // PopupMenuButton(
+                //     tooltip: '缓存时间',
+                //     offset: const Offset(0, 30),
+                //     icon: const Icon(Icons.av_timer, size: 19),
+                //     itemBuilder: (BuildContext context) {
+                //
+                //       return [
+                //         PopupMenuItem(child: Text("手动保存"), height: 35),
+                //         PopupMenuItem(child: Text("7天"), height: 35),
+                //         PopupMenuItem(child: Text("30天"), height: 35),
+                //         PopupMenuItem(child: Text("永久"), height: 35),
+                //       ];
+                //     }),
+                // const SizedBox(width: 5)
+              ],
             )),
         body: ListView.separated(
           itemCount: children.length,
@@ -216,7 +234,7 @@ class _HistoryListState extends State<_HistoryListWidget> {
 
   toRequestsView(HistoryItem item) {
     Navigator.pushNamed(context, '/domain', arguments: {'item': item}).whenComplete(() async {
-      if (item != writeTask?.history &&item.requests != null && item.requestLength != item.requests?.length) {
+      if (item != writeTask?.history && item.requests != null && item.requestLength != item.requests?.length) {
         await widget.storage.flushRequests(item, item.requests!);
         setState(() {});
       }

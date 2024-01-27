@@ -4,8 +4,9 @@ import 'package:network_proxy/ui/desktop/left/search_condition.dart';
 
 class MobileSearch extends StatefulWidget {
   final Function(SearchModel searchModel)? onSearch;
+  final bool showSearch;
 
-  const MobileSearch({super.key, this.onSearch});
+  const MobileSearch({super.key, this.onSearch, this.showSearch = false});
 
   @override
   State<StatefulWidget> createState() {
@@ -18,6 +19,17 @@ class MobileSearchState extends State<MobileSearch> {
   bool searched = false;
   TextEditingController keywordController = TextEditingController();
   bool changing = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.showSearch) {
+        showSearch();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

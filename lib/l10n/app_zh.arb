@@ -127,7 +127,9 @@
   "repeatDelay": "延时(ms)",
   "editRequest": "编辑请求重放",
   "reSendRequest": "已重新发送请求",
+  "viewExport": "视图导出",
 
+  "search": "搜索",
   "clearSearch": "清除搜索",
   "requestType": "请求类型",
   "keyword": "关键词",
@@ -141,6 +143,7 @@
 
   "historyRecord": "历史记录",
   "historyEmptyName": "名称不能为空",
+  "historyRecordTitle": "{name} 记录数 {length}",
   "historySubtitle": "记录数 {requestLength}  文件 {size}",
   "historyUnSave": "当前会话未保存 记录数 {length}",
   "historyDeleteConfirm": "是否删除该历史记录？",

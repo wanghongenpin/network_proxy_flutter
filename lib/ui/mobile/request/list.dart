@@ -113,6 +113,10 @@ class RequestListState extends State<RequestListWidget> {
     domainListKey.currentState?.search(searchModel.keyword?.trim());
   }
 
+  Iterable<HttpRequest>? currentView() {
+    return requestSequenceKey.currentState?.currentView();
+  }
+
   ///清理
   clean() {
     setState(() {
@@ -143,10 +147,10 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   ///请求和对应的row的映射
   Map<HttpRequest, GlobalKey<RequestRowState>> indexes = HashMap();
 
-  late List<HttpRequest> list = [];
+  List<HttpRequest> list = [];
 
   ///显示的请求列表 最新的在前面
-  late Queue<HttpRequest> view = Queue();
+  Queue<HttpRequest> view = Queue();
   bool changing = false;
 
   //搜索的内容
@@ -207,6 +211,10 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
       view = Queue.of(list.where((it) => searchModel.filter(it, it.response)).toList().reversed);
     }
     changeState();
+  }
+
+  Iterable<HttpRequest> currentView() {
+    return view;
   }
 
   changeState() {

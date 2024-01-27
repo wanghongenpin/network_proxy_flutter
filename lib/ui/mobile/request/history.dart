@@ -30,8 +30,10 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
+import 'package:network_proxy/ui/mobile/request/search.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -170,17 +172,10 @@ class _MobileHistoryState extends State<MobileHistory> {
   }
 
   toRequestsView(HistoryItem item, HistoryStorage storage) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-      bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
-      return Scaffold(
-          appBar: AppBar(
-              title: Text('${item.name} ${isCN ? "记录数" : "Records"} ${item.requestLength}',
-                  style: const TextStyle(fontSize: 16))),
-          body: futureWidget(
-              loading: true,
-              storage.getRequests(item),
-              (data) => RequestListWidget(proxyServer: widget.proxyServer, list: data)));
-    })).then((value) async {
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: (BuildContext context) => HistoryRecord(history: item, proxyServer: widget.proxyServer)))
+        .then((value) async {
       if (item != writeTask?.history && item.requests != null && item.requestLength != item.requests?.length) {
         await storage.flushRequests(item, item.requests!);
         setState(() {});
@@ -260,6 +255,81 @@ class _MobileHistoryState extends State<MobileHistory> {
             ],
           );
         });
+  }
+}
+
+class HistoryRecord extends StatefulWidget {
+  final HistoryItem history;
+  final ProxyServer proxyServer;
+
+  const HistoryRecord({super.key, required this.history, required this.proxyServer});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _HistoryRecordState();
+  }
+}
+
+class _HistoryRecordState extends State<HistoryRecord> {
+  GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
+  var searchEnabled = ValueNotifier(false);
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+  @override
+  void dispose() {
+    searchEnabled.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: ValueListenableBuilder(
+              valueListenable: searchEnabled,
+              builder: (BuildContext context, bool value, Widget? child) {
+                return value
+                    ? MobileSearch(onSearch: (val) => requestStateKey.currentState?.search(val), showSearch: true)
+                    : Text(localizations.historyRecordTitle(widget.history.requestLength, widget.history.name),
+                        style: const TextStyle(fontSize: 16));
+              }),
+          actions: [
+            PopupMenuButton(
+                offset: const Offset(0, 30),
+                icon: const Icon(Icons.more_vert_outlined),
+                itemBuilder: (BuildContext context) {
+                  return [
+                    PopupMenuItem(
+                        onTap: () => searchEnabled.value = true,
+                        child: IconText(icon: const Icon(Icons.search), text: localizations.search)),
+                    PopupMenuItem(
+                        onTap: export, child: IconText(icon: const Icon(Icons.share), text: localizations.viewExport)),
+                  ];
+                }),
+          ],
+        ),
+        body: futureWidget(
+            loading: true,
+            HistoryStorage.instance.then((storage) => storage.getRequests(widget.history)),
+            (data) => RequestListWidget(proxyServer: widget.proxyServer, list: data, key: requestStateKey)));
+  }
+
+  //导出har
+  export() async {
+    var item = widget.history;
+    //文件名称
+    String fileName =
+        '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'.replaceAll(" ", "_").replaceAll(":", "_");
+    //获取请求
+    var currentView = requestStateKey.currentState?.currentView();
+    if (currentView == null) {
+      FlutterToastr.show('Current View is Null', context);
+      return;
+    }
+
+    var json = await Har.writeJson(currentView.toList(), title: item.name);
+    var file = XFile.fromData(utf8.encode(json), name: fileName, mimeType: "har");
+    Share.shareXFiles([file], subject: fileName);
+    Future.delayed(const Duration(seconds: 30), () => item.requests = null);
   }
 }
 

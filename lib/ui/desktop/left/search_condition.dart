@@ -59,6 +59,7 @@ class SearchConditionsState extends State<SearchConditions> {
             TextFormField(
               initialValue: searchModel.keyword,
               onChanged: (val) => searchModel.keyword = val,
+              onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
               decoration: InputDecoration(
                 isCollapsed: true,
                 contentPadding: const EdgeInsets.all(10),
@@ -110,6 +111,7 @@ class SearchConditionsState extends State<SearchConditions> {
               TextFormField(
                 initialValue: searchModel.statusCode?.toString(),
                 onChanged: (val) => searchModel.statusCode = int.tryParse(val),
+                onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
                 inputFormatters: <TextInputFormatter>[
                   LengthLimitingTextInputFormatter(5),
                   FilteringTextInputFormatter.allow(RegExp('[-0-9]'))
