@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:date_format/date_format.dart';
 import 'package:easy_permission/easy_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
@@ -14,6 +15,7 @@ import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
+import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/widgets/about.dart';
 import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
@@ -59,9 +61,20 @@ class DrawerWidget extends StatelessWidget {
         ),
         const Divider(thickness: 0.3),
         ListTile(
+            leading: const Icon(Icons.construction),
+            title: Text(localizations.toolbox),
+            onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (BuildContext context) {
+                    return Scaffold(
+                        appBar: AppBar(title: Text(localizations.toolbox), centerTitle: true),
+                        body: Toolbox(proxyServer: proxyServer));
+                  }),
+                )),
+        ListTile(
             title: Text(localizations.httpsProxy),
             leading: const Icon(Icons.https),
             onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
+        const Divider(thickness: 0.3),
         ListTile(
             title: Text(localizations.filter),
             leading: const Icon(Icons.filter_alt_outlined),
@@ -126,15 +139,15 @@ class SettingMenu extends StatelessWidget {
                 onTap: () => _language(context),
               ),
               MobileThemeSetting(appConfiguration: appConfiguration),
-             ListTile(
-                      title: Text(localizations.windowMode),
-                      subtitle: Text(localizations.windowModeSubTitle, style: const TextStyle(fontSize: 12)),
-                      trailing: SwitchWidget(
-                          value: appConfiguration.pipEnabled,
-                          onChanged: (value) {
-                            appConfiguration.pipEnabled = value;
-                            appConfiguration.flushConfig();
-                          })),
+              ListTile(
+                  title: Text(localizations.windowMode),
+                  subtitle: Text(localizations.windowModeSubTitle, style: const TextStyle(fontSize: 12)),
+                  trailing: SwitchWidget(
+                      value: appConfiguration.pipEnabled,
+                      onChanged: (value) {
+                        appConfiguration.pipEnabled = value;
+                        appConfiguration.flushConfig();
+                      })),
               ListTile(
                   title: Text(localizations.headerExpanded),
                   subtitle: Text(localizations.headerExpandedSubtitle, style: const TextStyle(fontSize: 12)),
@@ -241,12 +254,12 @@ class MoreMenu extends StatelessWidget {
     AppLocalizations localizations = AppLocalizations.of(context)!;
 
     return PopupMenuButton(
-      tooltip: localizations.scanCode,
       offset: const Offset(0, 30),
-      child: const SizedBox(height: 38, width: 38, child: Icon(Icons.add_circle_outline, size: 26)),
+      child: const SizedBox(height: 38, width: 38, child: Icon(Icons.more_vert, size: 26)),
       itemBuilder: (BuildContext context) {
-        return <PopupMenuItem>[
+        return <PopupMenuEntry>[
           PopupMenuItem(
+              height: 35,
               child: ListTile(
                   dense: true,
                   title: Text(localizations.httpsProxy),
@@ -259,40 +272,40 @@ class MoreMenu extends StatelessWidget {
                     );
                   })),
           PopupMenuItem(
+              height: 35,
               child: ListTile(
-            dense: true,
-            leading: const Icon(Icons.qr_code_scanner_outlined),
-            title: Text(localizations.connectRemote),
-            onTap: () {
-              connectRemote(context);
-            },
-          )),
+                dense: true,
+                leading: const Icon(Icons.qr_code_scanner_outlined),
+                title: Text(localizations.connectRemote),
+                onTap: () {
+                  connectRemote(context);
+                },
+              )),
           PopupMenuItem(
+              height: 35,
               child: ListTile(
-            dense: true,
-            leading: const Icon(Icons.phone_iphone),
-            title: Text(localizations.myQRCode),
-            onTap: () async {
-              var ip = await localIp();
-              if (context.mounted) {
-                connectQrCode(context, ip, proxyServer.port);
-              }
-            },
-          )),
+                dense: true,
+                leading: const Icon(Icons.phone_iphone),
+                title: Text(localizations.myQRCode),
+                onTap: () async {
+                  var ip = await localIp();
+                  if (context.mounted) {
+                    connectQrCode(context, ip, proxyServer.port);
+                  }
+                },
+              )),
+          const PopupMenuDivider(height: 0),
           PopupMenuItem(
+              height: 35,
               child: ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.construction),
-                  title: Text(localizations.toolbox),
-                  onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (BuildContext context) {
-                          return Scaffold(
-                              appBar: AppBar(
-                                  title: Text(localizations.toolbox, style: const TextStyle(fontSize: 16)),
-                                  centerTitle: true),
-                              body: Toolbox(proxyServer: proxyServer));
-                        }),
-                      ))),
+                dense: true,
+                leading: const Icon(Icons.share),
+                title: Text(localizations.viewExport),
+                onTap: () async {
+                  var name = formatDate(DateTime.now(), [m, '-', d, ' ', HH, ':', nn, ':', ss]);
+                  MobileHomeState.requestStateKey.currentState?.export('ProxyPin$name');
+                },
+              )),
         ];
       },
     );

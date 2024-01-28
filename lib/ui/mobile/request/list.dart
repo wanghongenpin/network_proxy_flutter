@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,9 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
+import 'package:network_proxy/utils/har.dart';
 import 'package:network_proxy/utils/lang.dart';
+import 'package:share_plus/share_plus.dart';
 
 class RequestListWidget extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -76,7 +79,10 @@ class RequestListState extends State<RequestListWidget> {
           body: TabBarView(
             children: [
               RequestSequence(
-                  key: requestSequenceKey, list: container, proxyServer: widget.proxyServer, onRemove: remove),
+                  key: requestSequenceKey,
+                  container: container,
+                  proxyServer: widget.proxyServer,
+                  onRemove: sequenceRemove),
               DomainList(key: domainListKey, list: container, proxyServer: widget.proxyServer, onRemove: remove),
             ],
           ),
@@ -106,6 +112,13 @@ class RequestListState extends State<RequestListWidget> {
   ///移除
   remove(List<HttpRequest> list) {
     container.removeWhere((element) => list.contains(element));
+    requestSequenceKey.currentState?.remove(list);
+  }
+
+  ///全部请求删除
+  sequenceRemove(List<HttpRequest> list) {
+    container.removeWhere((element) => list.contains(element));
+    domainListKey.currentState?.remove(list);
   }
 
   search(SearchModel searchModel) {
@@ -125,17 +138,29 @@ class RequestListState extends State<RequestListWidget> {
       container.clear();
     });
   }
+
+  //导出har
+  export(String title) async {
+    //文件名称
+    String fileName =
+        '${title.contains("ProxyPin") ? '' : 'ProxyPin'}$title.har'.replaceAll(" ", "_").replaceAll(":", "_");
+    //获取请求
+    var view = currentView()!;
+    var json = await Har.writeJson(view.toList(), title: title);
+    var file = XFile.fromData(utf8.encode(json), name: fileName, mimeType: "har");
+    Share.shareXFiles([file], subject: fileName);
+  }
 }
 
 ///请求序列 列表
 class RequestSequence extends StatefulWidget {
-  final List<HttpRequest> list;
+  final List<HttpRequest> container;
   final ProxyServer proxyServer;
   final bool displayDomain;
   final Function(List<HttpRequest>)? onRemove;
 
   const RequestSequence(
-      {super.key, required this.list, required this.proxyServer, this.displayDomain = true, this.onRemove});
+      {super.key, required this.container, required this.proxyServer, this.displayDomain = true, this.onRemove});
 
   @override
   State<StatefulWidget> createState() {
@@ -147,8 +172,6 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   ///请求和对应的row的映射
   Map<HttpRequest, GlobalKey<RequestRowState>> indexes = HashMap();
 
-  List<HttpRequest> list = [];
-
   ///显示的请求列表 最新的在前面
   Queue<HttpRequest> view = Queue();
   bool changing = false;
@@ -159,14 +182,11 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   @override
   initState() {
     super.initState();
-    list = widget.list;
-    view.addAll(list.reversed);
+    view.addAll(widget.container.reversed);
   }
 
   ///添加请求
   add(HttpRequest request) {
-    list.add(request);
-
     ///过滤
     if (searchModel?.isNotEmpty == true && !searchModel!.filter(request, request.response)) {
       return;
@@ -196,9 +216,14 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
   clean() {
     setState(() {
-      list.clear();
       view.clear();
       indexes.clear();
+    });
+  }
+
+  remove(List<HttpRequest> list) {
+    setState(() {
+      view.removeWhere((element) => list.contains(element));
     });
   }
 
@@ -206,9 +231,9 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   void search(SearchModel searchModel) {
     this.searchModel = searchModel;
     if (searchModel.isEmpty) {
-      view = Queue.of(list.reversed);
+      view = Queue.of(widget.container.reversed);
     } else {
-      view = Queue.of(list.where((it) => searchModel.filter(it, it.response)).toList().reversed);
+      view = Queue.of(widget.container.where((it) => searchModel.filter(it, it.response)).toList().reversed);
     }
     changeState();
   }
@@ -250,11 +275,10 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
               proxyServer: widget.proxyServer,
               displayDomain: widget.displayDomain,
               onRemove: (request) {
-                widget.onRemove?.call([request]);
                 setState(() {
-                  list.remove(request);
                   view.remove(request);
                 });
+                widget.onRemove?.call([request]);
               });
         });
   }
@@ -282,10 +306,11 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   Map<HostAndPort, List<HttpRequest>> containerMap = {};
 
   //域名列表 为了维护插入顺序
-  LinkedHashSet<HostAndPort> container = LinkedHashSet<HostAndPort>();
+  LinkedHashSet<HostAndPort> domainList = LinkedHashSet<HostAndPort>();
 
   //显示的域名 最新的在顶部
-  List<HostAndPort> list = [];
+  List<HostAndPort> view = [];
+
   HostAndPort? showHostAndPort;
 
   //搜索关键字
@@ -300,27 +325,20 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
 
     for (var request in widget.list) {
       var hostAndPort = request.hostAndPort!;
-      container.add(hostAndPort);
-      var list = containerMap[hostAndPort];
-      if (list == null) {
-        list = [];
-        containerMap[hostAndPort] = list;
-      }
+      domainList.add(hostAndPort);
+      var list = containerMap[hostAndPort] ??= [];
       list.add(request);
     }
 
-    list = container.toList();
+    view = domainList.toList();
   }
 
   add(HttpRequest request) {
     var hostAndPort = request.hostAndPort!;
-    container.remove(hostAndPort);
-    container.add(hostAndPort);
-    var list = containerMap[hostAndPort];
-    if (list == null) {
-      list = [];
-      containerMap[hostAndPort] = list;
-    }
+    domainList.remove(hostAndPort);
+    domainList.add(hostAndPort);
+
+    var list = containerMap[hostAndPort] ??= [];
     list.add(request);
     if (showHostAndPort == request.hostAndPort) {
       requestSequenceKey.currentState?.add(request);
@@ -330,7 +348,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
       return;
     }
 
-    this.list = [...container.where(filter)].reversed.toList();
+    view = [...domainList.where(filter)].reversed.toList();
     setState(() {});
   }
 
@@ -342,17 +360,29 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
 
   clean() {
     setState(() {
-      list.clear();
-      container.clear();
+      view.clear();
+      domainList.clear();
       containerMap.clear();
     });
+  }
+
+  remove(List<HttpRequest> list) {
+    for (var request in list) {
+      containerMap[request.hostAndPort]?.remove(request);
+      if (containerMap[request.hostAndPort]!.isEmpty) {
+        domainList.remove(request.hostAndPort);
+        view.remove(request.hostAndPort);
+      }
+    }
+
+    setState(() {});
   }
 
   ///搜索域名
   void search(String? text) {
     if (text == null) {
       setState(() {
-        list = List.of(container.toList().reversed);
+        view = List.of(domainList.toList().reversed);
         searchText = null;
       });
       return;
@@ -364,9 +394,9 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
       searchText = text.toLowerCase();
       if (contains) {
         //包含从上次结果过滤
-        list.retainWhere(filter);
+        view.retainWhere(filter);
       } else {
-        list = List.of(container.where(filter).toList().reversed);
+        view = List.of(domainList.where(filter).toList().reversed);
       }
     });
   }
@@ -388,17 +418,17 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
         padding: EdgeInsets.zero,
         separatorBuilder: (context, index) =>
             Divider(thickness: 0.2, height: 0.5, color: Theme.of(context).dividerColor),
-        itemCount: list.length,
+        itemCount: view.length,
         itemBuilder: (ctx, index) => title(index));
   }
 
   Widget title(int index) {
-    var value = containerMap[list.elementAt(index)];
+    var value = containerMap[view.elementAt(index)];
     var time = value == null ? '' : formatDate(value.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
 
     return ListTile(
         visualDensity: const VisualDensity(vertical: -4),
-        title: Text(list.elementAt(index).domain, maxLines: 1, overflow: TextOverflow.ellipsis),
+        title: Text(view.elementAt(index).domain, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: const Icon(Icons.chevron_right),
         subtitle: Text(localizations.domainListSubtitle(value?.length ?? '', time),
             maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -406,13 +436,13 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
         contentPadding: const EdgeInsets.only(left: 10),
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {
-            showHostAndPort = list.elementAt(index);
+            showHostAndPort = view.elementAt(index);
             return Scaffold(
-                appBar: AppBar(title: Text(list.elementAt(index).domain, style: const TextStyle(fontSize: 16))),
+                appBar: AppBar(title: Text(view.elementAt(index).domain, style: const TextStyle(fontSize: 16))),
                 body: RequestSequence(
                     key: requestSequenceKey,
                     displayDomain: false,
-                    list: containerMap[list.elementAt(index)]!,
+                    container: containerMap[view.elementAt(index)]!,
                     onRemove: widget.onRemove,
                     proxyServer: widget.proxyServer));
           }));
@@ -421,7 +451,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
 
   ///菜单
   menu(int index) {
-    var hostAndPort = list.elementAt(index);
+    var hostAndPort = view.elementAt(index);
     showModalBottomSheet(
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
         context: context,
@@ -466,8 +496,8 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
                   onPressed: () {
                     setState(() {
                       var requests = containerMap.remove(hostAndPort);
-                      container.remove(hostAndPort);
-                      list.removeAt(index);
+                      domainList.remove(hostAndPort);
+                      view.removeAt(index);
                       if (requests != null) {
                         widget.onRemove?.call(requests);
                       }

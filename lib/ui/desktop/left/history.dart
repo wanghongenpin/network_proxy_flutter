@@ -52,8 +52,11 @@ class HistoryPageWidget extends StatelessWidget {
   }
 
   Widget domainWidget(BuildContext context, Map arguments) {
+    var domainKey = GlobalKey<DomainWidgetState>();
+
     HistoryItem item = arguments['item'];
     var localizations = AppLocalizations.of(context)!;
+
     return Scaffold(
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(40),
@@ -66,9 +69,27 @@ class HistoryPageWidget extends StatelessWidget {
                   localizations.historyRecordTitle(
                       item.requestLength, item.name.substring(0, min(item.name.length, 25))),
                   style: const TextStyle(fontSize: 14)),
+              actions: [
+                PopupMenuButton(
+                    offset: const Offset(0, 30),
+                    icon: const Icon(Icons.more_vert_outlined),
+                    itemBuilder: (BuildContext context) {
+                      return [
+                        PopupMenuItem(
+                            height: 35,
+                            onTap: () {
+                              String fileName = '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'
+                                  .replaceAll(" ", "_")
+                                  .replaceAll(":", "_");
+                              domainKey.currentState?.export(fileName);
+                            },
+                            child: IconText(icon: const Icon(Icons.share), text: localizations.viewExport)),
+                      ];
+                    }),
+              ],
             )),
         body: futureWidget(HistoryStorage.instance.then((value) => value.getRequests(item)), (data) {
-          return DomainList(panel: panel, proxyServer: proxyServer, list: data, shrinkWrap: false);
+          return DomainList(panel: panel, proxyServer: proxyServer, list: data, shrinkWrap: false, key: domainKey);
         }, loading: true));
   }
 }

@@ -1,5 +1,7 @@
 import 'dart:collection';
+import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
@@ -15,6 +17,7 @@ import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/desktop/left/request.dart';
 import 'package:network_proxy/ui/desktop/left/search.dart';
+import 'package:network_proxy/utils/har.dart';
 
 /// 左侧域名
 /// @author wanghongen
@@ -36,6 +39,8 @@ class DomainList extends StatefulWidget {
 class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientMixin {
   List<HttpRequest> container = [];
   LinkedHashMap<String, DomainRequests> containerMap = LinkedHashMap<String, DomainRequests>();
+
+  //搜索视图
   LinkedHashMap<String, DomainRequests> searchView = LinkedHashMap<String, DomainRequests>();
 
   //搜索的内容
@@ -160,7 +165,7 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
     String domain = channelContext.host!.domain;
     DomainRequests? domainRequests = containerMap[domain];
     var pathRow = domainRequests?.getRequest(response);
-    pathRow?.add(response);
+    pathRow?.setResponse(response);
     if (pathRow == null) {
       return;
     }
@@ -171,7 +176,7 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
       if (requests?.getRequest(response) == null) {
         requests?.addBody(response.requestId, pathRow);
       }
-      requests?.getRequest(response)?.add(response);
+      requests?.getRequest(response)?.setResponse(response);
     }
   }
 
@@ -182,6 +187,20 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
       container.clear();
       containerMap.clear();
     });
+  }
+
+  export(String fileName) async {
+    final FileSaveLocation? result = await getSaveLocation(suggestedName: fileName);
+    if (result == null) {
+      return;
+    }
+
+    //获取请求
+    List<HttpRequest> requests = searchView.values.expand((list) => list.body.map((it) => it.request)).toList();
+    var file = await File(result.path).create();
+    await Har.writeFile(requests, file, title: fileName);
+
+    if (mounted) FlutterToastr.show(AppLocalizations.of(context)!.exportSuccess, context);
   }
 }
 

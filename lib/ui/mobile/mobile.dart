@@ -220,15 +220,17 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-            '1. 历史记录增加搜索和搜索视图导出；\n'
-            '2. Android返回键进入小窗口；\n'
-            '3. Android白名单应用列表展示隐藏图标应用；\n'
-            '4. 修复websocket暗黑主题展示不清楚；\n'
+            '1. 增加当前视图导出；\n'
+            '2. 历史记录增加搜索；\n'
+            '3. Android返回键进入小窗口；\n'
+            '4. Android白名单应用列表展示隐藏图标应用；\n'
+            '5. 修复websocket暗黑主题展示不清楚；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
-            '1. History Add Search And View Export;\n'
-            '2. Android Return key to enter the small window；\n'
-            '3. Android Whitelist application list display hidden icon applications；\n'
-            '4. Fix websocket dark theme display unclear；\n'
+            '1. Add current view export;\n'
+            '2. History Add Search;\n'
+            '3. Android Return key to enter the small window；\n'
+            '4. Android Whitelist application list display hidden icon applications；\n'
+            '5. Fix websocket dark theme display unclear；\n'
             ;
     showAlertDialog(isCN ? '更新内容V1.0.8' : "Update content V1.0.8", content, () {
       widget.appConfiguration.upgradeNoticeV7 = false;

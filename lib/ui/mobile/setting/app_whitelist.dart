@@ -51,7 +51,7 @@ class _AppWhitelistState extends State<AppWhitelist> {
     var appWhitelist = <Future<AppInfo>>[];
     for (var element in configuration.appWhitelist) {
       appWhitelist.add(InstalledApps.getAppInfo(element).catchError((e) {
-        return AppInfo.formJson({"name": isCN ? "未知应用" : "Unknown app", "package_name": element});
+        return AppInfo(name: isCN ? "未知应用" : "Unknown app", packageName: element);
       }));
     }
 

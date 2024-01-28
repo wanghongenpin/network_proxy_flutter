@@ -275,11 +275,13 @@ class _HistoryRecordState extends State<HistoryRecord> {
   var searchEnabled = ValueNotifier(false);
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   void dispose() {
     searchEnabled.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -316,20 +318,7 @@ class _HistoryRecordState extends State<HistoryRecord> {
   //导出har
   export() async {
     var item = widget.history;
-    //文件名称
-    String fileName =
-        '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'.replaceAll(" ", "_").replaceAll(":", "_");
-    //获取请求
-    var currentView = requestStateKey.currentState?.currentView();
-    if (currentView == null) {
-      FlutterToastr.show('Current View is Null', context);
-      return;
-    }
-
-    var json = await Har.writeJson(currentView.toList(), title: item.name);
-    var file = XFile.fromData(utf8.encode(json), name: fileName, mimeType: "har");
-    Share.shareXFiles([file], subject: fileName);
-    Future.delayed(const Duration(seconds: 30), () => item.requests = null);
+    requestStateKey.currentState?.export(item.name);
   }
 }
 

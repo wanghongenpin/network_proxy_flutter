@@ -38,7 +38,7 @@ class RequestWidget extends StatefulWidget {
   @override
   State<RequestWidget> createState() => _RequestWidgetState();
 
-  void add(HttpResponse response) {
+  void setResponse(HttpResponse response) {
     this.response.set(response);
     var state = key as GlobalKey<_RequestWidgetState>;
     state.currentState?.changeState();

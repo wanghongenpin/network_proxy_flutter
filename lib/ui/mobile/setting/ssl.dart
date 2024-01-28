@@ -91,6 +91,8 @@ class _MobileSslState extends State<MobileSslWidget> {
   }
 
   Widget android() {
+    bool isCN = localizations.localeName == 'zh';
+
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(localizations.installRootCa),
       ExpansionTile(
@@ -102,9 +104,10 @@ class _MobileSslState extends State<MobileSslWidget> {
           children: [
             Text(localizations.androidRootMagisk),
             TextButton(
-                child: const Text("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
+                child: Text("https://${isCN ? 'gitee' : 'github'}.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
                 onPressed: () {
-                  launchUrl(Uri.parse("https://gitee.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
+                  launchUrl(
+                      Uri.parse("https://${isCN ? 'gitee' : 'github'}.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
                 }),
             SelectableText(localizations.androidRootRename),
           ]),
@@ -126,8 +129,9 @@ class _MobileSslState extends State<MobileSslWidget> {
             TextButton(onPressed: () {}, child: Text("2. ${localizations.androidUserCAInstall}")),
             TextButton(
                 onPressed: () {
-                  launchUrl(Uri.parse(
-                      "https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E5%AE%89%E5%8D%93%E6%97%A0ROOT%E4%BD%BF%E7%94%A8Xposed%E6%A8%A1%E5%9D%97%E6%8A%93%E5%8C%85"));
+                  launchUrl(Uri.parse(isCN
+                      ? "https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E5%AE%89%E5%8D%93%E6%97%A0ROOT%E4%BD%BF%E7%94%A8Xposed%E6%A8%A1%E5%9D%97%E6%8A%93%E5%8C%85"
+                      : "https://github.com/wanghongenpin/network_proxy_flutter/wiki/Android-without-ROOT-uses-Xposed-module-to-capture-packets"));
                 },
                 child: Text(localizations.androidUserXposed)),
             ClipRRect(
