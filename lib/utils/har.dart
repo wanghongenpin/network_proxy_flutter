@@ -18,6 +18,7 @@ class Har {
       "startedDateTime": request.requestTime.toUtc().toIso8601String(), // 请求发出的时间(ISO 8601)
       "time": request.response?.responseTime.difference(request.requestTime).inMilliseconds,
       "pageref": "ProxyPin", // 页面标识
+      "_id": request.requestId, // 页面标识
       "request": {
         "method": request.method.name, // 请求方法
         "url": request.requestUrl, // 请求地址
@@ -115,6 +116,8 @@ class Har {
     List headers = request['headers'];
 
     var httpRequest = HttpRequest(HttpMethod.valueOf(method), request['url'], protocolVersion: request['httpVersion']);
+    if (har.containsKey("_id")) httpRequest.requestId = har['_id']; // 页面标识
+
     httpRequest.body = request['postData']?['text']?.toString().codeUnits;
     for (var element in headers) {
       httpRequest.headers.add(element['name'], element['value']);

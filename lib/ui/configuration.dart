@@ -26,7 +26,7 @@ class AppConfiguration {
   Locale? _language;
 
   //是否显示更新内容公告
-  bool upgradeNoticeV7 = true;
+  bool upgradeNoticeV8 = true;
 
   /// 是否启用画中画
   bool pipEnabled = true;
@@ -114,7 +114,7 @@ class AppConfiguration {
       var mode =
           ThemeMode.values.firstWhere((element) => element.name == config['mode'], orElse: () => ThemeMode.system);
       _theme = ThemeModel(mode: mode, useMaterial3: config['useMaterial3'] ?? true);
-      upgradeNoticeV7 = config['upgradeNoticeV7'] ?? true;
+      upgradeNoticeV8 = config['upgradeNoticeV8'] ?? true;
       _language = config['language'] == null ? null : Locale.fromSubtags(languageCode: config['language']);
       pipEnabled = config['pipEnabled'] ?? true;
       headerExpanded = config['headerExpanded'] ?? true;
@@ -140,7 +140,7 @@ class AppConfiguration {
     return {
       'mode': _theme.mode.name,
       'useMaterial3': _theme.useMaterial3,
-      'upgradeNoticeV7': upgradeNoticeV7,
+      'upgradeNoticeV8': upgradeNoticeV8,
       "language": _language?.languageCode,
       'pipEnabled': pipEnabled,
       "headerExpanded": headerExpanded,

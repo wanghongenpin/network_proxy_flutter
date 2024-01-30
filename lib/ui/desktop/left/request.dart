@@ -5,6 +5,7 @@ import 'package:date_format/date_format.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
@@ -18,7 +19,6 @@ import 'package:network_proxy/ui/desktop/left/repeat.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 /// 请求 URI
 /// @author wanghongen
@@ -28,11 +28,10 @@ class RequestWidget extends StatefulWidget {
   final HttpRequest request;
   final ValueWrap<HttpResponse> response = ValueWrap();
 
-  final NetworkTabController panel;
   final ProxyServer proxyServer;
   final Function(RequestWidget)? remove;
 
-  RequestWidget(this.request, this.panel, {Key? key, this.color = Colors.green, required this.proxyServer, this.remove})
+  RequestWidget(this.request, {Key? key, this.color = Colors.green, required this.proxyServer, this.remove})
       : super(key: GlobalKey<_RequestWidgetState>());
 
   @override
@@ -183,6 +182,6 @@ class _RequestWidgetState extends State<RequestWidget> {
       });
     }
     selectedState = this;
-    widget.panel.change(widget.request, widget.response.get() ?? widget.request.response);
+    NetworkTabController.current?.change(widget.request, widget.response.get() ?? widget.request.response);
   }
 }

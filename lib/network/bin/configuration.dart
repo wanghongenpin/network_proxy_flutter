@@ -47,6 +47,9 @@ class Configuration {
 
   bool enabledHttp2 = false; //
 
+  //历史记录缓存时间
+  int historyCacheTime = 0;
+
   Configuration._();
 
   /// 单例
@@ -71,6 +74,7 @@ class Configuration {
     enableSsl = config['enableSsl'] == true;
     enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
     proxyPassDomains = config['proxyPassDomains'] ?? SystemProxy.proxyPassDomains;
+    historyCacheTime = config['historyCacheTime'] ?? 0;
     if (config['externalProxy'] != null) {
       externalProxy = ProxyInfo.fromJson(config['externalProxy']);
     }
@@ -121,6 +125,7 @@ class Configuration {
       'proxyPassDomains': proxyPassDomains,
       'externalProxy': externalProxy?.toJson(),
       'appWhitelist': appWhitelist,
+      'historyCacheTime': historyCacheTime,
       'whitelist': HostFilter.whitelist.toJson(),
       'blacklist': HostFilter.blacklist.toJson(),
     };

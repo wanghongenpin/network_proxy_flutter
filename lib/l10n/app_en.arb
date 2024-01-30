@@ -142,10 +142,14 @@
   "name": "Name",
 
   "historyRecord": "History",
+  "historyCacheTime": "Cache Time",
+  "historyManualSave": "Manual Save",
+  "historyDay": "{day} days",
+  "historyForever": "Forever",
   "historyRecordTitle": "{name} Records {length}",
   "historyEmptyName": "Name cannot be empty",
   "historySubtitle": "Records {requestLength}  file {size}",
-  "historyUnSave": "Current not saved Records {length}",
+  "historyUnSave": "Current record is not saved",
   "historyDeleteConfirm": "Do you want to delete this history?",
 
   "requestEdit": "Request Editing",

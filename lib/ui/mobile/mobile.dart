@@ -122,7 +122,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
       }
     });
 
-    if (widget.appConfiguration.upgradeNoticeV7) {
+    if (widget.appConfiguration.upgradeNoticeV8) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -233,7 +233,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '5. Fix websocket dark theme display unclear；\n'
             ;
     showAlertDialog(isCN ? '更新内容V1.0.8' : "Update content V1.0.8", content, () {
-      widget.appConfiguration.upgradeNoticeV7 = false;
+      widget.appConfiguration.upgradeNoticeV8 = false;
       widget.appConfiguration.flushConfig();
     });
   }

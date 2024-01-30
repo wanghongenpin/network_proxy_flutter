@@ -1,36 +1,42 @@
+import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:date_format/date_format.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/storage/path.dart';
 import 'package:network_proxy/utils/files.dart';
 import 'package:network_proxy/utils/har.dart';
+import 'package:network_proxy/utils/listenable_list.dart';
 import 'package:path_provider/path_provider.dart';
 
 ///历史存储
 class HistoryStorage {
   static HistoryStorage? _instance;
+  final File _storageFile;
 
-  HistoryStorage._internal();
+  HistoryStorage._internal(this._storageFile);
 
-  static final List<HistoryItem> _histories = [];
+  static final ListenableList<HistoryItem> _histories = ListenableList();
 
   ///单例
   static Future<HistoryStorage> get instance async {
     if (_instance == null) {
-      _instance = HistoryStorage._internal();
-      await _init();
+      var file = await Paths.getPath("histories.json");
+      _instance = HistoryStorage._internal(file);
+      await _instance!._init();
     }
     return _instance!;
   }
 
   //初始化
-  static Future<void> _init() async {
-    var file = await _path;
-    if (await file.exists()) {
-      var content = await file.readAsString();
+  Future<void> _init() async {
+    if (await _storageFile.exists()) {
+      var content = await _storageFile.readAsString();
       if (content.trim().isEmpty) {
         return;
       }
@@ -52,17 +58,11 @@ class HistoryStorage {
 
   /// 获取历史记录
   List<HistoryItem> get histories {
-    return _histories;
+    return _histories.source;
   }
 
-  //获取配置路径
-  static Future<File> get _path async {
-    final directory = await getApplicationSupportDirectory();
-    var file = File('${directory.path}${Platform.pathSeparator}histories.json');
-    if (!await file.exists()) {
-      await file.create(recursive: true);
-    }
-    return file;
+  addListener(ListenerListEvent<HistoryItem> listener) {
+    _histories.addListener(listener);
   }
 
   ///打开文件
@@ -77,7 +77,7 @@ class HistoryStorage {
     var size = await file.length();
     var historyItem = HistoryItem(name, file.path, requestLength, size);
     _histories.add(historyItem);
-    (await _path).writeAsString(jsonEncode(_histories));
+    refresh();
     return historyItem;
   }
 
@@ -87,26 +87,27 @@ class HistoryStorage {
 
   //更新
   updateHistory(int index, HistoryItem item) async {
-    _histories[index] = item;
-    (await _path).writeAsString(jsonEncode(_histories));
+    _histories.update(index, item);
+    refresh();
   }
 
   //获取
   HistoryItem getHistory(int index) {
-    return _histories[index];
+    return _histories.source[index];
   }
 
   Future<void> refresh() async {
-    (await _path).writeAsString(jsonEncode(_histories));
+    await _storageFile.writeAsString(jsonEncode(_histories.source));
   }
 
   ///删除
-  void removeHistory(int index) async {
+  Future<void> removeHistory(int index) async {
     var history = _histories.removeAt(index);
+    logger.i('删除历史记录 $history');
     final homePath = await _homePath();
     var file = File('$homePath${Platform.pathSeparator}${Files.getName(history.path)}');
     file.delete();
-    (await _path).writeAsString(jsonEncode(_histories));
+    await refresh();
   }
 
   //获取请求列表
@@ -137,7 +138,7 @@ class HistoryStorage {
 
     history.requestLength = requests.length;
     await file.length().then((size) => history.fileSize = size);
-    (await _path).writeAsString(jsonEncode(_histories));
+    await refresh();
   }
 
   //添加历史
@@ -166,19 +167,137 @@ class HistoryStorage {
   }
 }
 
+class HistoryTask extends ListenerListEvent<HttpRequest> {
+  HistoryItem? history;
+  Timer? timer;
+  final Queue writeList = Queue();
+
+  RandomAccessFile? open;
+  bool locked = false;
+
+  static HistoryTask? _instance;
+
+  final Configuration configuration;
+  final ListenableList<HttpRequest> sourceList;
+
+  HistoryTask(this.configuration, this.sourceList) {
+    if (configuration.historyCacheTime != 0) {
+      sourceList.addListener(this);
+
+      Future.delayed(const Duration(seconds: 10), () {
+        HistoryStorage.instance.then((value) => {});
+      });
+    }
+  }
+
+  static HistoryTask ensureInstance(Configuration configuration, ListenableList<HttpRequest> sourceList) {
+    return _instance ??= HistoryTask(configuration, sourceList);
+  }
+
+  //清理历史数据
+  cleanHistory() async {
+    if (configuration.historyCacheTime == 0) {
+      return;
+    }
+    var overdueTime = DateTime.now().subtract(Duration(days: configuration.historyCacheTime));
+    var historyStorage = await HistoryStorage.instance;
+    for (var element in historyStorage.histories) {
+      if (element.createTime.isBefore(overdueTime)) {
+        await historyStorage.removeHistory(historyStorage.getIndex(element));
+      }
+    }
+  }
+
+  @override
+  void onAdd(HttpRequest item) {
+    if (timer == null) {
+      startTask();
+    }
+    writeList.add(item);
+  }
+
+  @override
+  void onRemove(HttpRequest item) => resetList();
+
+  @override
+  void onBatchRemove(List<HttpRequest> items) => resetList();
+
+  @override
+  clear() => resetList();
+
+  resetList() async {
+    locked = true;
+    await open?.truncate(0);
+    history?.requestLength = 0;
+    writeList.clear();
+    writeList.addAll(sourceList.source);
+    locked = false;
+  }
+
+  cancelTask() {
+    timer?.cancel();
+    timer = null;
+    open?.close();
+    open = null;
+    history = null;
+    sourceList.removeListener(this);
+    writeList.clear();
+  }
+
+  //写入任务
+  Future<void> startTask() async {
+    if (timer != null) return;
+
+    HistoryStorage storage = await HistoryStorage.instance;
+    var name = formatDate(DateTime.now(), [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
+
+    File file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
+    open = await file.open(mode: FileMode.append);
+    history = await storage.addHistory(name, file, 0);
+    timer = Timer.periodic(const Duration(seconds: 15), (it) => writeTask());
+  }
+
+  //写入任务
+  writeTask() async {
+    if (writeList.isEmpty) {
+      return;
+    }
+
+    bool changed = false;
+    while (writeList.isNotEmpty && !locked) {
+      var request = writeList.removeFirst();
+      var har = Har.toHar(request);
+
+      await open?.writeString("${jsonEncode(har)},\n");
+
+      history!.requestLength++;
+      changed = true;
+    }
+
+    if (!changed) return;
+    history!.fileSize = await open!.length();
+    var historyStorage = await HistoryStorage.instance;
+    historyStorage.updateHistory(historyStorage.getIndex(history!), history!);
+  }
+}
+
 /// 历史记录
 class HistoryItem {
   String name;
   final String path; // 文件路径
   int requestLength = 0; // 请求数量
   int? fileSize; // 文件大小
+  DateTime createTime = DateTime.now();
+
   List<HttpRequest>? requests;
 
-  HistoryItem(this.name, this.path, this.requestLength, this.fileSize);
+  HistoryItem(this.name, this.path, this.requestLength, this.fileSize, {DateTime? createTime})
+      : createTime = createTime ?? DateTime.now();
 
   //json反序列化
   factory HistoryItem.formJson(Map<String, dynamic> map) {
-    return HistoryItem(map['name'], map['path'], map['requestLength'], map['fileSize']);
+    return HistoryItem(map['name'], map['path'], map['requestLength'], map['fileSize'],
+        createTime: DateTime.fromMillisecondsSinceEpoch(map['createTime']));
   }
 
   //json序列化
@@ -188,6 +307,7 @@ class HistoryItem {
       'path': path,
       'requestLength': requestLength,
       'fileSize': fileSize,
+      'createTime': createTime.millisecondsSinceEpoch,
     };
   }
 

@@ -97,7 +97,7 @@ class _MobileHistoryState extends State<MobileHistory> {
     return ListTile(
         dense: true,
         title: Text(name),
-        subtitle: Text(localizations.historyUnSave(container.length)),
+        subtitle: Text(localizations.historyUnSave),
         trailing: TextButton.icon(
           icon: const Icon(Icons.save),
           label: Text(localizations.save),

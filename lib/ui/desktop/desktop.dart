@@ -15,6 +15,7 @@ import 'package:network_proxy/ui/desktop/left/history.dart';
 import 'package:network_proxy/ui/desktop/left/list.dart';
 import 'package:network_proxy/ui/desktop/preference.dart';
 import 'package:network_proxy/ui/desktop/toolbar/toolbar.dart';
+import 'package:network_proxy/utils/listenable_list.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../component/split_view.dart';
@@ -32,6 +33,8 @@ class DesktopHomePage extends StatefulWidget {
 }
 
 class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventListener {
+  static final container = ListenableList<HttpRequest>();
+
   final domainStateKey = GlobalKey<DomainWidgetState>();
   final PageController pageController = PageController();
   final ValueNotifier<int> _selectIndex = ValueNotifier(0);
@@ -82,7 +85,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
     proxyServer.addListener(this);
     panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 16), proxyServer: proxyServer);
 
-    if (widget.appConfiguration.upgradeNoticeV7) {
+    if (widget.appConfiguration.upgradeNoticeV8) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -91,8 +94,6 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
 
   @override
   Widget build(BuildContext context) {
-    final domainWidget = DomainList(key: domainStateKey, proxyServer: proxyServer, panel: panel);
-
     return Scaffold(
         appBar: Tab(child: Toolbar(proxyServer, domainStateKey, sideNotifier: _selectIndex)),
         body: Row(
@@ -104,11 +105,10 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   minRatio: 0.15,
                   maxRatio: 0.9,
                   left: PageView(controller: pageController, physics: const NeverScrollableScrollPhysics(), children: [
-                    domainWidget,
+                    DomainList(key: domainStateKey, proxyServer: proxyServer, panel: panel, list: container),
                     Favorites(panel: panel),
                     KeepAliveWrapper(
-                        child: HistoryPageWidget(
-                            proxyServer: proxyServer, domainWidgetState: domainStateKey, panel: panel)),
+                        child: HistoryPageWidget(proxyServer: proxyServer, container: container, panel: panel)),
                     const Toolbox()
                   ]),
                   right: panel),
@@ -189,33 +189,31 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
               actions: [
                 TextButton(
                     onPressed: () {
-                      widget.appConfiguration.upgradeNoticeV7 = false;
+                      widget.appConfiguration.upgradeNoticeV8 = false;
                       widget.appConfiguration.flushConfig();
                       Navigator.pop(context);
                     },
                     child: Text(localizations.cancel))
               ],
-              title: Text(isCN ? '更新内容V1.0.7' : "Update content V1.0.7", style: const TextStyle(fontSize: 18)),
+              title: Text(isCN ? '更新内容V1.0.8' : "Update content V1.0.8", style: const TextStyle(fontSize: 18)),
               content: Text(
                   isCN
                       ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                           '点击HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
-                          '1. 增加多语言支持；\n'
-                          '2. 请求重写支持文件选择；\n'
-                          '3. 抓包详情页面Headers默认展开配置；\n'
-                          '4. 请求编辑URL参数支持表单编辑；\n'
-                          '5. 增加高级重放；\n'
-                          '6. 域名过滤支持批量导出&编辑；\n'
-                          '7. IOS支持画中画模式；\n'
+                          '1. 历史记录增加缓存时间设置；\n'
+                          '2. 增加当前视图导出；\n'
+                          '3. 历史记录增加搜索；\n'
+                          '4. Android返回键进入小窗口；\n'
+                          '5. Android白名单应用列表展示隐藏图标应用；\n'
+                          '6. 修复websocket暗黑主题展示不清楚；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
-                          '1. Increase multilingual support；\n'
-                          '2. Request Rewrite support file selection；\n'
-                          '3. Details page Headers Expanded Config；\n'
-                          '4. Request Edit URL parameter support for form editing；\n'
-                          '5. Support advanced replay；\n'
-                          '6. Domain name filtering supports batch export&editing；\n'
-                          '7. iOS Supports picture in picture mode;\n',
+                          '1. History support cache time setting；\n'
+                          '2. Add current view export;\n'
+                          '3. History Add Search;\n'
+                          '4. Android Return key to enter the small window；\n'
+                          '5. Android Whitelist application list display hidden icon applications；\n'
+                          '6. Fix websocket dark theme display unclear；\n',
                   style: const TextStyle(fontSize: 14)));
         });
   }

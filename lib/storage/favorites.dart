@@ -1,10 +1,9 @@
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:network_proxy/storage/path.dart';
 
 class FavoriteStorage {
   static Queue<Favorite>? list;
@@ -13,7 +12,7 @@ class FavoriteStorage {
   static Future<Queue<Favorite>> get favorites async {
     if (list == null) {
       list = ListQueue();
-      var file = await _path;
+      var file = await Paths.getPath("favorites.json");
       if (await file.exists()) {
         var value = await file.readAsString();
         if (value.isEmpty) {
@@ -30,15 +29,6 @@ class FavoriteStorage {
       }
     }
     return list!;
-  }
-
-  static Future<File> get _path async {
-    final directory = await getApplicationSupportDirectory();
-    var file = File('${directory.path}${Platform.pathSeparator}favorites.json');
-    if (!await file.exists()) {
-      await file.create();
-    }
-    return file;
   }
 
   /// 添加收藏
@@ -61,7 +51,7 @@ class FavoriteStorage {
   //刷新配置
   static void flushConfig() async {
     var list = await favorites;
-    _path.then((file) => file.writeAsString(toJson(list)));
+    Paths.getPath("favorites.json").then((file) => file.writeAsString(toJson(list)));
   }
 
   static String toJson(Queue<Favorite> list) {

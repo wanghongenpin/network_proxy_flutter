@@ -142,10 +142,14 @@
   "name": "名称",
 
   "historyRecord": "历史记录",
+  "historyManualSave": "手动保存",
+  "historyDay": "{day}天",
+  "historyForever": "永久",
+  "historyCacheTime": "缓存时间",
   "historyEmptyName": "名称不能为空",
   "historyRecordTitle": "{name} 记录数 {length}",
   "historySubtitle": "记录数 {requestLength}  文件 {size}",
-  "historyUnSave": "当前会话未保存 记录数 {length}",
+  "historyUnSave": "当前会话记录未保存",
   "historyDeleteConfirm": "是否删除该历史记录？",
 
   "requestEdit": "请求编辑",

@@ -18,17 +18,19 @@ import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/desktop/left/request.dart';
 import 'package:network_proxy/ui/desktop/left/search.dart';
 import 'package:network_proxy/utils/har.dart';
+import 'package:network_proxy/utils/listenable_list.dart';
 
 /// 左侧域名
 /// @author wanghongen
 /// 2023/10/8
 class DomainList extends StatefulWidget {
-  final NetworkTabController panel;
   final ProxyServer proxyServer;
-  final List<HttpRequest>? list;
+  final NetworkTabController panel;
+
+  final ListenableList<HttpRequest> list;
   final bool shrinkWrap;
 
-  const DomainList({super.key, required this.panel, required this.proxyServer, this.list, this.shrinkWrap = true});
+  const DomainList({super.key, required this.proxyServer, required this.list, this.shrinkWrap = true, required this.panel});
 
   @override
   State<StatefulWidget> createState() {
@@ -37,8 +39,9 @@ class DomainList extends StatefulWidget {
 }
 
 class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientMixin {
-  List<HttpRequest> container = [];
-  LinkedHashMap<String, DomainRequests> containerMap = LinkedHashMap<String, DomainRequests>();
+  late ListenableList<HttpRequest> container;
+
+  final LinkedHashMap<String, DomainRequests> containerMap = LinkedHashMap<String, DomainRequests>();
 
   //搜索视图
   LinkedHashMap<String, DomainRequests> searchView = LinkedHashMap<String, DomainRequests>();
@@ -61,22 +64,12 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
   @override
   void initState() {
     super.initState();
-    widget.list?.forEach((request) {
+    container = widget.list;
+    for (var request in container.source) {
       var host = request.remoteDomain()!;
-      DomainRequests? domainRequests = containerMap[host];
-      if (domainRequests == null) {
-        domainRequests = DomainRequests(host, proxyServer: widget.panel.proxyServer, onRemove: () {
-          widget.list?.removeWhere((it) => it.remoteDomain() == host);
-          remove(host);
-        });
-        containerMap[host] = domainRequests;
-      }
-      var listURI = RequestWidget(request, widget.panel, proxyServer: widget.panel.proxyServer, remove: (it) {
-        widget.list?.remove(it.request);
-        domainRequests!.remove(it);
-      });
-      domainRequests.addBody(null, listURI);
-    });
+      DomainRequests domainRequests = getDomainRequests(host);
+      domainRequests.addRequest(request.requestId, request);
+    }
   }
 
   @override
@@ -131,29 +124,34 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
     }
 
     //按照域名分类
-    DomainRequests? domainRequests = containerMap[host];
-    if (domainRequests != null) {
-      var requestWidget = RequestWidget(request, widget.panel,
-          proxyServer: widget.proxyServer, remove: (it) => domainRequests!.remove(it));
-      domainRequests.addBody(request.requestId, requestWidget);
-
-      //搜索视图
-      if (searchModel?.isNotEmpty == true && searchModel?.filter(request, null) == true) {
-        searchView[host]?.addBody(request.requestId, requestWidget);
-      }
-      return;
+    DomainRequests domainRequests = getDomainRequests(host);
+    var isNew = domainRequests.body.isEmpty;
+    domainRequests.addRequest(request.requestId, request);
+    //搜索视图
+    if (searchModel?.isNotEmpty == true && searchModel?.filter(request, null) == true) {
+      searchView[host]?.addRequest(request.requestId, request);
     }
 
-    domainRequests = DomainRequests(host, proxyServer: widget.proxyServer, onRemove: () => remove(host));
-    var requestWidget = RequestWidget(request, widget.panel,
-        proxyServer: widget.proxyServer, remove: (it) => domainRequests!.remove(it));
-    domainRequests.addBody(request.requestId, requestWidget);
-    setState(() {
-      containerMap[host] = domainRequests!;
-    });
+    if (isNew) {
+      setState(() {
+        containerMap[host] = domainRequests;
+      });
+    }
   }
 
-  remove(String host) {
+  DomainRequests getDomainRequests(String host) {
+    DomainRequests? domainRequests = containerMap[host];
+    if (domainRequests == null) {
+      domainRequests = DomainRequests(host,
+          proxyServer: widget.panel.proxyServer, onDelete: deleteHost, onRequestRemove: (req) => container.remove(req));
+      containerMap[host] = domainRequests;
+    }
+
+    return domainRequests;
+  }
+
+  ///移除域名
+  deleteHost(String host) {
     setState(() {
       containerMap.remove(host);
       container.removeWhere((element) => element.remoteDomain() == host);
@@ -174,7 +172,7 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
     if (searchModel?.isNotEmpty == true && searchModel?.filter(pathRow.request, response) == true) {
       var requests = searchView[domain];
       if (requests?.getRequest(response) == null) {
-        requests?.addBody(response.requestId, pathRow);
+        requests?.addRequest(response.requestId, pathRow.request);
       }
       requests?.getRequest(response)?.setResponse(response);
     }
@@ -219,18 +217,22 @@ class DomainRequests extends StatefulWidget {
   final bool selected;
 
   //移除回调
-  final Function()? onRemove;
+  final Function(String host)? onDelete;
+  final Function(HttpRequest request)? onRequestRemove;
 
-  DomainRequests(this.domain, {this.selected = false, this.onRemove, required this.proxyServer})
+  DomainRequests(this.domain, {this.selected = false, this.onDelete, required this.proxyServer, this.onRequestRemove})
       : super(key: GlobalKey<_DomainRequestsState>());
 
   ///添加请求
-  void addBody(String? requestId, RequestWidget widget) {
-    body.addFirst(widget);
+  void addRequest(String? requestId, HttpRequest request) {
+    if (requestMap.containsKey(requestId)) return;
+
+    var requestWidget = RequestWidget(request, proxyServer: proxyServer, remove: (it) => _remove(it));
+    body.addFirst(requestWidget);
     if (requestId == null) {
       return;
     }
-    requestMap[requestId] = widget;
+    requestMap[requestId] = requestWidget;
     changeState();
   }
 
@@ -238,8 +240,9 @@ class DomainRequests extends StatefulWidget {
     return requestMap[response.request?.requestId ?? response.requestId];
   }
 
-  remove(RequestWidget requestWidget) {
+  _remove(RequestWidget requestWidget) {
     if (body.remove(requestWidget)) {
+      onRequestRemove?.call(requestWidget.request);
       changeState();
     }
   }
@@ -254,7 +257,10 @@ class DomainRequests extends StatefulWidget {
   DomainRequests copy({Iterable<RequestWidget>? body, bool? selected}) {
     var state = key as GlobalKey<_DomainRequestsState>;
     var headerBody = DomainRequests(domain,
-        selected: selected ?? state.currentState?.selected == true, onRemove: onRemove, proxyServer: proxyServer);
+        selected: selected ?? state.currentState?.selected == true,
+        onDelete: onDelete,
+        onRequestRemove: onRequestRemove,
+        proxyServer: proxyServer);
     if (body != null) {
       headerBody.body.addAll(body);
     }
@@ -374,7 +380,7 @@ class _DomainRequestsState extends State<DomainRequests> {
   _delete() {
     widget.requestMap.clear();
     widget.body.clear();
-    widget.onRemove?.call();
+    widget.onDelete?.call(widget.domain);
     FlutterToastr.show(localizations.deleteSuccess, context);
   }
 }
