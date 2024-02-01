@@ -14,35 +14,35 @@
  * limitations under the License.
  */
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:date_format/date_format.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
-import 'package:network_proxy/network/channel.dart';
-import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/storage/histories.dart';
+import 'package:network_proxy/ui/component/history_cache_time.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
-import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/request/search.dart';
+import 'package:network_proxy/utils/listenable_list.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../../utils/har.dart';
 
 class MobileHistory extends StatefulWidget {
   final ProxyServer proxyServer;
+  final HistoryTask historyTask;
+  final ListenableList<HttpRequest> container;
 
-  const MobileHistory({super.key, required this.proxyServer});
+  const MobileHistory({super.key, required this.proxyServer, required this.container, required this.historyTask});
 
   @override
   State<StatefulWidget> createState() {
@@ -53,33 +53,51 @@ class MobileHistory extends StatefulWidget {
 class _MobileHistoryState extends State<MobileHistory> {
   ///是否保存会话
   static bool _sessionSaved = false;
-  static WriteTask? writeTask;
+  late Configuration configuration;
+
+  @override
+  void initState() {
+    super.initState();
+    configuration = widget.proxyServer.configuration;
+  }
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   Widget build(BuildContext context) {
-    return futureWidget(HistoryStorage.instance, (data) {
+    return futureWidget(HistoryStorage.instance, (storage) {
       List<Widget> children = [];
 
-      var container = MobileHomeState.requestStateKey.currentState!.container;
-      if (container.isNotEmpty == true && !_sessionSaved) {
+      if (widget.container.isNotEmpty == true && !_sessionSaved && widget.historyTask.history == null) {
         //当前会话未保存，是否保存当前会话
-        children.add(buildSaveSession(data, container));
+        children.add(buildSaveSession(storage));
       }
 
-      var histories = data.histories;
+      var histories = storage.histories;
       for (int i = histories.length - 1; i >= 0; i--) {
         var entry = histories.elementAt(i);
-        children.add(buildItem(data, i, entry));
+        children.add(buildItem(storage, i, entry));
       }
 
       return Scaffold(
           appBar: AppBar(
-            title: Text(localizations.history, style: const TextStyle(fontSize: 16)),
-            centerTitle: true,
-            actions: [TextButton(onPressed: () => import(data), child: Text(localizations.import))],
-          ),
+              title: Text(localizations.history, style: const TextStyle(fontSize: 16)),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                    onPressed: () => import(storage),
+                    icon: const Icon(Icons.input, size: 18),
+                    tooltip: localizations.import),
+                const SizedBox(width: 3),
+                HistoryCacheTime(configuration, onSelected: (val) {
+                  if (val == 0) {
+                    widget.container.removeListener(widget.historyTask);
+                  } else {
+                    widget.container.addListener(widget.historyTask);
+                  }
+                }),
+                const SizedBox(width: 5)
+              ]),
           body: children.isEmpty
               ? Center(child: Text(localizations.emptyData))
               : ListView.separated(
@@ -91,7 +109,7 @@ class _MobileHistoryState extends State<MobileHistory> {
   }
 
   //构建保存会话
-  Widget buildSaveSession(HistoryStorage storage, List<HttpRequest> container) {
+  Widget buildSaveSession(HistoryStorage storage) {
     var name = formatDate(DateTime.now(), [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
 
     return ListTile(
@@ -102,8 +120,9 @@ class _MobileHistoryState extends State<MobileHistory> {
           icon: const Icon(Icons.save),
           label: Text(localizations.save),
           onPressed: () async {
-            await _writeHarFile(storage, container, name);
             setState(() {
+              widget.container.addListener(widget.historyTask);
+              widget.historyTask.startTask();
               _sessionSaved = true;
             });
           },
@@ -134,20 +153,6 @@ class _MobileHistoryState extends State<MobileHistory> {
     }
   }
 
-  //写入文件
-  _writeHarFile(HistoryStorage storage, List<HttpRequest> container, String name) async {
-    var file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch.toRadixString(36)}.txt");
-    RandomAccessFile open = await file.open(mode: FileMode.append);
-    HistoryItem history = await storage.addHistory(name, file, 0);
-
-    writeTask = WriteTask(history, open, storage);
-    writeTask?.writeList.addAll(container);
-    widget.proxyServer.addListener(writeTask!);
-    await writeTask?.writeTask();
-    writeTask?.startTask();
-    setState(() {});
-  }
-
   int selectIndex = -1;
 
   //构建历史记录
@@ -176,7 +181,7 @@ class _MobileHistoryState extends State<MobileHistory> {
         .push(MaterialPageRoute(
             builder: (BuildContext context) => HistoryRecord(history: item, proxyServer: widget.proxyServer)))
         .then((value) async {
-      if (item != writeTask?.history && item.requests != null && item.requestLength != item.requests?.length) {
+      if (item != widget.historyTask.history && item.requests != null && item.requestLength != item.requests?.length) {
         await storage.flushRequests(item, item.requests!);
         setState(() {});
       }
@@ -241,10 +246,8 @@ class _MobileHistoryState extends State<MobileHistory> {
               TextButton(
                   onPressed: () {
                     setState(() {
-                      if (storage.getHistory(index) == writeTask?.history) {
-                        writeTask?.timer?.cancel();
-                        writeTask?.open.close();
-                        writeTask = null;
+                      if (storage.getHistory(index) == widget.historyTask.history) {
+                        widget.historyTask.cancelTask();
                       }
                       storage.removeHistory(index);
                     });
@@ -312,61 +315,13 @@ class _HistoryRecordState extends State<HistoryRecord> {
         body: futureWidget(
             loading: true,
             HistoryStorage.instance.then((storage) => storage.getRequests(widget.history)),
-            (data) => RequestListWidget(proxyServer: widget.proxyServer, list: data, key: requestStateKey)));
+            (data) =>
+                RequestListWidget(proxyServer: widget.proxyServer, list: ListenableList(data), key: requestStateKey)));
   }
 
   //导出har
   export() async {
     var item = widget.history;
     requestStateKey.currentState?.export(item.name);
-  }
-}
-
-class WriteTask extends EventListener {
-  final HistoryStorage historyStorage;
-  final RandomAccessFile open;
-  Queue writeList = Queue();
-  Timer? timer;
-  final HistoryItem history;
-
-  WriteTask(this.history, this.open, this.historyStorage);
-
-  //写入任务
-  startTask() {
-    timer = Timer.periodic(const Duration(seconds: 15), (it) => writeTask());
-  }
-
-  @override
-  void onRequest(Channel channel, HttpRequest request) {}
-
-  @override
-  void onResponse(ChannelContext channelContext, HttpResponse response) {
-    if (response.request == null) {
-      return;
-    }
-    writeList.add(response.request!);
-  }
-
-  //写入任务
-  writeTask() async {
-    if (writeList.isEmpty) {
-      return;
-    }
-    int length = history.requestLength;
-
-    while (writeList.isNotEmpty) {
-      var request = writeList.removeFirst();
-      var har = Har.toHar(request);
-
-      await open.writeString(jsonEncode(har));
-      await open.writeString(",\n");
-      length++;
-    }
-
-    await open.flush(); //刷新
-
-    history.requestLength = length;
-    history.fileSize = await open.length();
-    await historyStorage.refresh();
   }
 }

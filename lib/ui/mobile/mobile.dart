@@ -24,6 +24,7 @@ import 'package:network_proxy/ui/mobile/request/search.dart';
 import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/widgets/pip.dart';
 import 'package:network_proxy/utils/ip.dart';
+import 'package:network_proxy/utils/listenable_list.dart';
 
 class MobileHomePage extends StatefulWidget {
   final Configuration configuration;
@@ -41,7 +42,8 @@ class MobileHomePage extends StatefulWidget {
 final ValueNotifier<bool> pictureInPictureNotifier = ValueNotifier(false);
 
 class MobileHomeState extends State<MobileHomePage> implements EventListener, LifecycleListener {
-  static GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
+  static final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
+  static final container = ListenableList<HttpRequest>();
 
   /// 远程连接
   final ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
@@ -163,7 +165,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             valueListenable: pictureInPictureNotifier,
             builder: (context, pip, _) {
               if (pip) {
-                return Scaffold(body: RequestListWidget(key: requestStateKey, proxyServer: proxyServer));
+                return Scaffold(
+                    body: RequestListWidget(key: requestStateKey, proxyServer: proxyServer, list: container));
               }
 
               return Scaffold(
@@ -171,14 +174,16 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
                       widget.appConfiguration.pipEnabled ? PictureInPictureWindow(proxyServer) : const SizedBox(),
                   body: Scaffold(
                     appBar: appBar(),
-                    drawer: DrawerWidget(proxyServer: proxyServer),
+                    drawer: DrawerWidget(proxyServer: proxyServer, container: container),
                     floatingActionButton: _launchActionButton(),
                     body: ValueListenableBuilder(
                         valueListenable: desktop,
                         builder: (context, value, _) {
                           return Column(children: [
                             value.connect ? remoteConnect(value) : const SizedBox(),
-                            Expanded(child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer))
+                            Expanded(
+                                child:
+                                    RequestListWidget(key: requestStateKey, proxyServer: proxyServer, list: container))
                           ]);
                         }),
                   ));
@@ -220,18 +225,19 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-            '1. 增加当前视图导出；\n'
-            '2. 历史记录增加搜索；\n'
-            '3. Android返回键进入小窗口；\n'
-            '4. Android白名单应用列表展示隐藏图标应用；\n'
-            '5. 修复websocket暗黑主题展示不清楚；\n'
+            '1. 历史记录支持自动缓存时间设置；\n'
+            '2. 增加当前视图导出；\n'
+            '3. 历史记录增加搜索；\n'
+            '4. Android返回键进入小窗口；\n'
+            '5. Android白名单应用列表展示隐藏图标应用；\n'
+            '6. 修复websocket暗黑主题展示不清楚；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
-            '1. Add current view export;\n'
-            '2. History Add Search;\n'
-            '3. Android Return key to enter the small window；\n'
-            '4. Android Whitelist application list display hidden icon applications；\n'
-            '5. Fix websocket dark theme display unclear；\n'
-            ;
+            '1. History support auto cache time setting；\n'
+            '2. Add current view export;\n'
+            '3. History Add Search;\n'
+            '4. Android Return key to enter the small window；\n'
+            '5. Android Whitelist application list display hidden icon applications；\n'
+            '6. Fix websocket dark theme display unclear；\n';
     showAlertDialog(isCN ? '更新内容V1.0.8' : "Update content V1.0.8", content, () {
       widget.appConfiguration.upgradeNoticeV8 = false;
       widget.appConfiguration.flushConfig();

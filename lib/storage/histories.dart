@@ -73,9 +73,8 @@ class HistoryStorage {
   }
 
   /// 添加历史记录
-  Future<HistoryItem> addHistory(String name, File file, int requestLength) async {
-    var size = await file.length();
-    var historyItem = HistoryItem(name, file.path, requestLength, size);
+  HistoryItem addHistory(String name, File file, int requestLength) {
+    var historyItem = HistoryItem(name, file.path, requestLength, 0);
     _histories.add(historyItem);
     refresh();
     return historyItem;
@@ -183,7 +182,6 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
   HistoryTask(this.configuration, this.sourceList) {
     if (configuration.historyCacheTime != 0) {
       sourceList.addListener(this);
-
       Future.delayed(const Duration(seconds: 10), () {
         HistoryStorage.instance.then((value) => {});
       });
@@ -210,8 +208,9 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
 
   @override
   void onAdd(HttpRequest item) {
-    if (timer == null) {
+    if (history == null) {
       startTask();
+      return;
     }
     writeList.add(item);
   }
@@ -246,15 +245,19 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
 
   //写入任务
   Future<void> startTask() async {
-    if (timer != null) return;
+    if (history != null || locked) return;
+    locked = true;
 
     HistoryStorage storage = await HistoryStorage.instance;
     var name = formatDate(DateTime.now(), [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
-
     File file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
+    history = storage.addHistory(name, file, 0);
+    writeList.clear();
+    writeList.addAll(sourceList.source);
+    locked = false;
+
     open = await file.open(mode: FileMode.append);
-    history = await storage.addHistory(name, file, 0);
-    timer = Timer.periodic(const Duration(seconds: 15), (it) => writeTask());
+    timer = Timer.periodic(const Duration(seconds: 5), (it) => writeTask());
   }
 
   //写入任务
@@ -276,6 +279,7 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
 
     if (!changed) return;
     history!.fileSize = await open!.length();
+    history!.requests = null;
     var historyStorage = await HistoryStorage.instance;
     historyStorage.updateHistory(historyStorage.getIndex(history!), history!);
   }
@@ -297,7 +301,7 @@ class HistoryItem {
   //json反序列化
   factory HistoryItem.formJson(Map<String, dynamic> map) {
     return HistoryItem(map['name'], map['path'], map['requestLength'], map['fileSize'],
-        createTime: DateTime.fromMillisecondsSinceEpoch(map['createTime']));
+        createTime: map['createTime'] == null ? null : DateTime.fromMillisecondsSinceEpoch(map['createTime']));
   }
 
   //json序列化

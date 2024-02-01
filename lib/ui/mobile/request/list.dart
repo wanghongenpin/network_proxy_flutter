@@ -16,11 +16,12 @@ import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
 import 'package:network_proxy/utils/har.dart';
 import 'package:network_proxy/utils/lang.dart';
+import 'package:network_proxy/utils/listenable_list.dart';
 import 'package:share_plus/share_plus.dart';
 
 class RequestListWidget extends StatefulWidget {
   final ProxyServer proxyServer;
-  final List<HttpRequest>? list;
+  final ListenableList<HttpRequest>? list;
 
   const RequestListWidget({super.key, required this.proxyServer, this.list});
 
@@ -35,7 +36,7 @@ class RequestListState extends State<RequestListWidget> {
   final GlobalKey<DomainListState> domainListKey = GlobalKey<DomainListState>();
 
   //请求列表容器
-  List<HttpRequest> container = [];
+  ListenableList<HttpRequest> container = ListenableList();
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
@@ -62,7 +63,7 @@ class RequestListState extends State<RequestListWidget> {
             return Text.rich(
                 overflow: TextOverflow.ellipsis,
                 TextSpan(
-                    text: container[container.length - index - 1].requestUrl.fixAutoLines(),
+                    text: container.elementAt(container.length - index - 1).requestUrl.fixAutoLines(),
                     style: const TextStyle(fontSize: 9)),
                 maxLines: 2);
           });
@@ -154,7 +155,7 @@ class RequestListState extends State<RequestListWidget> {
 
 ///请求序列 列表
 class RequestSequence extends StatefulWidget {
-  final List<HttpRequest> container;
+  final ListenableList<HttpRequest> container;
   final ProxyServer proxyServer;
   final bool displayDomain;
   final Function(List<HttpRequest>)? onRemove;
@@ -182,7 +183,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   @override
   initState() {
     super.initState();
-    view.addAll(widget.container.reversed);
+    view.addAll(widget.container.source.reversed);
   }
 
   ///添加请求
@@ -231,7 +232,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   void search(SearchModel searchModel) {
     this.searchModel = searchModel;
     if (searchModel.isEmpty) {
-      view = Queue.of(widget.container.reversed);
+      view = Queue.of(widget.container.source.reversed);
     } else {
       view = Queue.of(widget.container.where((it) => searchModel.filter(it, it.response)).toList().reversed);
     }
@@ -286,7 +287,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
 ///域名列表
 class DomainList extends StatefulWidget {
-  final List<HttpRequest> list;
+  final ListenableList<HttpRequest> list;
   final ProxyServer proxyServer;
   final Function(List<HttpRequest>)? onRemove;
 
@@ -442,7 +443,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
                 body: RequestSequence(
                     key: requestSequenceKey,
                     displayDomain: false,
-                    container: containerMap[view.elementAt(index)]!,
+                    container: ListenableList(containerMap[view.elementAt(index)]!),
                     onRemove: widget.onRemove,
                     proxyServer: widget.proxyServer));
           }));

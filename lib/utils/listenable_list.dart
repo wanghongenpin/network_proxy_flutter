@@ -37,7 +37,7 @@ class OnchangeListEvent<T> extends ListenerListEvent<T> {
 /// 可监听list
 /// @author wanghongen
 /// 2024/01/30
-class ListenableList<T> {
+class ListenableList<T> extends Iterable<T> {
   List<T> source = [];
   final List<ListenerListEvent<T>> _listeners = [];
 
@@ -55,9 +55,16 @@ class ListenableList<T> {
     _listeners.remove(listener);
   }
 
+  @override
   int get length => source.length;
 
+  @override
+  bool get isEmpty => source.isEmpty;
+
   int indexOf(T item) => source.indexOf(item);
+
+  @override
+  T elementAt(int index) => source[index];
 
   update(int index, T item) {
     source[index] = item;
@@ -115,4 +122,7 @@ class ListenableList<T> {
       element.onBatchRemove(list);
     }
   }
+
+  @override
+  Iterator<T> get iterator => source.iterator;
 }

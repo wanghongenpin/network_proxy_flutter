@@ -11,6 +11,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/storage/histories.dart';
+import 'package:network_proxy/ui/component/history_cache_time.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/utils/har.dart';
@@ -128,9 +129,12 @@ class _HistoryListState extends State<_HistoryListWidget> {
     container = widget.container;
     proxyServer = widget.proxyServer;
 
-    storage.addListener(OnchangeListEvent(() {
-      if (mounted) setState(() {});
-    }));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      storage.addListener(OnchangeListEvent(() {
+        if (mounted) setState(() {});
+      }));
+    });
+
   }
 
   @override
@@ -155,7 +159,13 @@ class _HistoryListState extends State<_HistoryListWidget> {
               actions: [
                 IconButton(onPressed: import, icon: const Icon(Icons.input, size: 18), tooltip: localizations.import),
                 const SizedBox(width: 3),
-                cacheTimeMenu(),
+                HistoryCacheTime(proxyServer.configuration, onSelected: (val) {
+                  if (val == 0) {
+                    widget.container.removeListener(widget.historyTask);
+                  } else {
+                    widget.container.addListener(widget.historyTask);
+                  }
+                }),
                 const SizedBox(width: 5)
               ],
             )),
@@ -164,35 +174,6 @@ class _HistoryListState extends State<_HistoryListWidget> {
           itemBuilder: (_, index) => children[index],
           separatorBuilder: (_, index) => const Divider(thickness: 0.3, height: 0),
         ));
-  }
-
-  //缓存时间菜单
-  Widget cacheTimeMenu() {
-    return PopupMenuButton(
-        tooltip: localizations.historyCacheTime,
-        offset: const Offset(0, 35),
-        icon: const Icon(Icons.av_timer, size: 19),
-        initialValue: proxyServer.configuration.historyCacheTime,
-        onSelected: (val) {
-          setState(() {
-            if (val == 0) {
-              widget.container.removeListener(widget.historyTask);
-            } else {
-              widget.container.addListener(widget.historyTask);
-            }
-
-            proxyServer.configuration.historyCacheTime = val;
-            proxyServer.configuration.flushConfig();
-          });
-        },
-        itemBuilder: (BuildContext context) {
-          return [
-            PopupMenuItem(value: 0, height: 35, child: Text(localizations.historyManualSave)),
-            PopupMenuItem(value: 7, height: 35, child: Text(localizations.historyDay(7))),
-            PopupMenuItem(value: 30, height: 35, child: Text(localizations.historyDay(30))),
-            PopupMenuItem(value: 99999, height: 35, child: Text(localizations.historyForever)),
-          ];
-        });
   }
 
   //导入har

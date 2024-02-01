@@ -200,7 +200,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   isCN
                       ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                           '点击HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
-                          '1. 历史记录增加缓存时间设置；\n'
+                          '1. 历史记录支持自动缓存时间设置；\n'
                           '2. 增加当前视图导出；\n'
                           '3. 历史记录增加搜索；\n'
                           '4. Android返回键进入小窗口；\n'
@@ -208,7 +208,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                           '6. 修复websocket暗黑主题展示不清楚；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
-                          '1. History support cache time setting；\n'
+                          '1. History support auto cache time setting；\n'
                           '2. Add current view export;\n'
                           '3. History Add Search;\n'
                           '4. Android Return key to enter the small window；\n'

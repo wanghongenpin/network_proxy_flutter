@@ -10,14 +10,14 @@ import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
-import 'package:network_proxy/ui/mobile/widgets/about.dart';
-import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
 import 'package:network_proxy/ui/mobile/request/history.dart';
 import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
@@ -27,7 +27,10 @@ import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/mobile/setting/script.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
 import 'package:network_proxy/ui/mobile/setting/theme.dart';
+import 'package:network_proxy/ui/mobile/widgets/about.dart';
+import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
 import 'package:network_proxy/utils/ip.dart';
+import 'package:network_proxy/utils/listenable_list.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
 import 'package:url_launcher/url_launcher.dart';
@@ -35,8 +38,11 @@ import 'package:url_launcher/url_launcher.dart';
 ///左侧抽屉
 class DrawerWidget extends StatelessWidget {
   final ProxyServer proxyServer;
+  final ListenableList<HttpRequest> container;
+  final HistoryTask historyTask;
 
-  const DrawerWidget({super.key, required this.proxyServer});
+  DrawerWidget({super.key, required this.proxyServer, required this.container})
+      : historyTask = HistoryTask.ensureInstance(proxyServer.configuration, container);
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +63,8 @@ class DrawerWidget extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.history),
           title: Text(localizations.history),
-          onTap: () => navigator(context, MobileHistory(proxyServer: proxyServer)),
+          onTap: () => navigator(
+              context, MobileHistory(proxyServer: proxyServer, container: container, historyTask: historyTask)),
         ),
         const Divider(thickness: 0.3),
         ListTile(
