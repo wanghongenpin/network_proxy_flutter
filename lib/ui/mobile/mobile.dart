@@ -228,16 +228,18 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '1. 历史记录支持自动缓存时间设置；\n'
             '2. 增加当前视图导出；\n'
             '3. 历史记录增加搜索；\n'
-            '4. Android返回键进入小窗口；\n'
-            '5. Android白名单应用列表展示隐藏图标应用；\n'
-            '6. 修复websocket暗黑主题展示不清楚；\n'
+            '4. 支持高亮请求；\n'
+            '5. Android返回键进入小窗口；\n'
+            '6. Android白名单应用列表展示隐藏图标应用；\n'
+            '7. 修复websocket暗黑主题展示不清楚；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             '1. History support auto cache time setting；\n'
             '2. Add current view export;\n'
             '3. History Add Search;\n'
-            '4. Android Return key to enter the small window；\n'
-            '5. Android Whitelist application list display hidden icon applications；\n'
-            '6. Fix websocket dark theme display unclear；\n';
+            '4. Supports highlighting requests；\n'
+            '5. Android Return key to enter the small window；\n'
+            '6. Android Whitelist application list display hidden icon applications；\n'
+            '7. Fix websocket dark theme display unclear；\n';
     showAlertDialog(isCN ? '更新内容V1.0.8' : "Update content V1.0.8", content, () {
       widget.appConfiguration.upgradeNoticeV8 = false;
       widget.appConfiguration.flushConfig();

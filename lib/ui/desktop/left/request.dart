@@ -5,6 +5,7 @@ import 'package:date_format/date_format.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_desktop_context_menu/flutter_desktop_context_menu.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
@@ -50,6 +51,8 @@ class _RequestWidgetState extends State<RequestWidget> {
 
   bool selected = false;
 
+  Color? highlightColor; //高亮颜色
+
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
@@ -66,9 +69,11 @@ class _RequestWidgetState extends State<RequestWidget> {
     var packagesSize = getPackagesSize(request, response);
 
     return GestureDetector(
-        onSecondaryTapDown: menu,
+        onSecondaryTap: contextualMenu,
         child: ListTile(
             minLeadingWidth: 5,
+            textColor: highlightColor,
+            selectedColor: highlightColor,
             leading: getIcon(widget.response.get() ?? widget.request.response),
             title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
             subtitle: Text(
@@ -87,41 +92,124 @@ class _RequestWidgetState extends State<RequestWidget> {
     setState(() {});
   }
 
-  ///右键菜单
-  menu(TapDownDetails details) {
-    showContextMenu(
-      context,
-      details.globalPosition,
-      items: <PopupMenuEntry>[
-        popupItem(localizations.copyUrl, onTap: () {
+  contextualMenu() {
+    Menu menu = Menu(items: [
+      MenuItem(
+        label: localizations.copyUrl,
+        onClick: (_) {
           var requestUrl = widget.request.requestUrl;
           Clipboard.setData(ClipboardData(text: requestUrl))
               .then((value) => FlutterToastr.show(localizations.copied, context));
-        }),
-        popupItem(localizations.copyRequestResponse, onTap: () {
+        },
+      ),
+      MenuItem(
+        label: localizations.copyRequestResponse,
+        onClick: (_) {
           Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))
               .then((value) => FlutterToastr.show(localizations.copied, context));
-        }),
-        popupItem(localizations.copyCurl, onTap: () {
+        },
+      ),
+      MenuItem(
+        label: localizations.copyCurl,
+        onClick: (_) {
           Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
               .then((value) => FlutterToastr.show(localizations.copied, context));
-        }),
-        const PopupMenuDivider(height: 0.3),
-        popupItem(localizations.repeat, onTap: () => onRepeat(widget.request)),
-        popupItem(localizations.customRepeat, onTap: () => showCustomRepeat(widget.request)),
-        popupItem(localizations.editRequest, onTap: () {
+        },
+      ),
+      MenuItem.separator(),
+      MenuItem(
+        label: localizations.repeat,
+        onClick: (_) => onRepeat(widget.request),
+      ),
+      MenuItem(
+        label: localizations.customRepeat,
+        onClick: (_) => showCustomRepeat(widget.request),
+      ),
+      MenuItem(
+        label: localizations.editRequest,
+        onClick: (_) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             requestEdit();
           });
-        }),
-        popupItem(localizations.favorite, onTap: () {
+        },
+      ),
+      MenuItem.separator(),
+      MenuItem(
+        label: localizations.favorite,
+        onClick: (_) {
           FavoriteStorage.addFavorite(widget.request);
           FlutterToastr.show(localizations.operationSuccess, context);
-        }),
-        const PopupMenuDivider(height: 0.3),
-        popupItem(localizations.delete, onTap: () {
+        },
+      ),
+      MenuItem(
+        label: localizations.highlight,
+        type: 'submenu',
+        submenu: highlightMenu(),
+        onClick: (_) {
+          setState(() {
+            highlightColor = Colors.red;
+          });
+        },
+      ),
+      MenuItem.separator(),
+      MenuItem(
+        label: localizations.delete,
+        onClick: (_) {
           widget.remove?.call(widget);
-        }),
+        },
+      ),
+    ]);
+
+    popUpContextMenu(menu);
+  }
+
+  ///高亮
+  Menu highlightMenu() {
+    return Menu(
+      items: [
+        MenuItem(
+            label: localizations.red,
+            onClick: (_) {
+              setState(() {
+                highlightColor = Colors.red;
+              });
+            }),
+        MenuItem(
+            label: localizations.yellow,
+            onClick: (_) {
+              setState(() {
+                highlightColor = Colors.yellow.shade600;
+              });
+            }),
+        MenuItem(
+            label: localizations.blue,
+            onClick: (_) {
+              setState(() {
+                highlightColor = Colors.blue;
+              });
+            }),
+        MenuItem(
+            label: localizations.green,
+            onClick: (_) {
+              setState(() {
+                highlightColor = Colors.green;
+              });
+            }),
+        MenuItem(
+            label: localizations.gray,
+            onClick: (_) {
+              setState(() {
+                highlightColor = Colors.grey;
+              });
+            }),
+        MenuItem.separator(),
+        MenuItem(
+            label: localizations.reset,
+            onClick: (_) {
+              setState(() {
+                highlightColor = null;
+              });
+            }),
       ],
     );
   }

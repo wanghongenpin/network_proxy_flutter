@@ -37,15 +37,6 @@ class _SettingState extends State<Setting> {
     super.initState();
   }
 
-  Widget item(String text, {VoidCallback? onPressed}) {
-    return MenuItemButton(
-        trailingIcon: const Icon(Icons.arrow_right),
-        onPressed: onPressed,
-        child: Padding(
-            padding: const EdgeInsets.only(left: 10, right: 5),
-            child: Text(text, style: const TextStyle(fontSize: 14))));
-  }
-
   @override
   Widget build(BuildContext context) {
     var surfaceTintColor =
@@ -76,16 +67,13 @@ class _SettingState extends State<Setting> {
     );
   }
 
-  PopupMenuItem<String> menuItem(String title, {GestureTapCallback? onTap}) {
-    return PopupMenuItem<String>(
-        child: ListTile(
-      title: Text(title),
-      dense: true,
-      hoverColor: Colors.transparent,
-      focusColor: Colors.transparent,
-      trailing: const Icon(Icons.arrow_right),
-      onTap: onTap,
-    ));
+  Widget item(String text, {VoidCallback? onPressed}) {
+    return MenuItemButton(
+        trailingIcon: const Icon(Icons.arrow_right),
+        onPressed: onPressed,
+        child: Padding(
+            padding: const EdgeInsets.only(left: 10, right: 5),
+            child: Text(text, style: const TextStyle(fontSize: 14))));
   }
 
   ///设置外部代理地址

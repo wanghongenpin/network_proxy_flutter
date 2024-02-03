@@ -266,7 +266,7 @@ class MoreMenu extends StatelessWidget {
       itemBuilder: (BuildContext context) {
         return <PopupMenuEntry>[
           PopupMenuItem(
-              height: 35,
+              height: 32,
               child: ListTile(
                   dense: true,
                   title: Text(localizations.httpsProxy),
@@ -279,7 +279,7 @@ class MoreMenu extends StatelessWidget {
                     );
                   })),
           PopupMenuItem(
-              height: 35,
+              height: 32,
               child: ListTile(
                 dense: true,
                 leading: const Icon(Icons.qr_code_scanner_outlined),
@@ -289,7 +289,7 @@ class MoreMenu extends StatelessWidget {
                 },
               )),
           PopupMenuItem(
-              height: 35,
+              height: 32,
               child: ListTile(
                 dense: true,
                 leading: const Icon(Icons.phone_iphone),
@@ -303,7 +303,7 @@ class MoreMenu extends StatelessWidget {
               )),
           const PopupMenuDivider(height: 0),
           PopupMenuItem(
-              height: 35,
+              height: 32,
               child: ListTile(
                 dense: true,
                 leading: const Icon(Icons.share),

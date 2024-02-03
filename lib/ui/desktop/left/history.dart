@@ -71,19 +71,22 @@ class HistoryPageWidget extends StatelessWidget {
                   style: const TextStyle(fontSize: 14)),
               actions: [
                 PopupMenuButton(
-                    offset: const Offset(0, 30),
-                    icon: const Icon(Icons.more_vert_outlined),
+                    offset: const Offset(0, 32),
+                    icon: const Icon(Icons.more_vert_outlined, size: 20),
                     itemBuilder: (BuildContext context) {
                       return [
                         PopupMenuItem(
-                            height: 35,
+                            height: 32,
                             onTap: () {
                               String fileName = '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'
                                   .replaceAll(" ", "_")
                                   .replaceAll(":", "_");
                               domainKey.currentState?.export(fileName);
                             },
-                            child: IconText(icon: const Icon(Icons.share), text: localizations.viewExport)),
+                            child: IconText(
+                                icon: const Icon(Icons.share, size: 18),
+                                text: localizations.viewExport,
+                                textStyle: const TextStyle(fontSize: 14))),
                       ];
                     }),
               ],
@@ -134,7 +137,6 @@ class _HistoryListState extends State<_HistoryListWidget> {
         if (mounted) setState(() {});
       }));
     });
-
   }
 
   @override

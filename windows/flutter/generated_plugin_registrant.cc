@@ -8,6 +8,7 @@
 
 #include <desktop_multi_window/desktop_multi_window_plugin.h>
 #include <file_selector_windows/file_selector_windows.h>
+#include <flutter_desktop_context_menu/flutter_desktop_context_menu_plugin.h>
 #include <flutter_js/flutter_js_plugin.h>
 #include <proxy_manager/proxy_manager_plugin.h>
 #include <screen_retriever/screen_retriever_plugin.h>
@@ -20,6 +21,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("DesktopMultiWindowPlugin"));
   FileSelectorWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FileSelectorWindows"));
+  FlutterDesktopContextMenuPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("FlutterDesktopContextMenuPlugin"));
   FlutterJsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterJsPlugin"));
   ProxyManagerPluginRegisterWithRegistrar(

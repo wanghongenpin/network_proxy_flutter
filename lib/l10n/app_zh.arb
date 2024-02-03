@@ -115,7 +115,7 @@
   "domainListSubtitle": "最后请求时间: {time},  次数: {count}",
 
   "copy": "复制",
-  "copyUrl": "复制请求连接",
+  "copyUrl": "复制URL",
   "copyRequestResponse": "复制请求和响应",
   "copyCurl": "复制 cURL 请求",
   "delete": "删除",
@@ -125,7 +125,7 @@
   "repeatCount": "次数",
   "repeatInterval": "间隔(ms)",
   "repeatDelay": "延时(ms)",
-  "editRequest": "编辑请求重放",
+  "editRequest": "编辑请求",
   "reSendRequest": "已重新发送请求",
   "viewExport": "视图导出",
 
@@ -231,5 +231,15 @@
   "scriptUseDescribe": "使用 JavaScript 修改请求和响应",
   "scriptEdit": "编辑脚本",
   "material3": "Material3是谷歌开源设计系统的最新版本",
-  "iosVpnBackgroundAudio": "开启抓包后，退出到后台。为了维护主UI线程的网络通信，将启用静音音频播放以保持主线程运行。否则，它将只在后台运行30秒。您同意在启用抓包后在后台播放音频吗?"
+  "iosVpnBackgroundAudio": "开启抓包后，退出到后台。为了维护主UI线程的网络通信，将启用静音音频播放以保持主线程运行。否则，它将只在后台运行30秒。您同意在启用抓包后在后台播放音频吗?",
+
+  "highlight": "高亮",
+  "blue" : "蓝色",
+  "green" : "绿色",
+  "yellow" : "黄色",
+  "red" : "红色",
+  "pink" : "粉色",
+  "gray" : "灰色",
+  "underline" : "下划线"
+
 }

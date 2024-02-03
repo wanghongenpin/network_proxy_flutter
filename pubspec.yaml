@@ -18,7 +18,7 @@ dependencies:
   basic_utils: ^5.7.0
   logger: ^2.0.1
   date_format: ^2.0.7
-  window_manager: ^0.3.7
+  window_manager: ^0.3.8
   desktop_multi_window:
     git:
       url: https://gitee.com/wanghongenpin/flutter-plugins.git
@@ -37,6 +37,7 @@ dependencies:
   flutter_js: ^0.8.0
   flutter_code_editor:
   file_picker: ^6.1.1
+  flutter_desktop_context_menu: ^0.2.0
   video_player:
     git:
       url: https://github.com/icapps/plugins.git
