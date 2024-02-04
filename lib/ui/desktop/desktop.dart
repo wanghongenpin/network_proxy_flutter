@@ -130,7 +130,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                 BoxDecoration(border: Border(right: BorderSide(color: Theme.of(context).dividerColor, width: 0.2))),
             child: Column(children: <Widget>[
               SizedBox(
-                height: 300,
+                height: 320,
                 child: leftNavigation(index),
               ),
               Expanded(
@@ -201,21 +201,23 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                       ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                           '点击HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
                           '1. 历史记录支持自动缓存时间设置；\n'
-                          '2. 增加当前视图导出；\n'
-                          '3. 历史记录增加搜索；\n'
-                          '4. 支持高亮请求；\n'
-                          '5. Android返回键进入小窗口；\n'
-                          '6. Android白名单应用列表展示隐藏图标应用；\n'
-                          '7. 修复websocket暗黑主题展示不清楚；\n'
+                          '2. 历史记录增加搜索；\n'
+                          '3. 增加当前视图导出；\n'
+                          '4. 增加屏蔽请求功能；\n'
+                          '5. 支持高亮请求；\n'
+                          '6. Android返回键进入小窗口；\n'
+                          '7. Android白名单应用列表展示隐藏图标应用；\n'
+                          '8. 修复websocket暗黑主题展示不清楚；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
                           '1. History support auto cache time setting；\n'
-                          '2. Add current view export;\n'
-                          '3. History Add Search;\n'
-                          '4. Supports highlighting requests；\n'
-                          '5. Android Return key to enter the small window；\n'
-                          '6. Android Whitelist application list display hidden icon applications；\n'
-                          '7. Fix websocket dark theme display unclear；\n',
+                          '2. History Add Search;\n'
+                          '3. Add current view export;\n'
+                          '4. Support blocking request；\n'
+                          '5. Support highlighting requests；\n'
+                          '6. Android Return key to enter the small window；\n'
+                          '7. Android Whitelist application list display hidden icon applications；\n'
+                          '8. Fix websocket dark theme display unclear；\n',
                   style: const TextStyle(fontSize: 14)));
         });
   }

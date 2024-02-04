@@ -41,8 +41,8 @@ class _ToolbarState extends State<Toolbar> {
     if (event.logicalKey == LogicalKeyboardKey.escape) {
       if (ModalRoute.of(context)?.isCurrent == false) {
         Navigator.of(context).pop();
+        return true;
       }
-      return true;
     }
 
     if (HardwareKeyboard.instance.isMetaPressed && event.logicalKey == LogicalKeyboardKey.keyW) {

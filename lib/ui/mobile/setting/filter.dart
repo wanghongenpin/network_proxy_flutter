@@ -182,7 +182,7 @@ class DomainAddDialog extends StatelessWidget {
                 ]))),
         actions: [
           FilledButton(
-              child: Text(localizations.add),
+              child: Text(localizations.save),
               onPressed: () {
                 if (!(formKey.currentState as FormState).validate()) {
                   return;

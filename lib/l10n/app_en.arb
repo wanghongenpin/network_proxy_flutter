@@ -181,7 +181,7 @@
   "caIosBrowser": "Open Safari on iOS devices：",
 
   "localIP": "Local IP ",
-  "mobileScan": "Scan with Mobile App",
+  "mobileScan": "Configure Wi-Fi proxy or Scan with Mobile App",
 
   "decode": "Decode",
   "encodeInput": "Enter the content to be converted",
@@ -241,6 +241,9 @@
   "red" : "Red",
   "pink" : "Pink",
   "gray" : "Gray",
-  "underline" : "Underline"
+  "underline" : "Underline",
+
+  "requestBlock": "Request Block"
+
 
 }

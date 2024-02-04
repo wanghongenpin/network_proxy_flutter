@@ -9,6 +9,7 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
+import 'package:network_proxy/network/components/request_block_manager.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
@@ -23,6 +24,7 @@ import 'package:network_proxy/ui/mobile/request/history.dart';
 import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
 import 'package:network_proxy/ui/mobile/setting/filter.dart';
 import 'package:network_proxy/ui/mobile/setting/proxy.dart';
+import 'package:network_proxy/ui/mobile/setting/request_block.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/mobile/setting/script.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
@@ -89,8 +91,21 @@ class DrawerWidget extends StatelessWidget {
         ListTile(
             title: Text(localizations.requestRewrite),
             leading: const Icon(Icons.replay_outlined),
-            onTap: () async =>
-                navigator(context, MobileRequestRewrite(requestRewrites: (await RequestRewrites.instance)))),
+            onTap: () async {
+              var requestRewrites = await RequestRewrites.instance;
+              if (context.mounted) {
+                navigator(context, MobileRequestRewrite(requestRewrites: requestRewrites));
+              }
+            }),
+        ListTile(
+            title: Text(localizations.requestBlock),
+            leading: const Icon(Icons.block_flipped),
+            onTap: () async {
+              var requestBlockManager = await RequestBlockManager.instance;
+              if (context.mounted) {
+                navigator(context, MobileRequestBlock(requestBlockManager: requestBlockManager));
+              }
+            }),
         ListTile(
             title: Text(localizations.script),
             leading: const Icon(Icons.code),

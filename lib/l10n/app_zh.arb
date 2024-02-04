@@ -182,7 +182,7 @@
   "caIosBrowser": "在 iOS 设备上打开 Safari访问：",
 
   "localIP": "本地IP ",
-  "mobileScan": "请使用手机版扫描二维码",
+  "mobileScan": "配置Wi-Fi代理或使用手机版扫描二维码",
 
   "encodeInput": "输入要转换的内容",
   "encodeResult": "转换结果",
@@ -240,6 +240,8 @@
   "red" : "红色",
   "pink" : "粉色",
   "gray" : "灰色",
-  "underline" : "下划线"
+  "underline" : "下划线",
+
+  "requestBlock": "请求屏蔽"
 
 }

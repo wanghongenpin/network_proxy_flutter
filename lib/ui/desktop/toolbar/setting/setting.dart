@@ -4,12 +4,11 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/components/request_block_manager.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
-import 'package:network_proxy/ui/component/utils.dart';
-import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/external_proxy.dart';
-import 'package:network_proxy/ui/desktop/toolbar/setting/theme.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/request_block.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'filter.dart';
@@ -57,9 +56,9 @@ class _SettingState extends State<Setting> {
       },
       menuChildren: [
         _ProxyMenu(proxyServer: widget.proxyServer),
-        futureWidget(AppConfiguration.instance, (appConfiguration) => ThemeSetting(appConfiguration: appConfiguration)),
         item(localizations.domainFilter, onPressed: hostFilter),
         item(localizations.requestRewrite, onPressed: requestRewrite),
+        item(localizations.requestBlock, onPressed: showRequestBlock),
         item(localizations.script, onPressed: () => openScriptWindow()),
         item(localizations.externalProxy, onPressed: setExternalProxy),
         item("Github", onPressed: () => launchUrl(Uri.parse("https://github.com/wanghongenpin/network_proxy_flutter"))),
@@ -99,6 +98,19 @@ class _SettingState extends State<Setting> {
       context: context,
       builder: (context) {
         return FilterDialog(configuration: configuration);
+      },
+    );
+  }
+
+  //请求屏蔽
+  void showRequestBlock() async {
+    var requestBlockManager = await RequestBlockManager.instance;
+    if (!mounted) return;
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return RequestBlock(requestBlockManager: requestBlockManager);
       },
     );
   }

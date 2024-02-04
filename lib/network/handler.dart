@@ -31,6 +31,7 @@ import 'package:network_proxy/network/util/uri.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 import 'channel.dart';
+import 'components/request_block_manager.dart';
 import 'http_client.dart';
 
 ///请求和响应事件监听
@@ -111,6 +112,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
         return;
       }
 
+      var uri = '${httpRequest.remoteDomain()}${httpRequest.path()}';
       //脚本替换
       var scriptManager = await ScriptManager.instance;
       HttpRequest? request = await scriptManager.runScript(httpRequest);
@@ -125,8 +127,16 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
       listener?.onRequest(channel, httpRequest);
 
+      //屏蔽请求
+      var blockRequest = (await RequestBlockManager.instance).enableBlockRequest(uri);
+      if (blockRequest) {
+        log.d("[${channel.id}] 屏蔽请求 $uri");
+        channel.close();
+        remoteChannel.close();
+        return;
+      }
+
       //重定向
-      var uri = '${httpRequest.remoteDomain()}${httpRequest.path()}';
       String? redirectUrl = await requestRewrites?.getRedirectRule(uri);
       if (redirectUrl?.isNotEmpty == true) {
         await redirect(channelContext, channel, httpRequest, redirectUrl!);
@@ -243,6 +253,15 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
       log.e('[${clientChannel.id}] 响应重写异常 ', error: e, stackTrace: t);
     }
     listener?.onResponse(channelContext, msg);
+
+    //屏蔽响应
+    var uri = '${request?.remoteDomain()}${request?.path()}';
+    var blockResponse = (await RequestBlockManager.instance).enableBlockResponse(uri);
+    if (blockResponse) {
+      channel.close();
+      return;
+    }
+
     //发送给客户端
     await clientChannel.write(msg);
   }
