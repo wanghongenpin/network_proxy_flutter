@@ -215,6 +215,7 @@ class RequestBlockAddDialog extends StatelessWidget {
                 (formKey.currentState as FormState).save();
 
                 item.enabled = enabled;
+                item.urlReg = null;
                 if (index != null) {
                   requestBlockManager.list[index!] = item;
                 } else {

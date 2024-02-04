@@ -214,7 +214,8 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
       if (item.bodyFile != null)
         Container(
             padding: const EdgeInsets.all(8),
-            foregroundDecoration: BoxDecoration(border: Border.all(color: Theme.of(context).primaryColor, width: 1)),
+            foregroundDecoration:
+                BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 1)),
             child: Text(item.bodyFile ?? ''))
     ]);
   }
@@ -378,7 +379,7 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2));
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
   }
 }
 

@@ -231,7 +231,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '4. 增加屏蔽请求功能；\n'
             '5. Android返回键进入小窗口；\n'
             '6. Android白名单应用列表展示隐藏图标应用；\n'
-            '7. 修复websocket暗黑主题展示不清楚；\n'
+            '7. 修复暗黑主题样式；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             '1. History support auto cache time setting；\n'
             '2. History Add Search;\n'
@@ -239,7 +239,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '4. Support blocking request；\n'
             '5. Android Return key to enter the small window；\n'
             '6. Android Whitelist application list display hidden icon applications；\n'
-            '7. Fix websocket dark theme display unclear；\n';
+            '7. Fix dark theme style；\n';
     showAlertDialog(isCN ? '更新内容V1.0.8' : "Update content V1.0.8", content, () {
       widget.appConfiguration.upgradeNoticeV8 = false;
       widget.appConfiguration.flushConfig();

@@ -90,10 +90,7 @@ class _MobileScriptState extends State<MobileScript> {
                           Container(
                               padding: const EdgeInsets.only(top: 10),
                               constraints: const BoxConstraints(maxHeight: 500, minHeight: 300),
-                              decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                                  color: Colors.white,
-                                  backgroundBlendMode: BlendMode.colorBurn),
+                              decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
                               child: SingleChildScrollView(
                                   child: Column(children: [
                                 Row(
@@ -264,7 +261,7 @@ class _ScriptEditState extends State<ScriptEdit> {
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2));
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
   }
 }
 
@@ -289,7 +286,7 @@ class _ScriptListState extends State<ScriptList> {
   }
 
   List<Widget> rows(List<ScriptItem> list) {
-    var primaryColor = Theme.of(context).primaryColor;
+    var primaryColor = Theme.of(context).colorScheme.primary;
 
     return List.generate(list.length, (index) {
       return InkWell(

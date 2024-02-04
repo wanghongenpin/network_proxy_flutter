@@ -218,10 +218,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                 padding: const EdgeInsets.only(top: 10),
                 height: 500,
                 // constraints: const BoxConstraints(maxHeight: 500, minHeight: 350),
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                    color: Colors.white,
-                    backgroundBlendMode: BlendMode.colorBurn),
+                decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
                 child: SingleChildScrollView(
                     child: Column(children: [
                   Row(
@@ -637,6 +634,6 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2));
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
   }
 }

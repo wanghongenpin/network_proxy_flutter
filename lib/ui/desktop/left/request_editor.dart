@@ -588,7 +588,8 @@ class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin
                 contentPadding: const EdgeInsets.fromLTRB(5, 13, 5, 13),
                 focusedBorder: widget.readOnly
                     ? null
-                    : OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1.5)),
+                    : OutlineInputBorder(
+                        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)),
                 border: InputBorder.none,
                 hintText: isKey ? "Key" : "Value")));
   }

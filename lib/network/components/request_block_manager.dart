@@ -99,7 +99,7 @@ class RequestBlockItem {
 
   //匹配url
   bool match(String url, BlockType blockType) {
-    urlReg ??= RegExp(this.url.replaceAll("*", ".*"));
+    urlReg ??= RegExp('^${this.url.replaceAll("*", ".*")}');
     return enabled && type == blockType && urlReg!.hasMatch(url);
   }
 

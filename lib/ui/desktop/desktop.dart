@@ -207,7 +207,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                           '5. 支持高亮请求；\n'
                           '6. Android返回键进入小窗口；\n'
                           '7. Android白名单应用列表展示隐藏图标应用；\n'
-                          '8. 修复websocket暗黑主题展示不清楚；\n'
+                          '8. 修复暗黑主题样式；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
                           '1. History support auto cache time setting；\n'
@@ -217,7 +217,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                           '5. Support highlighting requests；\n'
                           '6. Android Return key to enter the small window；\n'
                           '7. Android Whitelist application list display hidden icon applications；\n'
-                          '8. Fix websocket dark theme display unclear；\n',
+                          '8. Fix dark theme style；\n',
                   style: const TextStyle(fontSize: 14)));
         });
   }

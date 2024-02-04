@@ -255,10 +255,7 @@ class _DomainListState extends State<DomainList> {
           height: 50,
           width: double.infinity,
           margin: const EdgeInsets.only(top: 10),
-          decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-              color: Colors.white,
-              backgroundBlendMode: BlendMode.colorBurn)),
+          decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2)))),
       Positioned(
           top: 0,
           left: 0,

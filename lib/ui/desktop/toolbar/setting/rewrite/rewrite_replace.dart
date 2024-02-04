@@ -204,7 +204,7 @@ class _RewriteReplaceState extends State<RewriteReplaceDialog> {
               : Container(
                   padding: const EdgeInsets.all(5),
                   foregroundDecoration:
-                      BoxDecoration(border: Border.all(color: Theme.of(context).primaryColor, width: 1)),
+                      BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 1)),
                   child: Text(item.bodyFile ?? ''))),
       const SizedBox(width: 10),
       FilledButton(
@@ -389,7 +389,7 @@ class _RewriteReplaceState extends State<RewriteReplaceDialog> {
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2));
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
   }
 }
 

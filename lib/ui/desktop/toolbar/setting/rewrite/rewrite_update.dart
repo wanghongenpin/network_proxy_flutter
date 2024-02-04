@@ -203,7 +203,7 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2));
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
   }
 }
 
@@ -231,10 +231,7 @@ class _UpdateListState extends State<UpdateList> {
         padding: const EdgeInsets.only(top: 10),
         height: 320,
         width: 550,
-        decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            color: Colors.white,
-            backgroundBlendMode: BlendMode.colorBurn),
+        decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
         child: SingleChildScrollView(
             child: Column(children: [
           Row(
@@ -254,7 +251,7 @@ class _UpdateListState extends State<UpdateList> {
   int selected = -1;
 
   List<Widget> rows(List<RewriteItem> list) {
-    var primaryColor = Theme.of(context).primaryColor;
+    var primaryColor = Theme.of(context).colorScheme.primary;
     bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
     return List.generate(list.length, (index) {

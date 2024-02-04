@@ -156,10 +156,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
         persistentFooterButtons: [multiple ? globalMenu() : const SizedBox()],
         body: Container(
             padding: const EdgeInsets.only(top: 10, bottom: 30),
-            decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                color: Colors.white,
-                backgroundBlendMode: BlendMode.colorBurn),
+            decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
             child: Scrollbar(
                 child: ListView(
               children: [
@@ -185,10 +182,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
           height: 50,
           width: double.infinity,
           margin: const EdgeInsets.only(top: 10),
-          decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-              color: Colors.white,
-              backgroundBlendMode: BlendMode.colorBurn)),
+          decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2)))),
       Positioned(
           top: 0,
           left: 0,

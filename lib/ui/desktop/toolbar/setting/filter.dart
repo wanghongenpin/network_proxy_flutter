@@ -279,9 +279,7 @@ class _DomainListState extends State<DomainList> {
             child: Container(
                 padding: const EdgeInsets.only(top: 10),
                 height: 380,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                ),
+                decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
                 child: SingleChildScrollView(
                     child: Column(children: [
                   Row(
