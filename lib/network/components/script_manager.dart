@@ -18,7 +18,7 @@ async function onRequest(context, request) {
   console.log(request.url);
   //URL参数
   //request.queries["name"] = "value";
-  // 更新或添加新标头
+  //Update or add Header
   //request.headers["X-New-Headers"] = "My-Value";
   
   // Update Body 使用fetch API请求接口，具体文档可网上搜索fetch API
@@ -28,7 +28,7 @@ async function onRequest(context, request) {
 
 // 在将响应数据发送到客户端之前,调用此函数,您可以在此处修改响应数据
 async function onResponse(context, request, response) {
-  // 更新或添加新标头
+   //Update or add Header
   // response.headers["Name"] = "Value";
   // response.statusCode = 200;
 
@@ -157,11 +157,14 @@ async function onResponse(context, request, response) {
     _path.then((value) => value.writeAsString(jsonEncode({'enabled': enabled, 'list': list})));
   }
 
+  Map<String, dynamic> scriptSession = {};
+
   ///脚本上下文
   Map<String, dynamic> scriptContext(ScriptItem item) {
     return {
       'scriptName': item.name,
       'os': Platform.operatingSystem,
+      'session': scriptSession,
     };
   }
 
@@ -177,12 +180,13 @@ async function onResponse(context, request, response) {
         var jsRequest = jsonEncode(convertJsRequest(request));
         String script = await getScript(item);
         var jsResult = await flutterJs.evaluateAsync(
-            """var request = $jsRequest, context = $context;  request['context'] = context; $script\n  onRequest(context, request)""");
+            """var request = $jsRequest, context = $context;  request['scriptContext'] = context; $script\n  onRequest(context, request)""");
         var result = await jsResultResolve(jsResult);
         if (result == null) {
           return null;
         }
-        request.attributes['scriptContext'] = result['context'];
+        request.attributes['scriptContext'] = result['scriptContext'];
+        scriptSession = result['scriptContext']['session'] ?? {};
         return convertHttpRequest(request, result);
       }
     }
@@ -203,12 +207,15 @@ async function onResponse(context, request, response) {
         var jsRequest = jsonEncode(convertJsRequest(request));
         var jsResponse = jsonEncode(convertJsResponse(response));
         String script = await getScript(item);
-        var jsResult = await flutterJs.evaluateAsync("""$script\n  onResponse($context, $jsRequest,$jsResponse);""");
+        var jsResult = await flutterJs.evaluateAsync(
+            """var response = $jsResponse, context = $context;  response['scriptContext'] = context; $script
+            \n  onResponse(context, $jsRequest, response);""");
         // print("response: ${jsResult.isPromise} ${jsResult.isError} ${jsResult.rawResult}");
         var result = await jsResultResolve(jsResult);
         if (result == null) {
           return null;
         }
+        scriptSession = result['scriptContext']['session'] ?? {};
         return convertHttpResponse(response, result);
       }
     }

@@ -39,7 +39,7 @@ class _RequestBlockState extends State<MobileRequestBlock> {
                 FilledButton.icon(
                     icon: const Icon(Icons.add, size: 14),
                     onPressed: showEdit,
-                    label: Text(localizations.add, style: const TextStyle(fontSize: 12))),
+                    label: Text(localizations.add, style: const TextStyle(fontSize: 14))),
                 const SizedBox(width: 5),
               ]),
               const SizedBox(height: 8),

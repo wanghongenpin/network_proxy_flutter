@@ -182,9 +182,7 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
   HistoryTask(this.configuration, this.sourceList) {
     if (configuration.historyCacheTime != 0) {
       sourceList.addListener(this);
-      Future.delayed(const Duration(seconds: 10), () {
-        HistoryStorage.instance.then((value) => {});
-      });
+      Future.delayed(const Duration(seconds: 3), () => cleanHistory());
     }
   }
 
@@ -199,9 +197,11 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
     }
     var overdueTime = DateTime.now().subtract(Duration(days: configuration.historyCacheTime));
     var historyStorage = await HistoryStorage.instance;
-    for (var element in historyStorage.histories) {
-      if (element.createTime.isBefore(overdueTime)) {
-        await historyStorage.removeHistory(historyStorage.getIndex(element));
+    var histories = historyStorage.histories;
+    for (int i = 0; i < histories.length; i++) {
+      if (histories.elementAt(i).createTime.isBefore(overdueTime)) {
+        await historyStorage.removeHistory(i);
+        i--;
       }
     }
   }
