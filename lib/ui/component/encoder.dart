@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/utils/lang.dart';
 
 ///编码类型
 enum EncoderType {
@@ -167,12 +169,23 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
         case EncoderType.url:
           result = Uri.decodeFull(inputText);
         case EncoderType.base64:
-          result = utf8.decode(base64Decode(inputText));
+          // base64.
+          var text = inputText.replaceAll('.', '');
+          if (text.length % 4 != 0) {
+            text = text.padRight(text.length + (4 - text.length % 4), '=');
+          }
+          Uint8List compressed = base64.decode(text);
+          try {
+            result = utf8.decode(compressed);
+          } catch (e) {
+            result = String.fromCharCodes(compressed);
+          }
         case EncoderType.md5:
       }
-    } catch (e) {
+    } catch (e, t) {
+      logger.e("$e", error: e, stackTrace: t);
       FlutterToastr.show(localizations.decodeFail, context);
     }
-    outputTextController.text = result;
+    outputTextController.text = result.fixAutoLines();
   }
 }

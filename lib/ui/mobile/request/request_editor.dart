@@ -255,9 +255,11 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
           widget.title,
           if (widget.urlQueryNotifier != null)
             KeyValWidget(
-                title: 'URL${localizations.param}',
-                paramNotifier: widget.urlQueryNotifier,
-                params: message is HttpRequest ? (message as HttpRequest).requestUri?.queryParametersAll : null),
+              title: 'URL${localizations.param}',
+              paramNotifier: widget.urlQueryNotifier,
+              params: message is HttpRequest ? (message as HttpRequest).requestUri?.queryParametersAll : null,
+              expanded: false,
+            ),
           KeyValWidget(
               title: "Headers",
               params: message?.headers.getHeaders() ?? initHeader,
@@ -390,8 +392,10 @@ class KeyValWidget extends StatefulWidget {
   final Map<String, List<String>>? params;
   final bool readOnly; //只读
   final UrlQueryNotifier? paramNotifier;
+  final bool expanded;
 
-  const KeyValWidget({super.key, this.params, this.readOnly = false, this.paramNotifier, required this.title});
+  const KeyValWidget(
+      {super.key, this.params, this.readOnly = false, this.paramNotifier, required this.title, this.expanded = true});
 
   @override
   State<StatefulWidget> createState() {
@@ -480,7 +484,7 @@ class KeyValState extends State<KeyValWidget> {
     return ExpansionTile(
       title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.blue)),
       tilePadding: const EdgeInsets.only(left: 0, top: 10, bottom: 10),
-      initiallyExpanded: true,
+      initiallyExpanded: widget.expanded,
       shape: const Border(),
       children: [
         ..._buildRows(),

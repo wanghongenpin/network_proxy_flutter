@@ -157,7 +157,7 @@ async function onResponse(context, request, response) {
     _path.then((value) => value.writeAsString(jsonEncode({'enabled': enabled, 'list': list})));
   }
 
-  Map<String, dynamic> scriptSession = {};
+  Map<dynamic, dynamic> scriptSession = {};
 
   ///脚本上下文
   Map<String, dynamic> scriptContext(ScriptItem item) {

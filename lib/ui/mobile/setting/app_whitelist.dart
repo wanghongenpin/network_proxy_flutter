@@ -87,11 +87,13 @@ class _AppWhitelistState extends State<AppWhitelist> {
             if (snapshot.hasData) {
               if (snapshot.data!.isEmpty) {
                 return Center(
-                  child: Text(
-                      isCN
-                          ? "未设置白名单应用时会对所有应用抓包"
-                          : "When no whitelist application is set, all applications will be captured",
-                      style: const TextStyle(color: Colors.grey)),
+                  child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Text(
+                          isCN
+                              ? "未设置白名单应用时会对所有应用抓包"
+                              : "When no whitelist application is set, all applications will be captured",
+                          style: const TextStyle(color: Colors.grey))),
                 );
               }
 
