@@ -29,7 +29,6 @@ import '../../utils/compress.dart';
 import 'http.dart';
 import 'http_headers.dart';
 
-
 class ParserException implements Exception {
   final String message;
   final String? source;
@@ -162,11 +161,12 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     }
 
     //请求头
+    bool isChunked = message.headers.isChunked;
     message.headers.remove(HttpHeaders.TRANSFER_ENCODING);
 
-    if (body != null && body.isNotEmpty) {
+    if (body != null && (body.isNotEmpty || isChunked)) {
       message.headers.contentLength = body.length;
-    } else if (message.contentLength != 0){
+    } else if (message.contentLength != 0) {
       message.headers.remove(HttpHeaders.CONTENT_LENGTH);
     }
 

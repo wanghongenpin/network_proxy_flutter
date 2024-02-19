@@ -69,7 +69,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
 
   @override
   void dispose() {
-    HardwareKeyboard.instance.removeHandler(onKeyEvent);
+    // HardwareKeyboard.instance.removeHandler(onKeyEvent);
     super.dispose();
   }
 

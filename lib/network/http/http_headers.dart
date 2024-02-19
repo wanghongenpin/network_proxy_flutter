@@ -85,9 +85,10 @@ class HttpHeaders {
     return _headers[originalHeaderName];
   }
 
-  void remove(String name) {
+  bool remove(String name) {
     var originalHeaderName = _originalHeaderNames.remove(name.toLowerCase());
     _headers.remove(originalHeaderName);
+    return originalHeaderName != null;
   }
 
   int? getInt(String name) {

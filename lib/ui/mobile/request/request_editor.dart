@@ -361,7 +361,7 @@ class _RequestLineState extends State<_RequestLine> {
               isDense: true,
               focusColor: Colors.transparent,
               value: requestMethod,
-              items: HttpMethod.values
+              items: HttpMethod.methods()
                   .map((it) =>
                       DropdownMenuItem(value: it.name, child: Text(it.name, style: const TextStyle(fontSize: 12))))
                   .toList(),

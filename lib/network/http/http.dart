@@ -51,7 +51,7 @@ abstract class HttpMessage {
   List<int>? body;
   String? remoteAddress;
 
-  String requestId = (DateTime.now().millisecondsSinceEpoch + Random().nextInt(99999)).toRadixString(16);
+  String requestId = (DateTime.now().millisecondsSinceEpoch + Random().nextInt(99999)).toRadixString(36);
   int? streamId; // http2 streamId
   HttpMessage(this.protocolVersion);
 
@@ -266,6 +266,7 @@ enum HttpMethod {
   trace("TRACE"),
   connect("CONNECT"),
   propfind("PROPFIND"),
+  report("REPORT"),
   ;
 
   final String name;
@@ -279,6 +280,10 @@ enum HttpMethod {
       logger.e("HttpMethod error $name :$error");
       rethrow;
     }
+  }
+
+  static List<HttpMethod> methods() {
+    return values.where((method) => method != HttpMethod.propfind &&  method != HttpMethod.report).toList();
   }
 }
 

@@ -381,7 +381,7 @@ class _RequestLineState extends State<_RequestLine> {
               isDense: true,
               focusColor: Colors.transparent,
               value: requestMethod,
-              items: HttpMethod.values.map((it) => DropdownMenuItem(value: it.name, child: Text(it.name))).toList(),
+              items: HttpMethod.methods().map((it) => DropdownMenuItem(value: it.name, child: Text(it.name))).toList(),
               onChanged: (String? value) {
                 setState(() {
                   requestMethod = value!;

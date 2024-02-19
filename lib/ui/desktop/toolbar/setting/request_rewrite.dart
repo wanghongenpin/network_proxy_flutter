@@ -38,7 +38,7 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
   @override
   void initState() {
     super.initState();
-    HardwareKeyboard.instance.addHandler(onKeyEvent);
+    // HardwareKeyboard.instance.addHandler(onKeyEvent);
     enableNotifier = ValueNotifier(widget.requestRewrites.enabled == true);
   }
 

@@ -84,7 +84,7 @@ class SearchConditionsState extends State<SearchConditions> {
                 Text('${localizations.requestMethod}:'),
                 DropdownMenu(
                     initialValue: searchModel.requestMethod?.name ?? localizations.all,
-                    items: HttpMethod.values.map((e) => e.name).toList()..insert(0, localizations.all),
+                    items: HttpMethod.methods().map((e) => e.name).toList()..insert(0, localizations.all),
                     onSelected: (String value) {
                       searchModel.requestMethod = value == localizations.all ? null : HttpMethod.valueOf(value);
                     })),
