@@ -182,6 +182,8 @@ class _ScriptEditState extends State<ScriptEdit> {
   @override
   Widget build(BuildContext context) {
     GlobalKey formKey = GlobalKey<FormState>();
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
     return Scaffold(
         appBar: AppBar(
             title: Row(children: [
@@ -191,8 +193,9 @@ class _ScriptEditState extends State<ScriptEdit> {
                   text: localizations.useGuide,
                   style: const TextStyle(color: Colors.blue, fontSize: 14),
                   recognizer: TapGestureRecognizer()
-                    ..onTap = () => launchUrl(
-                        Uri.parse('https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC')))),
+                    ..onTap = () => launchUrl(Uri.parse(isCN
+                        ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
+                        : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script')))),
             ]),
             actions: [
               TextButton(

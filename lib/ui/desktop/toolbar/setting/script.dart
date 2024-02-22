@@ -136,8 +136,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
                           Container(
                               padding: const EdgeInsets.only(top: 10),
                               constraints: const BoxConstraints(maxHeight: 500, minHeight: 300),
-                              decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey.withOpacity(0.2))),
+                              decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
                               child: SingleChildScrollView(
                                   child: Column(children: [
                                 Row(
@@ -230,6 +229,8 @@ class _ScriptEditState extends State<ScriptEdit> {
   @override
   Widget build(BuildContext context) {
     GlobalKey formKey = GlobalKey<FormState>();
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
     return AlertDialog(
         scrollable: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -242,7 +243,11 @@ class _ScriptEditState extends State<ScriptEdit> {
               style: const TextStyle(color: Colors.blue, fontSize: 14),
               recognizer: TapGestureRecognizer()
                 ..onTap = () => DesktopMultiWindow.invokeMethod(
-                    0, "launchUrl", 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'))),
+                    0,
+                    "launchUrl",
+                    isCN
+                        ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
+                        : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script'))),
           const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
         ]),
         actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),

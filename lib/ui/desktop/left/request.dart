@@ -84,7 +84,7 @@ class _RequestWidgetState extends State<RequestWidget> {
             selected: selected,
             dense: true,
             visualDensity: const VisualDensity(vertical: -4),
-            contentPadding: const EdgeInsets.only(left: 35),
+            contentPadding: const EdgeInsets.only(left: 28),
             onTap: onClick));
   }
 

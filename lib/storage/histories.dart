@@ -226,7 +226,8 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
 
   resetList() async {
     locked = true;
-    await open?.truncate(0);
+    open = await open?.truncate(0);
+    await open?.setPosition(0);
     history?.requestLength = 0;
     writeList.clear();
     writeList.addAll(sourceList.source);
