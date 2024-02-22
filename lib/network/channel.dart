@@ -27,6 +27,7 @@ import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/byte_buf.dart';
 import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/network/util/process_info.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 import 'handler.dart';
@@ -323,9 +324,16 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       var data = decodeResult.data;
       if (data is HttpRequest) {
         channelContext.currentRequest = data;
+        data.packageSize = length;
         data.hostAndPort = channelContext.host ?? getHostAndPort(data, ssl: channel.isSsl);
         if (data.headers.host != null && data.headers.host?.contains(":") == false) {
           data.hostAndPort?.host = data.headers.host!;
+        }
+
+        if (data.method != HttpMethod.connect) {
+          try {
+            data.processInfo ??= await ProcessInfoUtils.getProcessByPort(channel.remotePort, data.remoteDomain()!);
+          } catch (ignore) {/*ignore*/}
         }
       }
 

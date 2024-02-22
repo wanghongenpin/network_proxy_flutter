@@ -264,13 +264,13 @@ Widget _copyValue(BuildContext context, Widget child, Object? value) {
                       height: 30,
                       child: Text(localizations.copy),
                       onTap: () {
-                        Clipboard.setData(ClipboardData(text: jsonEncode(value)))
+                        Clipboard.setData(ClipboardData(text: value is String ? value : jsonEncode(value)))
                             .then((value) => Toast.show(localizations.copied, context));
                       })
                 ]);
           },
           onTap: () {
-            Clipboard.setData(ClipboardData(text: jsonEncode(value)))
+            Clipboard.setData(ClipboardData(text: value is String ? value : jsonEncode(value)))
                 .then((value) => Toast.show(localizations.copied, context));
           }));
 }

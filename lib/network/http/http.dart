@@ -20,6 +20,7 @@ import 'dart:math';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/network/util/process_info.dart';
 import 'package:network_proxy/utils/compress.dart';
 
 import 'http_headers.dart';
@@ -102,6 +103,7 @@ class HttpRequest extends HttpMessage {
   DateTime requestTime = DateTime.now(); //请求时间
   HttpResponse? response;
   Map<String, dynamic> attributes = {};
+  ProcessInfo? processInfo;
 
   HttpRequest(this.method, this.uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
 

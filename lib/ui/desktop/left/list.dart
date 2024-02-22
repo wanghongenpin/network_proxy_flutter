@@ -30,7 +30,8 @@ class DomainList extends StatefulWidget {
   final ListenableList<HttpRequest> list;
   final bool shrinkWrap;
 
-  const DomainList({super.key, required this.proxyServer, required this.list, this.shrinkWrap = true, required this.panel});
+  const DomainList(
+      {super.key, required this.proxyServer, required this.list, this.shrinkWrap = true, required this.panel});
 
   @override
   State<StatefulWidget> createState() {
@@ -66,8 +67,7 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
     super.initState();
     container = widget.list;
     for (var request in container.source) {
-      var host = request.remoteDomain()!;
-      DomainRequests domainRequests = getDomainRequests(host);
+      DomainRequests domainRequests = getDomainRequests(request);
       domainRequests.addRequest(request.requestId, request);
     }
   }
@@ -124,7 +124,7 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
     }
 
     //按照域名分类
-    DomainRequests domainRequests = getDomainRequests(host);
+    DomainRequests domainRequests = getDomainRequests(request);
     var isNew = domainRequests.body.isEmpty;
     domainRequests.addRequest(request.requestId, request);
     //搜索视图
@@ -139,11 +139,19 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
     }
   }
 
-  DomainRequests getDomainRequests(String host) {
+  DomainRequests getDomainRequests(HttpRequest request) {
+    var host = request.remoteDomain()!;
     DomainRequests? domainRequests = containerMap[host];
+    var processInfo = request.processInfo;
     if (domainRequests == null) {
       domainRequests = DomainRequests(host,
-          proxyServer: widget.panel.proxyServer, onDelete: deleteHost, onRequestRemove: (req) => container.remove(req));
+          proxyServer: widget.panel.proxyServer,
+          trailing: processInfo == null
+              ? null
+              : futureWidget(processInfo.getIcon(),
+                  (data) => SizedBox(width: 25, child: data.isEmpty ? null : Image.memory(data))),
+          onDelete: deleteHost,
+          onRequestRemove: (req) => container.remove(req));
       containerMap[host] = domainRequests;
     }
 
@@ -209,6 +217,7 @@ class DomainRequests extends StatefulWidget {
 
   final String domain;
   final ProxyServer proxyServer;
+  final Widget? trailing;
 
   //请求列表
   final Queue<RequestWidget> body = Queue();
@@ -220,7 +229,8 @@ class DomainRequests extends StatefulWidget {
   final Function(String host)? onDelete;
   final Function(HttpRequest request)? onRequestRemove;
 
-  DomainRequests(this.domain, {this.selected = false, this.onDelete, required this.proxyServer, this.onRequestRemove})
+  DomainRequests(this.domain,
+      {this.selected = false, this.onDelete, required this.proxyServer, this.onRequestRemove, this.trailing})
       : super(key: GlobalKey<_DomainRequestsState>());
 
   ///添加请求
@@ -257,6 +267,7 @@ class DomainRequests extends StatefulWidget {
   DomainRequests copy({Iterable<RequestWidget>? body, bool? selected}) {
     var state = key as GlobalKey<_DomainRequestsState>;
     var headerBody = DomainRequests(domain,
+        trailing: trailing,
         selected: selected ?? state.currentState?.selected == true,
         onDelete: onDelete,
         onRequestRemove: onRequestRemove,
@@ -316,8 +327,10 @@ class _DomainRequestsState extends State<DomainRequests> {
         child: ListTile(
             minLeadingWidth: 25,
             leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 18),
+            trailing: widget.trailing,
             dense: true,
             horizontalTitleGap: 0,
+            contentPadding: const EdgeInsets.only(left: 3, right: 8),
             visualDensity: const VisualDensity(vertical: -3.6),
             title: Text(title,
                 textAlign: TextAlign.left,
