@@ -229,6 +229,7 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
     open = await open?.truncate(0);
     await open?.setPosition(0);
     history?.requestLength = 0;
+    history?.requests = null;
     writeList.clear();
     writeList.addAll(sourceList.source);
     locked = false;

@@ -6,5 +6,5 @@ interface CloseableConnection {
     /**
      * 关闭连接
      */
-    fun closeConnection(session: Connection)
+    fun closeConnection(connection: Connection)
 }

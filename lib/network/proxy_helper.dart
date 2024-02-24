@@ -66,7 +66,7 @@ class ProxyHelper {
   static exceptionHandler(
       ChannelContext channelContext, Channel channel, EventListener? listener, HttpRequest? request, error) {
     HostAndPort? hostAndPort = channelContext.host;
-    hostAndPort ??= HostAndPort.host(scheme: HostAndPort.httpScheme, channel.remoteAddress.host, channel.remotePort);
+    hostAndPort ??= HostAndPort.host(scheme: HostAndPort.httpScheme, channel.remoteSocketAddress.host, channel.remoteSocketAddress.port);
     String message = error.toString();
     HttpStatus status = HttpStatus(-1, message);
     if (error is HandshakeException) {

@@ -28,6 +28,7 @@ import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/byte_buf.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/process_info.dart';
+import 'package:network_proxy/network/util/socket_address.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 import 'handler.dart';
@@ -64,8 +65,7 @@ class Channel {
   bool isOpen = true;
 
   //此通道连接到的远程地址
-  final InternetAddress remoteAddress;
-  final int remotePort;
+  final InetSocketAddress remoteSocketAddress;
 
   //是否写入中
   bool isWriting = false;
@@ -74,8 +74,7 @@ class Channel {
 
   Channel(this._socket)
       : _id = DateTime.now().millisecondsSinceEpoch + Random().nextInt(999999),
-        remoteAddress = _socket.remoteAddress,
-        remotePort = _socket.remotePort;
+        remoteSocketAddress = InetSocketAddress(_socket.remoteAddress, _socket.remotePort);
 
   ///返回此channel的全局唯一标识符。
   String get id => _id.toRadixString(36);
@@ -153,7 +152,7 @@ class Channel {
 
   @override
   String toString() {
-    return 'Channel($id ${remoteAddress.host}:$remotePort)';
+    return 'Channel($id $remoteSocketAddress';
   }
 }
 
@@ -332,15 +331,18 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
 
         if (data.method != HttpMethod.connect) {
           try {
-            data.processInfo ??= await ProcessInfoUtils.getProcessByPort(channel.remotePort, data.remoteDomain()!);
-          } catch (ignore) {/*ignore*/}
+            data.processInfo ??=
+                await ProcessInfoUtils.getProcessByPort(channel.remoteSocketAddress, data.remoteDomain()!);
+          } catch (ignore) {
+            /*ignore*/
+          }
         }
       }
 
       if (data is HttpResponse) {
         data.requestId = channelContext.currentRequest?.requestId ?? data.requestId;
         data.packageSize = length;
-        data.remoteAddress = '${channel.remoteAddress.host}:${channel.remotePort}';
+        data.remoteAddress = '${channel.remoteSocketAddress.host}:${channel.remoteSocketAddress.port}';
         data.request ??= channelContext.currentRequest;
         channelContext.currentRequest?.response = data;
       }

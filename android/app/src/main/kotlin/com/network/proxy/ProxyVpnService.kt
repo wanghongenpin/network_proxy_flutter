@@ -27,6 +27,8 @@ class ProxyVpnService : VpnService(), ProtectSocket {
     companion object {
         const val MAX_PACKET_LEN = 1500
 
+        const val VirtualHost = "10.0.0.2"
+
         const val ProxyHost = "ProxyHost"
         const val ProxyPort = "ProxyPort"
         const val AllowApps = "AllowApps" //允许的名单
@@ -155,7 +157,7 @@ class ProxyVpnService : VpnService(), ProtectSocket {
             ParcelFileDescriptor? {
         val build = Builder()
             .setMtu(MAX_PACKET_LEN)
-            .addAddress("10.0.0.2", 32)
+            .addAddress(VirtualHost, 32)
             .addRoute("0.0.0.0", 0)
             .setSession(baseContext.applicationInfo.name)
             .setBlocking(true)

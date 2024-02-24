@@ -19,7 +19,6 @@ class AppInfo {
   String? name;
   String? packageName;
   String? versionName;
-  int? versionCode;
 
   //icon
   Uint8List? icon;
@@ -28,7 +27,6 @@ class AppInfo {
     this.name,
     this.packageName,
     this.versionName,
-    this.versionCode,
     this.icon,
   });
 
@@ -36,7 +34,6 @@ class AppInfo {
     name = json['name'];
     packageName = json['packageName'];
     versionName = json['versionName'];
-    versionCode = json['versionCode'];
     icon = json['icon'];
   }
 
@@ -45,10 +42,10 @@ class AppInfo {
     data['name'] = name;
     data['packageName'] = packageName;
     data['versionName'] = versionName;
-    data['versionCode'] = versionCode;
     data['icon'] = icon;
     return data;
   }
+
   @override
   String toString() {
     return toJson().toString();
