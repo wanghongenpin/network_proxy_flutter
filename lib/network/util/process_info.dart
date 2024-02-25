@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:network_proxy/network/util/socket_address.dart';
+
 import 'cache.dart';
 
 void main() async {
@@ -15,11 +17,17 @@ void main() async {
 class ProcessInfoUtils {
   static var processInfoCache = ExpiringCache<String, ProcessInfo>(const Duration(minutes: 5));
 
-  static Future<ProcessInfo?> getProcessByPort(int port, String cacheKeyPre) async {
+  static Future<ProcessInfo?> getProcessByPort(InetSocketAddress socketAddress, String cacheKeyPre) async {
+    if (Platform.isAndroid) {
+      // var app = await ProcessInfoPlugin.getProcessByPort(socketAddress.host, socketAddress.port);
+      // print(app);
+      return null;
+    }
+
     if (Platform.isMacOS) {
       var results = await Process.run('bash', [
         '-c',
-        _concatCommands(['lsof -nP -iTCP:$port |grep "$port->"'])
+        _concatCommands(['lsof -nP -iTCP:${socketAddress.port} |grep "${socketAddress.port}->"'])
       ]);
 
       if (results.exitCode == 0) {

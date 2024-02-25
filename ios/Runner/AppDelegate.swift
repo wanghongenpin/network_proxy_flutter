@@ -24,9 +24,13 @@ import NetworkExtension
                     VpnManager.shared.connect(host: arguments?["proxyHost"] as? String ,port: arguments?["proxyPort"] as? Int)
               }
           })
-
-     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
+      
+        if #available(iOS 13.0.0, *) {
+            PictureInPictureManager.regirst(flutter: controller as! FlutterBinaryMessenger)
+        }
+        
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+   }
 
     override func applicationWillTerminate(_ application: UIApplication) {
         VpnManager.shared.disconnect()
