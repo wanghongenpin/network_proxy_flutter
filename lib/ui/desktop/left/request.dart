@@ -25,14 +25,13 @@ import 'package:window_manager/window_manager.dart';
 /// @author wanghongen
 /// 2023/10/8
 class RequestWidget extends StatefulWidget {
-  final Color? color;
   final HttpRequest request;
   final ValueWrap<HttpResponse> response = ValueWrap();
 
   final ProxyServer proxyServer;
   final Function(RequestWidget)? remove;
 
-  RequestWidget(this.request, {Key? key, this.color = Colors.green, required this.proxyServer, this.remove})
+  RequestWidget(this.request, {Key? key, required this.proxyServer, this.remove})
       : super(key: GlobalKey<_RequestWidgetState>());
 
   @override
@@ -72,8 +71,8 @@ class _RequestWidgetState extends State<RequestWidget> {
         onSecondaryTap: contextualMenu,
         child: ListTile(
             minLeadingWidth: 5,
-            textColor: highlightColor,
-            selectedColor: highlightColor,
+            textColor: color(),
+            selectedColor: color(),
             leading: getIcon(widget.response.get() ?? widget.request.response),
             title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
             subtitle: Text(
@@ -86,6 +85,14 @@ class _RequestWidgetState extends State<RequestWidget> {
             visualDensity: const VisualDensity(vertical: -4),
             contentPadding: const EdgeInsets.only(left: 28),
             onTap: onClick));
+  }
+
+  Color? color() {
+    if (highlightColor != null) {
+      return highlightColor;
+    }
+
+    return _KeywordHighlight.getHighlightColor(widget.request.uri);
   }
 
   void changeState() {
@@ -210,6 +217,11 @@ class _RequestWidgetState extends State<RequestWidget> {
                 highlightColor = null;
               });
             }),
+        MenuItem(
+            label: localizations.keyword,
+            onClick: (_) {
+              showDialog(context: context, builder: (BuildContext context) => const _KeywordHighlight());
+            }),
       ],
     );
   }
@@ -271,5 +283,94 @@ class _RequestWidgetState extends State<RequestWidget> {
     }
     selectedState = this;
     NetworkTabController.current?.change(widget.request, widget.response.get() ?? widget.request.response);
+  }
+}
+
+//配置关键词高亮
+class _KeywordHighlight extends StatelessWidget {
+  static Map<Color, String> keywords = {};
+
+  static Color? getHighlightColor(String key) {
+    for (var entry in keywords.entries) {
+      if (key.contains(entry.value)) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
+  const _KeywordHighlight();
+
+  @override
+  Widget build(BuildContext context) {
+    AppLocalizations localizations = AppLocalizations.of(context)!;
+    var colors = {
+      Colors.red: localizations.red,
+      Colors.yellow.shade600: localizations.yellow,
+      Colors.blue: localizations.blue,
+      Colors.green: localizations.green,
+      Colors.grey: localizations.gray,
+    };
+
+    var map = Map.of(keywords);
+
+    return AlertDialog(
+      title: ListTile(
+          title: Text(localizations.keyword + localizations.highlight,
+              textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+      titlePadding: const EdgeInsets.all(0),
+      actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
+      contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 5),
+      actions: [
+        TextButton(
+          child: Text(localizations.cancel),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        TextButton(
+          child: Text(localizations.done),
+          onPressed: () {
+            keywords = map;
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+      content: SizedBox(
+        height: 180,
+        width: 400,
+        child: DefaultTabController(
+          length: colors.length,
+          child: Scaffold(
+            appBar: TabBar(tabs: colors.entries.map((e) => Tab(text: e.value)).toList()),
+            body: TabBarView(
+                children: colors.entries
+                    .map((e) => Padding(
+                        padding: const EdgeInsets.all(15),
+                        child: TextFormField(
+                          minLines: 2,
+                          maxLines: 2,
+                          initialValue: map[e.key],
+                          onChanged: (value) {
+                            if (value.isEmpty) {
+                              map.remove(e.key);
+                            } else {
+                              map[e.key] = value;
+                            }
+                          },
+                          decoration: decoration(localizations.keyword),
+                        )))
+                    .toList()),
+          ),
+        ),
+      ),
+    );
+  }
+
+  InputDecoration decoration(String label, {String? hintText}) {
+    return InputDecoration(
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      labelText: label,
+      isDense: true,
+      border: const OutlineInputBorder(),
+    );
   }
 }

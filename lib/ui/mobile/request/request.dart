@@ -12,6 +12,7 @@ import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/mobile/request/repeat.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
+import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
 
@@ -68,10 +69,14 @@ class RequestRowState extends State<RequestRow> {
 
     var subTitle = '$time - [${response?.status.code ?? ''}] $contentType $packagesSize ${response?.costTime() ?? ''}';
 
+    var highlightColor = KeywordHighlight.getHighlightColor(widget.displayDomain ? request.requestUrl : request.path());
+
     return ListTile(
         visualDensity: const VisualDensity(vertical: -4),
         minLeadingWidth: 5,
         selected: selected,
+        textColor: highlightColor,
+        selectedColor: highlightColor,
         leading: getIcon(response),
         title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2, style: const TextStyle(fontSize: 14)),
         subtitle: Text.rich(

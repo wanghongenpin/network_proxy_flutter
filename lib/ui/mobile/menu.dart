@@ -31,6 +31,7 @@ import 'package:network_proxy/ui/mobile/setting/ssl.dart';
 import 'package:network_proxy/ui/mobile/setting/theme.dart';
 import 'package:network_proxy/ui/mobile/widgets/about.dart';
 import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
+import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
 import 'package:network_proxy/utils/ip.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -285,7 +286,7 @@ class MoreMenu extends StatelessWidget {
               child: ListTile(
                   dense: true,
                   title: Text(localizations.httpsProxy),
-                  leading: Icon(Icons.https, color: proxyServer.enableSsl ? null : Colors.red),
+                  leading: Icon(Icons.https_outlined, color: proxyServer.enableSsl ? null : Colors.red),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (BuildContext context) {
@@ -307,7 +308,7 @@ class MoreMenu extends StatelessWidget {
               height: 32,
               child: ListTile(
                 dense: true,
-                leading: const Icon(Icons.phone_iphone),
+                leading: const Icon(Icons.phone_iphone_outlined),
                 title: Text(localizations.myQRCode),
                 onTap: () async {
                   var ip = await localIp();
@@ -321,7 +322,21 @@ class MoreMenu extends StatelessWidget {
               height: 32,
               child: ListTile(
                 dense: true,
-                leading: const Icon(Icons.share),
+                leading: const Icon(Icons.highlight_outlined),
+                title: Text(localizations.highlight),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (BuildContext context) {
+                      return const KeywordHighlight();
+                    }),
+                  );
+                },
+              )),
+          PopupMenuItem(
+              height: 32,
+              child: ListTile(
+                dense: true,
+                leading: const Icon(Icons.share_outlined),
                 title: Text(localizations.viewExport),
                 onTap: () async {
                   var name = formatDate(DateTime.now(), [m, '-', d, ' ', HH, ':', nn, ':', ss]);
