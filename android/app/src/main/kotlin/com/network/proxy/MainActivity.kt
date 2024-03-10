@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import com.network.proxy.plugin.AppLifecyclePlugin
 import com.network.proxy.plugin.InstalledAppsPlugin
 import com.network.proxy.plugin.PictureInPicturePlugin
+import com.network.proxy.plugin.ProcessInfoPlugin
 import com.network.proxy.plugin.VpnServicePlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -39,6 +40,7 @@ class MainActivity : FlutterActivity() {
         flutterEngine.plugins.add(PictureInPicturePlugin())
         flutterEngine.plugins.add(lifecycleChannel)
         flutterEngine.plugins.add(InstalledAppsPlugin())
+        flutterEngine.plugins.add(ProcessInfoPlugin.instance)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

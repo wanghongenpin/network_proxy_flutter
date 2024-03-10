@@ -18,7 +18,12 @@ import java.util.concurrent.ConcurrentMap
 /**
  * 管理VPN客户端的连接
  */
-class ConnectionManager : CloseableConnection {
+class ConnectionManager private constructor() : CloseableConnection {
+    //单例
+    companion object {
+        val instance = ConnectionManager()
+    }
+
     private val table: ConcurrentMap<String, Connection> = ConcurrentHashMap()
     var proxyAddress: InetSocketAddress? = null
 
@@ -42,9 +47,9 @@ class ConnectionManager : CloseableConnection {
      */
     fun closeConnection(protocol: Protocol, ip: Int, port: Int, srcIp: Int, srcPort: Int) {
         val key = Connection.getConnectionKey(protocol, ip, port, srcIp, srcPort)
-        val session: Connection? = table.remove(key)
-        session?.let {
-            val channel = session.channel
+        val connection: Connection? = table.remove(key)
+        connection?.let {
+            val channel = connection.channel
             try {
                 channel?.close()
             } catch (e: IOException) {

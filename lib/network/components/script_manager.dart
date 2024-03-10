@@ -304,7 +304,7 @@ class ScriptItem {
     return urlReg!.hasMatch(url);
   }
 
-  factory ScriptItem.fromJson(Map<String, dynamic> json) {
+  factory ScriptItem.fromJson(Map<dynamic, dynamic> json) {
     return ScriptItem(json['enabled'], json['name'], json['url'], scriptPath: json['scriptPath']);
   }
 

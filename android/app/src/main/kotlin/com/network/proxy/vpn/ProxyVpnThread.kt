@@ -14,6 +14,7 @@ import java.nio.ByteBuffer
 
 /**
  * VPN线程，负责处理VPN接收到的数据包
+ * @author wanghongen
  */
 class ProxyVpnThread(
     vpnInterface: ParcelFileDescriptor,
@@ -38,7 +39,7 @@ class ProxyVpnThread(
     private val nioService = SocketNIODataService(vpnPacketWriter)
     private val dataServiceThread = Thread(nioService, "Socket NIO thread")
 
-    private val manager = ConnectionManager().apply {
+    private val manager = ConnectionManager.instance.apply {
         //流量转发到代理地址
         this.proxyAddress = InetSocketAddress(proxyHost, proxyPort)
     }

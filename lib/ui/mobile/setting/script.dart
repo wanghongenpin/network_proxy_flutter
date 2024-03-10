@@ -51,7 +51,8 @@ class _MobileScriptState extends State<MobileScript> {
             child: futureWidget(
                 ScriptManager.instance,
                 loading: true,
-                (data) => Column(
+                    (data) =>
+                    Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
@@ -72,42 +73,21 @@ class _MobileScriptState extends State<MobileScript> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               const SizedBox(width: 10),
-                              FilledButton(
-                                style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
-                                onPressed: scriptEdit,
-                                child: Text(localizations.add),
+                              FilledButton.icon(
+                                  icon: const Icon(Icons.add, size: 18),
+                                  onPressed: scriptEdit,
+                                  label: Text(localizations.add)),
+                              const SizedBox(width: 10),
+                              FilledButton.icon(
+                                icon: const Icon(Icons.input_rounded, size: 18),
+                                onPressed: import,
+                                label: Text(localizations.import),
                               ),
                               const SizedBox(width: 10),
-                              OutlinedButton(
-                                style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
-                                onPressed: import,
-                                child: Text(localizations.import),
-                              ),
-                              const SizedBox(width: 15),
                             ],
                           ),
                           const SizedBox(height: 5),
-                          Container(
-                              padding: const EdgeInsets.only(top: 10),
-                              constraints: const BoxConstraints(maxHeight: 500, minHeight: 300),
-                              decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
-                              child: SingleChildScrollView(
-                                  child: Column(children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                        width: 100,
-                                        padding: const EdgeInsets.only(left: 10),
-                                        child: Text(localizations.name)),
-                                    SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
-                                    const VerticalDivider(),
-                                    const Expanded(child: Text("URL")),
-                                  ],
-                                ),
-                                const Divider(thickness: 0.5),
-                                ScriptList(scripts: data.list),
-                              ]))),
+                          Expanded(child: ScriptList(scripts: data.list)),
                         ]))));
   }
 
@@ -119,9 +99,19 @@ class _MobileScriptState extends State<MobileScript> {
     }
 
     try {
+      var scriptManager = (await ScriptManager.instance);
       var json = jsonDecode(utf8.decode(await file.readAsBytes()));
-      var scriptItem = ScriptItem.fromJson(json);
-      (await ScriptManager.instance).addScript(scriptItem, json['script']);
+
+      if (json is List<dynamic>) {
+        for (var item in json) {
+          var scriptItem = ScriptItem.fromJson(item);
+          await scriptManager.addScript(scriptItem, item['script']);
+        }
+      } else {
+        var scriptItem = ScriptItem.fromJson(json);
+        await scriptManager.addScript(scriptItem, json['script']);
+      }
+
       _refreshScript();
       if (mounted) {
         FlutterToastr.show(localizations.importSuccess, context);
@@ -193,9 +183,10 @@ class _ScriptEditState extends State<ScriptEdit> {
                   text: localizations.useGuide,
                   style: const TextStyle(color: Colors.blue, fontSize: 14),
                   recognizer: TapGestureRecognizer()
-                    ..onTap = () => launchUrl(Uri.parse(isCN
-                        ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
-                        : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script')))),
+                    ..onTap = () =>
+                        launchUrl(Uri.parse(isCN
+                            ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
+                            : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script')))),
             ]),
             actions: [
               TextButton(
@@ -249,22 +240,25 @@ class _ScriptEditState extends State<ScriptEdit> {
       SizedBox(width: 50, child: Text(label)),
       Expanded(
           child: TextFormField(
-        controller: controller,
-        validator: (val) => val?.isNotEmpty == true ? null : "",
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-            hintText: hint,
-            contentPadding: const EdgeInsets.all(10),
-            errorStyle: const TextStyle(height: 0, fontSize: 0),
-            focusedBorder: focusedBorder(),
-            isDense: true,
-            border: const OutlineInputBorder()),
-      ))
+            controller: controller,
+            validator: (val) => val?.isNotEmpty == true ? null : "",
+            keyboardType: keyboardType,
+            decoration: InputDecoration(
+                hintText: hint,
+                contentPadding: const EdgeInsets.all(10),
+                errorStyle: const TextStyle(height: 0, fontSize: 0),
+                focusedBorder: focusedBorder(),
+                isDense: true,
+                border: const OutlineInputBorder()),
+          ))
     ]);
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme
+        .of(context)
+        .colorScheme
+        .primary, width: 2));
   }
 }
 
@@ -279,41 +273,103 @@ class ScriptList extends StatefulWidget {
 }
 
 class _ScriptListState extends State<ScriptList> {
-  int selected = -1;
+  Set<int> selected = {};
+  bool multiple = false;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: rows(widget.scripts));
+    return Scaffold(
+        persistentFooterButtons: [multiple ? globalMenu() : const SizedBox()],
+        body: Container(
+            padding: const EdgeInsets.only(top: 10, bottom: 30),
+            decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
+            child: Scrollbar(
+                child: ListView(children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Container(width: 100, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
+                      SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
+                      const VerticalDivider(),
+                      const Expanded(child: Text("URL")),
+                    ],
+                  ),
+                  const Divider(thickness: 0.5),
+                  Column(children: rows(widget.scripts))
+                ]))));
+  }
+
+  globalMenu() {
+    return Stack(children: [
+      Container(
+          height: 50,
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 10),
+          decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2)))),
+      Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Center(
+              child: TextButton(
+                  onPressed: () {},
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    TextButton.icon(
+                        onPressed: () {
+                          export(selected.toList());
+                          setState(() {
+                            selected.clear();
+                            multiple = false;
+                          });
+                        },
+                        icon: const Icon(Icons.share, size: 18),
+                        label: Text(localizations.export, style: const TextStyle(fontSize: 14))),
+                    TextButton.icon(
+                        onPressed: () => removeScripts(selected.toList()),
+                        icon: const Icon(Icons.delete, size: 18),
+                        label: Text(localizations.delete, style: const TextStyle(fontSize: 14))),
+                    TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            multiple = false;
+                            selected.clear();
+                          });
+                        },
+                        icon: const Icon(Icons.cancel, size: 18),
+                        label: Text(localizations.cancel, style: const TextStyle(fontSize: 14))),
+                  ]))))
+    ]);
   }
 
   List<Widget> rows(List<ScriptItem> list) {
-    var primaryColor = Theme.of(context).colorScheme.primary;
+    var primaryColor = Theme
+        .of(context)
+        .colorScheme
+        .primary;
 
     return List.generate(list.length, (index) {
       return InkWell(
           splashColor: primaryColor.withOpacity(0.3),
           onTap: () async {
-            String script = await (await ScriptManager.instance).getScript(list[index]);
-            if (!mounted) {
+            if (multiple) {
+              setState(() {
+                if (!selected.add(index)) {
+                  selected.remove(index);
+                }
+              });
               return;
             }
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (context) => ScriptEdit(scriptItem: list[index], script: script)))
-                .then((value) {
-              if (value != null) {
-                setState(() {});
-              }
-            });
+            showEdit(index);
           },
           onLongPress: () => showMenus(index),
           child: Container(
-              color: selected == index
+              color: selected.contains(index)
                   ? primaryColor.withOpacity(0.8)
                   : index.isEven
-                      ? Colors.grey.withOpacity(0.1)
-                      : null,
+                  ? Colors.grey.withOpacity(0.1)
+                  : null,
               height: 45,
               padding: const EdgeInsets.all(5),
               child: Row(
@@ -342,8 +398,9 @@ class _ScriptListState extends State<ScriptList> {
   //点击菜单
   showMenus(int index) {
     setState(() {
-      selected = index;
+      selected.add(index);
     });
+
     showModalBottomSheet(
         context: context,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
@@ -353,27 +410,14 @@ class _ScriptListState extends State<ScriptList> {
             alignment: WrapAlignment.center,
             children: [
               BottomSheetItem(
-                  text: localizations.edit,
-                  onPressed: () async {
-                    String script = await (await ScriptManager.instance).getScript(widget.scripts[index]);
-                    if (!context.mounted) {
-                      return;
-                    }
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(
-                            builder: (context) => ScriptEdit(scriptItem: widget.scripts[index], script: script)))
-                        .then((value) {
-                      if (value != null) {
-                        setState(() {});
-                      }
-                    });
+                  text: localizations.multiple,
+                  onPressed: () {
+                    setState(() => multiple = true);
                   }),
               const Divider(thickness: 0.5, height: 1),
-              BottomSheetItem(
-                  text: localizations.share,
-                  onPressed: () {
-                    export(widget.scripts[index]);
-                  }),
+              BottomSheetItem(text: localizations.edit, onPressed: () => showEdit(index)),
+              const Divider(thickness: 0.5, height: 1),
+              BottomSheetItem(text: localizations.share, onPressed: () => export([index])),
               const Divider(thickness: 0.5, height: 1),
               BottomSheetItem(
                   text: widget.scripts[index].enabled ? localizations.disabled : localizations.enable,
@@ -389,7 +433,9 @@ class _ScriptListState extends State<ScriptList> {
                     _refreshScript();
                     if (context.mounted) FlutterToastr.show(localizations.importSuccess, context);
                   }),
-              Container(color: Theme.of(context).hoverColor, height: 8),
+              Container(color: Theme
+                  .of(context)
+                  .hoverColor, height: 8),
               TextButton(
                 child: Container(
                     height: 50,
@@ -404,19 +450,67 @@ class _ScriptListState extends State<ScriptList> {
           );
         }).then((value) {
       setState(() {
-        selected = -1;
+        selected.remove(index);
       });
     });
   }
 
+  showEdit([int? index]) async {
+    String? script = index == null ? null : await (await ScriptManager.instance).getScript(widget.scripts[index]);
+    if (!mounted) {
+      return;
+    }
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+        builder: (context) => ScriptEdit(scriptItem: index == null ? null : widget.scripts[index], script: script)))
+        .then((value) {
+      if (value != null) {
+        setState(() {});
+      }
+    });
+  }
+
   //导出js
-  export(ScriptItem item) async {
+  export(List<int> indexes) async {
+    if (indexes.isEmpty) return;
     //文件名称
-    String fileName = '${item.name}.json';
-    var json = item.toJson();
-    json.remove("scriptPath");
-    json['script'] = await (await ScriptManager.instance).getScript(item);
+    String fileName = 'proxypin-scripts.json';
+    var scriptManager = await ScriptManager.instance;
+    List<dynamic> json = [];
+    for (var idx in indexes) {
+      var item = widget.scripts[idx];
+      var map = item.toJson();
+      map.remove("scriptPath");
+      map['script'] = await scriptManager.getScript(item);
+      json.add(map);
+    }
+
     final XFile file = XFile.fromData(utf8.encode(jsonEncode(json)), mimeType: 'json');
     Share.shareXFiles([file], subject: fileName);
+  }
+
+  enableStatus(bool enable) {
+    for (var idx in selected) {
+      widget.scripts[idx].enabled = enable;
+    }
+    setState(() {});
+    _refreshScript();
+  }
+
+  removeScripts(List<int> indexes) async {
+    if (indexes.isEmpty) return;
+    showConfirmDialog(context, content: localizations.confirmContent, onConfirm: () async {
+      var scriptManager = await ScriptManager.instance;
+      for (var idx in indexes) {
+        await scriptManager.removeScript(idx);
+      }
+
+      setState(() {
+        selected.clear();
+      });
+      _refreshScript();
+
+      if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
+    });
   }
 }

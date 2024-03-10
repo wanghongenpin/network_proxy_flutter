@@ -135,12 +135,10 @@ class ConnectionHandler(
      * 获取代理地址
      */
     private fun getProxyAddress(
-        packetData: ByteBuffer,
-        destinationIP: Int,
-        destinationPort: Int
-    ): SocketAddress {
+        packetData: ByteBuffer, destinationIP: Int, destinationPort: Int
+    ): InetSocketAddress {
         val supperProtocol = supperProtocol(packetData)
-        var socketAddress: SocketAddress? = null
+        var socketAddress: InetSocketAddress? = null
         if (supperProtocol) {
             socketAddress = manager.proxyAddress
         }

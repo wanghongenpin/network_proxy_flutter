@@ -86,7 +86,9 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
+        backgroundColor: Theme
+            .of(context)
+            .dialogBackgroundColor,
         appBar: AppBar(
             title: Text(localizations.script, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             toolbarHeight: 36,
@@ -96,7 +98,8 @@ class _ScriptWidgetState extends State<ScriptWidget> {
             child: futureWidget(
                 ScriptManager.instance,
                 loading: true,
-                (data) => Column(
+                    (data) =>
+                    Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
@@ -104,56 +107,34 @@ class _ScriptWidgetState extends State<ScriptWidget> {
                             SizedBox(
                                 width: 300,
                                 child: SwitchWidget(
-                                  title: localizations.enableScript,
-                                  subtitle: localizations.scriptUseDescribe,
-                                  value: data.enabled,
-                                  onChanged: (value) {
-                                    data.enabled = value;
-                                    _refreshScript();
-                                  },
-                                )),
+                                    title: localizations.enableScript,
+                                    subtitle: localizations.scriptUseDescribe,
+                                    value: data.enabled,
+                                    onChanged: (value) {
+                                      data.enabled = value;
+                                      _refreshScript();
+                                    })),
                             Expanded(
                                 child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                const SizedBox(width: 10),
-                                FilledButton(
-                                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
-                                  onPressed: scriptEdit,
-                                  child: Text(localizations.add),
-                                ),
-                                const SizedBox(width: 10),
-                                OutlinedButton(
-                                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.only(left: 20, right: 20)),
-                                  onPressed: import,
-                                  child: Text(localizations.import),
-                                )
-                              ],
-                            )),
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    const SizedBox(width: 10),
+                                    FilledButton.icon(
+                                        icon: const Icon(Icons.add, size: 18),
+                                        onPressed: scriptEdit,
+                                        label: Text(localizations.add)),
+                                    const SizedBox(width: 10),
+                                    FilledButton.icon(
+                                      icon: const Icon(Icons.input_rounded, size: 18),
+                                      onPressed: import,
+                                      label: Text(localizations.import),
+                                    ),
+                                  ],
+                                )),
                             const SizedBox(width: 15)
                           ]),
                           const SizedBox(height: 5),
-                          Container(
-                              padding: const EdgeInsets.only(top: 10),
-                              constraints: const BoxConstraints(maxHeight: 500, minHeight: 300),
-                              decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
-                              child: SingleChildScrollView(
-                                  child: Column(children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                        width: 200,
-                                        padding: const EdgeInsets.only(left: 10),
-                                        child: Text(localizations.name)),
-                                    SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
-                                    const VerticalDivider(),
-                                    const Expanded(child: Text("URL")),
-                                  ],
-                                ),
-                                const Divider(thickness: 0.5),
-                                ScriptList(scripts: data.list, windowId: widget.windowId),
-                              ]))),
+                          ScriptList(scripts: data.list, windowId: widget.windowId),
                         ]))));
   }
 
@@ -167,8 +148,17 @@ class _ScriptWidgetState extends State<ScriptWidget> {
 
     try {
       var json = jsonDecode(await File(file).readAsString());
-      var scriptItem = ScriptItem.fromJson(json);
-      (await ScriptManager.instance).addScript(scriptItem, json['script']);
+      var scriptManager = (await ScriptManager.instance);
+      if (json is List<dynamic>) {
+        for (var item in json) {
+          var scriptItem = ScriptItem.fromJson(item);
+          await scriptManager.addScript(scriptItem, item['script']);
+        }
+      } else {
+        var scriptItem = ScriptItem.fromJson(json);
+        await scriptManager.addScript(scriptItem, json['script']);
+      }
+
       _refreshScript();
       if (mounted) {
         FlutterToastr.show(localizations.importSuccess, context);
@@ -242,12 +232,13 @@ class _ScriptEditState extends State<ScriptEdit> {
               text: localizations.useGuide,
               style: const TextStyle(color: Colors.blue, fontSize: 14),
               recognizer: TapGestureRecognizer()
-                ..onTap = () => DesktopMultiWindow.invokeMethod(
-                    0,
-                    "launchUrl",
-                    isCN
-                        ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
-                        : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script'))),
+                ..onTap = () =>
+                    DesktopMultiWindow.invokeMethod(
+                        0,
+                        "launchUrl",
+                        isCN
+                            ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
+                            : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script'))),
           const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
         ]),
         actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
@@ -305,22 +296,25 @@ class _ScriptEditState extends State<ScriptEdit> {
       SizedBox(width: 50, child: Text(label)),
       Expanded(
           child: TextFormField(
-        controller: controller,
-        validator: (val) => val?.isNotEmpty == true ? null : "",
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-            hintText: hint,
-            contentPadding: const EdgeInsets.all(10),
-            errorStyle: const TextStyle(height: 0, fontSize: 0),
-            focusedBorder: focusedBorder(),
-            isDense: true,
-            border: const OutlineInputBorder()),
-      ))
+            controller: controller,
+            validator: (val) => val?.isNotEmpty == true ? null : "",
+            keyboardType: keyboardType,
+            decoration: InputDecoration(
+                hintText: hint,
+                contentPadding: const EdgeInsets.all(10),
+                errorStyle: const TextStyle(height: 0, fontSize: 0),
+                focusedBorder: focusedBorder(),
+                isDense: true,
+                border: const OutlineInputBorder()),
+          ))
     ]);
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme
+        .of(context)
+        .colorScheme
+        .primary, width: 2));
   }
 }
 
@@ -336,48 +330,91 @@ class ScriptList extends StatefulWidget {
 }
 
 class _ScriptListState extends State<ScriptList> {
-  int selected = -1;
+  Set<int> selected = {};
+  bool isPress = false;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: rows(widget.scripts));
+    return GestureDetector(
+        onSecondaryTapDown: (details) => showGlobalMenu(details.globalPosition),
+        onTapDown: (details) {
+          if (selected.isEmpty) {
+            return;
+          }
+          if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
+            return;
+          }
+          setState(() {
+            selected.clear();
+          });
+        },
+        child: Listener(
+            onPointerUp: (details) => isPress = false,
+            onPointerDown: (details) => isPress = true,
+            child: Container(
+                padding: const EdgeInsets.only(top: 10),
+                height: 530,
+                decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
+                child: SingleChildScrollView(
+                    child: Column(children: [
+                      Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                        Container(
+                            width: 200, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
+                        SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
+                        const VerticalDivider(),
+                        const Expanded(child: Text("URL")),
+                      ]),
+                      const Divider(thickness: 0.5),
+                      Column(children: rows(widget.scripts))
+                    ])))));
   }
 
   List<Widget> rows(List<ScriptItem> list) {
-    var primaryColor = Theme.of(context).colorScheme.primary;
+    var primaryColor = Theme
+        .of(context)
+        .colorScheme
+        .primary;
 
     return List.generate(list.length, (index) {
       return InkWell(
-          // onTap: () {
-          //   selected[index] = !(selected[index] ?? false);
-          //   setState(() {});
-          // },
+        // onTap: () {
+        //   selected[index] = !(selected[index] ?? false);
+        //   setState(() {});
+        // },
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
           hoverColor: primaryColor.withOpacity(0.3),
-          onDoubleTap: () async {
-            String script = await (await ScriptManager.instance).getScript(list[index]);
-            if (!mounted) {
+          onDoubleTap: () => showEdit(index),
+          onSecondaryTapDown: (details) => showMenus(details, index),
+          onHover: (hover) {
+            if (isPress && !selected.contains(index)) {
+              setState(() {
+                selected.add(index);
+              });
+            }
+          },
+          onTap: () {
+            if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
+              setState(() {
+                selected.contains(index) ? selected.remove(index) : selected.add(index);
+              });
               return;
             }
-            showDialog(
-                barrierDismissible: false,
-                context: context,
-                builder: (_) => ScriptEdit(scriptItem: list[index], script: script)).then((value) {
-              if (value != null) {
-                setState(() {});
-              }
+            if (selected.isEmpty) {
+              return;
+            }
+            setState(() {
+              selected.clear();
             });
           },
-          onSecondaryTapDown: (details) => showMenus(details, index),
           child: Container(
-              color: selected == index
+              color: selected.contains(index)
                   ? primaryColor.withOpacity(0.8)
                   : index.isEven
-                      ? Colors.grey.withOpacity(0.1)
-                      : null,
+                  ? Colors.grey.withOpacity(0.1)
+                  : null,
               height: 30,
               padding: const EdgeInsets.all(5),
               child: Row(
@@ -400,66 +437,120 @@ class _ScriptListState extends State<ScriptList> {
     });
   }
 
+  showGlobalMenu(Offset offset) {
+    showContextMenu(context, offset, items: [
+      PopupMenuItem(height: 35, child: Text(localizations.newBuilt), onTap: () => showEdit()),
+      PopupMenuItem(height: 35, child: Text(localizations.export), onTap: () => export(selected.toList())),
+      const PopupMenuDivider(),
+      PopupMenuItem(height: 35, child: Text(localizations.enableSelect), onTap: () => enableStatus(true)),
+      PopupMenuItem(height: 35, child: Text(localizations.disableSelect), onTap: () => enableStatus(false)),
+      const PopupMenuDivider(),
+      PopupMenuItem(height: 35, child: Text(localizations.deleteSelect), onTap: () => removeScripts(selected.toList())),
+    ]);
+  }
+
   //点击菜单
   showMenus(TapDownDetails details, int index) {
+    if (selected.length > 1) {
+      showGlobalMenu(details.globalPosition);
+      return;
+    }
     setState(() {
-      selected = index;
+      selected.add(index);
     });
+
     showContextMenu(context, details.globalPosition, items: [
-      PopupMenuItem(
-          height: 35,
-          child: Text(localizations.edit),
-          onTap: () async {
-            String script = await (await ScriptManager.instance).getScript(widget.scripts[index]);
-            if (!mounted) {
-              return;
-            }
-            showDialog(
-                barrierDismissible: false,
-                context: context,
-                builder: (_) => ScriptEdit(scriptItem: widget.scripts[index], script: script)).then((value) {
-              if (value != null) {
-                setState(() {});
-              }
-            });
-          }),
-      PopupMenuItem(height: 35, child: Text(localizations.export), onTap: () => export(widget.scripts[index])),
+      PopupMenuItem(height: 35, child: Text(localizations.edit), onTap: () => showEdit(index)),
+      PopupMenuItem(height: 35, child: Text(localizations.export), onTap: () => export([index])),
       PopupMenuItem(
           height: 35,
           child: widget.scripts[index].enabled ? Text(localizations.disabled) : Text(localizations.enable),
           onTap: () {
             widget.scripts[index].enabled = !widget.scripts[index].enabled;
+            _refreshScript();
           }),
       const PopupMenuDivider(),
       PopupMenuItem(
           height: 35,
           child: Text(localizations.delete),
           onTap: () async {
-            (await ScriptManager.instance).removeScript(index);
+            var scriptManager = await ScriptManager.instance;
+            await scriptManager.removeScript(index);
             _refreshScript();
-            if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
           }),
     ]).then((value) {
-      setState(() {
-        selected = -1;
-      });
+      if (mounted) {
+        setState(() {
+          selected.remove(index);
+        });
+      }
+    });
+  }
+
+  showEdit([int? index]) async {
+    String? script = index == null ? null : await (await ScriptManager.instance).getScript(widget.scripts[index]);
+    if (!mounted) {
+      return;
+    }
+
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (_) => ScriptEdit(scriptItem: index == null ? null : widget.scripts[index], script: script))
+        .then((value) {
+      if (value != null) {
+        setState(() {});
+      }
     });
   }
 
   //导出js
-  export(ScriptItem item) async {
+  export(List<int> indexes) async {
+    if (indexes.isEmpty) return;
     //文件名称
-    String fileName = '${item.name}.json';
+    String fileName = 'proxypin-scripts.json';
     String? saveLocation = await DesktopMultiWindow.invokeMethod(0, 'getSaveLocation', fileName);
     WindowController.fromWindowId(widget.windowId).show();
     if (saveLocation == null) {
       return;
     }
-    var json = item.toJson();
-    json.remove("scriptPath");
-    json['script'] = await (await ScriptManager.instance).getScript(item);
+    var scriptManager = await ScriptManager.instance;
+    List<dynamic> json = [];
+    for (var idx in indexes) {
+      var item = widget.scripts[idx];
+      var map = item.toJson();
+      map.remove("scriptPath");
+      map['script'] = await scriptManager.getScript(item);
+      json.add(map);
+    }
+
     final XFile xFile = XFile.fromData(utf8.encode(jsonEncode(json)), mimeType: 'json');
     await xFile.saveTo(saveLocation);
     if (mounted) FlutterToastr.show(localizations.exportSuccess, context);
+  }
+
+  enableStatus(bool enable) {
+    for (var idx in selected) {
+      widget.scripts[idx].enabled = enable;
+    }
+    setState(() {});
+    _refreshScript();
+  }
+
+  removeScripts(List<int> indexes) async {
+    if (indexes.isEmpty) return;
+    showConfirmDialog(context, content: localizations.confirmContent, onConfirm: () async {
+      var scriptManager = await ScriptManager.instance;
+      for (var idx in indexes) {
+        await scriptManager.removeScript(idx);
+      }
+
+      setState(() {
+        selected.clear();
+      });
+      _refreshScript();
+
+      if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
+    });
   }
 }
