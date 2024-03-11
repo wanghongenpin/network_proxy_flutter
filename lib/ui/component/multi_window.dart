@@ -56,6 +56,11 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
         RequestRewrites.instance, (data) => RequestRewriteWidget(windowId: windowId, requestRewrites: data));
   }
 
+  //脚本日志
+  if (argument['name'] == 'ScriptConsoleWidget') {
+    return ScriptConsoleWidget(windowId: windowId);
+  }
+
   return const SizedBox();
 }
 
@@ -166,6 +171,11 @@ void registerMethodHandler() {
       return launchUrl(Uri.parse(call.arguments));
     }
 
+    if (call.method == 'registerConsoleLog') {
+      ScriptManager.registerConsoleLog(fromWindowId);
+      return "done";
+    }
+
     return 'done';
   });
 }
@@ -225,6 +235,21 @@ openRequestRewriteWindow() async {
   window.setTitle('Request Rewrite');
   window
     ..setFrame(const Offset(50, 0) & Size(800 * ratio, 650 * ratio))
+    ..center();
+  window.show();
+}
+
+openScriptConsoleWindow() async {
+  var ratio = 1.0;
+  if (Platform.isWindows) {
+    ratio = WindowManager.instance.getDevicePixelRatio();
+  }
+  final window = await DesktopMultiWindow.createWindow(jsonEncode(
+    {'name': 'ScriptConsoleWidget'},
+  ));
+  window.setTitle('Script Console');
+  window
+    ..setFrame(const Offset(50, 0) & Size(900 * ratio, 650 * ratio))
     ..center();
   window.show();
 }

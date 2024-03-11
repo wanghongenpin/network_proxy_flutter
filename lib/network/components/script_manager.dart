@@ -48,6 +48,8 @@ async function onResponse(context, request, response) {
 
   static JavascriptRuntime flutterJs = getJavascriptRuntime();
 
+  static final List<int> _windowIds = [];
+
   ScriptManager._();
 
   ///单例
@@ -55,9 +57,30 @@ async function onResponse(context, request, response) {
     if (_instance == null) {
       _instance = ScriptManager._();
       await _instance?.reloadScript();
+      // register channel callback
+      final channelCallbacks = JavascriptRuntime.channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
+      channelCallbacks!["ConsoleLog"] = _instance!.consoleLog;
       logger.d('init script manager');
     }
     return _instance!;
+  }
+
+  static void registerConsoleLog(int fromWindowId) {
+    if (!_windowIds.contains(fromWindowId)) _windowIds.add(fromWindowId);
+  }
+
+  dynamic consoleLog(dynamic args) async {
+    var level = args.removeAt(0);
+    String output = args.join(' ');
+    if (level == 'info') level = 'warn';
+
+    for (int i = 0; i < _windowIds.length; i++) {
+      var winId = _windowIds.elementAt(i);
+      DesktopMultiWindow.invokeMethod(winId, "consoleLog", {"level": level, "output": output}).onError((e, t) {
+        logger.e("consoleLog error: $e");
+        _windowIds.remove(winId);
+      });
+    }
   }
 
   ///重新加载脚本

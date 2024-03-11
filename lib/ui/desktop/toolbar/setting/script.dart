@@ -29,8 +29,10 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:highlight/languages/javascript.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
+import 'package:network_proxy/utils/lang.dart';
 
 bool _refresh = false;
 
@@ -86,9 +88,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme
-            .of(context)
-            .dialogBackgroundColor,
+        backgroundColor: Theme.of(context).dialogBackgroundColor,
         appBar: AppBar(
             title: Text(localizations.script, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             toolbarHeight: 36,
@@ -98,8 +98,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
             child: futureWidget(
                 ScriptManager.instance,
                 loading: true,
-                    (data) =>
-                    Column(
+                (data) => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
@@ -116,26 +115,36 @@ class _ScriptWidgetState extends State<ScriptWidget> {
                                     })),
                             Expanded(
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    const SizedBox(width: 10),
-                                    FilledButton.icon(
-                                        icon: const Icon(Icons.add, size: 18),
-                                        onPressed: scriptEdit,
-                                        label: Text(localizations.add)),
-                                    const SizedBox(width: 10),
-                                    FilledButton.icon(
-                                      icon: const Icon(Icons.input_rounded, size: 18),
-                                      onPressed: import,
-                                      label: Text(localizations.import),
-                                    ),
-                                  ],
-                                )),
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                const SizedBox(width: 10),
+                                FilledButton.icon(
+                                    icon: const Icon(Icons.add, size: 18),
+                                    onPressed: scriptAdd,
+                                    label: Text(localizations.add)),
+                                const SizedBox(width: 10),
+                                FilledButton.icon(
+                                  icon: const Icon(Icons.input_rounded, size: 18),
+                                  onPressed: import,
+                                  label: Text(localizations.import),
+                                ),
+                                const SizedBox(width: 10),
+                                FilledButton.icon(
+                                  icon: const Icon(Icons.terminal, size: 18),
+                                  onPressed: consoleLog,
+                                  label: Text(localizations.logger),
+                                ),
+                              ],
+                            )),
                             const SizedBox(width: 15)
                           ]),
                           const SizedBox(height: 5),
                           ScriptList(scripts: data.list, windowId: widget.windowId),
                         ]))));
+  }
+
+  consoleLog() {
+    openScriptConsoleWindow();
   }
 
   //导入js
@@ -173,12 +182,125 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   }
 
   /// 添加脚本
-  scriptEdit() async {
+  scriptAdd() async {
     showDialog(barrierDismissible: false, context: context, builder: (_) => const ScriptEdit()).then((value) {
       if (value != null) {
         setState(() {});
       }
     });
+  }
+}
+
+class ScriptConsoleWidget extends StatefulWidget {
+  final int windowId;
+
+  const ScriptConsoleWidget({super.key, required this.windowId});
+
+  @override
+  State<ScriptConsoleWidget> createState() => _ScriptConsoleState();
+}
+
+class LogInfo {
+  final DateTime time = DateTime.now();
+  final String level;
+  final String output;
+
+  LogInfo(this.level, this.output);
+}
+
+class _ScriptConsoleState extends State<ScriptConsoleWidget> {
+  final List<LogInfo> logs = [];
+  final ScrollController _scrollController = ScrollController();
+  bool scrollEnd = true;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  @override
+  void initState() {
+    super.initState();
+    DesktopMultiWindow.invokeMethod(0, "registerConsoleLog", widget.windowId);
+    DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
+      // print("consoleLog  $scrollEnd $fromWindowId ${call.arguments}");
+      if (call.method == 'consoleLog') {
+        setState(() {
+          var logInfo = LogInfo(call.arguments['level'], call.arguments['output']);
+          logs.add(logInfo);
+        });
+
+        if (scrollEnd) {
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              _scrollController.animateTo(_scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+            }
+          });
+        }
+      }
+      return "ok";
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // print("script build");
+    return Scaffold(
+        backgroundColor: Theme.of(context).dialogBackgroundColor,
+        appBar: AppBar(
+            title: Text(localizations.logger, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            actions: [
+              IconButton(
+                tooltip: localizations.scrollEnd,
+                onPressed: () {
+                  setState(() {
+                    scrollEnd = !scrollEnd;
+                  });
+                  if (scrollEnd) {
+                    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+                  }
+                },
+                icon: Icon(Icons.update, color: scrollEnd ? Theme.of(context).colorScheme.primary : null),
+              ),
+              const SizedBox(width: 10),
+              IconButton(
+                  tooltip: localizations.clear,
+                  onPressed: () => setState(() {
+                        logs.clear();
+                      }),
+                  icon: const Icon(Icons.delete)),
+              const SizedBox(width: 10)
+            ],
+            toolbarHeight: 36,
+            centerTitle: true),
+        body: Container(
+            decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.3))),
+            margin: const EdgeInsets.all(5),
+            padding: const EdgeInsets.all(5),
+            child: ListView.builder(
+              itemCount: logs.length,
+              controller: _scrollController,
+              itemBuilder: (BuildContext context, int index) {
+                Color? color;
+                if (logs[index].level == 'error') {
+                  color = Colors.red;
+                } else if (logs[index].level == 'warn') {
+                  color = Colors.orange;
+                }
+
+                //脚本日志 样式展示
+                return Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Row(
+                      children: [
+                        Text(logs[index].time.format(), style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                        const SizedBox(width: 10),
+                        Text(logs[index].level, style: TextStyle(fontSize: 13, color: color)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                            child: SelectableText(logs[index].output, style: TextStyle(fontSize: 13, color: color))),
+                      ],
+                    ));
+              },
+            )));
   }
 }
 
@@ -232,13 +354,12 @@ class _ScriptEditState extends State<ScriptEdit> {
               text: localizations.useGuide,
               style: const TextStyle(color: Colors.blue, fontSize: 14),
               recognizer: TapGestureRecognizer()
-                ..onTap = () =>
-                    DesktopMultiWindow.invokeMethod(
-                        0,
-                        "launchUrl",
-                        isCN
-                            ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
-                            : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script'))),
+                ..onTap = () => DesktopMultiWindow.invokeMethod(
+                    0,
+                    "launchUrl",
+                    isCN
+                        ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
+                        : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script'))),
           const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
         ]),
         actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
@@ -296,25 +417,22 @@ class _ScriptEditState extends State<ScriptEdit> {
       SizedBox(width: 50, child: Text(label)),
       Expanded(
           child: TextFormField(
-            controller: controller,
-            validator: (val) => val?.isNotEmpty == true ? null : "",
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-                hintText: hint,
-                contentPadding: const EdgeInsets.all(10),
-                errorStyle: const TextStyle(height: 0, fontSize: 0),
-                focusedBorder: focusedBorder(),
-                isDense: true,
-                border: const OutlineInputBorder()),
-          ))
+        controller: controller,
+        validator: (val) => val?.isNotEmpty == true ? null : "",
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+            hintText: hint,
+            contentPadding: const EdgeInsets.all(10),
+            errorStyle: const TextStyle(height: 0, fontSize: 0),
+            focusedBorder: focusedBorder(),
+            isDense: true,
+            border: const OutlineInputBorder()),
+      ))
     ]);
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme
-        .of(context)
-        .colorScheme
-        .primary, width: 2));
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
   }
 }
 
@@ -359,30 +477,26 @@ class _ScriptListState extends State<ScriptList> {
                 decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
                 child: SingleChildScrollView(
                     child: Column(children: [
-                      Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-                        Container(
-                            width: 200, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
-                        SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
-                        const VerticalDivider(),
-                        const Expanded(child: Text("URL")),
-                      ]),
-                      const Divider(thickness: 0.5),
-                      Column(children: rows(widget.scripts))
-                    ])))));
+                  Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                    Container(width: 200, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
+                    SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
+                    const VerticalDivider(),
+                    const Expanded(child: Text("URL")),
+                  ]),
+                  const Divider(thickness: 0.5),
+                  Column(children: rows(widget.scripts))
+                ])))));
   }
 
   List<Widget> rows(List<ScriptItem> list) {
-    var primaryColor = Theme
-        .of(context)
-        .colorScheme
-        .primary;
+    var primaryColor = Theme.of(context).colorScheme.primary;
 
     return List.generate(list.length, (index) {
       return InkWell(
-        // onTap: () {
-        //   selected[index] = !(selected[index] ?? false);
-        //   setState(() {});
-        // },
+          // onTap: () {
+          //   selected[index] = !(selected[index] ?? false);
+          //   setState(() {});
+          // },
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
           hoverColor: primaryColor.withOpacity(0.3),
@@ -413,8 +527,8 @@ class _ScriptListState extends State<ScriptList> {
               color: selected.contains(index)
                   ? primaryColor.withOpacity(0.8)
                   : index.isEven
-                  ? Colors.grey.withOpacity(0.1)
-                  : null,
+                      ? Colors.grey.withOpacity(0.1)
+                      : null,
               height: 30,
               padding: const EdgeInsets.all(5),
               child: Row(
@@ -494,9 +608,9 @@ class _ScriptListState extends State<ScriptList> {
     }
 
     showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (_) => ScriptEdit(scriptItem: index == null ? null : widget.scripts[index], script: script))
+            barrierDismissible: false,
+            context: context,
+            builder: (_) => ScriptEdit(scriptItem: index == null ? null : widget.scripts[index], script: script))
         .then((value) {
       if (value != null) {
         setState(() {});

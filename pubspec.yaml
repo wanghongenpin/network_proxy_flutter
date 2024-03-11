@@ -45,22 +45,22 @@ dependencies:
       path: packages/video_player/video_player
 
 
-dependency_overrides:
-  video_player_platform_interface:
-    git:
-      url: https://github.com/icapps/plugins.git
-      ref: feature/ios-pip
-      path: packages/video_player/video_player_platform_interface
-  video_player_avfoundation:
-    git:
-      url: https://github.com/icapps/plugins.git
-      ref: feature/ios-pip
-      path: packages/video_player/video_player_avfoundation
-  video_player_android:
-    git:
-      url: https://github.com/icapps/plugins.git
-      ref: feature/ios-pip
-      path: packages/video_player/video_player_android
+#dependency_overrides:
+#  video_player_platform_interface:
+#    git:
+#      url: https://github.com/icapps/plugins.git
+#      ref: feature/ios-pip
+#      path: packages/video_player/video_player_platform_interface
+#  video_player_avfoundation:
+#    git:
+#      url: https://github.com/icapps/plugins.git
+#      ref: feature/ios-pip
+#      path: packages/video_player/video_player_avfoundation
+#  video_player_android:
+#    git:
+#      url: https://github.com/icapps/plugins.git
+#      ref: feature/ios-pip
+#      path: packages/video_player/video_player_android
 
 dev_dependencies:
   flutter_test:

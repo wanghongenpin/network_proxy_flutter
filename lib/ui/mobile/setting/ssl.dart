@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
-import 'package:network_proxy/ui/mobile/setting/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MobileSslWidget extends StatefulWidget {
@@ -56,16 +55,16 @@ class _MobileSslState extends State<MobileSslWidget> {
 
   Widget ios() {
     return Column(children: [
-      if (localizations.localeName != 'zh')
-        ExpansionTile(
-          title: Text(localizations.useGuide),
-          shape: const Border(),
-          maintainState: true,
-          children: [
-            Container(
-                height: 350, padding: const EdgeInsets.only(left: 15, right: 15), child: const VideoPlayerScreen())
-          ],
-        ),
+      // if (localizations.localeName != 'zh')
+      //   ExpansionTile(
+      //     title: Text(localizations.useGuide),
+      //     shape: const Border(),
+      //     maintainState: true,
+      //     children: [
+      //       Container(
+      //           height: 350, padding: const EdgeInsets.only(left: 15, right: 15), child: const VideoPlayerScreen())
+      //     ],
+      //   ),
       ExpansionTile(
           title: Text(localizations.installRootCa),
           initiallyExpanded: true,

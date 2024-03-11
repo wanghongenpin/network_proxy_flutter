@@ -17,7 +17,7 @@
 
   "start": "开始",
   "stop": "停止",
-  "clear": "清除",
+  "clear": "清空",
   "httpsProxy": "HTTPS 代理",
   "setting": "设置",
   "mobileConnect": "手机连接",
@@ -230,6 +230,8 @@
   "enableScript": "启用脚本工具",
   "scriptUseDescribe": "使用 JavaScript 修改请求和响应",
   "scriptEdit": "编辑脚本",
+  "scrollEnd": "跟踪滚动",
+  "logger": "日志",
   "material3": "Material3是谷歌开源设计系统的最新版本",
   "iosVpnBackgroundAudio": "开启抓包后，退出到后台。为了维护主UI线程的网络通信，将启用静音音频播放以保持主线程运行。否则，它将只在后台运行30秒。您同意在启用抓包后在后台播放音频吗?",
 
