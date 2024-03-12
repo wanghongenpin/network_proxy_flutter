@@ -97,14 +97,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.0.3"
-  csslib:
-    dependency: transitive
-    description:
-      name: csslib
-      sha256: "706b5707578e0c1b4b7550f64078f0a0f19dec3f50a178ffae7006b0a9ca58fb"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.0.0"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -350,14 +342,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.2.3"
-  html:
-    dependency: transitive
-    description:
-      name: html
-      sha256: "3a7812d5bcd2894edf53dfaf8cd640876cf6cef50a8f238745c8b8120ea74d3a"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.15.4"
   http:
     dependency: transitive
     description:
@@ -803,47 +787,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.4"
-  video_player:
-    dependency: "direct main"
-    description:
-      path: "packages/video_player/video_player"
-      ref: "feature/ios-pip"
-      resolved-ref: b829adec12641d97bef672d8ddbbf0531dd3efe7
-      url: "https://github.com/icapps/plugins.git"
-    source: git
-    version: "2.6.0"
-  video_player_android:
-    dependency: transitive
-    description:
-      name: video_player_android
-      sha256: "4dd9b8b86d70d65eecf3dcabfcdfbb9c9115d244d022654aba49a00336d540c2"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.4.12"
-  video_player_avfoundation:
-    dependency: transitive
-    description:
-      name: video_player_avfoundation
-      sha256: "309e3962795e761be010869bae65c0b0e45b5230c5cee1bec72197ca7db040ed"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.5.6"
-  video_player_platform_interface:
-    dependency: transitive
-    description:
-      name: video_player_platform_interface
-      sha256: "236454725fafcacf98f0f39af0d7c7ab2ce84762e3b63f2cbb3ef9a7e0550bc6"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "6.2.2"
-  video_player_web:
-    dependency: transitive
-    description:
-      name: video_player_web
-      sha256: "34beb3a07d4331a24f7e7b2f75b8e2b103289038e07e65529699a671b6a6e2cb"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.1.3"
   vm_service:
     dependency: transitive
     description:

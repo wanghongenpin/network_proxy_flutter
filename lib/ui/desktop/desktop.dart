@@ -200,24 +200,16 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   isCN
                       ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                           '点击HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
-                          '1. 历史记录支持自动缓存时间设置；\n'
-                          '2. 历史记录增加搜索；\n'
-                          '3. 增加当前视图导出；\n'
-                          '4. 增加屏蔽请求功能；\n'
-                          '5. 支持高亮请求；\n'
-                          '6. Android返回键进入小窗口；\n'
-                          '7. Android白名单应用列表展示隐藏图标应用；\n'
-                          '8. 修复暗黑主题样式；\n'
+                          '1. 展示请求发起的应用图标；\n'
+                          '2. 关键词匹配高亮；\n'
+                          '3. 脚本批量操作和导入导出；\n'
+                          '4. 脚本支持日志查看，通过console.log()输出；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
-                          '1. History support auto cache time setting；\n'
-                          '2. History Add Search;\n'
-                          '3. Add current view export;\n'
-                          '4. Support blocking request；\n'
-                          '5. Support highlighting requests；\n'
-                          '6. Android Return key to enter the small window；\n'
-                          '7. Android Whitelist application list display hidden icon applications；\n'
-                          '8. Fix dark theme style；\n',
+                          '1. Display the application icon initiated by the request；\n'
+                          '2. Keyword matching highlights;\n'
+                          '3. Script batch operations and import/export;\n'
+                          '4. The script supports log viewing, output through console.log()；\n',
                   style: const TextStyle(fontSize: 14)));
         });
   }

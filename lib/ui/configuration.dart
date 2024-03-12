@@ -29,7 +29,7 @@ class AppConfiguration {
   bool upgradeNoticeV8 = true;
 
   /// 是否启用画中画
-  bool pipEnabled = true;
+  ValueNotifier<bool> pipEnabled = ValueNotifier(true);
 
   ///
   bool headerExpanded = true;
@@ -116,7 +116,7 @@ class AppConfiguration {
       _theme = ThemeModel(mode: mode, useMaterial3: config['useMaterial3'] ?? true);
       upgradeNoticeV8 = config['upgradeNoticeV8'] ?? true;
       _language = config['language'] == null ? null : Locale.fromSubtags(languageCode: config['language']);
-      pipEnabled = config['pipEnabled'] ?? true;
+      pipEnabled.value = config['pipEnabled'] ?? true;
       headerExpanded = config['headerExpanded'] ?? true;
       iosVpnBackgroundAudioEnable = config['iosVpnBackgroundAudioEnable'];
     } catch (e) {
@@ -142,7 +142,7 @@ class AppConfiguration {
       'useMaterial3': _theme.useMaterial3,
       'upgradeNoticeV8': upgradeNoticeV8,
       "language": _language?.languageCode,
-      'pipEnabled': pipEnabled,
+      'pipEnabled': pipEnabled.value,
       "headerExpanded": headerExpanded,
       "iosVpnBackgroundAudioEnable": iosVpnBackgroundAudioEnable == false ? null : iosVpnBackgroundAudioEnable
     };

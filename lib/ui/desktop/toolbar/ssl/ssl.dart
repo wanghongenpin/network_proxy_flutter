@@ -196,76 +196,82 @@ class _SslState extends State<SslWidget> {
         builder: (BuildContext context) {
           return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-              contentPadding: const EdgeInsets.all(16),
+              contentPadding: const EdgeInsets.all(5),
               title: Row(children: [
                 Text("Android ${localizations.caInstallGuide}", style: const TextStyle(fontSize: 16)),
                 const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
               ]),
-              alignment: Alignment.center,
               content: SizedBox(
                   width: 600,
-                  child: ListView(children: [
-                    ExpansionTile(
-                        title: Text(localizations.androidRoot,
-                            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-                        tilePadding: const EdgeInsets.only(left: 0),
-                        expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                        expandedAlignment: Alignment.topLeft,
-                        childrenPadding: const EdgeInsets.only(left: 20),
-                        initiallyExpanded: true,
-                        shape: const Border(),
-                        children: [
-                          Text(localizations.androidRootMagisk),
-                          TextButton(
-                              child: Text(
-                                  "https://${isCN ? 'gitee' : 'github'}.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
-                              onPressed: () {
-                                launchUrl(Uri.parse(
-                                    "https://${isCN ? 'gitee' : 'github'}.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
-                              }),
-                          SelectableText(localizations.androidRootRename),
-                        ]),
-                    const SizedBox(height: 10),
-                    ExpansionTile(
-                      title: Text(localizations.androidUserCA,
-                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-                      tilePadding: const EdgeInsets.only(left: 0),
-                      expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                      childrenPadding: const EdgeInsets.only(left: 20),
-                      initiallyExpanded: true,
-                      shape: const Border(),
-                      children: [
-                        SelectableText.rich(TextSpan(
-                            text: "1. ${localizations.configWifiProxy} Host：$host  Port：${widget.proxyServer.port}")),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Text("2. ${localizations.caIosBrowser}\t"),
-                            const SelectableText.rich(TextSpan(
-                                text: "http://proxy.pin/ssl", style: TextStyle(decoration: TextDecoration.underline)))
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text("3. ${localizations.androidUserCAInstall}"),
-                        const SizedBox(height: 10),
-                        TextButton(
-                            onPressed: () {
-                              launchUrl(Uri.parse(isCN
-                                  ? "https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E5%AE%89%E5%8D%93%E6%97%A0ROOT%E4%BD%BF%E7%94%A8Xposed%E6%A8%A1%E5%9D%97%E6%8A%93%E5%8C%85"
-                                  : "https://github.com/wanghongenpin/network_proxy_flutter/wiki/Android-without-ROOT-uses-Xposed-module-to-capture-packets"));
-                            },
-                            child: Text(" ${localizations.androidUserXposed}")),
-                        ClipRRect(
-                            child: Align(
-                                alignment: Alignment.topCenter,
-                                heightFactor: .7,
-                                child: Image.network(
-                                  "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
-                                  height: 550,
-                                )))
-                      ],
-                    ),
-                  ])));
+                  child: DefaultTabController(
+                      length: 2,
+                      child: Scaffold(
+                        appBar: TabBar(
+                            tabs: [
+                          Tab(text: localizations.androidRoot),
+                          Tab(text: localizations.androidUserCA),
+                        ] as List<Widget>),
+                        body: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: TabBarView(children: [
+                              ListView(children: [
+                                Text(localizations.androidRootMagisk),
+                                TextButton(
+                                    child: Text(
+                                        "https://${isCN ? 'gitee' : 'github'}.com/wanghongenpin/Magisk-ProxyPinCA/releases"),
+                                    onPressed: () {
+                                      launchUrl(Uri.parse(
+                                          "https://${isCN ? 'gitee' : 'github'}.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
+                                    }),
+                                const SizedBox(height: 10),
+                                SelectableText(localizations.androidRootRename),
+                                const SizedBox(height: 10),
+                                ClipRRect(
+                                    child: Align(
+                                        alignment: Alignment.topCenter,
+                                        child: Image.network(
+                                          scale: 0.5,
+                                          "https://foruda.gitee.com/images/1710181660282752846/cb520c0b_1073801.png",
+                                          height: 460,
+                                        )))
+                              ]),
+                              ListView(
+                                children: [
+                                  SelectableText.rich(TextSpan(
+                                      text:
+                                          "1. ${localizations.configWifiProxy} Host：$host  Port：${widget.proxyServer.port}")),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      Text("2. ${localizations.caAndroidBrowser}\t"),
+                                      const SelectableText.rich(TextSpan(
+                                          text: "http://proxy.pin/ssl",
+                                          style: TextStyle(decoration: TextDecoration.underline)))
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text("3. ${localizations.androidUserCAInstall}"),
+                                  const SizedBox(height: 10),
+                                  TextButton(
+                                      onPressed: () {
+                                        launchUrl(Uri.parse(isCN
+                                            ? "https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E5%AE%89%E5%8D%93%E6%97%A0ROOT%E4%BD%BF%E7%94%A8Xposed%E6%A8%A1%E5%9D%97%E6%8A%93%E5%8C%85"
+                                            : "https://github.com/wanghongenpin/network_proxy_flutter/wiki/Android-without-ROOT-uses-Xposed-module-to-capture-packets"));
+                                      },
+                                      child: Text(" ${localizations.androidUserXposed}")),
+                                  const SizedBox(height: 10),
+                                  ClipRRect(
+                                      child: Align(
+                                          alignment: Alignment.topCenter,
+                                          heightFactor: .7,
+                                          child: Image.network(
+                                            "https://foruda.gitee.com/images/1689352695624941051/74e3bed6_1073801.png",
+                                            height: 530,
+                                          )))
+                                ],
+                              ),
+                            ])),
+                      ))));
         });
   }
 

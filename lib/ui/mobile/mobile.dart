@@ -59,7 +59,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   Future<bool> enterPictureInPicture() async {
     if (Vpn.isVpnStarted && !pictureInPictureNotifier.value) {
-      if (desktop.value.connect || !Platform.isAndroid || !(await (AppConfiguration.instance)).pipEnabled) {
+      if (desktop.value.connect || !Platform.isAndroid || !(await (AppConfiguration.instance)).pipEnabled.value) {
         return false;
       }
 
@@ -170,8 +170,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
               }
 
               return Scaffold(
-                  floatingActionButton:
-                      widget.appConfiguration.pipEnabled ? PictureInPictureWindow(proxyServer) : const SizedBox(),
+                  floatingActionButton: PictureInPictureWindow(proxyServer),
                   body: Scaffold(
                     appBar: appBar(),
                     drawer: DrawerWidget(proxyServer: proxyServer, container: container),

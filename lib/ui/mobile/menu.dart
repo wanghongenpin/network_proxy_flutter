@@ -69,7 +69,7 @@ class DrawerWidget extends StatelessWidget {
           onTap: () => navigator(
               context, MobileHistory(proxyServer: proxyServer, container: container, historyTask: historyTask)),
         ),
-        const Divider(thickness: 0.3),
+        const Divider(thickness: 0.3, height: 0),
         ListTile(
             leading: const Icon(Icons.construction),
             title: Text(localizations.toolbox),
@@ -84,7 +84,7 @@ class DrawerWidget extends StatelessWidget {
             title: Text(localizations.httpsProxy),
             leading: const Icon(Icons.https),
             onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
-        const Divider(thickness: 0.3),
+        const Divider(thickness: 0.3, height: 0),
         ListTile(
             title: Text(localizations.filter),
             leading: const Icon(Icons.filter_alt_outlined),
@@ -122,6 +122,7 @@ class DrawerWidget extends StatelessWidget {
             title: Text(localizations.about),
             leading: const Icon(Icons.info_outline),
             onTap: () => navigator(context, const About())),
+        const SizedBox(height: 20)
       ],
     ));
   }
@@ -166,9 +167,9 @@ class SettingMenu extends StatelessWidget {
                   title: Text(localizations.windowMode),
                   subtitle: Text(localizations.windowModeSubTitle, style: const TextStyle(fontSize: 12)),
                   trailing: SwitchWidget(
-                      value: appConfiguration.pipEnabled,
+                      value: appConfiguration.pipEnabled.value,
                       onChanged: (value) {
-                        appConfiguration.pipEnabled = value;
+                        appConfiguration.pipEnabled.value = value;
                         appConfiguration.flushConfig();
                       })),
               ListTile(

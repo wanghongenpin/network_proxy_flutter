@@ -225,6 +225,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
     return ListView(
         controller: scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [rowWidget("URI", path), ...message(widget.request.get(), "Request", scrollController)]);
   }
 
@@ -234,7 +235,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     }
 
     var scrollController = ScrollController();
-    return ListView(controller: scrollController, children: [
+    return ListView(controller: scrollController, physics: const AlwaysScrollableScrollPhysics(), children: [
       rowWidget("StatusCode", widget.response.get()?.status.toString()),
       ...message(widget.response.get(), "Response", scrollController)
     ]);

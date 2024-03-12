@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/native/pip.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/utils/ip.dart';
 
 class PictureInPictureWindow extends StatefulWidget {
@@ -26,8 +27,16 @@ class _PictureInPictureState extends State<PictureInPictureWindow> {
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
+  void initState() {
+    super.initState();
+    AppConfiguration.current?.pipEnabled.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (Platform.isAndroid) return const SizedBox();
+    if (Platform.isAndroid || AppConfiguration.current?.pipEnabled.value == false) return const SizedBox();
 
     size ??= MediaQuery.sizeOf(context);
     if (size == null || size!.isEmpty) {
