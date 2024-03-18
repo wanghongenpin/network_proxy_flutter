@@ -27,7 +27,8 @@ class AppInfo(name: CharSequence, packageName: String, icon: ByteArray, versionN
             val icon =
                 if (withIcon) drawableToByteArray(app.loadIcon(packageManager)) else ByteArray(0)
             val packageInfo = packageManager.getPackageInfo(app.packageName, 0)
-            val versionName = packageInfo.versionName
+            // 部分应用可能没有设置versionName，将导致获取列表操作失败
+            val versionName = packageInfo.versionName ?: ""
 
             return AppInfo(name, packageName, icon, versionName)
         }
