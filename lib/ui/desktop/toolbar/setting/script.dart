@@ -375,7 +375,7 @@ class _ScriptEditState extends State<ScriptEdit> {
                 //新增
                 if (widget.scriptItem == null) {
                   var scriptItem = ScriptItem(true, nameController.text, urlController.text);
-                  (await ScriptManager.instance).addScript(scriptItem, script.text);
+                  await (await ScriptManager.instance).addScript(scriptItem, script.text);
                 } else {
                   widget.scriptItem?.name = nameController.text;
                   widget.scriptItem?.url = urlController.text;

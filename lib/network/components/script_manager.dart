@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter_js/flutter_js.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -307,6 +308,7 @@ async function onResponse(context, request, response) {
     map['headers'].forEach((key, value) {
       response.headers.add(key, value);
     });
+    response.headers.remove(HttpHeaders.CONTENT_ENCODING);
     response.body = map['body'] == null ? null : utf8.encode(map['body'].toString());
     return response;
   }

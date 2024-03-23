@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/file_read.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/utils/lang.dart';
@@ -368,6 +369,7 @@ class RequestRewrites {
         return item.value ?? '';
       }));
 
+      message.headers.remove(HttpHeaders.CONTENT_ENCODING);
       message.headers.contentLength = message.body!.length;
       return;
     }
