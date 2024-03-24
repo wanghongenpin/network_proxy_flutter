@@ -157,38 +157,45 @@ class _InstalledAppsWidgetState extends State<InstalledAppsWidget> {
           },
         ),
       ),
-      body: FutureBuilder(
-        future: apps,
-        builder: (BuildContext context, AsyncSnapshot<List<AppInfo>> snapshot) {
-          if (snapshot.hasData) {
-            List<AppInfo> appInfoList = snapshot.data!;
-            if (keyword != null && keyword!.trim().isNotEmpty) {
-              appInfoList = appInfoList
-                  .where((element) =>
-                      element.name!.toLowerCase().contains(keyword!) ||
-                      element.packageName!.toLowerCase().contains(keyword!))
-                  .toList();
-            }
-
-            return ListView.builder(
-                itemCount: appInfoList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  AppInfo appInfo = appInfoList[index];
-                  return ListTile(
-                    leading: Image.memory(appInfo.icon ?? Uint8List(0)),
-                    title: Text(appInfo.name ?? ""),
-                    subtitle: Text(appInfo.packageName ?? ""),
-                    onTap: () async {
-                      Navigator.of(context).pop(appInfo.packageName);
-                    },
-                  );
-                });
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+      body: RefreshIndicator(
+        onRefresh: () async {
+          apps = InstalledApps.getInstalledApps(true);
+          await apps;
+          setState(() {});
         },
+        child: FutureBuilder(
+          future: apps,
+          builder: (BuildContext context, AsyncSnapshot<List<AppInfo>> snapshot) {
+            if (snapshot.hasData) {
+              List<AppInfo> appInfoList = snapshot.data!;
+              if (keyword != null && keyword!.trim().isNotEmpty) {
+                appInfoList = appInfoList
+                    .where((element) =>
+                        element.name!.toLowerCase().contains(keyword!) ||
+                        element.packageName!.toLowerCase().contains(keyword!))
+                    .toList();
+              }
+
+              return ListView.builder(
+                  itemCount: appInfoList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    AppInfo appInfo = appInfoList[index];
+                    return ListTile(
+                      leading: Image.memory(appInfo.icon ?? Uint8List(0)),
+                      title: Text(appInfo.name ?? ""),
+                      subtitle: Text(appInfo.packageName ?? ""),
+                      onTap: () async {
+                        Navigator.of(context).pop(appInfo.packageName);
+                      },
+                    );
+                  });
+            } else {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          },
+        ),
       ),
     );
   }
