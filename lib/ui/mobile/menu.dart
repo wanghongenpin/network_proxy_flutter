@@ -289,6 +289,7 @@ class MoreMenu extends StatelessWidget {
                   title: Text(localizations.httpsProxy),
                   leading: Icon(Icons.https_outlined, color: proxyServer.enableSsl ? null : Colors.red),
                   onTap: () {
+                    Navigator.of(context).pop();
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (BuildContext context) {
                         return MobileSslWidget(proxyServer: proxyServer);
@@ -302,6 +303,7 @@ class MoreMenu extends StatelessWidget {
                 leading: const Icon(Icons.qr_code_scanner_outlined),
                 title: Text(localizations.connectRemote),
                 onTap: () {
+                  Navigator.of(context).pop();
                   connectRemote(context);
                 },
               )),
@@ -314,6 +316,7 @@ class MoreMenu extends StatelessWidget {
                 onTap: () async {
                   var ip = await localIp();
                   if (context.mounted) {
+                    Navigator.of(context).pop();
                     connectQrCode(context, ip, proxyServer.port);
                   }
                 },
@@ -326,6 +329,7 @@ class MoreMenu extends StatelessWidget {
                 leading: const Icon(Icons.highlight_outlined),
                 title: Text(localizations.highlight),
                 onTap: () {
+                  Navigator.of(context).pop();
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (BuildContext context) {
                       return const KeywordHighlight();
@@ -340,6 +344,7 @@ class MoreMenu extends StatelessWidget {
                 leading: const Icon(Icons.share_outlined),
                 title: Text(localizations.viewExport),
                 onTap: () async {
+                  Navigator.of(context).pop();
                   var name = formatDate(DateTime.now(), [m, '-', d, ' ', HH, ':', nn, ':', ss]);
                   MobileHomeState.requestStateKey.currentState?.export('ProxyPin$name');
                 },
