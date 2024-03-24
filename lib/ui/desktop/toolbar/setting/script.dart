@@ -200,14 +200,6 @@ class ScriptConsoleWidget extends StatefulWidget {
   State<ScriptConsoleWidget> createState() => _ScriptConsoleState();
 }
 
-class LogInfo {
-  final DateTime time = DateTime.now();
-  final String level;
-  final String output;
-
-  LogInfo(this.level, this.output);
-}
-
 class _ScriptConsoleState extends State<ScriptConsoleWidget> {
   final List<LogInfo> logs = [];
   final ScrollController _scrollController = ScrollController();

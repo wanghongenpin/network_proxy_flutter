@@ -289,11 +289,7 @@ class MoreMenu extends StatelessWidget {
                   title: Text(localizations.httpsProxy),
                   leading: Icon(Icons.https_outlined, color: proxyServer.enableSsl ? null : Colors.red),
                   onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (BuildContext context) {
-                        return MobileSslWidget(proxyServer: proxyServer);
-                      }),
-                    );
+                    navigator(context, MobileSslWidget(proxyServer: proxyServer));
                   })),
           PopupMenuItem(
               height: 32,
@@ -302,6 +298,7 @@ class MoreMenu extends StatelessWidget {
                 leading: const Icon(Icons.qr_code_scanner_outlined),
                 title: Text(localizations.connectRemote),
                 onTap: () {
+                  Navigator.maybePop(context);
                   connectRemote(context);
                 },
               )),
@@ -312,6 +309,7 @@ class MoreMenu extends StatelessWidget {
                 leading: const Icon(Icons.phone_iphone_outlined),
                 title: Text(localizations.myQRCode),
                 onTap: () async {
+                  Navigator.maybePop(context);
                   var ip = await localIp();
                   if (context.mounted) {
                     connectQrCode(context, ip, proxyServer.port);
@@ -326,11 +324,7 @@ class MoreMenu extends StatelessWidget {
                 leading: const Icon(Icons.highlight_outlined),
                 title: Text(localizations.highlight),
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (BuildContext context) {
-                      return const KeywordHighlight();
-                    }),
-                  );
+                  navigator(context, const KeywordHighlight());
                 },
               )),
           PopupMenuItem(
@@ -340,6 +334,7 @@ class MoreMenu extends StatelessWidget {
                 leading: const Icon(Icons.share_outlined),
                 title: Text(localizations.viewExport),
                 onTap: () async {
+                  Navigator.maybePop(context);
                   var name = formatDate(DateTime.now(), [m, '-', d, ' ', HH, ':', nn, ':', ss]);
                   MobileHomeState.requestStateKey.currentState?.export('ProxyPin$name');
                 },
@@ -347,6 +342,15 @@ class MoreMenu extends StatelessWidget {
         ];
       },
     );
+  }
+
+  void navigator(BuildContext context, Widget widget) async {
+    await Navigator.maybePop(context);
+    if (context.mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (BuildContext context) => widget),
+      );
+    }
   }
 
   ///扫码连接

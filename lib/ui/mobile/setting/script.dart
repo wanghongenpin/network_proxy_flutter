@@ -4,6 +4,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:highlight/languages/javascript.dart';
@@ -11,9 +12,10 @@ import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
+import 'package:network_proxy/ui/mobile/widgets/floating_window.dart';
+import 'package:network_proxy/utils/lang.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 /// @author wanghongen
 /// 2023/10/19
@@ -51,8 +53,7 @@ class _MobileScriptState extends State<MobileScript> {
             child: futureWidget(
                 ScriptManager.instance,
                 loading: true,
-                    (data) =>
-                    Column(
+                (data) => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
@@ -84,11 +85,21 @@ class _MobileScriptState extends State<MobileScript> {
                                 label: Text(localizations.import),
                               ),
                               const SizedBox(width: 10),
+                              FilledButton.icon(
+                                icon: const Icon(Icons.terminal, size: 18),
+                                onPressed: consoleLog,
+                                label: Text(localizations.logger),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 5),
                           Expanded(child: ScriptList(scripts: data.list)),
                         ]))));
+  }
+
+  consoleLog() {
+    // FloatingWindowManager().show(context);
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ScriptConsoleLog()));
   }
 
   //导入js
@@ -132,6 +143,218 @@ class _MobileScriptState extends State<MobileScript> {
         setState(() {});
       }
     });
+  }
+}
+
+///控制台日志
+class ScriptConsoleLog extends StatefulWidget {
+  const ScriptConsoleLog({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _ScriptConsoleLogState();
+}
+
+class _ScriptConsoleLogState extends State<ScriptConsoleLog> {
+  static final List<LogInfo> logs = [];
+  static FloatingWindowManager floatingWindowManager = FloatingWindowManager();
+
+  final ScrollController _scrollController = ScrollController();
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((d) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
+
+    if (floatingWindowManager.isShow) {
+      return;
+    }
+
+    LogHandler logHandler = LogHandler(
+        channelId: hashCode,
+        handle: (log) {
+          logs.add(log);
+
+          if (!mounted && !floatingWindowManager.isShow) {
+            logs.clear();
+            //关闭日志监听
+            ScriptManager.removeLogHandler(hashCode);
+            return;
+          }
+
+          if (mounted) {
+            setState(() {});
+          }
+        });
+
+    ScriptManager.registerLogHandler(logHandler);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (!floatingWindowManager.isShow) {
+      logs.clear();
+      ScriptManager.removeLogHandler(hashCode);
+    }
+    _scrollController.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(title: Text(localizations.logger, style: const TextStyle(fontSize: 16)), actions: [
+          IconButton(
+              tooltip: localizations.windowMode,
+              onPressed: () {
+                if (floatingWindowManager.isShow) {
+                  floatingWindowManager.hide();
+                  return;
+                }
+                floatingWindowManager.show(context,
+                    widget: ScriptLogSmallWindow(floatingWindowManager: floatingWindowManager));
+              },
+              icon: const Icon(Icons.picture_in_picture_alt_rounded)),
+          const SizedBox(width: 5),
+          IconButton(
+              tooltip: localizations.clear,
+              onPressed: () => setState(() {
+                    logs.clear();
+                  }),
+              icon: const Icon(Icons.delete)),
+          const SizedBox(width: 10)
+        ]),
+        body: Container(
+          padding: const EdgeInsets.only(top: 10, bottom: 10, right: 3),
+          decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
+          child: Scrollbar(
+              controller: _scrollController,
+              thumbVisibility: true,
+              thickness: 6,
+              interactive: true,
+              child: loggerContent()),
+        ));
+  }
+
+  Widget loggerContent() {
+    return ListView.builder(
+        controller: _scrollController,
+        itemCount: logs.length,
+        itemBuilder: (context, index) {
+          var log = logs[index];
+          Color? color;
+          if (log.level == 'error') {
+            color = Colors.red;
+          } else if (log.level == 'warn') {
+            color = Colors.orange;
+          }
+
+          return Padding(
+              padding: const EdgeInsets.only(bottom: 5, left: 3, right: 3),
+              child: Row(
+                children: [
+                  Text(log.time.timeFormat(), style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                  const SizedBox(width: 8),
+                  Text(log.level, style: TextStyle(fontSize: 13, color: color)),
+                  const SizedBox(width: 8),
+                  Expanded(child: SelectableText(log.output, style: TextStyle(fontSize: 13, color: color))),
+                ],
+              ));
+        });
+  }
+}
+
+class ScriptLogSmallWindow extends StatefulWidget {
+  final FloatingWindowManager floatingWindowManager;
+
+  const ScriptLogSmallWindow({super.key, required this.floatingWindowManager});
+
+  @override
+  State<StatefulWidget> createState() => _ScriptLogSmallWindowState();
+}
+
+class _ScriptLogSmallWindowState extends State<ScriptLogSmallWindow> {
+  final List<LogInfo> logs = [];
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    LogHandler logHandler = LogHandler(
+        channelId: hashCode,
+        handle: (log) {
+          logs.add(log);
+          if (!mounted) {
+            ScriptManager.removeLogHandler(hashCode);
+            return;
+          }
+          setState(() {});
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        });
+    ScriptManager.registerLogHandler(logHandler);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    ScriptManager.removeLogHandler(hashCode);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingWindow(
+        top: 320,
+        right: 8,
+        child: Material(
+            child: Container(
+                height: 320,
+                width: 180,
+                decoration: BoxDecoration(
+                    color: Colors.teal.withOpacity(0.3),
+                    border: Border.all(color: Colors.grey.withOpacity(0.8)),
+                    borderRadius: const BorderRadius.all(Radius.circular(10))),
+                child: Stack(
+                  children: [
+                    Positioned(
+                        top: -12,
+                        left: -5,
+                        child: IconButton(
+                            onPressed: () {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (context) => const ScriptConsoleLog()));
+                            },
+                            icon: const Icon(Icons.picture_in_picture, size: 20))),
+                    Positioned(
+                        top: -12,
+                        right: -8,
+                        child: IconButton(
+                            onPressed: () => widget.floatingWindowManager.hide(),
+                            icon: const Icon(Icons.close, size: 20))),
+                    list()
+                  ],
+                ))));
+  }
+
+  Widget list() {
+    return Padding(
+        padding: const EdgeInsets.only(bottom: 5, top: 18),
+        child: Scrollbar(
+            child: ListView.builder(
+                controller: _scrollController,
+                itemCount: logs.length,
+                itemBuilder: (context, index) {
+                  var log = logs[index];
+                  return Padding(
+                      padding: const EdgeInsets.only(bottom: 3, left: 3, right: 3),
+                      child: Text(log.output,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, color: log.level == 'error' ? Colors.red : null)));
+                })));
   }
 }
 
@@ -183,10 +406,9 @@ class _ScriptEditState extends State<ScriptEdit> {
                   text: localizations.useGuide,
                   style: const TextStyle(color: Colors.blue, fontSize: 14),
                   recognizer: TapGestureRecognizer()
-                    ..onTap = () =>
-                        launchUrl(Uri.parse(isCN
-                            ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
-                            : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script')))),
+                    ..onTap = () => launchUrl(Uri.parse(isCN
+                        ? 'https://gitee.com/wanghongenpin/network-proxy-flutter/wikis/%E8%84%9A%E6%9C%AC'
+                        : 'https://github.com/wanghongenpin/network_proxy_flutter/wiki/Script')))),
             ]),
             actions: [
               TextButton(
@@ -240,25 +462,22 @@ class _ScriptEditState extends State<ScriptEdit> {
       SizedBox(width: 50, child: Text(label)),
       Expanded(
           child: TextFormField(
-            controller: controller,
-            validator: (val) => val?.isNotEmpty == true ? null : "",
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-                hintText: hint,
-                contentPadding: const EdgeInsets.all(10),
-                errorStyle: const TextStyle(height: 0, fontSize: 0),
-                focusedBorder: focusedBorder(),
-                isDense: true,
-                border: const OutlineInputBorder()),
-          ))
+        controller: controller,
+        validator: (val) => val?.isNotEmpty == true ? null : "",
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+            hintText: hint,
+            contentPadding: const EdgeInsets.all(10),
+            errorStyle: const TextStyle(height: 0, fontSize: 0),
+            focusedBorder: focusedBorder(),
+            isDense: true,
+            border: const OutlineInputBorder()),
+      ))
     ]);
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme
-        .of(context)
-        .colorScheme
-        .primary, width: 2));
+    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
   }
 }
 
@@ -287,18 +506,18 @@ class _ScriptListState extends State<ScriptList> {
             decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
             child: Scrollbar(
                 child: ListView(children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Container(width: 100, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
-                      SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
-                      const VerticalDivider(),
-                      const Expanded(child: Text("URL")),
-                    ],
-                  ),
-                  const Divider(thickness: 0.5),
-                  Column(children: rows(widget.scripts))
-                ]))));
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Container(width: 100, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
+                  SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
+                  const VerticalDivider(),
+                  const Expanded(child: Text("URL")),
+                ],
+              ),
+              const Divider(thickness: 0.5),
+              Column(children: rows(widget.scripts))
+            ]))));
   }
 
   globalMenu() {
@@ -344,10 +563,7 @@ class _ScriptListState extends State<ScriptList> {
   }
 
   List<Widget> rows(List<ScriptItem> list) {
-    var primaryColor = Theme
-        .of(context)
-        .colorScheme
-        .primary;
+    var primaryColor = Theme.of(context).colorScheme.primary;
 
     return List.generate(list.length, (index) {
       return InkWell(
@@ -368,8 +584,8 @@ class _ScriptListState extends State<ScriptList> {
               color: selected.contains(index)
                   ? primaryColor.withOpacity(0.8)
                   : index.isEven
-                  ? Colors.grey.withOpacity(0.1)
-                  : null,
+                      ? Colors.grey.withOpacity(0.1)
+                      : null,
               height: 45,
               padding: const EdgeInsets.all(5),
               child: Row(
@@ -433,9 +649,7 @@ class _ScriptListState extends State<ScriptList> {
                     _refreshScript();
                     if (context.mounted) FlutterToastr.show(localizations.importSuccess, context);
                   }),
-              Container(color: Theme
-                  .of(context)
-                  .hoverColor, height: 8),
+              Container(color: Theme.of(context).hoverColor, height: 8),
               TextButton(
                 child: Container(
                     height: 50,
@@ -462,7 +676,7 @@ class _ScriptListState extends State<ScriptList> {
     }
     Navigator.of(context)
         .push(MaterialPageRoute(
-        builder: (context) => ScriptEdit(scriptItem: index == null ? null : widget.scripts[index], script: script)))
+            builder: (context) => ScriptEdit(scriptItem: index == null ? null : widget.scripts[index], script: script)))
         .then((value) {
       if (value != null) {
         setState(() {});

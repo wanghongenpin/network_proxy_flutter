@@ -17,6 +17,10 @@ extension DateTimeFormat on DateTime {
   String format() {
     return formatDate(this, [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn, ':', ss]);
   }
+
+  String timeFormat() {
+    return formatDate(this, [HH, ':', nn, ':', ss]);
+  }
 }
 
 class ValueWrap<V> {
@@ -95,5 +99,28 @@ class Maps {
       }
     }
     return null;
+  }
+}
+
+/// 用于存储一些数据，当数据超过指定大小时，删除最早的数据
+class CapacityList<T> {
+  final int capacity;
+  final List<T> list = [];
+
+  CapacityList(this.capacity);
+
+  void add(T value) {
+    if (list.length >= capacity) {
+      list.removeAt(0);
+    }
+    list.add(value);
+  }
+
+  void remove(T value) {
+    list.remove(value);
+  }
+
+  void clear() {
+    list.clear();
   }
 }

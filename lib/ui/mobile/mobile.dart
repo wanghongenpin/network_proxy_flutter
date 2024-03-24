@@ -300,7 +300,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         retry++;
       }
 
-      if (retry > 3) {
+      if (retry > 5) {
         timer.cancel();
         desktop.value = RemoteModel(connect: false);
         if (context.mounted) {

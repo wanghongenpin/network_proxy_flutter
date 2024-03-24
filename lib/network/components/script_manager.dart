@@ -49,7 +49,7 @@ async function onResponse(context, request, response) {
 
   static JavascriptRuntime flutterJs = getJavascriptRuntime();
 
-  static final List<int> _windowIds = [];
+  static final List<LogHandler> _logHandlers = [];
 
   ScriptManager._();
 
@@ -58,6 +58,7 @@ async function onResponse(context, request, response) {
     if (_instance == null) {
       _instance = ScriptManager._();
       await _instance?.reloadScript();
+
       // register channel callback
       final channelCallbacks = JavascriptRuntime.channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
       channelCallbacks!["ConsoleLog"] = _instance!.consoleLog;
@@ -67,20 +68,36 @@ async function onResponse(context, request, response) {
   }
 
   static void registerConsoleLog(int fromWindowId) {
-    if (!_windowIds.contains(fromWindowId)) _windowIds.add(fromWindowId);
+    LogHandler logHandler = LogHandler(
+        channelId: fromWindowId,
+        handle: (logInfo) {
+          DesktopMultiWindow.invokeMethod(fromWindowId, "consoleLog", logInfo.toJson()).onError((e, t) {
+            logger.e("consoleLog error: $e");
+            removeLogHandler(fromWindowId);
+          });
+        });
+    registerLogHandler(logHandler);
+  }
+
+  static void registerLogHandler(LogHandler logHandler) {
+    if (!_logHandlers.any((it) => it.channelId == logHandler.channelId)) _logHandlers.add(logHandler);
+  }
+
+  static void removeLogHandler(int channelId) {
+    _logHandlers.removeWhere((element) => channelId == element.channelId);
   }
 
   dynamic consoleLog(dynamic args) async {
+    if (_logHandlers.isEmpty) {
+      return;
+    }
+
     var level = args.removeAt(0);
     String output = args.join(' ');
     if (level == 'info') level = 'warn';
-
-    for (int i = 0; i < _windowIds.length; i++) {
-      var winId = _windowIds.elementAt(i);
-      DesktopMultiWindow.invokeMethod(winId, "consoleLog", {"level": level, "output": output}).onError((e, t) {
-        logger.e("consoleLog error: $e");
-        _windowIds.remove(winId);
-      });
+    LogInfo logInfo = LogInfo(level, output);
+    for (int i = 0; i < _logHandlers.length; i++) {
+      _logHandlers[i].handle.call(logInfo);
     }
   }
 
@@ -311,6 +328,34 @@ async function onResponse(context, request, response) {
     response.headers.remove(HttpHeaders.CONTENT_ENCODING);
     response.body = map['body'] == null ? null : utf8.encode(map['body'].toString());
     return response;
+  }
+}
+
+class LogHandler {
+  final int channelId;
+  final Function(LogInfo logInfo) handle;
+
+  LogHandler({required this.channelId, required this.handle});
+}
+
+class LogInfo {
+  final DateTime time;
+  final String level;
+  final String output;
+
+  LogInfo(this.level, this.output, {DateTime? time}) : time = time ?? DateTime.now();
+
+  factory LogInfo.fromJson(Map<String, dynamic> json) {
+    return LogInfo(json['level'], json['output'], time: DateTime.fromMillisecondsSinceEpoch(json['time']));
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'time': time.millisecondsSinceEpoch, 'level': level, 'output': output};
+  }
+
+  @override
+  String toString() {
+    return '{time: $time, level: $level, output: $output}';
   }
 }
 
