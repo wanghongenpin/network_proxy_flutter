@@ -31,7 +31,10 @@ class AppConfiguration {
   /// 是否启用画中画
   ValueNotifier<bool> pipEnabled = ValueNotifier(true);
 
-  ///
+  /// 显示画中画图标
+  ValueNotifier<bool> pipIcon = ValueNotifier(true);
+
+  /// header默认展示
   bool headerExpanded = true;
 
   bool? iosVpnBackgroundAudioEnable;
@@ -117,6 +120,7 @@ class AppConfiguration {
       upgradeNoticeV8 = config['upgradeNoticeV8'] ?? true;
       _language = config['language'] == null ? null : Locale.fromSubtags(languageCode: config['language']);
       pipEnabled.value = config['pipEnabled'] ?? true;
+      pipIcon.value = config['pipIcon'] ?? false;
       headerExpanded = config['headerExpanded'] ?? true;
       iosVpnBackgroundAudioEnable = config['iosVpnBackgroundAudioEnable'];
     } catch (e) {
@@ -143,6 +147,7 @@ class AppConfiguration {
       'upgradeNoticeV8': upgradeNoticeV8,
       "language": _language?.languageCode,
       'pipEnabled': pipEnabled.value,
+      'pipIcon': pipIcon.value ? true : null,
       "headerExpanded": headerExpanded,
       "iosVpnBackgroundAudioEnable": iosVpnBackgroundAudioEnable == false ? null : iosVpnBackgroundAudioEnable
     };

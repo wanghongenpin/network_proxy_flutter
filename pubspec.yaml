@@ -31,12 +31,12 @@ dependencies:
   qrscan: ^0.3.3
   flutter_barcode_scanner: ^2.0.0
   flutter_toastr: ^1.0.3
-  share_plus: ^7.2.1
+  share_plus: ^8.0.2
   brotli: ^0.6.0
   file_selector: ^1.0.2
   flutter_js: ^0.8.0
   flutter_code_editor:
-  file_picker: ^6.1.1
+  file_picker: ^8.0.0
   flutter_desktop_context_menu: ^0.2.0
 #  video_player:
 #    git:

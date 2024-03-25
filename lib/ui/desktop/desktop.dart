@@ -142,7 +142,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                       preferBelow: false,
                       child: IconButton(
                           onPressed: () {
-                            showDialog(context: context, builder: (_) => Preference(widget.appConfiguration));
+                            showDialog(context: context, builder: (_) => Preference(widget.appConfiguration, proxyServer.configuration));
                           },
                           icon: Icon(Icons.settings_outlined, color: Colors.grey.shade500))),
                   const SizedBox(height: 5),
@@ -204,12 +204,14 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                           '2. 关键词匹配高亮；\n'
                           '3. 脚本批量操作和导入导出；\n'
                           '4. 脚本支持日志查看，通过console.log()输出；\n'
+                          '5. 设置增加自动开启抓包；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
                           '1. Display the application icon initiated by the request；\n'
                           '2. Keyword matching highlights;\n'
                           '3. Script batch operations and import/export;\n'
-                          '4. The script supports log viewing, output through console.log()；\n',
+                          '4. The script supports log viewing, output through console.log()；\n'
+                          '5. Setting Auto Start Recording Traffic；\n',
                   style: const TextStyle(fontSize: 14)));
         });
   }

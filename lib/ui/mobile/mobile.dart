@@ -18,12 +18,14 @@ import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/launch/launch.dart';
-import 'package:network_proxy/ui/mobile/menu.dart';
+import 'package:network_proxy/ui/mobile/menu/drawer.dart';
+import 'package:network_proxy/ui/mobile/menu/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/request/search.dart';
 import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/widgets/pip.dart';
 import 'package:network_proxy/utils/ip.dart';
+import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
 
 class MobileHomePage extends StatefulWidget {
@@ -38,9 +40,6 @@ class MobileHomePage extends StatefulWidget {
   }
 }
 
-///画中画
-final ValueNotifier<bool> pictureInPictureNotifier = ValueNotifier(false);
-
 class MobileHomeState extends State<MobileHomePage> implements EventListener, LifecycleListener {
   static final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
   static final container = ListenableList<HttpRequest>();
@@ -50,6 +49,9 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   late ProxyServer proxyServer;
 
+  ///画中画
+  // bool pictureInPicture = false;
+
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
@@ -58,7 +60,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   }
 
   Future<bool> enterPictureInPicture() async {
-    if (Vpn.isVpnStarted && !pictureInPictureNotifier.value) {
+    if (Vpn.isVpnStarted) {
       if (desktop.value.connect || !Platform.isAndroid || !(await (AppConfiguration.instance)).pipEnabled.value) {
         return false;
       }
@@ -71,26 +73,30 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   @override
   onPictureInPictureModeChanged(bool isInPictureInPictureMode) async {
-    if (isInPictureInPictureMode && !pictureInPictureNotifier.value) {
-      while (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-      pictureInPictureNotifier.value = true;
+    if (isInPictureInPictureMode) {
+      Navigator.push(
+          context,
+          PageRouteBuilder(
+              transitionDuration: Duration.zero,
+              pageBuilder: (context, animation, secondaryAnimation) {
+                return PictureInPictureWindow(container);
+              }));
       return;
     }
 
-    if (!isInPictureInPictureMode && pictureInPictureNotifier.value) {
+    if (!isInPictureInPictureMode) {
+      Navigator.maybePop(context);
       Vpn.isRunning().then((value) {
         Vpn.isVpnStarted = value;
-        pictureInPictureNotifier.value = false;
+        SocketLaunch.startStatus.value = ValueWrap.of(value);
       });
     }
   }
 
   @override
   void onRequest(Channel channel, HttpRequest request) {
-    PictureInPicture.addData(request.requestUrl);
     requestStateKey.currentState!.add(channel, request);
+    PictureInPicture.addData(request.requestUrl);
   }
 
   @override
@@ -157,36 +163,25 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             }
             return;
           }
-
           //退出程序
           SystemNavigator.pop();
         },
-        child: ValueListenableBuilder<bool>(
-            valueListenable: pictureInPictureNotifier,
-            builder: (context, pip, _) {
-              if (pip) {
-                return Scaffold(
-                    body: RequestListWidget(key: requestStateKey, proxyServer: proxyServer, list: container));
-              }
-
-              return Scaffold(
-                  floatingActionButton: PictureInPictureWindow(proxyServer),
-                  body: Scaffold(
-                    appBar: appBar(),
-                    drawer: DrawerWidget(proxyServer: proxyServer, container: container),
-                    floatingActionButton: _launchActionButton(),
-                    body: ValueListenableBuilder(
-                        valueListenable: desktop,
-                        builder: (context, value, _) {
-                          return Column(children: [
-                            value.connect ? remoteConnect(value) : const SizedBox(),
-                            Expanded(
-                                child:
-                                    RequestListWidget(key: requestStateKey, proxyServer: proxyServer, list: container))
-                          ]);
-                        }),
-                  ));
-            }));
+        child: Scaffold(
+            floatingActionButton: PictureInPictureIcon(proxyServer),
+            body: Scaffold(
+              appBar: appBar(),
+              drawer: DrawerWidget(proxyServer: proxyServer, container: container),
+              floatingActionButton: _launchActionButton(),
+              body: ValueListenableBuilder(
+                  valueListenable: desktop,
+                  builder: (context, value, _) {
+                    return Column(children: [
+                      value.connect ? remoteConnect(value) : const SizedBox(),
+                      Expanded(
+                          child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer, list: container))
+                    ]);
+                  }),
+            )));
   }
 
   AppBar appBar() {
@@ -208,7 +203,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
           child: SocketLaunch(
               proxyServer: proxyServer,
               size: 36,
-              startup: Vpn.isVpnStarted,
+              startup: proxyServer.configuration.startup,
               serverLaunch: false,
               onStart: () async {
                 Vpn.startVpn(Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port,

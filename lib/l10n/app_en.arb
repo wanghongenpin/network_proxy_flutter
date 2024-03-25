@@ -29,6 +29,8 @@
   "themeLight": "Light",
   "themeDark": "Dark",
   "language": "Language",
+  "autoStartup": "Auto Start Recording Traffic",
+  "autoStartupDescribe": "Automatically start recording traffic when the program starts",
 
   "copied": "Copied to clipboard",
   "cancel": "Cancel",
@@ -215,8 +217,10 @@
 
   "windowMode": "Window Mode",
   "windowModeSubTitle": "Enabled Packet Capture, Enter the background, Display a small window",
+  "windowIcon": "Window shortcut icon",
+  "windowIconDescribe": "Show quick access to small window Icon",
   "headerExpanded": "Headers Expanded",
-  "headerExpandedSubtitle": "Details page Headers column is expanded by default",
+  "headerExpandedSubtitle": "Details page Headers is expanded by default",
 
   "externalProxyConnectFailure": "External Proxy Connect failure",
   "externalProxyFailureConfirm": "Access to all http will fail due to network connectivity issues，Do you want to continue setting up external proxies。",

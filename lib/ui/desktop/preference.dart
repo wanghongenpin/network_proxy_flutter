@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
 
 /// @author wanghongen
 /// 2024/1/2
 class Preference extends StatelessWidget {
+  final Configuration configuration;
   final AppConfiguration appConfiguration;
 
-  const Preference(this.appConfiguration, {super.key});
+  const Preference(this.appConfiguration, this.configuration, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class Preference extends StatelessWidget {
           const Expanded(child: Align(alignment: Alignment.topRight, child: CloseButton()))
         ]),
         content: SizedBox(
-            width: 280,
+            width: 300,
             child: Column(children: [
               Row(children: [
                 SizedBox(width: 100, child: Text("${localizations.language}: ", style: titleMedium)),
@@ -60,7 +62,17 @@ class Preference extends StatelessWidget {
                   )),
               const Divider(),
               ListTile(
-                  contentPadding: const EdgeInsets.only(),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(localizations.autoStartup), //默认是否启动
+                  subtitle: Text(localizations.autoStartupDescribe, style: const TextStyle(fontSize: 14)),
+                  trailing: SwitchWidget(
+                      value: configuration.startup,
+                      onChanged: (value) {
+                        configuration.startup = value;
+                        configuration.flushConfig();
+                      })),
+              ListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: Text(localizations.headerExpanded),
                   subtitle: Text(localizations.headerExpandedSubtitle, style: const TextStyle(fontSize: 14)),
                   trailing: SwitchWidget(

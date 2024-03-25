@@ -12,10 +12,8 @@ import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
-import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
 import 'package:network_proxy/utils/har.dart';
-import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -50,25 +48,6 @@ class RequestListState extends State<RequestListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (pictureInPictureNotifier.value) {
-      if (container.isEmpty) {
-        return Center(child: Text(localizations.emptyData, style: const TextStyle(color: Colors.grey)));
-      }
-
-      return ListView.separated(
-          padding: const EdgeInsets.only(left: 2),
-          itemCount: container.length,
-          separatorBuilder: (context, index) => const Divider(thickness: 0.3, height: 0.5),
-          itemBuilder: (context, index) {
-            return Text.rich(
-                overflow: TextOverflow.ellipsis,
-                TextSpan(
-                    text: container.elementAt(container.length - index - 1).requestUrl.fixAutoLines(),
-                    style: const TextStyle(fontSize: 9)),
-                maxLines: 2);
-          });
-    }
-
     List<Tab> tabs = [
       Tab(child: Text(localizations.sequence)),
       Tab(child: Text(localizations.domainList)),
@@ -92,13 +71,6 @@ class RequestListState extends State<RequestListWidget> {
 
   ///添加请求
   add(Channel channel, HttpRequest request) {
-    if (pictureInPictureNotifier.value) {
-      setState(() {
-        container.add(request);
-      });
-      return;
-    }
-
     container.add(request);
     requestSequenceKey.currentState?.add(request);
     domainListKey.currentState?.add(request);

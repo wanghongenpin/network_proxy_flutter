@@ -22,6 +22,7 @@ import 'package:network_proxy/network/util/file_read.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/system_proxy.dart';
+import 'package:network_proxy/utils/platform.dart';
 
 class Configuration {
   ///代理相关配置
@@ -50,6 +51,9 @@ class Configuration {
   //历史记录缓存时间
   int historyCacheTime = 0;
 
+  //默认是否启动
+  bool startup = false;
+
   Configuration._();
 
   /// 单例
@@ -72,6 +76,7 @@ class Configuration {
   Configuration.fromJson(Map<String, dynamic> config) {
     port = config['port'] ?? port;
     enableSsl = config['enableSsl'] == true;
+    startup = config['startup'] ?? Platforms.isDesktop();
     enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
     proxyPassDomains = config['proxyPassDomains'] ?? SystemProxy.proxyPassDomains;
     historyCacheTime = config['historyCacheTime'] ?? 0;
@@ -121,6 +126,7 @@ class Configuration {
     return {
       'port': port,
       'enableSsl': enableSsl,
+      'startup': startup,
       'enableSystemProxy': enableSystemProxy,
       'proxyPassDomains': proxyPassDomains,
       'externalProxy': externalProxy?.toJson(),

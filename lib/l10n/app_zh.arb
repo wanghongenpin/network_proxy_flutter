@@ -29,6 +29,8 @@
   "themeLight": "浅色",
   "themeDark": "深色",
   "language": "语言",
+  "autoStartup": "自动开启抓包",
+  "autoStartupDescribe": "程序启动时自动开始记录流量",
 
   "copied": "已复制到剪贴板",
   "cancel": "取消",
@@ -215,8 +217,10 @@
 
   "windowMode": "窗口模式",
   "windowModeSubTitle": "开启抓包后 如果应用退回到后台，显示一个小窗口",
-  "headerExpanded": "Headers默认展开",
-  "headerExpandedSubtitle": "详情页Headers栏是否默认展开",
+  "windowIcon": "窗口快捷图标",
+  "windowIconDescribe": "展示快捷进入小窗口Icon",
+  "headerExpanded": "Headers自动展开",
+  "headerExpandedSubtitle": "详情页Headers栏是否自动展开",
 
   "externalProxyConnectFailure": "外部代理连接失败",
   "externalProxyFailureConfirm": "网络不通所有接口将会访问失败，是否继续设置外部代理。",

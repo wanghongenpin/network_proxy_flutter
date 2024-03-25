@@ -50,6 +50,9 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
       windowManager.setPreventClose(true);
     }
     SocketLaunch.startStatus.addListener(() {
+      if (SocketLaunch.startStatus.value.get() == started) {
+        return;
+      }
       setState(() {
         started = SocketLaunch.startStatus.value.get() ?? started;
       });

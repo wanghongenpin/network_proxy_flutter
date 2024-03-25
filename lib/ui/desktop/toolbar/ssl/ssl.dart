@@ -207,10 +207,10 @@ class _SslState extends State<SslWidget> {
                       length: 2,
                       child: Scaffold(
                         appBar: TabBar(
-                            tabs: [
+                            tabs: <Widget>[
                           Tab(text: localizations.androidRoot),
                           Tab(text: localizations.androidUserCA),
-                        ] as List<Widget>),
+                        ]),
                         body: Padding(
                             padding: const EdgeInsets.all(10),
                             child: TabBarView(children: [
