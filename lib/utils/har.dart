@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
+import 'package:network_proxy/network/util/process_info.dart';
 
 class Har {
   static int maxBodyLength = 1024 * 1024 * 4;
@@ -19,6 +20,7 @@ class Har {
       "time": request.response?.responseTime.difference(request.requestTime).inMilliseconds,
       "pageref": "ProxyPin", // 页面标识
       "_id": request.requestId, // 页面标识
+      '_app': request.processInfo?.toJson(),
       "request": {
         "method": request.method.name, // 请求方法
         "url": request.requestUrl, // 请求地址
@@ -39,10 +41,6 @@ class Har {
       'serverIPAddress': request.response?.remoteAddress
     };
 
-    //body已经解码 删除编码
-    if (request.response?.headers.contentEncoding == 'br') {
-      request.response?.headers.remove(HttpHeaders.CONTENT_ENCODING);
-    }
     har['response'] = {
       "status": request.response?.status.code ?? 0, // 响应状态码
       "statusText": request.response?.status.reasonPhrase ?? '', // 响应状态码描述
@@ -101,8 +99,14 @@ class Har {
 
   static List<Map> _headers(HttpMessage? message) {
     var headers = <Map<String, String>>[];
+    var contentEncodingName = message?.headers.getOriginalName(HttpHeaders.CONTENT_ENCODING);
+
     message?.headers.forEach((name, values) {
       for (var element in values) {
+        //body已经解码 删除编码
+        if (name == contentEncodingName && element == 'br') {
+          continue;
+        }
         headers.add({'name': name, 'value': element});
       }
     });
@@ -117,7 +121,7 @@ class Har {
 
     var httpRequest = HttpRequest(HttpMethod.valueOf(method), request['url'], protocolVersion: request['httpVersion']);
     if (har.containsKey("_id")) httpRequest.requestId = har['_id']; // 页面标识
-
+    httpRequest.processInfo = har['_app'] == null ? null : ProcessInfo.fromJson(har['_app']);
     httpRequest.body = request['postData']?['text']?.toString().codeUnits;
     for (var element in headers) {
       httpRequest.headers.add(element['name'], element['value']);

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -77,7 +79,7 @@ class RequestRowState extends State<RequestRow> {
         selected: selected,
         textColor: highlightColor,
         selectedColor: highlightColor,
-        leading: getIcon(response),
+        leading: appIcon(),
         title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2, style: const TextStyle(fontSize: 14)),
         subtitle: Text.rich(
             maxLines: 1,
@@ -85,9 +87,9 @@ class RequestRowState extends State<RequestRow> {
               TextSpan(text: '#${widget.index} ', style: const TextStyle(fontSize: 12, color: Colors.teal)),
               TextSpan(text: subTitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
             ])),
-        trailing: const Icon(Icons.chevron_right, size: 22),
-        dense: true,
-        contentPadding: const EdgeInsets.only(left: 3),
+        trailing: getIcon(response),
+        contentPadding:
+            Platform.isIOS ? const EdgeInsets.symmetric(horizontal: 8) : const EdgeInsets.only(left: 3, right: 5),
         onLongPress: menu,
         onTap: () {
           Navigator.push(
@@ -101,6 +103,23 @@ class RequestRowState extends State<RequestRow> {
                         httpResponse: response,
                         title: Text(localizations.captureDetail, style: const TextStyle(fontSize: 16)));
                   }));
+        });
+  }
+
+  Widget? appIcon() {
+    if (Platform.isIOS) {
+      return null;
+    }
+    if (request.processInfo == null) {
+      return const Icon(Icons.question_mark, size: 38);
+    }
+    return FutureBuilder(
+        future: request.processInfo!.getIcon(),
+        builder: (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
+          if (snapshot.hasData) {
+            return Image.memory(snapshot.data!, width: 40);
+          }
+          return const SizedBox(width: 40);
         });
   }
 

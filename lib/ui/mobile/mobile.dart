@@ -130,7 +130,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
       }
     });
 
-    if (widget.appConfiguration.upgradeNoticeV8) {
+    if (widget.appConfiguration.upgradeNoticeV9) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -219,23 +219,22 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-            '1. 历史记录支持自动缓存时间设置；\n'
-            '2. 历史记录增加搜索；\n'
-            '3. 增加当前视图导出；\n'
-            '4. 增加屏蔽请求功能；\n'
-            '5. Android返回键进入小窗口；\n'
-            '6. Android白名单应用列表展示隐藏图标应用；\n'
-            '7. 修复暗黑主题样式；\n'
+            '1. 展示请求发起的应用图标；\n'
+            '2. 关键词匹配高亮；\n'
+            '3. 脚本批量操作和导入导出；\n'
+            '4. 脚本支持日志查看，通过console.log()输出；\n'
+            '5. 设置增加自动开启抓包；\n'
+            '6. Android证书下载优化；'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
-            '1. History support auto cache time setting；\n'
-            '2. History Add Search;\n'
-            '3. Add current view export;\n'
-            '4. Support blocking request；\n'
-            '5. Android Return key to enter the small window；\n'
-            '6. Android Whitelist application list display hidden icon applications；\n'
-            '7. Fix dark theme style；\n';
-    showAlertDialog(isCN ? '更新内容V1.0.8' : "Update content V1.0.8", content, () {
-      widget.appConfiguration.upgradeNoticeV8 = false;
+            'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
+            '1. Display the application icon initiated by the request；\n'
+            '2. Keyword matching highlights;\n'
+            '3. Script batch operations and import/export;\n'
+            '4. The script supports log viewing, output through console.log()；\n'
+            '5. Setting Auto Start Recording Traffic；\n'
+            '6. Android certificate download optimization; \n';
+    showAlertDialog(isCN ? '更新内容V1.0.9-Beta' : "Update content V1.0.9-Beta", content, () {
+      widget.appConfiguration.upgradeNoticeV9 = false;
       widget.appConfiguration.flushConfig();
     });
   }

@@ -4,6 +4,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/ui/component/share.dart';
+import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/utils/lang.dart';
@@ -110,8 +111,8 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
             controller: _tabController,
             children: [
               SelectionArea(child: general()),
-              SelectionArea(child: request()),
-              SelectionArea(child: response()),
+              KeepAliveWrapper(child: request()),
+              KeepAliveWrapper(child: response()),
               SelectionArea(child: isWebSocket ? websocket() : cookies()),
             ],
           )),
@@ -256,14 +257,13 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     var headers = <Widget>[];
     message?.headers.forEach((name, values) {
       for (var v in values) {
-        headers.add(SelectionArea(
-            child: Row(children: [
-          SelectableText('$name: ',
-              contextMenuBuilder: contextMenu,
-              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent, fontSize: 14)),
+        const nameStyle = TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent, fontSize: 14);
+        headers.add(Row(children: [
+          SelectableText(name, contextMenuBuilder: contextMenu, style: nameStyle),
+          const Text(": ", style: nameStyle),
           Expanded(
               child: SelectableText(v, style: textStyle, contextMenuBuilder: contextMenu, maxLines: 8, minLines: 1)),
-        ])));
+        ]));
         headers.add(const Divider(thickness: 0.1));
       }
     });

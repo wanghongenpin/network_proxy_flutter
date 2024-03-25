@@ -40,7 +40,7 @@ class MainActivity : FlutterActivity() {
         flutterEngine.plugins.add(PictureInPicturePlugin())
         flutterEngine.plugins.add(lifecycleChannel)
         flutterEngine.plugins.add(InstalledAppsPlugin())
-        flutterEngine.plugins.add(ProcessInfoPlugin.instance)
+        flutterEngine.plugins.add(ProcessInfoPlugin())
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

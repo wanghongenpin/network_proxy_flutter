@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.ProxyInfo
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -27,11 +26,11 @@ class ProxyVpnService : VpnService(), ProtectSocket {
     companion object {
         const val MAX_PACKET_LEN = 1500
 
-        const val VirtualHost = "10.0.0.2"
+        const val VIRTUAL_HOST = "10.0.0.2"
 
-        const val ProxyHost = "ProxyHost"
-        const val ProxyPort = "ProxyPort"
-        const val AllowApps = "AllowApps" //允许的名单
+        const val PROXY_HOST_KEY = "ProxyHost"
+        const val PROXY_PORT_KEY = "ProxyPort"
+        const val ALLOW_APPS_KEY = "AllowApps" //允许的名单
 
         /**
          * 动作：断开连接
@@ -63,9 +62,9 @@ class ProxyVpnService : VpnService(), ProtectSocket {
             allowApps: ArrayList<String>? = this.allowApps
         ): Intent {
             return Intent(context, ProxyVpnService::class.java).also {
-                it.putExtra(ProxyHost, proxyHost)
-                it.putExtra(ProxyPort, proxyPort)
-                it.putStringArrayListExtra(AllowApps, allowApps)
+                it.putExtra(PROXY_HOST_KEY, proxyHost)
+                it.putExtra(PROXY_PORT_KEY, proxyPort)
+                it.putStringArrayListExtra(ALLOW_APPS_KEY, allowApps)
             }
         }
     }
@@ -81,9 +80,9 @@ class ProxyVpnService : VpnService(), ProtectSocket {
             START_NOT_STICKY
         } else {
             connect(
-                intent.getStringExtra(ProxyHost) ?: host!!,
-                intent.getIntExtra(ProxyPort, port),
-                intent.getStringArrayListExtra(AllowApps) ?: allowApps
+                intent.getStringExtra(PROXY_HOST_KEY) ?: host!!,
+                intent.getIntExtra(PROXY_PORT_KEY, port),
+                intent.getStringArrayListExtra(ALLOW_APPS_KEY) ?: allowApps
             )
             START_STICKY
         }
@@ -157,7 +156,7 @@ class ProxyVpnService : VpnService(), ProtectSocket {
             ParcelFileDescriptor? {
         val build = Builder()
             .setMtu(MAX_PACKET_LEN)
-            .addAddress(VirtualHost, 32)
+            .addAddress(VIRTUAL_HOST, 32)
             .addRoute("0.0.0.0", 0)
             .setSession(baseContext.applicationInfo.name)
             .setBlocking(true)
@@ -181,9 +180,9 @@ class ProxyVpnService : VpnService(), ProtectSocket {
         )
 
         return build.apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                setHttpProxy(ProxyInfo.buildDirectProxy(proxyHost, proxyPort))
-            }
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//                setHttpProxy(ProxyInfo.buildDirectProxy(proxyHost, proxyPort))
+//            }
         }.establish()
     }
 

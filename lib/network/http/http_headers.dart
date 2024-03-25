@@ -77,6 +77,10 @@ class HttpHeaders {
     return getList(name)?.first;
   }
 
+  String getOriginalName(String name) {
+    return _originalHeaderNames[name.toLowerCase()] ?? name;
+  }
+
   List<String>? getList(String name) {
     var originalHeaderName = _originalHeaderNames[name.toLowerCase()];
     if (originalHeaderName == null) {

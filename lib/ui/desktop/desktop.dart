@@ -85,7 +85,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
     proxyServer.addListener(this);
     panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 16), proxyServer: proxyServer);
 
-    if (widget.appConfiguration.upgradeNoticeV8) {
+    if (widget.appConfiguration.upgradeNoticeV9) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -142,7 +142,9 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                       preferBelow: false,
                       child: IconButton(
                           onPressed: () {
-                            showDialog(context: context, builder: (_) => Preference(widget.appConfiguration, proxyServer.configuration));
+                            showDialog(
+                                context: context,
+                                builder: (_) => Preference(widget.appConfiguration, proxyServer.configuration));
                           },
                           icon: Icon(Icons.settings_outlined, color: Colors.grey.shade500))),
                   const SizedBox(height: 5),
@@ -189,13 +191,13 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
               actions: [
                 TextButton(
                     onPressed: () {
-                      widget.appConfiguration.upgradeNoticeV8 = false;
+                      widget.appConfiguration.upgradeNoticeV9 = false;
                       widget.appConfiguration.flushConfig();
                       Navigator.pop(context);
                     },
                     child: Text(localizations.cancel))
               ],
-              title: Text(isCN ? '更新内容V1.0.8' : "Update content V1.0.8", style: const TextStyle(fontSize: 18)),
+              title: Text(isCN ? '更新内容V1.0.9' : "Update content V1.0.9", style: const TextStyle(fontSize: 18)),
               content: Text(
                   isCN
                       ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
@@ -211,7 +213,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                           '2. Keyword matching highlights;\n'
                           '3. Script batch operations and import/export;\n'
                           '4. The script supports log viewing, output through console.log()；\n'
-                          '5. Setting Auto Start Recording Traffic；\n',
+                          '5. Setting Auto Start Recording Traffic',
                   style: const TextStyle(fontSize: 14)));
         });
   }

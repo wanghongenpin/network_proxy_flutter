@@ -88,5 +88,5 @@ flutter {
 }
 
 dependencies {
-
+    implementation group: 'com.github.ben-manes.caffeine', name: 'guava', version: '3.1.8'
 }

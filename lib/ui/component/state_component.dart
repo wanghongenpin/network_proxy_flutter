@@ -26,5 +26,5 @@ class _KeepAliveWrapperState extends State<KeepAliveWrapper> with AutomaticKeepA
   }
 
   @override
-  bool get wantKeepAlive => widget.keepAlive;
+  bool get wantKeepAlive => widget.keepAlive && mounted;
 }

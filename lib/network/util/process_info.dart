@@ -2,25 +2,30 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:network_proxy/native/installed_apps.dart';
+import 'package:network_proxy/native/process_info.dart';
 import 'package:network_proxy/network/util/socket_address.dart';
 
 import 'cache.dart';
 
 void main() async {
   var processInfo = await ProcessInfoUtils.getProcess(512);
-  print(await processInfo!.getIconPath());
+  print(await processInfo!._getIconPath());
   // await ProcessInfoUtils.getMacIcon(processInfo!.path);
   // print(await ProcessInfoUtils.getProcessByPort(63194));
-  print((await ProcessInfoUtils.getProcess(30025))?.getIconPath());
+  print((await ProcessInfoUtils.getProcess(30025))?._getIconPath());
 }
 
 class ProcessInfoUtils {
-  static var processInfoCache = ExpiringCache<String, ProcessInfo>(const Duration(minutes: 5));
+  static final processInfoCache = ExpiringCache<String, ProcessInfo>(const Duration(minutes: 5));
 
   static Future<ProcessInfo?> getProcessByPort(InetSocketAddress socketAddress, String cacheKeyPre) async {
     if (Platform.isAndroid) {
-      // var app = await ProcessInfoPlugin.getProcessByPort(socketAddress.host, socketAddress.port);
-      // print(app);
+      var app = await ProcessInfoPlugin.getProcessByPort(socketAddress.host, socketAddress.port);
+      if (app != null) {
+        return ProcessInfo(app.packageName ?? '', app.name ?? '', app.name ?? '', icon: app.icon);
+      }
+      if (socketAddress.host == '127.0.0.1') return ProcessInfo('com.network.proxy', "ProxyPin", '');
       return null;
     }
 
@@ -67,7 +72,7 @@ class ProcessInfoUtils {
             parts.removeAt(0).trim();
             var path = parts.join(" ").split(".app/")[0];
             String name = path.substring(path.lastIndexOf('/') + 1);
-            return ProcessInfo(name, "$path.app");
+            return ProcessInfo(name, name, "$path.app");
           }
         }
       }
@@ -82,30 +87,46 @@ class ProcessInfoUtils {
 }
 
 class ProcessInfo {
-  // final String id; //应用包名
+  static final _iconCache = ExpiringCache<String, Uint8List?>(const Duration(minutes: 5));
+
+  final String id; //应用包名
   final String name; //应用名称
   final String path;
 
   Uint8List? icon;
 
-  ProcessInfo(this.name, this.path);
+  ProcessInfo(this.id, this.name, this.path, {this.icon});
 
-  Future<String> getIconPath() async {
-    return getMacIcon(path);
+  factory ProcessInfo.fromJson(Map<String, dynamic> json) {
+    return ProcessInfo(json['id'], json['name'], json['path']);
+  }
+
+  Future<String> _getIconPath() async {
+    return _getMacIcon(path);
   }
 
   Future<Uint8List> getIcon() async {
     if (icon != null) return icon!;
+    if (_iconCache.get(id) != null) return _iconCache.get(id)!;
+
     try {
-      var macIcon = await getIconPath();
-      icon = await File(macIcon).readAsBytes();
+      if (Platform.isAndroid) {
+        icon = (await InstalledApps.getAppInfo(id)).icon;
+      }
+
+      if (Platform.isMacOS) {
+        var macIcon = await _getIconPath();
+        icon = await File(macIcon).readAsBytes();
+      }
+      icon = icon ?? Uint8List(0);
+      _iconCache.set(id, icon);
     } catch (e) {
       icon = Uint8List(0);
     }
     return icon!;
   }
 
-  static Future<String> getMacIcon(String path) async {
+  static Future<String> _getMacIcon(String path) async {
     var xml = await File('$path/Contents/Info.plist').readAsString();
     var key = "<key>CFBundleIconFile</key>";
     var indexOf = xml.indexOf(key);
@@ -117,7 +138,7 @@ class ProcessInfo {
   }
 
   Map<String, dynamic> toJson() {
-    return {'name': name, 'path': path};
+    return {'id': id, 'name': name, 'path': path};
   }
 
   @override

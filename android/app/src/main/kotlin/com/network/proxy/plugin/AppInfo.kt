@@ -8,7 +8,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import java.io.ByteArrayOutputStream
 
-class AppInfo(name: CharSequence, packageName: String, icon: ByteArray, versionName: String) :
+class AppInfo(name: CharSequence, packageName: String, icon: ByteArray?, versionName: String?) :
     HashMap<String, Any?>() {
     init {
         put("name", name)
@@ -16,6 +16,7 @@ class AppInfo(name: CharSequence, packageName: String, icon: ByteArray, versionN
         put("icon", icon)
         put("versionName", versionName)
     }
+
     companion object {
         fun create(
             packageManager: PackageManager,

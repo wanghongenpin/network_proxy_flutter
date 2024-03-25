@@ -12,6 +12,7 @@ import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/file_read.dart';
 
 import 'components/host_filter.dart';
+import 'util/process_info.dart';
 
 class ProxyHelper {
   //请求本服务
@@ -64,7 +65,7 @@ class ProxyHelper {
 
   ///异常处理
   static exceptionHandler(
-      ChannelContext channelContext, Channel channel, EventListener? listener, HttpRequest? request, error) {
+      ChannelContext channelContext, Channel channel, EventListener? listener, HttpRequest? request, error) async {
     HostAndPort? hostAndPort = channelContext.host;
     hostAndPort ??= HostAndPort.host(scheme: HostAndPort.httpScheme, channel.remoteSocketAddress.host, channel.remoteSocketAddress.port);
     String message = error.toString();
@@ -83,6 +84,13 @@ class ProxyHelper {
       ..body = message.codeUnits
       ..headers.contentLength = message.codeUnits.length
       ..hostAndPort = hostAndPort;
+
+    try {
+      request.processInfo ??=
+          await ProcessInfoUtils.getProcessByPort(channel.remoteSocketAddress, request.remoteDomain()!);
+    } catch (ignore) {
+      /*ignore*/
+    }
 
     request.response ??= HttpResponse(status)
       ..headers.contentType = 'text/plain'

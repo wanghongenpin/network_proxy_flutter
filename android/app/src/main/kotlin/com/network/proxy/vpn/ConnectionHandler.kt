@@ -15,12 +15,12 @@ import com.network.proxy.vpn.transport.protocol.UDPPacketFactory
 import com.network.proxy.vpn.util.PacketUtil.getOutput
 import com.network.proxy.vpn.util.PacketUtil.intToIPAddress
 import com.network.proxy.vpn.util.PacketUtil.isPacketCorrupted
+import com.network.proxy.vpn.util.ProcessInfoManager
 import com.network.proxy.vpn.util.TLS.getDomain
 import com.network.proxy.vpn.util.TLS.isTLSClientHello
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 import java.nio.channels.SocketChannel
@@ -111,7 +111,7 @@ class ConnectionHandler(
     private fun supperProtocol(packetData: ByteBuffer): Boolean {
         val position = packetData.position()
         //判断是否是ssl握手
-        if (isTLSClientHello(packetData) && getDomain(packetData) != null) {
+        if (isTLSClientHello(packetData)) {
             packetData.position(position)
             return true
         }
@@ -184,12 +184,14 @@ class ConnectionHandler(
                         val proxyAddress =
                             getProxyAddress(clientPacketData, destinationIP, destinationPort)
                         try {
-                            val channel =
-                                connection.channel as SocketChannel?
+                            val channel = connection.channel as SocketChannel?
                             val connected = channel!!.connect(proxyAddress)
                             connection.isConnected = connected
                             nioService.registerSession(connection)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && proxyAddress == manager.proxyAddress) {
+                                //获取进程信息
+                                ProcessInfoManager.instance.setConnectionOwnerUid(connection)
                                 Log.d(
                                     TAG,
                                     "Proxy Initiate connecting key:" + key + " " + channel.localAddress + " to remote tcp server: " + channel.remoteAddress
@@ -197,11 +199,7 @@ class ConnectionHandler(
                             }
                         } catch (e: Exception) {
                             val ips = intToIPAddress(destinationIP)
-                            Log.w(
-                                TAG,
-                                "Failed to reconnect to $ips:$destinationPort",
-                                e
-                            )
+                            Log.w(TAG, "Failed to reconnect to $ips:$destinationPort", e)
                         }
                     }
 
@@ -308,7 +306,7 @@ class ConnectionHandler(
         val data = TCPPacketFactory.createFinAckData(ip, tcp, ack, seq, isFin = true, isAck = false)
         val stream = ByteBuffer.wrap(data)
         writer.write(data)
-        Log.d(TAG, "00000000000 FIN-ACK packet data to vpn client 000000000000")
+//        Log.d(TAG, "00000000000 FIN-ACK packet data to vpn client 000000000000")
         var vpnIp: IP4Header? = null
         try {
             vpnIp = IPPacketFactory.createIP4Header(stream)
@@ -325,7 +323,7 @@ class ConnectionHandler(
             val logOut = getOutput(vpnIp, vpnTcp, data)
             Log.d(TAG, logOut)
         }
-        Log.d(TAG, "0000000000000 finished sending FIN-ACK packet to vpn client 000000000000")
+//        Log.d(TAG, "0000000000000 finished sending FIN-ACK packet to vpn client 000000000000")
         connection.sendNext = seq + 1
         //avoid re-sending it, from here client should take care the rest
         connection.isClosingConnection = false
