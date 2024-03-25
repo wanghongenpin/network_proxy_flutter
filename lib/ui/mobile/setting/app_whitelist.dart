@@ -83,7 +83,6 @@ class _AppWhitelistState extends State<AppWhitelist> {
       body: FutureBuilder(
           future: Future.wait(appWhitelist),
           builder: (BuildContext context, AsyncSnapshot<List<AppInfo>> snapshot) {
-            print(snapshot.data);
             if (snapshot.hasData) {
               if (snapshot.data!.isEmpty) {
                 return Center(

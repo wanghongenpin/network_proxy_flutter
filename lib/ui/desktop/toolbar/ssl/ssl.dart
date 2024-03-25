@@ -237,6 +237,8 @@ class _SslState extends State<SslWidget> {
                               ]),
                               ListView(
                                 children: [
+                                  Text(localizations.androidUserCATips, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                  const SizedBox(height: 10),
                                   SelectableText.rich(TextSpan(
                                       text:
                                           "1. ${localizations.configWifiProxy} Host：$host  Port：${widget.proxyServer.port}")),

@@ -285,7 +285,7 @@ enum HttpMethod {
   }
 
   static List<HttpMethod> methods() {
-    return values.where((method) => method != HttpMethod.propfind &&  method != HttpMethod.report).toList();
+    return values.where((method) => method != HttpMethod.propfind && method != HttpMethod.report).toList();
   }
 }
 
