@@ -204,6 +204,10 @@ class ChannelContext {
 
   set currentRequest(HttpRequest? request) => putAttribute(AttributeKeys.request, request);
 
+  set processInfo(ProcessInfo? processInfo) => putAttribute(AttributeKeys.processInfo, processInfo);
+
+  ProcessInfo? get processInfo => getAttribute(AttributeKeys.processInfo);
+
   StreamSetting? setting;
 
   HttpRequest? putStreamRequest(int streamId, HttpRequest request) {

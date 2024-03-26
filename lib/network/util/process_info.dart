@@ -5,15 +5,15 @@ import 'dart:typed_data';
 import 'package:network_proxy/native/installed_apps.dart';
 import 'package:network_proxy/native/process_info.dart';
 import 'package:network_proxy/network/util/socket_address.dart';
+import 'package:win32audio/win32audio.dart';
 
 import 'cache.dart';
 
 void main() async {
   var processInfo = await ProcessInfoUtils.getProcess(512);
-  print(await processInfo!._getIconPath());
   // await ProcessInfoUtils.getMacIcon(processInfo!.path);
   // print(await ProcessInfoUtils.getProcessByPort(63194));
-  print((await ProcessInfoUtils.getProcess(30025))?._getIconPath());
+  print(processInfo);
 }
 
 class ProcessInfoUtils {
@@ -29,29 +29,49 @@ class ProcessInfoUtils {
       return null;
     }
 
+    var pid = await _getPid(socketAddress);
+    if (pid == null) return null;
+
+    String cacheKey = "$cacheKeyPre:$pid";
+    var processInfo = processInfoCache.get(cacheKey);
+    if (processInfo != null) return processInfo;
+
+    processInfo = await getProcess(pid);
+    processInfoCache.set(cacheKey, processInfo!);
+    return processInfo;
+  }
+
+  // 获取进程 ID
+  static Future<int?> _getPid(InetSocketAddress socketAddress) async {
+    if (Platform.isWindows) {
+      var result = await Process.run('cmd', ['/c', 'netstat -ano | findstr :${socketAddress.port}']);
+      var lines = LineSplitter.split(result.stdout);
+      for (var line in lines) {
+        var parts = line.trim().split(RegExp(r'\s+'));
+        if (parts.length < 5) {
+          continue;
+        }
+        if (parts[1].trim().contains("${socketAddress.host}:${socketAddress.port}")) {
+          return int.tryParse(parts[4]);
+        }
+      }
+      return null;
+    }
+
     if (Platform.isMacOS) {
-      var results = await Process.run('bash', [
-        '-c',
-        _concatCommands(['lsof -nP -iTCP:${socketAddress.port} |grep "${socketAddress.port}->"'])
-      ]);
+      var results =
+          await Process.run('bash', ['-c', 'lsof -nP -iTCP:${socketAddress.port} |grep "${socketAddress.port}->"']);
 
-      if (results.exitCode == 0) {
-        var lines = LineSplitter.split(results.stdout);
+      if (results.exitCode != 0) {
+        return null;
+      }
 
-        for (var line in lines) {
-          var parts = line.trim().split(RegExp(r'\s+'));
-          if (parts.length >= 9) {
-            var pid = int.tryParse(parts[1]);
-            if (pid != null) {
-              String cacheKey = "$cacheKeyPre:$pid";
-              var processInfo = processInfoCache.get(cacheKey);
-              if (processInfo != null) return processInfo;
+      var lines = LineSplitter.split(results.stdout);
 
-              processInfo = await getProcess(pid);
-              processInfoCache.set(cacheKey, processInfo!);
-              return processInfo;
-            }
-          }
+      for (var line in lines) {
+        var parts = line.trim().split(RegExp(r'\s+'));
+        if (parts.length >= 9) {
+          return int.tryParse(parts[1]);
         }
       }
     }
@@ -59,11 +79,18 @@ class ProcessInfoUtils {
   }
 
   static Future<ProcessInfo?> getProcess(int pid) async {
+    if (Platform.isWindows) {
+      // 获取应用路径
+      var result = await Process.run('cmd', ['/c', 'wmic process where processid=$pid get ExecutablePath']);
+      var output = result.stdout.toString();
+      var path = output.split('\n')[1].trim();
+      print(output);
+      String name = path.substring(path.lastIndexOf('\\') + 1);
+      return ProcessInfo(name, name.split(".")[0], path);
+    }
+
     if (Platform.isMacOS) {
-      var results = await Process.run('bash', [
-        '-c',
-        _concatCommands(['ps -p $pid -o pid= -o comm='])
-      ]);
+      var results = await Process.run('bash', ['-c', 'ps -p $pid -o pid= -o comm=']);
       if (results.exitCode == 0) {
         var lines = LineSplitter.split(results.stdout);
         for (var line in lines) {
@@ -79,10 +106,6 @@ class ProcessInfoUtils {
     }
 
     return null;
-  }
-
-  static _concatCommands(List<String> commands) {
-    return commands.where((element) => element.isNotEmpty).join(' && ');
   }
 }
 
@@ -101,10 +124,6 @@ class ProcessInfo {
     return ProcessInfo(json['id'], json['name'], json['path']);
   }
 
-  Future<String> _getIconPath() async {
-    return _getMacIcon(path);
-  }
-
   Future<Uint8List> getIcon() async {
     if (icon != null) return icon!;
     if (_iconCache.get(id) != null) return _iconCache.get(id)!;
@@ -114,16 +133,25 @@ class ProcessInfo {
         icon = (await InstalledApps.getAppInfo(id)).icon;
       }
 
+      if (Platform.isWindows) {
+        icon = await _getWindowsIcon(path);
+      }
+
       if (Platform.isMacOS) {
-        var macIcon = await _getIconPath();
+        var macIcon = await _getMacIcon(path);
         icon = await File(macIcon).readAsBytes();
       }
+
       icon = icon ?? Uint8List(0);
       _iconCache.set(id, icon);
     } catch (e) {
       icon = Uint8List(0);
     }
     return icon!;
+  }
+
+  Future<Uint8List?> _getWindowsIcon(String path) async {
+    return await WinIcons().extractFileIcon(path);
   }
 
   static Future<String> _getMacIcon(String path) async {

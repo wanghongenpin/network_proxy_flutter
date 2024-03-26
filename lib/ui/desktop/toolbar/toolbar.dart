@@ -69,7 +69,7 @@ class _ToolbarState extends State<Toolbar> {
     return Row(
       children: [
         Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 80 : 30)),
-        SocketLaunch(proxyServer: widget.proxyServer),
+        SocketLaunch(proxyServer: widget.proxyServer, startup: widget.proxyServer.configuration.startup),
         const Padding(padding: EdgeInsets.only(left: 20)),
         IconButton(
             tooltip: localizations.clear,

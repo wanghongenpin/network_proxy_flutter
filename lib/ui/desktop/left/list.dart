@@ -126,6 +126,7 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
     //按照域名分类
     DomainRequests domainRequests = getDomainRequests(request);
     var isNew = domainRequests.body.isEmpty;
+
     domainRequests.addRequest(request.requestId, request);
     //搜索视图
     if (searchModel?.isNotEmpty == true && searchModel?.filter(request, null) == true) {
@@ -142,20 +143,28 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
   DomainRequests getDomainRequests(HttpRequest request) {
     var host = request.remoteDomain()!;
     DomainRequests? domainRequests = containerMap[host];
-    var processInfo = request.processInfo;
     if (domainRequests == null) {
       domainRequests = DomainRequests(host,
           proxyServer: widget.panel.proxyServer,
-          trailing: processInfo == null
-              ? null
-              : futureWidget(processInfo.getIcon(),
-                  (data) => SizedBox(width: 25, child: data.isEmpty ? null : Image.memory(data))),
+          trailing: appIcon(request),
           onDelete: deleteHost,
           onRequestRemove: (req) => container.remove(req));
       containerMap[host] = domainRequests;
     }
 
     return domainRequests;
+  }
+
+  Widget? appIcon(HttpRequest request) {
+    var processInfo = request.processInfo;
+    if (processInfo == null) {
+      return null;
+    }
+
+    return futureWidget(
+        processInfo.getIcon(),
+        (data) =>
+            data.isEmpty ? const SizedBox() : Image.memory(data, width: 23, height: Platform.isWindows ? 16 : null));
   }
 
   ///移除域名
@@ -250,6 +259,11 @@ class DomainRequests extends StatefulWidget {
     return requestMap[response.request?.requestId ?? response.requestId];
   }
 
+  setTrailing(Widget? trailing) {
+    var state = key as GlobalKey<_DomainRequestsState>;
+    state.currentState?.trailing = trailing;
+  }
+
   _remove(RequestWidget requestWidget) {
     if (body.remove(requestWidget)) {
       onRequestRemove?.call(requestWidget.request);
@@ -298,6 +312,7 @@ class _DomainRequestsState extends State<DomainRequests> {
   final GlobalKey<ColorTransitionState> transitionState = GlobalKey<ColorTransitionState>();
   late Configuration configuration;
   late bool selected;
+  Widget? trailing;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
@@ -306,6 +321,7 @@ class _DomainRequestsState extends State<DomainRequests> {
     super.initState();
     configuration = widget.proxyServer.configuration;
     selected = widget.selected;
+    trailing = widget.trailing;
   }
 
   changeState() {
@@ -327,7 +343,7 @@ class _DomainRequestsState extends State<DomainRequests> {
         child: ListTile(
             minLeadingWidth: 25,
             leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 18),
-            trailing: widget.trailing,
+            trailing: trailing,
             dense: true,
             horizontalTitleGap: 0,
             contentPadding: const EdgeInsets.only(left: 3, right: 8),

@@ -67,7 +67,8 @@ class ProxyHelper {
   static exceptionHandler(
       ChannelContext channelContext, Channel channel, EventListener? listener, HttpRequest? request, error) async {
     HostAndPort? hostAndPort = channelContext.host;
-    hostAndPort ??= HostAndPort.host(scheme: HostAndPort.httpScheme, channel.remoteSocketAddress.host, channel.remoteSocketAddress.port);
+    hostAndPort ??= HostAndPort.host(
+        scheme: HostAndPort.httpScheme, channel.remoteSocketAddress.host, channel.remoteSocketAddress.port);
     String message = error.toString();
     HttpStatus status = HttpStatus(-1, message);
     if (error is HandshakeException) {
@@ -84,13 +85,7 @@ class ProxyHelper {
       ..body = message.codeUnits
       ..headers.contentLength = message.codeUnits.length
       ..hostAndPort = hostAndPort;
-
-    try {
-      request.processInfo ??=
-          await ProcessInfoUtils.getProcessByPort(channel.remoteSocketAddress, request.remoteDomain()!);
-    } catch (ignore) {
-      /*ignore*/
-    }
+    request.processInfo ??= channelContext.processInfo;
 
     request.response ??= HttpResponse(status)
       ..headers.contentType = 'text/plain'

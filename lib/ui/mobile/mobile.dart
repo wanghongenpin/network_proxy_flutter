@@ -233,7 +233,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '4. The script supports log viewing, output through console.log()；\n'
             '5. Setting Auto Start Recording Traffic；\n'
             '6. Android certificate download optimization; \n';
-    showAlertDialog(isCN ? '更新内容V1.0.9-Beta' : "Update content V1.0.9-Beta", content, () {
+    showAlertDialog(isCN ? '更新内容V1.0.9' : "Update content V1.0.9", content, () {
       widget.appConfiguration.upgradeNoticeV9 = false;
       widget.appConfiguration.flushConfig();
     });

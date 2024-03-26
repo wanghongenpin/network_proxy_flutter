@@ -197,7 +197,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       const SizedBox(height: 20),
       rowWidget("Remote Address", response?.remoteAddress),
       const SizedBox(height: 20),
-      rowWidget("Request Time", request.requestTime.toString()),
+      rowWidget("Request Time", request.requestTime.format()),
       const SizedBox(height: 20),
       rowWidget("Duration", response?.costTime()),
       const SizedBox(height: 20),
@@ -209,6 +209,10 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       const SizedBox(height: 20),
       rowWidget("Response Package", getPackage(response)),
     ];
+    if (request.processInfo != null) {
+      content.add(const SizedBox(height: 20));
+      content.add(rowWidget("App", request.processInfo!.name));
+    }
 
     return ListView(children: [expansionTile("General", content)]);
   }

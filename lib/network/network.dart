@@ -24,6 +24,7 @@ import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
 import 'package:network_proxy/network/util/crts.dart';
+import 'package:network_proxy/network/util/process_info.dart';
 import 'package:network_proxy/network/util/tls.dart';
 
 import 'host_port.dart';
@@ -131,10 +132,11 @@ class Server extends Network {
   void ssl(ChannelContext channelContext, Channel channel, Uint8List data) async {
     var hostAndPort = channelContext.host;
     try {
-      hostAndPort?.scheme = HostAndPort.httpsScheme;
       if (hostAndPort == null && TLS.getDomain(data) != null) {
         hostAndPort = HostAndPort.host(TLS.getDomain(data)!, 443);
       }
+
+      hostAndPort?.scheme = HostAndPort.httpsScheme;
       channelContext.putAttribute(AttributeKeys.domain, hostAndPort?.host);
 
       Channel? remoteChannel = channelContext.serverChannel;
@@ -162,6 +164,13 @@ class Server extends Network {
       var secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
       channel.secureSocket(secureSocket, channelContext);
     } catch (error, trace) {
+      try {
+        channelContext.processInfo =
+            await ProcessInfoUtils.getProcessByPort(channel.remoteSocketAddress, hostAndPort?.domain ?? 'unknown');
+      } catch (ignore) {
+        /*ignore*/
+      }
+
       if (error is HandshakeException) {
         channelContext.host = hostAndPort;
       }
