@@ -9,6 +9,7 @@ import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/desktop/desktop.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
+import 'package:network_proxy/utils/navigator.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -77,6 +78,7 @@ class FluentApp extends StatelessWidget {
           return MaterialApp(
             title: 'ProxyPin',
             debugShowCheckedModeBanner: false,
+            navigatorKey: navigatorHelper.navigatorKey,
             theme: appConfiguration.useMaterial3 ? material3Light : light,
             darkTheme: appConfiguration.useMaterial3 ? material3Dark : darkTheme,
             themeMode: appConfiguration.themeMode,
