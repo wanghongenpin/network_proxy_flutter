@@ -17,6 +17,7 @@ import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
+import 'package:network_proxy/utils/navigator.dart';
 
 ///请求行
 class RequestRow extends StatefulWidget {
@@ -92,8 +93,7 @@ class RequestRowState extends State<RequestRow> {
             Platform.isIOS ? const EdgeInsets.symmetric(horizontal: 8) : const EdgeInsets.only(left: 3, right: 5),
         onLongPress: menu,
         onTap: () {
-          Navigator.push(
-              context,
+          NavigatorHelper.push(
               MaterialPageRoute(
                   settings: const RouteSettings(name: "NetworkTabController"),
                   builder: (context) {
@@ -143,7 +143,7 @@ class RequestRowState extends State<RequestRow> {
               child: SizedBox(width: double.infinity, child: Text(localizations.repeat, textAlign: TextAlign.center)),
               onPressed: () {
                 onRepeat(widget.request);
-                Navigator.of(context).pop();
+                NavigatorHelper.pop();
               }),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
@@ -155,8 +155,8 @@ class RequestRowState extends State<RequestRow> {
               child:
                   SizedBox(width: double.infinity, child: Text(localizations.editRequest, textAlign: TextAlign.center)),
               onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(MaterialPageRoute(
+                NavigatorHelper.pop();
+                NavigatorHelper.push(MaterialPageRoute(
                     builder: (context) =>
                         MobileRequestEditor(request: widget.request, proxyServer: widget.proxyServer)));
               }),
@@ -166,7 +166,7 @@ class RequestRowState extends State<RequestRow> {
               onPressed: () {
                 FavoriteStorage.addFavorite(widget.request);
                 FlutterToastr.show(localizations.addSuccess, context);
-                Navigator.of(context).pop();
+                NavigatorHelper.pop();
               }),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
@@ -174,7 +174,7 @@ class RequestRowState extends State<RequestRow> {
               onPressed: () {
                 widget.onRemove?.call(request);
                 FlutterToastr.show(localizations.deleteSuccess, context);
-                Navigator.of(context).pop();
+                NavigatorHelper.pop();
               }),
           Container(
             color: Theme.of(context).hoverColor,
@@ -187,7 +187,7 @@ class RequestRowState extends State<RequestRow> {
                 padding: const EdgeInsets.only(top: 10),
                 child: Text(localizations.cancel, textAlign: TextAlign.center)),
             onPressed: () {
-              Navigator.of(context).pop();
+              NavigatorHelper.pop();
             },
           ),
         ]);
@@ -197,8 +197,8 @@ class RequestRowState extends State<RequestRow> {
 
   //显示高级重发
   showCustomRepeat(HttpRequest request) {
-    Navigator.of(context).pop();
-    Navigator.of(context)
+    NavigatorHelper.pop();
+    NavigatorHelper
         .push(MaterialPageRoute(builder: (context) => MobileCustomRepeat(onRepeat: () => onRepeat(request))));
   }
 
@@ -218,7 +218,7 @@ class RequestRowState extends State<RequestRow> {
         onPressed: () {
           Clipboard.setData(ClipboardData(text: callback.call())).then((value) {
             FlutterToastr.show(localizations.copied, context);
-            Navigator.of(context).pop();
+            NavigatorHelper.pop();
           });
         });
   }
