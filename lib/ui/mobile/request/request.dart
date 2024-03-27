@@ -93,16 +93,15 @@ class RequestRowState extends State<RequestRow> {
             Platform.isIOS ? const EdgeInsets.symmetric(horizontal: 8) : const EdgeInsets.only(left: 3, right: 5),
         onLongPress: menu,
         onTap: () {
-          NavigatorHelper.push(
-              MaterialPageRoute(
-                  settings: const RouteSettings(name: "NetworkTabController"),
-                  builder: (context) {
-                    return NetworkTabController(
-                        proxyServer: widget.proxyServer,
-                        httpRequest: request,
-                        httpResponse: response,
-                        title: Text(localizations.captureDetail, style: const TextStyle(fontSize: 16)));
-                  }));
+          NavigatorHelper.push(MaterialPageRoute(
+              settings: const RouteSettings(name: "NetworkTabController"),
+              builder: (context) {
+                return NetworkTabController(
+                    proxyServer: widget.proxyServer,
+                    httpRequest: request,
+                    httpResponse: response,
+                    title: Text(localizations.captureDetail, style: const TextStyle(fontSize: 16)));
+              }));
         });
   }
 
@@ -192,14 +191,17 @@ class RequestRowState extends State<RequestRow> {
           ),
         ]);
       },
-    ).then((value) => setState(() => selected = false));
+    ).then((value) {
+      selected = false;
+      if (mounted) setState(() {});
+    });
   }
 
   //显示高级重发
   showCustomRepeat(HttpRequest request) {
     NavigatorHelper.pop();
-    NavigatorHelper
-        .push(MaterialPageRoute(builder: (context) => MobileCustomRepeat(onRepeat: () => onRepeat(request))));
+    NavigatorHelper.push(
+        MaterialPageRoute(builder: (context) => MobileCustomRepeat(onRepeat: () => onRepeat(request))));
   }
 
   onRepeat(HttpRequest request) {

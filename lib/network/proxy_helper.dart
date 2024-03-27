@@ -12,7 +12,6 @@ import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/file_read.dart';
 
 import 'components/host_filter.dart';
-import 'util/process_info.dart';
 
 class ProxyHelper {
   //请求本服务

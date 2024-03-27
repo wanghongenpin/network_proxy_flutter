@@ -20,9 +20,9 @@ class About extends StatelessWidget {
             const SizedBox(height: 20),
             Padding(
                 padding: const EdgeInsets.only(left: 10, right: 10),
-                child: Text(isCN ? "全平台开源免费抓包软件" : "Full platform open source free packet capture software")),
+                child: Text(isCN ? "全平台开源免费抓包软件" : "Full platform open source free capture HTTP(S) traffic software")),
             const SizedBox(height: 10),
-            const Text("V1.0.8"),
+            const Text("V1.0.9"),
             ListTile(
                 title: const Text("Github"),
                 trailing: const Icon(Icons.arrow_right),

@@ -84,7 +84,6 @@ class ProcessInfoUtils {
       var result = await Process.run('cmd', ['/c', 'wmic process where processid=$pid get ExecutablePath']);
       var output = result.stdout.toString();
       var path = output.split('\n')[1].trim();
-      print(output);
       String name = path.substring(path.lastIndexOf('\\') + 1);
       return ProcessInfo(name, name.split(".")[0], path);
     }
