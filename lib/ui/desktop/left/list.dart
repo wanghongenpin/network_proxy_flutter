@@ -50,6 +50,8 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
   //搜索的内容
   SearchModel? searchModel;
   bool changing = false; //是否存在刷新任务
+  //关键词高亮监听
+  late VoidCallback highlightListener;
 
   changeState() {
     if (!changing) {
@@ -70,6 +72,19 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
       DomainRequests domainRequests = getDomainRequests(request);
       domainRequests.addRequest(request.requestId, request);
     }
+    highlightListener = () {
+      //回调时机在高亮设置页面dispose之后。所以需要在下一帧刷新，否则会报错
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        highlightHandler();
+      });
+    };
+    KeywordHighlightDialog.keywordsController.addListener(highlightListener);
+  }
+
+  @override
+  dispose() {
+    KeywordHighlightDialog.keywordsController.removeListener(highlightListener);
+    super.dispose();
   }
 
   @override
@@ -113,6 +128,19 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
     });
 
     return result;
+  }
+
+  ///高亮处理
+  highlightHandler() {
+    //获取所有请求Widget
+    List<RequestWidget> requests = containerMap.values
+        .map((e) => e.body)
+        .expand((element) => element)
+        .toList();
+    for (RequestWidget request in requests) {
+      GlobalKey key = request.key as GlobalKey<State>;
+      key.currentState?.setState(() {});
+    }
   }
 
   ///添加请求

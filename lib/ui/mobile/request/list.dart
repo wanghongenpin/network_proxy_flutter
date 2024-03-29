@@ -13,6 +13,7 @@ import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
+import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
 import 'package:network_proxy/utils/har.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
 import 'package:share_plus/share_plus.dart';
@@ -152,10 +153,26 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   //搜索的内容
   SearchModel? searchModel;
 
+  //关键词高亮监听
+  late VoidCallback highlightListener;
+
   @override
   initState() {
     super.initState();
     view.addAll(widget.container.source.reversed);
+    highlightListener = () {
+      //回调时机在高亮设置页面dispose之后。所以需要在下一帧刷新，否则会报错
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        setState(() {});
+      });
+    };
+    KeywordHighlight.keywordsController.addListener(highlightListener);
+  }
+
+  @override
+  dispose() {
+    KeywordHighlight.keywordsController.removeListener(highlightListener);
+    super.dispose();
   }
 
   ///添加请求

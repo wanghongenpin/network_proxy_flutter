@@ -92,7 +92,7 @@ class _RequestWidgetState extends State<RequestWidget> {
       return highlightColor;
     }
 
-    return _KeywordHighlight.getHighlightColor(widget.request.uri);
+    return KeywordHighlightDialog.getHighlightColor(widget.request.uri);
   }
 
   void changeState() {
@@ -220,7 +220,7 @@ class _RequestWidgetState extends State<RequestWidget> {
         MenuItem(
             label: localizations.keyword,
             onClick: (_) {
-              showDialog(context: context, builder: (BuildContext context) => const _KeywordHighlight());
+              showDialog(context: context, builder: (BuildContext context) => const KeywordHighlightDialog());
             }),
       ],
     );
@@ -287,8 +287,9 @@ class _RequestWidgetState extends State<RequestWidget> {
 }
 
 //配置关键词高亮
-class _KeywordHighlight extends StatelessWidget {
+class KeywordHighlightDialog extends StatefulWidget {
   static Map<Color, String> keywords = {};
+  static ValueNotifier keywordsController = ValueNotifier<Map>(keywords);
 
   static Color? getHighlightColor(String key) {
     for (var entry in keywords.entries) {
@@ -299,8 +300,13 @@ class _KeywordHighlight extends StatelessWidget {
     return null;
   }
 
-  const _KeywordHighlight();
+  const KeywordHighlightDialog({super.key});
 
+  @override
+  State<KeywordHighlightDialog> createState() => _KeywordHighlightState();
+}
+
+class _KeywordHighlightState extends State<KeywordHighlightDialog> {
   @override
   Widget build(BuildContext context) {
     AppLocalizations localizations = AppLocalizations.of(context)!;
@@ -312,7 +318,7 @@ class _KeywordHighlight extends StatelessWidget {
       Colors.grey: localizations.gray,
     };
 
-    var map = Map.of(keywords);
+    var map = Map.of(KeywordHighlightDialog.keywords);
 
     return AlertDialog(
       title: ListTile(
@@ -329,7 +335,7 @@ class _KeywordHighlight extends StatelessWidget {
         TextButton(
           child: Text(localizations.done),
           onPressed: () {
-            keywords = map;
+            KeywordHighlightDialog.keywords = map;
             Navigator.of(context).pop();
           },
         ),
@@ -372,5 +378,11 @@ class _KeywordHighlight extends StatelessWidget {
       isDense: true,
       border: const OutlineInputBorder(),
     );
+  }
+
+  @override
+  void dispose() {
+    KeywordHighlightDialog.keywordsController.value = Map.from(KeywordHighlightDialog.keywords);
+    super.dispose();
   }
 }

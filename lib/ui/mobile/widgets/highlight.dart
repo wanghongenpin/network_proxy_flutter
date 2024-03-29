@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 
-class KeywordHighlight extends StatelessWidget {
+class KeywordHighlight extends StatefulWidget {
   static Map<Color, String> keywords = {};
   static bool enabled = true;
+  static ValueNotifier keywordsController = ValueNotifier<Map>(keywords);
 
   static Color? getHighlightColor(String? key) {
     if (key == null || !enabled) {
@@ -21,6 +22,11 @@ class KeywordHighlight extends StatelessWidget {
   const KeywordHighlight({super.key});
 
   @override
+  State<KeywordHighlight> createState() => _KeywordHighlightState();
+}
+
+class _KeywordHighlightState extends State<KeywordHighlight> {
+  @override
   Widget build(BuildContext context) {
     AppLocalizations localizations = AppLocalizations.of(context)!;
     var colors = {
@@ -36,7 +42,7 @@ class KeywordHighlight extends StatelessWidget {
         title: Text(localizations.keyword + localizations.highlight,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
         actions: [
-          SwitchWidget(scale: 0.7, value: enabled, onChanged: (val) => enabled = val),
+          SwitchWidget(scale: 0.7, value: KeywordHighlight.enabled, onChanged: (val) => KeywordHighlight.enabled = val),
           const SizedBox(width: 10)
         ],
       ),
@@ -51,12 +57,12 @@ class KeywordHighlight extends StatelessWidget {
                       child: TextFormField(
                         minLines: 2,
                         maxLines: 2,
-                        initialValue: keywords[e.key],
+                        initialValue: KeywordHighlight.keywords[e.key],
                         onChanged: (value) {
                           if (value.isEmpty) {
-                            keywords.remove(e.key);
+                            KeywordHighlight.keywords.remove(e.key);
                           } else {
-                            keywords[e.key] = value;
+                            KeywordHighlight.keywords[e.key] = value;
                           }
                         },
                         decoration: decoration(localizations.keyword),
@@ -74,5 +80,15 @@ class KeywordHighlight extends StatelessWidget {
       isDense: true,
       border: const OutlineInputBorder(),
     );
+  }
+
+  @override
+  void dispose() {
+    if(KeywordHighlight.enabled){
+      KeywordHighlight.keywordsController.value = Map.from(KeywordHighlight.keywords);
+    } else {
+      KeywordHighlight.keywordsController.value = {};
+    }
+    super.dispose();
   }
 }
