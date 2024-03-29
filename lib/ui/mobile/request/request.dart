@@ -112,6 +112,12 @@ class RequestRowState extends State<RequestRow> {
     if (request.processInfo == null) {
       return const Icon(Icons.question_mark, size: 38);
     }
+
+    //如果有缓存图标直接返回图标
+    if(request.processInfo!.hasCacheIcon){
+      return Image.memory(request.processInfo!.cacheIcon!, width: 40);
+    }
+
     return FutureBuilder(
         future: request.processInfo!.getIcon(),
         builder: (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
