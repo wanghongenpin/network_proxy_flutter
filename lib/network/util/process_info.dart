@@ -123,6 +123,10 @@ class ProcessInfo {
     return ProcessInfo(json['id'], json['name'], json['path']);
   }
 
+  bool get hasCacheIcon => icon != null || _iconCache.get(id) != null;
+
+  Uint8List? get cacheIcon => icon ?? _iconCache.get(id);
+
   Future<Uint8List> getIcon() async {
     if (icon != null) return icon!;
     if (_iconCache.get(id) != null) return _iconCache.get(id)!;
