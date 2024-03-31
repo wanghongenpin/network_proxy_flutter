@@ -9,6 +9,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/network/util/cache.dart';
 import 'package:network_proxy/storage/favorites.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/panel.dart';
@@ -42,6 +43,8 @@ class RequestRow extends StatefulWidget {
 }
 
 class RequestRowState extends State<RequestRow> {
+  static ExpiringCache<String, Image> imageCache = ExpiringCache<String, Image>(const Duration(minutes: 5));
+
   late HttpRequest request;
   HttpResponse? response;
   bool selected = false;
@@ -114,8 +117,10 @@ class RequestRowState extends State<RequestRow> {
     }
 
     //如果有缓存图标直接返回图标
-    if(request.processInfo!.hasCacheIcon){
-      return Image.memory(request.processInfo!.cacheIcon!, width: 40);
+    if (request.processInfo!.hasCacheIcon) {
+      return imageCache.putIfAbsent(request.processInfo!.id, () {
+        return Image.memory(request.processInfo!.cacheIcon!, width: 40, gaplessPlayback: true);
+      });
     }
 
     return FutureBuilder(

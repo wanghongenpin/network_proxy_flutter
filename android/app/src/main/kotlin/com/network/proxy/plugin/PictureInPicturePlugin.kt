@@ -24,6 +24,8 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
     var channel: MethodChannel? = null
     var proxyHost: String? = null
     var proxyPort: Int? = null
+    var allowApps: ArrayList<String>? = null
+    var disallowApps: ArrayList<String>? = null
 
     ///广播事件接受者
     private val vpnBroadcastReceiver = object : BroadcastReceiver() {
@@ -43,7 +45,15 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
             if (isRunning) {
                 activity.startService(ProxyVpnService.stopVpnIntent(activity))
             } else {
-                activity.startService(ProxyVpnService.startVpnIntent(activity, proxyHost, proxyPort))
+                activity.startService(
+                    ProxyVpnService.startVpnIntent(
+                        activity,
+                        proxyHost,
+                        proxyPort,
+                        allowApps,
+                        disallowApps
+                    )
+                )
             }
 
             //设置画中画参数
@@ -67,6 +77,8 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         proxyHost = call.argument<String>("proxyHost")
                         proxyPort = call.argument<Int>("proxyPort")
+                        allowApps = call.argument<ArrayList<String>>("allowApps")
+                        disallowApps = call.argument<ArrayList<String>>("disallowApps")
 
                         val param = updatePictureInPictureParams(ProxyVpnService.isRunning)
                         if (!registerBroadcast) {

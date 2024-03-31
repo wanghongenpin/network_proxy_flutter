@@ -14,7 +14,7 @@ import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/mobile/menu/preference.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
 import 'package:network_proxy/ui/mobile/request/history.dart';
-import 'package:network_proxy/ui/mobile/setting/app_whitelist.dart';
+import 'package:network_proxy/ui/mobile/setting/app_filter.dart';
 import 'package:network_proxy/ui/mobile/setting/filter.dart';
 import 'package:network_proxy/ui/mobile/setting/request_block.dart';
 import 'package:network_proxy/ui/mobile/setting/request_rewrite.dart';
@@ -153,6 +153,12 @@ class FilterMenu extends StatelessWidget {
                       title: Text(localizations.appWhitelist),
                       trailing: const Icon(Icons.arrow_right),
                       onTap: () => navigator(context, AppWhitelist(proxyServer: proxyServer))),
+              Platform.isIOS
+                  ? const SizedBox()
+                  : ListTile(
+                  title: Text(localizations.appBlacklist),
+                  trailing: const Icon(Icons.arrow_right),
+                  onTap: () => navigator(context, AppBlacklist(proxyServer: proxyServer))),
             ])));
   }
 }

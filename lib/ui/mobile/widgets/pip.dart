@@ -130,7 +130,9 @@ class _PictureInPictureState extends State<PictureInPictureIcon> {
                 tooltip: localizations.windowMode,
                 onPressed: () async {
                   PictureInPicture.enterPictureInPictureMode(
-                      Platform.isAndroid ? await localIp() : "127.0.0.1", widget.proxyServer.port);
+                      Platform.isAndroid ? await localIp() : "127.0.0.1", widget.proxyServer.port,
+                      appList: widget.proxyServer.configuration.appWhitelist,
+                      disallowApps: widget.proxyServer.configuration.appBlacklist);
                 },
                 icon: const Icon(Icons.picture_in_picture_alt))),
       )

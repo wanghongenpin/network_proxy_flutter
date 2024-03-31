@@ -23,7 +23,7 @@ class ProcessInfoManager private constructor() {
     }
 
     private val localPortUidMap =
-        CacheBuilder.newBuilder().maximumSize(10_000).expireAfterAccess(120, TimeUnit.SECONDS)
+        CacheBuilder.newBuilder().maximumSize(10_000).expireAfterAccess(60, TimeUnit.SECONDS)
             .build<Int, Int>()
 
     private val appInfoCache =

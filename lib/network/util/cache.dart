@@ -15,6 +15,15 @@ class ExpiringCache<K, V> {
     _expirationTimes[key] = Timer(duration, () => remove(key));
   }
 
+  V? putIfAbsent(K key, V Function() ifAbsent) {
+    if (_cache.containsKey(key)) {
+      return _cache[key];
+    }
+    final value = ifAbsent();
+    set(key, value);
+    return value;
+  }
+
   V? get(K key) {
     return _cache[key];
   }

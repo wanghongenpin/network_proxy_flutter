@@ -110,6 +110,7 @@
   "domainBlacklist": "Domain Blacklist",
   "domainFilter": "Domain Filter",
   "appWhitelist": "App Whitelist",
+  "appBlacklist": "App Blacklist",
   "scanCode": "Scan Code Connect",
   "addBlacklist": "Add Filter Blacklist",
   "addWhitelist": "Add Filter Whitelist",

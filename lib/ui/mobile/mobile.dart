@@ -66,7 +66,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
       }
 
       return PictureInPicture.enterPictureInPictureMode(
-          Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port);
+          Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port,
+          appList: proxyServer.configuration.appWhitelist, disallowApps: proxyServer.configuration.appBlacklist);
     }
     return false;
   }
@@ -207,8 +208,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
               serverLaunch: false,
               onStart: () async {
                 Vpn.startVpn(Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port,
-                    backgroundAudioEnable: widget.appConfiguration.iosVpnBackgroundAudioEnable,
-                    appList: proxyServer.configuration.appWhitelist);
+                    appList: proxyServer.configuration.appWhitelist,
+                    disallowApps: proxyServer.configuration.appBlacklist);
               },
               onStop: () => Vpn.stopVpn())),
     );

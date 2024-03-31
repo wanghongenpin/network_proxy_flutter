@@ -31,6 +31,7 @@ class ProxyVpnService : VpnService(), ProtectSocket {
         const val PROXY_HOST_KEY = "ProxyHost"
         const val PROXY_PORT_KEY = "ProxyPort"
         const val ALLOW_APPS_KEY = "AllowApps" //允许的名单
+        const val DISALLOW_APPS_KEY = "DisallowApps" //禁止的名单
 
         /**
          * 动作：断开连接
@@ -48,6 +49,7 @@ class ProxyVpnService : VpnService(), ProtectSocket {
         var host: String? = null
         var port: Int = 0
         var allowApps: ArrayList<String>? = null
+        private var disallowApps: ArrayList<String>? = null
 
         fun stopVpnIntent(context: Context): Intent {
             return Intent(context, ProxyVpnService::class.java).also {
@@ -59,12 +61,14 @@ class ProxyVpnService : VpnService(), ProtectSocket {
             context: Context,
             proxyHost: String? = host,
             proxyPort: Int? = port,
-            allowApps: ArrayList<String>? = this.allowApps
+            allowApps: ArrayList<String>? = this.allowApps,
+            disallowApps: ArrayList<String>? = this.disallowApps
         ): Intent {
             return Intent(context, ProxyVpnService::class.java).also {
                 it.putExtra(PROXY_HOST_KEY, proxyHost)
                 it.putExtra(PROXY_PORT_KEY, proxyPort)
                 it.putStringArrayListExtra(ALLOW_APPS_KEY, allowApps)
+                it.putStringArrayListExtra(DISALLOW_APPS_KEY, disallowApps)
             }
         }
     }
@@ -82,7 +86,8 @@ class ProxyVpnService : VpnService(), ProtectSocket {
             connect(
                 intent.getStringExtra(PROXY_HOST_KEY) ?: host!!,
                 intent.getIntExtra(PROXY_PORT_KEY, port),
-                intent.getStringArrayListExtra(ALLOW_APPS_KEY) ?: allowApps
+                intent.getStringArrayListExtra(ALLOW_APPS_KEY) ?: allowApps,
+                intent.getStringArrayListExtra(DISALLOW_APPS_KEY)
             )
             START_STICKY
         }
@@ -98,13 +103,19 @@ class ProxyVpnService : VpnService(), ProtectSocket {
         isRunning = false
     }
 
-    private fun connect(proxyHost: String, proxyPort: Int, allowPackages: ArrayList<String>?) {
+    private fun connect(
+        proxyHost: String,
+        proxyPort: Int,
+        allowPackages: ArrayList<String>?,
+        disallowPackages: ArrayList<String>?
+    ) {
         Log.i("ProxyVpnService", "startVpn $host:$port $allowApps")
 
         host = proxyHost
         port = proxyPort
         allowApps = allowPackages
-        vpnInterface = createVpnInterface(proxyHost, proxyPort, allowPackages)
+        disallowApps = disallowPackages
+        vpnInterface = createVpnInterface(proxyHost, proxyPort, allowPackages, disallowPackages)
         if (vpnInterface == null) {
             val alertDialog = Intent(applicationContext, VpnAlertDialog::class.java)
                 .setAction("com.network.proxy.ProxyVpnService")
@@ -152,7 +163,12 @@ class ProxyVpnService : VpnService(), ProtectSocket {
     }
 
 
-    private fun createVpnInterface(proxyHost: String, proxyPort: Int, allowPackages: List<String>?):
+    private fun createVpnInterface(
+        proxyHost: String,
+        proxyPort: Int,
+        allowPackages: List<String>?,
+        disallowApps: ArrayList<String>?
+    ):
             ParcelFileDescriptor? {
         val build = Builder()
             .setMtu(MAX_PACKET_LEN)
@@ -168,6 +184,10 @@ class ProxyVpnService : VpnService(), ProtectSocket {
             }
         } else {
             build.addDisallowedApplication(baseContext.packageName)
+        }
+
+        disallowApps?.forEach {
+            build.addDisallowedApplication(it)
         }
 
         build.setConfigureIntent(
