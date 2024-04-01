@@ -13,6 +13,7 @@ import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/storage/favorites.dart';
+import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
@@ -73,6 +74,7 @@ class _RequestWidgetState extends State<RequestWidget> {
             minLeadingWidth: 5,
             textColor: color(),
             selectedColor: color(),
+            selectedTileColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
             leading: getIcon(widget.response.get() ?? widget.request.response),
             title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
             subtitle: Text(
@@ -349,21 +351,22 @@ class _KeywordHighlightState extends State<KeywordHighlightDialog> {
             appBar: TabBar(tabs: colors.entries.map((e) => Tab(text: e.value)).toList()),
             body: TabBarView(
                 children: colors.entries
-                    .map((e) => Padding(
-                        padding: const EdgeInsets.all(15),
-                        child: TextFormField(
-                          minLines: 2,
-                          maxLines: 2,
-                          initialValue: map[e.key],
-                          onChanged: (value) {
-                            if (value.isEmpty) {
-                              map.remove(e.key);
-                            } else {
-                              map[e.key] = value;
-                            }
-                          },
-                          decoration: decoration(localizations.keyword),
-                        )))
+                    .map((e) => KeepAliveWrapper(
+                        child: Padding(
+                            padding: const EdgeInsets.all(15),
+                            child: TextFormField(
+                              minLines: 2,
+                              maxLines: 2,
+                              initialValue: map[e.key],
+                              onChanged: (value) {
+                                if (value.isEmpty) {
+                                  map.remove(e.key);
+                                } else {
+                                  map[e.key] = value;
+                                }
+                              },
+                              decoration: decoration(localizations.keyword),
+                            ))))
                     .toList()),
           ),
         ),

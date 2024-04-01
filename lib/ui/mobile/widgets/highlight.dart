@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 
 class KeywordHighlight extends StatefulWidget {
@@ -26,9 +27,10 @@ class KeywordHighlight extends StatefulWidget {
 }
 
 class _KeywordHighlightState extends State<KeywordHighlight> {
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
+
   @override
   Widget build(BuildContext context) {
-    AppLocalizations localizations = AppLocalizations.of(context)!;
     var colors = {
       Colors.red: localizations.red,
       Colors.yellow.shade600: localizations.yellow,
@@ -52,21 +54,22 @@ class _KeywordHighlightState extends State<KeywordHighlight> {
           appBar: TabBar(tabs: colors.entries.map((e) => Tab(text: e.value)).toList()),
           body: TabBarView(
               children: colors.entries
-                  .map((e) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 15),
-                      child: TextFormField(
-                        minLines: 2,
-                        maxLines: 2,
-                        initialValue: KeywordHighlight.keywords[e.key],
-                        onChanged: (value) {
-                          if (value.isEmpty) {
-                            KeywordHighlight.keywords.remove(e.key);
-                          } else {
-                            KeywordHighlight.keywords[e.key] = value;
-                          }
-                        },
-                        decoration: decoration(localizations.keyword),
-                      )))
+                  .map((e) => KeepAliveWrapper(
+                      child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 15),
+                          child: TextFormField(
+                            minLines: 2,
+                            maxLines: 2,
+                            initialValue: KeywordHighlight.keywords[e.key],
+                            onChanged: (value) {
+                              if (value.isEmpty) {
+                                KeywordHighlight.keywords.remove(e.key);
+                              } else {
+                                KeywordHighlight.keywords[e.key] = value;
+                              }
+                            },
+                            decoration: decoration(localizations.keyword),
+                          ))))
                   .toList()),
         ),
       ),
@@ -84,7 +87,7 @@ class _KeywordHighlightState extends State<KeywordHighlight> {
 
   @override
   void dispose() {
-    if(KeywordHighlight.enabled){
+    if (KeywordHighlight.enabled) {
       KeywordHighlight.keywordsController.value = Map.from(KeywordHighlight.keywords);
     } else {
       KeywordHighlight.keywordsController.value = {};
