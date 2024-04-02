@@ -485,7 +485,7 @@ class RequestRewriteRule {
   String? rewritePath;
 
   RequestRewriteRule({this.enabled = true, this.name, required this.url, required this.type, this.rewritePath})
-      : _urlReg = RegExp(url.replaceAll("*", ".*"));
+      : _urlReg = RegExp(url.replaceAll("*", ".*").replaceAll('?', '\\?'));
 
   bool match(String url, {RuleType? type}) {
     return enabled && (type == null || this.type == type) && _urlReg.hasMatch(url);
