@@ -207,9 +207,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
               startup: proxyServer.configuration.startup,
               serverLaunch: false,
               onStart: () async {
-                Vpn.startVpn(Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port,
-                    appList: proxyServer.configuration.appWhitelist,
-                    disallowApps: proxyServer.configuration.appBlacklist);
+                Vpn.startVpn(
+                    Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port, proxyServer.configuration);
               },
               onStop: () => Vpn.stopVpn())),
     );

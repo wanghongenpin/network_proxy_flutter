@@ -184,7 +184,7 @@ class _AndroidCaInstallState extends State<AndroidCaInstall> with SingleTickerPr
         onPressed: () {},
         child: Text("1. ${localizations.downloadRootCa} ", textAlign: TextAlign.left),
       ),
-      FilledButton(onPressed: () => _downloadCert('243f0bfb.0'), child: Text(localizations.downloadRootCa)),
+      FilledButton(onPressed: () => _downloadCert('ProxyPinCA.crt'), child: Text(localizations.downloadRootCa)),
       const SizedBox(height: 5),
       TextButton(onPressed: () {}, child: Text("2. ${localizations.androidUserCAInstall}")),
       TextButton(

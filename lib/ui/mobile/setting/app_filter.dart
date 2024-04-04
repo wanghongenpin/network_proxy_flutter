@@ -6,6 +6,7 @@ import 'package:network_proxy/native/installed_apps.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 
 //应用白名单 目前只支持安卓 ios没办法获取安装的列表
 class AppWhitelist extends StatefulWidget {
@@ -35,8 +36,7 @@ class _AppWhitelistState extends State<AppWhitelist> {
     if (changed) {
       configuration.flushConfig();
       if (Vpn.isVpnStarted) {
-        Vpn.restartVpn("127.0.0.1", widget.proxyServer.port,
-            appList: configuration.appWhitelist, disallowApps: configuration.appBlacklist);
+        Vpn.restartVpn("127.0.0.1", widget.proxyServer.port, configuration);
       }
     }
     super.dispose();
@@ -54,73 +54,86 @@ class _AppWhitelistState extends State<AppWhitelist> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(localizations.appWhitelist, style: const TextStyle(fontSize: 16)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              //添加
-              Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (context) => const InstalledAppsWidget()))
-                  .then((value) {
-                if (value != null) {
-                  if (configuration.appWhitelist.contains(value)) {
-                    return;
+        appBar: AppBar(
+          title: Text(localizations.appWhitelist, style: const TextStyle(fontSize: 16)),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                //添加
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (context) => const InstalledAppsWidget()))
+                    .then((value) {
+                  if (value != null) {
+                    if (configuration.appWhitelist.contains(value)) {
+                      return;
+                    }
+                    setState(() {
+                      configuration.appWhitelist.add(value);
+                      changed = true;
+                    });
                   }
-                  setState(() {
-                    configuration.appWhitelist.add(value);
-                    changed = true;
-                  });
-                }
-              });
-            },
-          ),
-        ],
-      ),
-      body: FutureBuilder(
-          future: Future.wait(appWhitelist),
-          builder: (BuildContext context, AsyncSnapshot<List<AppInfo>> snapshot) {
-            if (snapshot.hasData) {
-              if (snapshot.data!.isEmpty) {
-                return Center(
-                  child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Text(
-                          isCN
-                              ? "未设置白名单应用时会对所有应用抓包"
-                              : "When no whitelist application is set, all applications will be captured",
-                          style: const TextStyle(color: Colors.grey))),
-                );
-              }
+                });
+              },
+            ),
+          ],
+        ),
+        body: Column(children: [
+          const SizedBox(height: 5),
+          SwitchWidget(
+              value: configuration.appWhitelistEnabled,
+              title: localizations.enable,
+              subtitle: localizations.appWhitelistDescribe,
+              onChanged: (val) {
+                configuration.appWhitelistEnabled = val;
+                configuration.flushConfig();
+              }),
+          const SizedBox(height: 5),
+          Expanded(
+              child: FutureBuilder(
+                  future: Future.wait(appWhitelist),
+                  builder: (BuildContext context, AsyncSnapshot<List<AppInfo>> snapshot) {
+                    if (snapshot.hasData) {
+                      if (snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                  isCN
+                                      ? "未设置白名单应用时会对所有应用抓包"
+                                      : "When no whitelist application is set, all applications will be captured",
+                                  style: const TextStyle(color: Colors.grey))),
+                        );
+                      }
 
-              return ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    AppInfo appInfo = snapshot.data![index];
-                    return ListTile(
-                      leading: appInfo.icon == null ? const Icon(Icons.question_mark) : Image.memory(appInfo.icon!),
-                      title: Text(appInfo.name ?? ""),
-                      subtitle: Text(appInfo.packageName ?? ""),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          //删除
-                          setState(() {
-                            configuration.appWhitelist.remove(appInfo.packageName);
-                            changed = true;
+                      return ListView.builder(
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            AppInfo appInfo = snapshot.data![index];
+                            return ListTile(
+                              leading:
+                                  appInfo.icon == null ? const Icon(Icons.question_mark) : Image.memory(appInfo.icon!),
+                              title: Text(appInfo.name ?? ""),
+                              subtitle: Text(appInfo.packageName ?? ""),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  //删除
+                                  setState(() {
+                                    configuration.appWhitelist.remove(appInfo.packageName);
+                                    changed = true;
+                                  });
+                                },
+                              ),
+                            );
                           });
-                        },
-                      ),
-                    );
-                  });
-            } else {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-          }),
-    );
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  })),
+        ]));
   }
 }
 
@@ -151,8 +164,7 @@ class _AppBlacklistState extends State<AppBlacklist> {
     if (changed) {
       configuration.flushConfig();
       if (Vpn.isVpnStarted) {
-        Vpn.restartVpn("127.0.0.1", widget.proxyServer.port,
-            appList: configuration.appWhitelist, disallowApps: configuration.appBlacklist);
+        Vpn.restartVpn("127.0.0.1", widget.proxyServer.port, configuration);
       }
     }
     super.dispose();

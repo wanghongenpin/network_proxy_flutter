@@ -187,6 +187,7 @@ class ProxyVpnService : VpnService(), ProtectSocket {
         }
 
         disallowApps?.forEach {
+            if (packages?.contains(it) == true) return@forEach
             build.addDisallowedApplication(it)
         }
 

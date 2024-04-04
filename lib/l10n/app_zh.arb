@@ -109,6 +109,7 @@
   "domainWhitelist": "域名白名单",
   "domainBlacklist" :"域名黑名单",
   "appWhitelist": "应用白名单",
+  "appWhitelistDescribe": "只代理白名单中的应用, 白名单启用黑名单将会失效",
   "appBlacklist": "应用黑名单",
   "domainFilter": "域名过滤",
   "scanCode": "扫码连接",

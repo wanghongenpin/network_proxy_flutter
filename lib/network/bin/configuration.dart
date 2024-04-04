@@ -43,6 +43,9 @@ class Configuration {
   //白名单应用
   List<String> appWhitelist = [];
 
+  //白名单应用是否启用
+  bool appWhitelistEnabled = true;
+
   //应用黑名单
   List<String>? appBlacklist;
 
@@ -87,6 +90,7 @@ class Configuration {
       externalProxy = ProxyInfo.fromJson(config['externalProxy']);
     }
     appWhitelist = List<String>.from(config['appWhitelist'] ?? []);
+    appWhitelistEnabled = config['appWhitelistEnabled'] ?? true;
     appBlacklist = config['appBlacklist'] == null ? null : List<String>.from(config['appBlacklist']);
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
@@ -135,6 +139,7 @@ class Configuration {
       'proxyPassDomains': proxyPassDomains,
       'externalProxy': externalProxy?.toJson(),
       'appWhitelist': appWhitelist,
+      'appWhitelistEnabled': appWhitelistEnabled,
       'appBlacklist': appBlacklist,
       'historyCacheTime': historyCacheTime,
       'whitelist': HostFilter.whitelist.toJson(),

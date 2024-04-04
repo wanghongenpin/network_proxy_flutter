@@ -110,6 +110,7 @@
   "domainBlacklist": "Domain Blacklist",
   "domainFilter": "Domain Filter",
   "appWhitelist": "App Whitelist",
+  "appWhitelistDescribe": "Only proxy Apps on the whitelist. If the whitelist is enabled, the blacklist will be invalid",
   "appBlacklist": "App Blacklist",
   "scanCode": "Scan Code Connect",
   "addBlacklist": "Add Filter Blacklist",
