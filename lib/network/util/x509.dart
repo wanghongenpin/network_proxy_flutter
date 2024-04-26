@@ -56,7 +56,7 @@ class X509Generate {
     blockProtocol.add(ASN1Null());
     data.add(blockProtocol);
 
-    issuer ??= Map.from(caRoot.tbsCertificate!.issuer);
+    issuer ??= Map.from(caRoot.tbsCertificate!.subject);
 
     // Add Issuer
     var issuerSeq = ASN1Sequence();
