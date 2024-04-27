@@ -154,7 +154,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
     var redirectUri = UriBuild.build(redirectUrl, params: httpRequest.queries);
     httpRequest.uri = redirectUri.toString();
-    httpRequest.headers.host = redirectUri.host;
+    httpRequest.headers.host = redirectUri.hasPort ? "${redirectUri.host}:${redirectUri.port}" : redirectUri.host;
     var redirectChannel = await HttpClients.connect(Uri.parse(redirectUrl), proxyHandler, channelContext);
     channelContext.serverChannel = redirectChannel;
     await redirectChannel.write(httpRequest);

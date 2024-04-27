@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
@@ -401,6 +402,13 @@ class _DomainRequestsState extends State<DomainRequests> {
       context,
       details.globalPosition,
       items: <PopupMenuEntry>[
+        CustomPopupMenuItem(
+            height: 35,
+            child: Text(localizations.copyHost, style: const TextStyle(fontSize: 13)),
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: Uri.parse(widget.domain).host));
+              FlutterToastr.show(localizations.copied, context);
+            }),
         CustomPopupMenuItem(
             height: 35,
             child: Text(localizations.domainBlacklist, style: const TextStyle(fontSize: 13)),

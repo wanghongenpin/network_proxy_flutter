@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
@@ -299,7 +300,7 @@ class _DomainListState extends State<DomainList> {
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
           hoverColor: primaryColor.withOpacity(0.3),
-          onLongPress: () => showMenus(index),
+          onLongPress: () => showMenus(index), // menus
           onDoubleTap: () => showEdit(index),
           onTap: () {
             if (multiple) {
@@ -362,6 +363,11 @@ class _DomainListState extends State<DomainList> {
                 onPressed: () {
                   setState(() => multiple = true);
                 }),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(text: localizations.copy, onPressed: () {
+              Clipboard.setData(ClipboardData(text: widget.hostList.list[index].pattern.replaceAll(".*", "*")));
+              FlutterToastr.show(localizations.copied, context);
+            }),
             const Divider(thickness: 0.5, height: 5),
             BottomSheetItem(text: localizations.edit, onPressed: () => showEdit(index)),
             const Divider(thickness: 0.5, height: 5),

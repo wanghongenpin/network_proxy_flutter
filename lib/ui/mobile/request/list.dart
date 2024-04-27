@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
@@ -422,7 +423,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
         trailing: const Icon(Icons.chevron_right),
         subtitle: Text(localizations.domainListSubtitle(value?.length ?? '', time),
             maxLines: 1, overflow: TextOverflow.ellipsis),
-        onLongPress: () => menu(index),
+        onLongPress: () => menu(index), // show menus
         contentPadding: const EdgeInsets.only(left: 10),
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {
@@ -450,6 +451,15 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
           return Wrap(
             alignment: WrapAlignment.center,
             children: [
+              TextButton(
+                  child: SizedBox(
+                      width: double.infinity, child: Text(localizations.copyHost, textAlign: TextAlign.center)),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: hostAndPort.host));
+                    FlutterToastr.show(localizations.copied, context);
+                    Navigator.of(context).pop();
+                  }),
+              const Divider(thickness: 0.5),
               TextButton(
                   child: SizedBox(
                       width: double.infinity, child: Text(localizations.addBlacklist, textAlign: TextAlign.center)),

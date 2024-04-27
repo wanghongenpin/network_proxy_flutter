@@ -119,6 +119,7 @@
   "domainListSubtitle": "最后请求时间: {time},  次数: {count}",
 
   "copy": "复制",
+  "copyHost": "复制域名",
   "copyUrl": "复制URL",
   "copyRequestResponse": "复制请求和响应",
   "copyCurl": "复制 cURL 请求",

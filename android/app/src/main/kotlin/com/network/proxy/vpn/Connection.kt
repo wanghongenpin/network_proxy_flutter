@@ -175,5 +175,14 @@ class Connection(
         }
     }
 
+    override fun toString(): String {
+       return "Connection{" +
+                    "protocol=" + protocol +
+                    ", sourceIp=" + PacketUtil.intToIPAddress(sourceIp) +
+                    ", sourcePort=" + sourcePort +
+                    ", destinationIp=" + PacketUtil.intToIPAddress(destinationIp) +
+                    ", destinationPort=" + destinationPort +
+                    '}'
+    }
 
 }

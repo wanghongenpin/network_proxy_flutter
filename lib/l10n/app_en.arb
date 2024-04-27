@@ -119,6 +119,7 @@
   "domainListSubtitle": "Last Request Time: {time},  Count: {count}",
 
   "copy": "Copy",
+  "copyHost": "Copy Host",
   "copyUrl": "Copy URL",
   "copyRequestResponse": "Copy Request and Response",
   "copyCurl": "Copy cURL",

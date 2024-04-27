@@ -302,7 +302,7 @@ class _DomainListState extends State<DomainList> {
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
           hoverColor: primaryColor.withOpacity(0.3),
-          onSecondaryTapDown: (details) => showMenus(details, index),
+          onSecondaryTapDown: (details) => showMenus(details, index), //right click menus
           onDoubleTap: () => showEdit(index),
           onHover: (hover) {
             if (isPress && selected[index] != true) {
@@ -425,6 +425,10 @@ class _DomainListState extends State<DomainList> {
     });
 
     showContextMenu(context, details.globalPosition, items: [
+      PopupMenuItem(height: 35, child: Text(localizations.copy), onTap: () {
+        Clipboard.setData(ClipboardData(text: widget.hostList.list[index].pattern.replaceAll(".*", "*")));
+        FlutterToastr.show(localizations.copied, context);
+      }),
       PopupMenuItem(height: 35, child: Text(localizations.edit), onTap: () => showEdit(index)),
       PopupMenuItem(height: 35, onTap: () => export([index]), child: Text(localizations.export)),
       const PopupMenuDivider(),

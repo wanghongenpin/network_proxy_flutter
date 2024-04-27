@@ -27,7 +27,7 @@ class ConnectionManager private constructor() : CloseableConnection {
     private val table: ConcurrentMap<String, Connection> = ConcurrentHashMap()
     var proxyAddress: InetSocketAddress? = null
 
-    var DEFAULT_PORTS: List<Int> = listOf(
+    private val DEFAULT_PORTS: List<Int> = listOf(
         80,  // HTTP
         443,  // HTTPS
         8080,  // Common local dev ports
@@ -48,6 +48,8 @@ class ConnectionManager private constructor() : CloseableConnection {
     fun closeConnection(protocol: Protocol, ip: Int, port: Int, srcIp: Int, srcPort: Int) {
         val key = Connection.getConnectionKey(protocol, ip, port, srcIp, srcPort)
         val connection: Connection? = table.remove(key)
+        Log.d(TAG, "close connection $key")
+
         connection?.let {
             val channel = connection.channel
             try {
@@ -94,14 +96,11 @@ class ConnectionManager private constructor() : CloseableConnection {
 
         connection.channel = channel
 
-        val socketAddress: SocketAddress? = null
-//        if (!DEFAULT_PORTS.contains(port)) {
-//            socketAddress = new InetSocketAddress(ips, port);
-//        }
+        var socketAddress: SocketAddress? = null
+        if (DEFAULT_PORTS.contains(port)) {
+            socketAddress = proxyAddress
+        }
 
-        //        if (!DEFAULT_PORTS.contains(port)) {
-//            socketAddress = new InetSocketAddress(ips, port);
-//        }
         connection.isInitConnect = socketAddress != null
 
         if (socketAddress != null) {

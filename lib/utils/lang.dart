@@ -18,6 +18,10 @@ extension DateTimeFormat on DateTime {
     return formatDate(this, [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn, ':', ss]);
   }
 
+  String formatMillisecond() {
+    return formatDate(this, [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn, ':', ss, '.', SSS]);
+  }
+
   String timeFormat() {
     return formatDate(this, [HH, ':', nn, ':', ss]);
   }
