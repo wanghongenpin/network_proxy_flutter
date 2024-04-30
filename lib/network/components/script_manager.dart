@@ -5,6 +5,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter_js/flutter_js.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
+import 'package:network_proxy/ui/component/device.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -49,6 +50,8 @@ async function onResponse(context, request, response) {
 
   static JavascriptRuntime flutterJs = getJavascriptRuntime();
 
+  static String? deviceId;
+
   static final List<LogHandler> _logHandlers = [];
 
   ScriptManager._();
@@ -62,7 +65,8 @@ async function onResponse(context, request, response) {
       // register channel callback
       final channelCallbacks = JavascriptRuntime.channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
       channelCallbacks!["ConsoleLog"] = _instance!.consoleLog;
-      logger.d('init script manager');
+      deviceId = await DeviceUtils.deviceId();
+      logger.d('init script manager $deviceId');
     }
     return _instance!;
   }
@@ -202,11 +206,7 @@ async function onResponse(context, request, response) {
 
   ///脚本上下文
   Map<String, dynamic> scriptContext(ScriptItem item) {
-    return {
-      'scriptName': item.name,
-      'os': Platform.operatingSystem,
-      'session': scriptSession,
-    };
+    return {'scriptName': item.name, 'os': Platform.operatingSystem, 'session': scriptSession, "deviceId": deviceId};
   }
 
   ///运行脚本

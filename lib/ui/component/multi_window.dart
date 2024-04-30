@@ -9,6 +9,7 @@ import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/ui/component/device.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/body.dart';
@@ -174,6 +175,10 @@ void registerMethodHandler() {
     if (call.method == 'registerConsoleLog') {
       ScriptManager.registerConsoleLog(fromWindowId);
       return "done";
+    }
+
+    if (call.method == 'deviceId') {
+      return await DeviceUtils.desktopDeviceId();
     }
 
     return 'done';

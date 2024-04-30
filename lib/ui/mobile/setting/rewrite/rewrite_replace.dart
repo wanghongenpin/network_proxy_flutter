@@ -180,7 +180,7 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
         TextFormField(
             initialValue: rewriteItem.body,
             style: const TextStyle(fontSize: 14),
-            maxLines: 15,
+            maxLines: 25,
             decoration: decoration(localizations.replaceBodyWith,
                 hintText: '${localizations.example} {"code":"200","data":{}}'),
             onChanged: (val) => rewriteItem.body = val)

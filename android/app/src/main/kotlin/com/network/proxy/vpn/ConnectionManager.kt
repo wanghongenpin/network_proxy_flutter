@@ -6,6 +6,7 @@ import com.network.proxy.vpn.socket.CloseableConnection
 import com.network.proxy.vpn.socket.Constant
 import com.network.proxy.vpn.socket.ProtectSocketHolder.Companion.protect
 import com.network.proxy.vpn.util.PacketUtil
+import com.network.proxy.vpn.util.ProcessInfoManager
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.SocketAddress
@@ -107,6 +108,8 @@ class ConnectionManager private constructor() : CloseableConnection {
             val connected = channel.connect(socketAddress)
             connection.isConnected = connected
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                //获取进程信息
+                ProcessInfoManager.instance.setConnectionOwnerUid(connection)
                 Log.d(
                     TAG,
                     "Initiate connecting  " + channel.localAddress + " to remote tcp server: " + channel.remoteAddress
