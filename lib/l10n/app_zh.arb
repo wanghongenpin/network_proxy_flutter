@@ -180,7 +180,7 @@
   "androidRootRename": "模块不生效可以根据网上教程安装系统根证书, 根证书命名成 243f0bfb.0",
   "androidUserCA": "用户证书",
   "androidUserCATips": "提示：Android7+ 很多软件不会信任用户证书",
-  "androidRootCADownload": "下载系统根证书",
+  "androidRootCADownload": "下载系统根证书(.0)",
   "androidUserCAInstall": "打开设置 -> 安全 -> 加密和凭据 -> 安装证书 -> CA 证书",
   "androidUserXposed": "推荐使用Xposed模块抓包(无需ROOT), 点击查看wiki",
   "configWifiProxy": "配置手机Wi-Fi代理",

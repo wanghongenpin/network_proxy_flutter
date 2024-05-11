@@ -177,7 +177,7 @@
   "androidRoot": "System Certificate (ROOT Device)",
   "androidRootMagisk": "Magisk module: \nAndroid ROOT devices can be used Magisk ProxyPinCA System Certificate Module, After installing and restarting the phone Check the system certificate to see if there is a ProxyPinCA certificate. If there is, it indicates that the certificate has been successfully installed。",
   "androidRootRename": "If the module does not take effect, you can install the system root certificate according to the online tutorial, and name the root certificate 243f0bfb.0",
-  "androidRootCADownload": "Download System Certificate",
+  "androidRootCADownload": "Download System Certificate(.0)",
   "androidUserCA": "User Certificate",
   "androidUserCATips": "Tips: Android7+ many apps will not trust user certificates",
   "androidUserCAInstall": "Open settings -> Security -> Encryption and credentials -> Install certificate -> CA certificate",

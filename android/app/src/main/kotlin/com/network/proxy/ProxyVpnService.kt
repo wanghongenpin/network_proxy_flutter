@@ -201,6 +201,9 @@ class ProxyVpnService : VpnService(), ProtectSocket {
         )
 
         return build.apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                setMetered(false)
+            }
 //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 //                setHttpProxy(ProxyInfo.buildDirectProxy(proxyHost, proxyPort))
 //            }

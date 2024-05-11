@@ -11,6 +11,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/device.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
+import 'package:network_proxy/ui/component/js_run.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/ui/desktop/left/request_editor.dart';
@@ -60,6 +61,10 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
   //脚本日志
   if (argument['name'] == 'ScriptConsoleWidget') {
     return ScriptConsoleWidget(windowId: windowId);
+  }
+
+  if (argument['name'] == 'JavaScript') {
+    return const JavaScript();
   }
 
   return const SizedBox();

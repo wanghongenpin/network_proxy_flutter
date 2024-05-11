@@ -53,8 +53,9 @@ class ShareWidget extends StatelessWidget {
                   if (request == null) {
                     return;
                   }
-                  var file = XFile.fromData(utf8.encode(curlRequest(request!)), name: "cURL.txt", mimeType: "txt");
-                  Share.shareXFiles([file], text: localizations.proxyPinSoftware);
+                  var text = curlRequest(request!);
+                  var file = XFile.fromData(utf8.encode(text), name: "cURL.txt", mimeType: "txt");
+                  Share.shareXFiles([file], text: text);
                 }),
             PopupMenuItem(
                 child: Text(localizations.requestEdit),
