@@ -18,6 +18,7 @@ import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/repeat.dart';
 import 'package:network_proxy/utils/curl.dart';
+import 'package:network_proxy/utils/python.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// @author wanghongen
@@ -140,6 +141,10 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         }),
         popupItem(localizations.copyCurl, onTap: () {
           Clipboard.setData(ClipboardData(text: curlRequest(request)))
+              .then((value) => FlutterToastr.show(localizations.copied, context));
+        }),
+        popupItem(localizations.copyAsPythonRequests, onTap: () {
+          Clipboard.setData(ClipboardData(text: copyAsPythonRequests(request)))
               .then((value) => FlutterToastr.show(localizations.copied, context));
         }),
         const PopupMenuDivider(height: 0.3),

@@ -123,6 +123,7 @@
   "copyUrl": "Copy URL",
   "copyRequestResponse": "Copy Request and Response",
   "copyCurl": "Copy cURL",
+  "copyAsPythonRequests": "Copy as Python Requests",
   "delete": "Delete",
   "rename": "Rename",
   "repeat": "Repeat",

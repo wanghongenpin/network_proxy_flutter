@@ -123,6 +123,7 @@
   "copyUrl": "复制URL",
   "copyRequestResponse": "复制请求和响应",
   "copyCurl": "复制 cURL 请求",
+  "copyAsPythonRequests": "复制 Python Requests 请求",
   "delete": "删除",
   "rename": "重命名",
   "repeat": "重放",

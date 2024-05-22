@@ -18,6 +18,7 @@ import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
+import 'package:network_proxy/utils/python.dart';
 import 'package:network_proxy/utils/navigator.dart';
 
 ///请求行
@@ -148,6 +149,8 @@ class RequestRowState extends State<RequestRow> {
           menuItem(localizations.copyUrl, () => widget.request.requestUrl),
           const Divider(thickness: 0.5, height: 5),
           menuItem(localizations.copyCurl, () => curlRequest(widget.request)),
+          const Divider(thickness: 0.5, height: 5),
+          menuItem(localizations.copyAsPythonRequests, () => copyAsPythonRequests(widget.request)),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
               child: SizedBox(width: double.infinity, child: Text(localizations.repeat, textAlign: TextAlign.center)),
