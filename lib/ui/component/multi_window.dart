@@ -167,7 +167,9 @@ void registerMethodHandler() {
     }
 
     if (call.method == 'openFile') {
-      XTypeGroup typeGroup = XTypeGroup(extensions: <String>[call.arguments]);
+      XTypeGroup typeGroup = XTypeGroup(
+          extensions: <String>[call.arguments],
+          uniformTypeIdentifiers: Platform.isMacOS ? const ['public.item'] : null);
       final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
       if (Platform.isWindows) windowManager.blur();
       return file?.path;

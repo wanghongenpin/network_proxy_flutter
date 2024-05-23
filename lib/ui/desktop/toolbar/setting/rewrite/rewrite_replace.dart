@@ -13,11 +13,13 @@ import 'package:network_proxy/utils/lang.dart';
 /// @author wanghongen
 /// 2023/10/8
 class RewriteReplaceDialog extends StatefulWidget {
+  final int? windowId;
   final String subtitle;
   final RuleType ruleType;
   final List<RewriteItem>? items;
 
-  const RewriteReplaceDialog({super.key, required this.subtitle, this.items, required this.ruleType});
+  const RewriteReplaceDialog(
+      {super.key, required this.windowId, required this.subtitle, this.items, required this.ruleType});
 
   @override
   State<RewriteReplaceDialog> createState() => _RewriteReplaceState();
@@ -197,7 +199,7 @@ class _RewriteReplaceState extends State<RewriteReplaceDialog> {
 
   Widget fileBodyEdit(RewriteItem item) {
     //选择文件  删除
-    return Row(children: [
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Expanded(
           child: item.bodyFile == null
               ? Container(height: 50)
@@ -209,7 +211,11 @@ class _RewriteReplaceState extends State<RewriteReplaceDialog> {
       const SizedBox(width: 10),
       FilledButton(
           onPressed: () async {
-            var path = await DesktopMultiWindow.invokeMethod(0, "openFile", '*');
+            var path = await DesktopMultiWindow.invokeMethod(0, "openFile", 'txt');
+            if (widget.windowId != null) {
+              WindowController.fromWindowId(widget.windowId!).show();
+            }
+
             if (path == null) {
               return;
             }

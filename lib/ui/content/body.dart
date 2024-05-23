@@ -203,7 +203,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
       showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (BuildContext context) => RuleAddDialog(rule: rule, items: rewriteItems, newWindow: false))
+              builder: (BuildContext context) =>
+                  RuleAddDialog(rule: rule, items: rewriteItems, windowId: widget.windowController?.windowId))
           .then((value) {
         if (value is RequestRewriteRule) {
           FlutterToastr.show(localizations.saveSuccess, context);
