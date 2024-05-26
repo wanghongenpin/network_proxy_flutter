@@ -20,6 +20,7 @@ import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/repeat.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
+import 'package:network_proxy/utils/python.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// 请求 URI
@@ -122,6 +123,13 @@ class _RequestWidgetState extends State<RequestWidget> {
         label: localizations.copyCurl,
         onClick: (_) {
           Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
+              .then((value) => FlutterToastr.show(localizations.copied, context));
+        },
+      ),
+      MenuItem(
+        label: localizations.copyAsPythonRequests,
+        onClick: (_) {
+          Clipboard.setData(ClipboardData(text: copyAsPythonRequests(widget.request)))
               .then((value) => FlutterToastr.show(localizations.copied, context));
         },
       ),

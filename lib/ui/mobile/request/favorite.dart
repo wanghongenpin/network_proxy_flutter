@@ -15,6 +15,7 @@ import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/mobile/request/repeat.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/curl.dart';
+import 'package:network_proxy/utils/python.dart';
 
 class MobileFavorites extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -122,6 +123,8 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           menuItem(localizations.copyUrl, () => request.requestUrl),
           const Divider(thickness: 0.5, height: 5),
           menuItem(localizations.copyCurl, () => curlRequest(request)),
+          const Divider(thickness: 0.5, height: 5),
+          menuItem(localizations.copyAsPythonRequests, () => copyAsPythonRequests(request)),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
               child: SizedBox(width: double.infinity, child: Text(localizations.rename, textAlign: TextAlign.center)),
