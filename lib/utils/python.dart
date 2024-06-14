@@ -1,6 +1,5 @@
 import 'package:network_proxy/network/http/http.dart';
 
-
 // 复制为 Python Requests 请求
 String copyAsPythonRequests(HttpRequest request) {
   var sb = StringBuffer();
@@ -8,6 +7,7 @@ String copyAsPythonRequests(HttpRequest request) {
 
   String url = request.requestUrl;
   List<String> headers = request.headers.entries
+      .where((entry) => entry.key.toLowerCase() != 'content-length')
       .map((entry) => '${entry.key}: ${entry.value}')
       .toList();
   String method = request.method.name.toLowerCase();

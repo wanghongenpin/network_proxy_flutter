@@ -23,6 +23,7 @@
 		9B2A10C82B4CBE32001C443F /* silience.mov in Resources */ = {isa = PBXBuildFile; fileRef = 9B2A10C72B4CBE32001C443F /* silience.mov */; };
 		9B70772D2A5718FB00F184A9 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B70772C2A5718FB00F184A9 /* AudioManager.swift */; };
 		9B7077362A5728B900F184A9 /* silence.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 9B7077352A5728B900F184A9 /* silence.mp3 */; };
+		9B90F5802C183CDE007D7A81 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9B90F5822C183CDE007D7A81 /* InfoPlist.strings */; };
 		9BC4B8CC2B4B48710047DBDD /* PictureInPictureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BC4B8CB2B4B48710047DBDD /* PictureInPictureManager.swift */; };
 		B375908E625E0AED772FA2C0 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D37E307095F2B3E689A68827 /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
@@ -101,6 +102,10 @@
 		9B2A10C72B4CBE32001C443F /* silience.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = silience.mov; sourceTree = "<group>"; };
 		9B70772C2A5718FB00F184A9 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		9B7077352A5728B900F184A9 /* silence.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = silence.mp3; sourceTree = "<group>"; };
+		9B90F57C2C183C7E007D7A81 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
+		9B90F57D2C183C7E007D7A81 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
+		9B90F5812C183CDE007D7A81 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		9B90F5832C183CE0007D7A81 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		9BC4B8CB2B4B48710047DBDD /* PictureInPictureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureInPictureManager.swift; sourceTree = "<group>"; };
 		D37E307095F2B3E689A68827 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E328C7F89A365CDC0EAD15C6 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -215,6 +220,7 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				9B70772C2A5718FB00F184A9 /* AudioManager.swift */,
+				9B90F5822C183CDE007D7A81 /* InfoPlist.strings */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -332,6 +338,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
@@ -358,6 +365,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9B2A10C82B4CBE32001C443F /* silience.mov in Resources */,
+				9B90F5802C183CDE007D7A81 /* InfoPlist.strings in Resources */,
 				9B7077362A5728B900F184A9 /* silence.mp3 in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
@@ -520,6 +528,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				97C146FB1CF9000F007C117D /* Base */,
+				9B90F57C2C183C7E007D7A81 /* zh-Hans */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -528,8 +537,18 @@
 			isa = PBXVariantGroup;
 			children = (
 				97C147001CF9000F007C117D /* Base */,
+				9B90F57D2C183C7E007D7A81 /* zh-Hans */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		9B90F5822C183CDE007D7A81 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9B90F5812C183CDE007D7A81 /* en */,
+				9B90F5832C183CE0007D7A81 /* zh-Hans */,
+			);
+			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -539,6 +558,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -663,6 +683,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -718,6 +739,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
