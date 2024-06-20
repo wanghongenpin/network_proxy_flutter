@@ -18,7 +18,6 @@ import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
-import 'package:network_proxy/utils/python.dart';
 import 'package:network_proxy/utils/navigator.dart';
 
 ///请求行
@@ -139,6 +138,7 @@ class RequestRowState extends State<RequestRow> {
     setState(() {
       selected = true;
     });
+
     showModalBottomSheet(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
       context: context,
@@ -146,11 +146,9 @@ class RequestRowState extends State<RequestRow> {
       enableDrag: true,
       builder: (ctx) {
         return Wrap(alignment: WrapAlignment.center, children: [
-          menuItem(localizations.copyUrl, () => widget.request.requestUrl),
+          menuCopyItem(localizations.copyUrl, () => widget.request.requestUrl),
           const Divider(thickness: 0.5, height: 5),
-          menuItem(localizations.copyCurl, () => curlRequest(widget.request)),
-          const Divider(thickness: 0.5, height: 5),
-          menuItem(localizations.copyAsPythonRequests, () => copyAsPythonRequests(widget.request)),
+          menuCopyItem(localizations.copyCurl, () => curlRequest(widget.request)),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
               child: SizedBox(width: double.infinity, child: Text(localizations.repeat, textAlign: TextAlign.center)),
@@ -228,7 +226,7 @@ class RequestRowState extends State<RequestRow> {
     }
   }
 
-  Widget menuItem(String title, String Function() callback) {
+  Widget menuCopyItem(String title, String Function() callback) {
     return TextButton(
         child: SizedBox(width: double.infinity, child: Text(title, textAlign: TextAlign.center)),
         onPressed: () {

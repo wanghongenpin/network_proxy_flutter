@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,7 +19,11 @@ class MobileCustomRepeat extends StatefulWidget {
 class _CustomRepeatState extends State<MobileCustomRepeat> {
   TextEditingController count = TextEditingController(text: '1');
   TextEditingController interval = TextEditingController(text: '0');
+  TextEditingController minInterval = TextEditingController(text: '0');
+  TextEditingController maxInterval = TextEditingController(text: '1000');
   TextEditingController delay = TextEditingController(text: '0');
+
+  bool fixed = true;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
@@ -44,8 +49,7 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
                 if (!formKey.currentState!.validate()) {
                   return;
                 }
-                Future.delayed(Duration(milliseconds: int.parse(delay.text)),
-                    () => submitTask(int.parse(count.text), int.parse(interval.text)));
+                Future.delayed(Duration(milliseconds: int.parse(delay.text)), () => submitTask(int.parse(count.text)));
                 Navigator.of(context).pop();
               },
             )
@@ -55,11 +59,11 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
             padding: const EdgeInsets.all(15),
             child: Form(
               key: formKey,
-              child: ListBody(
+              child: Column(
                 children: <Widget>[
                   field(localizations.repeatCount, count), //次数
                   const SizedBox(height: 6),
-                  field(localizations.repeatInterval, interval), //间隔
+                  intervalWidget(), //间隔
                   const SizedBox(height: 6),
                   field(localizations.repeatDelay, delay), //延时
                 ],
@@ -68,38 +72,104 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
   }
 
   //定时重放
-  submitTask(int counter, var interval) {
+  submitTask(int counter) {
     if (counter <= 0) {
       return;
     }
-    Future.delayed(Duration(milliseconds: interval), () {
-      widget.onRepeat.call();
+    widget.onRepeat.call();
+
+    int intervalValue = int.parse(interval.text);
+    //随机
+    if (!fixed) {
+      int min = int.parse(minInterval.text);
+      int max = int.parse(maxInterval.text);
+      intervalValue = Random().nextInt(max - min) + min;
+    }
+
+    Future.delayed(Duration(milliseconds: intervalValue), () {
       if (counter - 1 > 0) {
-        submitTask(counter - 1, interval);
+        submitTask(counter - 1);
       }
     });
   }
 
-  Widget field(String label, TextEditingController controller) {
-    Color color = Theme.of(context).colorScheme.primary;
+  //间隔widget
+  Widget intervalWidget() {
+    return Row(
+      children: [
+        SizedBox(width: 83, child: Text(localizations.repeatInterval)),
+        Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          //Checkbox样式 固定和随机
+          Row(children: [
+            SizedBox(
+                width: 112,
+                height: 35,
+                child: Transform.scale(
+                    scale: 0.82,
+                    child: CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text("${localizations.fixed}:"),
+                        value: fixed,
+                        dense: true,
+                        onChanged: (val) {
+                          setState(() {
+                            fixed = true;
+                          });
+                        }))),
+            Expanded(child: textField(interval, style: const TextStyle(fontSize: 13))),
+          ]),
+          const SizedBox(height: 5),
+          Row(children: [
+            SizedBox(
+                width: 112,
+                child: Transform.scale(
+                    scale: 0.82,
+                    child: CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text("${localizations.random}:"),
+                        value: !fixed,
+                        dense: true,
+                        onChanged: (val) {
+                          setState(() {
+                            fixed = false;
+                          });
+                        }))),
+            Flexible(child: textField(minInterval, style: const TextStyle(fontSize: 13))),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 5), child: Text("-")),
+            Flexible(child: textField(maxInterval, style: const TextStyle(fontSize: 13))),
+          ]),
+        ])),
+      ],
+    );
+  }
 
+  Widget field(String label, TextEditingController controller) {
     return Row(
       children: [
         SizedBox(width: 95, child: Text("$label :")),
         Expanded(
-          child: TextFormField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-                contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
-                border: OutlineInputBorder(borderSide: BorderSide(width: 1, color: color.withOpacity(0.3))),
-                enabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.5, color: color.withOpacity(0.5))),
-                focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 2, color: color))),
-            validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
-          ),
+          child: textField(controller),
         ),
       ],
+    );
+  }
+
+  FormField textField(TextEditingController? controller, {TextStyle? style}) {
+    Color color = Theme.of(context).colorScheme.primary;
+
+    return TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      style: style,
+      decoration: InputDecoration(
+          errorStyle: const TextStyle(height: 2, fontSize: 0),
+          contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
+          border: OutlineInputBorder(borderSide: BorderSide(width: 1, color: color.withOpacity(0.3))),
+          enabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.5, color: color.withOpacity(0.5))),
+          focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 2, color: color))),
+      validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
     );
   }
 }

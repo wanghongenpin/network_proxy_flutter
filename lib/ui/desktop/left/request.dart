@@ -113,23 +113,33 @@ class _RequestWidgetState extends State<RequestWidget> {
         },
       ),
       MenuItem(
-        label: localizations.copyRequestResponse,
-        onClick: (_) {
-          Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))
-              .then((value) => FlutterToastr.show(localizations.copied, context));
-        },
-      ),
-      MenuItem(
-        label: localizations.copyCurl,
+        label: localizations.copy,
+        type: 'submenu',
+        submenu: Menu(items: [
+          MenuItem(
+            label: localizations.copyCurl,
+            onClick: (_) {
+              Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
+                  .then((value) => FlutterToastr.show(localizations.copied, context));
+            },
+          ),
+          MenuItem(
+            label: localizations.copyRequestResponse,
+            onClick: (_) {
+              Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))
+                  .then((value) => FlutterToastr.show(localizations.copied, context));
+            },
+          ),
+          MenuItem(
+            label: localizations.copyAsPythonRequests,
+            onClick: (_) {
+              Clipboard.setData(ClipboardData(text: copyAsPythonRequests(widget.request)))
+                  .then((value) => FlutterToastr.show(localizations.copied, context));
+            },
+          ),
+        ]),
         onClick: (_) {
           Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
-              .then((value) => FlutterToastr.show(localizations.copied, context));
-        },
-      ),
-      MenuItem(
-        label: localizations.copyAsPythonRequests,
-        onClick: (_) {
-          Clipboard.setData(ClipboardData(text: copyAsPythonRequests(widget.request)))
               .then((value) => FlutterToastr.show(localizations.copied, context));
         },
       ),

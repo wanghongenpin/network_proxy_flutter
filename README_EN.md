@@ -16,7 +16,7 @@ and easy to use.
 **Mac will prompt untrusted developers when first opened, you need to go to System Preferences-Security & Privacy-Allow any source.**
 Download： https://github.com/wanghongenpin/network_proxy_flutter/releases
 
-iOS TestFlight Download APP(Limited by quota)： https://testflight.apple.com/join/gURGH6B4
+iOS App Store：https://apps.apple.com/app/proxypin/id6450932949
 
 TG: https://t.me/proxypin_en
 

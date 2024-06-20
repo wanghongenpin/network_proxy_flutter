@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/util/logger.dart';
-import 'package:network_proxy/utils/lang.dart';
 
 ///编码类型
 enum EncoderType {
@@ -125,6 +124,7 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
             const SizedBox(height: 5),
             TextFormField(
               controller: outputTextController,
+              readOnly: true,
               minLines: 5,
               maxLines: 10,
               decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -186,6 +186,6 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
       logger.e("$e", error: e, stackTrace: t);
       FlutterToastr.show(localizations.decodeFail, context);
     }
-    outputTextController.text = result.fixAutoLines();
+    outputTextController.text = result;
   }
 }
