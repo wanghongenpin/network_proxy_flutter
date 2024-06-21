@@ -8,7 +8,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import java.io.ByteArrayOutputStream
 
-class AppInfo(name: CharSequence, packageName: String, icon: ByteArray?, versionName: String?) :
+class ProcessInfo(name: CharSequence, packageName: String, icon: ByteArray?, versionName: String?) :
     HashMap<String, Any?>() {
     init {
         put("name", name)
@@ -22,7 +22,7 @@ class AppInfo(name: CharSequence, packageName: String, icon: ByteArray?, version
             packageManager: PackageManager,
             app: ApplicationInfo,
             withIcon: Boolean = true
-        ): AppInfo {
+        ): ProcessInfo {
             val name = packageManager.getApplicationLabel(app)
             val packageName = app.packageName
             val icon =
@@ -31,7 +31,7 @@ class AppInfo(name: CharSequence, packageName: String, icon: ByteArray?, version
             // 部分应用可能没有设置versionName，将导致获取列表操作失败
             val versionName = packageInfo.versionName ?: ""
 
-            return AppInfo(name, packageName, icon, versionName)
+            return ProcessInfo(name, packageName, icon, versionName)
         }
 
         private fun drawableToByteArray(drawable: Drawable): ByteArray {

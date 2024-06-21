@@ -16,7 +16,6 @@ import com.network.proxy.vpn.util.PacketUtil.getOutput
 import com.network.proxy.vpn.util.PacketUtil.intToIPAddress
 import com.network.proxy.vpn.util.PacketUtil.isPacketCorrupted
 import com.network.proxy.vpn.util.ProcessInfoManager
-import com.network.proxy.vpn.util.TLS.getDomain
 import com.network.proxy.vpn.util.TLS.isTLSClientHello
 import java.io.IOException
 import java.net.InetAddress
@@ -179,29 +178,8 @@ class ConnectionHandler(
 
                 //any data from client?
                 if (dataLength > 0) {
-                    if (!connection.isInitConnect) {
-                        connection.isInitConnect = true
-                        val proxyAddress =
-                            getProxyAddress(clientPacketData, destinationIP, destinationPort)
-                        try {
-                            val channel = connection.channel as SocketChannel?
-                            val connected = channel!!.connect(proxyAddress)
-                            connection.isConnected = connected
-                            nioService.registerSession(connection)
-
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && proxyAddress == manager.proxyAddress) {
-                                //获取进程信息
-                                ProcessInfoManager.instance.setConnectionOwnerUid(connection)
-                                Log.d(
-                                    TAG,
-                                    "Proxy Initiate connecting key:" + key + " " + channel.localAddress + " to remote tcp server: " + channel.remoteAddress
-                                )
-                            }
-                        } catch (e: Exception) {
-                            val ips = intToIPAddress(destinationIP)
-                            Log.w(TAG, "Failed to reconnect to $ips:$destinationPort", e)
-                        }
-                    }
+                    //init proxy
+                    initProxyConnect(clientPacketData, destinationIP, destinationPort, connection)
 
                     //accumulate data from client
                     if (connection.recSequence == 0L || tcpHeader.sequenceNumber >= connection.recSequence) {
@@ -266,6 +244,37 @@ class ConnectionHandler(
             Log.d(TAG, ">>>>>>>> Received from client <<<<<<<<<<")
             Log.d(TAG, str1)
             Log.d(TAG, ">>>>>>>>>>>>>>>>>>>end receiving from client>>>>>>>>>>>>>>>>>>>>>")
+        }
+    }
+
+    private fun initProxyConnect(
+        clientPacketData: ByteBuffer, destinationIP: Int, destinationPort: Int,
+        connection: Connection
+    ) {
+        if (connection.isInitConnect) {
+            return
+        }
+
+        connection.isInitConnect = true
+        val proxyAddress =
+            getProxyAddress(clientPacketData, destinationIP, destinationPort)
+        try {
+            val channel = connection.channel as SocketChannel?
+            val connected = channel!!.connect(proxyAddress)
+            connection.isConnected = connected
+            nioService.registerSession(connection)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && proxyAddress == manager.proxyAddress) {
+                //获取进程信息
+                ProcessInfoManager.instance.setConnectionOwnerUid(connection)
+                Log.d(
+                    TAG,
+                    "Proxy Initiate connecting key:" + connection.toString() + " " + channel.localAddress + " to remote tcp server: " + channel.remoteAddress
+                )
+            }
+        } catch (e: Exception) {
+            val ips = intToIPAddress(destinationIP)
+            Log.w(TAG, "Failed to reconnect to $ips:$destinationPort", e)
         }
     }
 

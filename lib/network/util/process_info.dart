@@ -23,7 +23,7 @@ class ProcessInfoUtils {
     if (Platform.isAndroid) {
       var app = await ProcessInfoPlugin.getProcessByPort(socketAddress.host, socketAddress.port);
       if (app != null) {
-        return ProcessInfo(app.packageName ?? '', app.name ?? '', app.name ?? '', icon: app.icon);
+        return app;
       }
       if (socketAddress.host == '127.0.0.1') return ProcessInfo('com.network.proxy', "ProxyPin", '');
       return null;
@@ -116,8 +116,10 @@ class ProcessInfo {
   final String path;
 
   Uint8List? icon;
+  String? remoteHost;
+  int? remotePost;
 
-  ProcessInfo(this.id, this.name, this.path, {this.icon});
+  ProcessInfo(this.id, this.name, this.path, {this.icon, this.remoteHost, this.remotePost});
 
   factory ProcessInfo.fromJson(Map<String, dynamic> json) {
     return ProcessInfo(json['id'], json['name'], json['path']);

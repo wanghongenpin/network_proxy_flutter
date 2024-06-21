@@ -41,17 +41,17 @@ class InstalledAppsPlugin : AndroidFlutterPlugin() {
         }
     }
 
-    private fun getAppInfo(packageName: String): AppInfo {
+    private fun getAppInfo(packageName: String): ProcessInfo {
         val packageManager = activity.packageManager
         packageManager.getApplicationInfo(packageName, 0).let { app ->
-            return AppInfo.create(packageManager, app, true)
+            return ProcessInfo.create(packageManager, app, true)
         }
     }
 
     private fun getInstalledApps(
         withIcon: Boolean,
         packageNamePrefix: String
-    ): List<AppInfo> {
+    ): List<ProcessInfo> {
         val packageManager = activity.packageManager
         var installedApps = packageManager.getInstalledApplications(0)
         installedApps =
@@ -70,8 +70,8 @@ class InstalledAppsPlugin : AndroidFlutterPlugin() {
 
         val threadPoolExecutor = Executors.newFixedThreadPool(6)
         installedApps.map { app ->
-            val task: Callable<AppInfo> = Callable {
-                AppInfo.create(packageManager, app, withIcon)
+            val task: Callable<ProcessInfo> = Callable {
+                ProcessInfo.create(packageManager, app, withIcon)
             }
             threadPoolExecutor.submit(task)
         }.map { future ->

@@ -132,17 +132,25 @@ class Server extends Network {
   void ssl(ChannelContext channelContext, Channel channel, Uint8List data) async {
     var hostAndPort = channelContext.host;
     try {
-      if (hostAndPort == null && TLS.getDomain(data) != null) {
-        hostAndPort = HostAndPort.host(TLS.getDomain(data)!, 443);
+      if (hostAndPort == null) {
+        var domain = TLS.getDomain(data);
+        var port = 443;
+        if (domain == null) {
+          var process = await ProcessInfoUtils.getProcessByPort(
+              channel.remoteSocketAddress, channel.remoteSocketAddress.toString());
+          domain = process?.remoteHost;
+          port = process?.remotePost ?? port;
+        }
+        hostAndPort = HostAndPort.host(domain!, port);
       }
 
-      hostAndPort?.scheme = HostAndPort.httpsScheme;
-      channelContext.putAttribute(AttributeKeys.domain, hostAndPort?.host);
+      hostAndPort.scheme = HostAndPort.httpsScheme;
+      channelContext.putAttribute(AttributeKeys.domain, hostAndPort.host);
 
       Channel? remoteChannel = channelContext.serverChannel;
 
-      if (HostFilter.filter(hostAndPort?.host) || !configuration.enableSsl) {
-        remoteChannel = remoteChannel ?? await channelContext.connectServerChannel(hostAndPort!, RelayHandler(channel));
+      if (HostFilter.filter(hostAndPort.host) || !configuration.enableSsl) {
+        remoteChannel = remoteChannel ?? await channelContext.connectServerChannel(hostAndPort, RelayHandler(channel));
         relay(channel, remoteChannel);
         channel.pipeline.channelRead(channelContext, channel, data);
         return;
@@ -151,12 +159,12 @@ class Server extends Network {
       if (remoteChannel != null && !remoteChannel.isSsl) {
         var supportProtocols = configuration.enabledHttp2 ? TLS.supportProtocols(data) : null;
         var secureSocket = await SecureSocket.secure(remoteChannel.socket,
-            supportedProtocols: supportProtocols, host: hostAndPort?.host, onBadCertificate: (certificate) => true);
+            supportedProtocols: supportProtocols, host: hostAndPort.host, onBadCertificate: (certificate) => true);
         remoteChannel.secureSocket(secureSocket, channelContext);
       }
 
       //ssl自签证书
-      var certificate = await CertificateManager.getCertificateContext(hostAndPort!.host);
+      var certificate = await CertificateManager.getCertificateContext(hostAndPort.host);
       var selectedProtocol = remoteChannel?.selectedProtocol;
       if (selectedProtocol != null) certificate.setAlpnProtocols([selectedProtocol], true);
 
