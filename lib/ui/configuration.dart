@@ -26,7 +26,7 @@ class AppConfiguration {
   Locale? _language;
 
   //是否显示更新内容公告
-  bool upgradeNoticeV9 = true;
+  bool upgradeNoticeV10 = true;
 
   /// 是否启用画中画
   ValueNotifier<bool> pipEnabled = ValueNotifier(true);
@@ -117,7 +117,7 @@ class AppConfiguration {
       var mode =
           ThemeMode.values.firstWhere((element) => element.name == config['mode'], orElse: () => ThemeMode.system);
       _theme = ThemeModel(mode: mode, useMaterial3: config['useMaterial3'] ?? true);
-      upgradeNoticeV9 = config['upgradeNoticeV9'] ?? true;
+      upgradeNoticeV10 = config['upgradeNoticeV10'] ?? true;
       _language = config['language'] == null ? null : Locale.fromSubtags(languageCode: config['language']);
       pipEnabled.value = config['pipEnabled'] ?? true;
       pipIcon.value = config['pipIcon'] ?? false;
@@ -144,7 +144,7 @@ class AppConfiguration {
     return {
       'mode': _theme.mode.name,
       'useMaterial3': _theme.useMaterial3,
-      'upgradeNoticeV9': upgradeNoticeV9,
+      'upgradeNoticeV10': upgradeNoticeV10,
       "language": _language?.languageCode,
       'pipEnabled': pipEnabled.value,
       'pipIcon': pipIcon.value ? true : null,

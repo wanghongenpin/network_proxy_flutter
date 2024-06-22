@@ -225,7 +225,7 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
     message = widget.message;
     body = widget.message?.bodyAsString;
     if (widget.message?.headers == null && !widget.readOnly) {
-      initHeader["User-Agent"] = ["ProxyPin/1.0.9"];
+      initHeader["User-Agent"] = ["ProxyPin/1.1.0"];
       initHeader["Accept"] = ["*/*"];
       return;
     }

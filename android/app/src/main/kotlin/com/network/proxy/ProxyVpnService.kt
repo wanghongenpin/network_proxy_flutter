@@ -109,7 +109,7 @@ class ProxyVpnService : VpnService(), ProtectSocket {
         allowPackages: ArrayList<String>?,
         disallowPackages: ArrayList<String>?
     ) {
-        Log.i("ProxyVpnService", "startVpn $host:$port $allowApps")
+        Log.i("ProxyVpnService", "startVpn $proxyHost:$proxyPort $allowPackages")
 
         host = proxyHost
         port = proxyPort

@@ -54,6 +54,18 @@ class HttpClients {
       return channel;
     }
 
+    await connectRequest(hostAndPort, channel);
+
+    if (hostAndPort.isSsl()) {
+      await channel.secureSocket(channelContext);
+    }
+
+    return channel;
+  }
+
+  ///发起代理连接请求
+  static Future<Channel> connectRequest(HostAndPort hostAndPort, Channel channel) async {
+    ChannelHandler handler = channel.pipeline.handler;
     //代理 发送connect请求
     var httpResponseHandler = HttpResponseHandler();
     channel.pipeline.handler = httpResponseHandler;
@@ -62,14 +74,13 @@ class HttpClients {
     proxyRequest.headers.set(HttpHeaders.hostHeader, '${hostAndPort.host}:${hostAndPort.port}');
 
     await channel.write(proxyRequest);
-    var response = await httpResponseHandler.getResponse(const Duration(seconds: 3));
+    var response = await httpResponseHandler.getResponse(const Duration(seconds: 5));
 
     channel.pipeline.handler = handler;
 
     if (!response.status.isSuccessful()) {
-      final error = "$hostAndPort Proxy failed to establish tunnel "
-          "(${response.status.code} ${response..status.reasonPhrase})";
-      throw Exception(error);
+      throw Exception("$hostAndPort Proxy failed to establish tunnel "
+          "(${response.status.code} ${response..status.reasonPhrase})");
     }
 
     return channel;
@@ -120,12 +131,8 @@ class HttpClients {
     ChannelContext channelContext = ChannelContext();
     var httpResponseHandler = HttpResponseHandler();
     HostAndPort hostPort = HostAndPort.of(request.uri);
-    Channel channel = await proxyConnect(proxyInfo: proxyInfo, hostPort, httpResponseHandler, channelContext);
 
-    if (hostPort.isSsl()) {
-      var secureSocket = await SecureSocket.secure(channel.socket, onBadCertificate: (certificate) => true);
-      channel.secureSocket(secureSocket, channelContext);
-    }
+    Channel channel = await proxyConnect(proxyInfo: proxyInfo, hostPort, httpResponseHandler, channelContext);
 
     await channel.write(request);
     return httpResponseHandler.getResponse(timeout).whenComplete(() => channel.close());

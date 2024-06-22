@@ -88,8 +88,8 @@ class RequestRowState extends State<RequestRow> {
         subtitle: Text.rich(
             maxLines: 1,
             TextSpan(children: [
-              TextSpan(text: '#${widget.index} ', style: const TextStyle(fontSize: 12, color: Colors.teal)),
-              TextSpan(text: subTitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              TextSpan(text: '#${widget.index} ', style: const TextStyle(fontSize: 11, color: Colors.teal)),
+              TextSpan(text: subTitle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
             ])),
         trailing: getIcon(response),
         contentPadding:

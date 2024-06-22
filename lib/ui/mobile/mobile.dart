@@ -131,7 +131,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
       }
     });
 
-    if (widget.appConfiguration.upgradeNoticeV9) {
+    if (widget.appConfiguration.upgradeNoticeV10) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -219,22 +219,24 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-            '1. 展示请求发起的应用图标；\n'
-            '2. 关键词匹配高亮；\n'
-            '3. 脚本批量操作和导入导出；\n'
-            '4. 脚本支持日志查看，通过console.log()输出；\n'
-            '5. 设置增加自动开启抓包；\n'
-            '6. Android证书下载优化；'
+            '1. 更改应用程序图标；\n'
+            '2. 工具箱Javascript代码运行调试；\n'
+            '3. 支持生成python requests代码；\n'
+            '4. 修复mac重写不能选择文件；\n'
+            '5. 高级重放请求支持随机间隔；\n'
+            '6. 修复配置外部代理互相转发问题；\n'
+            '7. 修复ssl握手包域名为空的导致请求失败问题；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
-            '1. Display the application icon initiated by the request；\n'
-            '2. Keyword matching highlights;\n'
-            '3. Script batch operations and import/export;\n'
-            '4. The script supports log viewing, output through console.log()；\n'
-            '5. Setting Auto Start Recording Traffic；\n'
-            '6. Android certificate download optimization; \n';
-    showAlertDialog(isCN ? '更新内容V1.0.9' : "Update content V1.0.9", content, () {
-      widget.appConfiguration.upgradeNoticeV9 = false;
+            '1. Change app icon；\n'
+            '2. Toolbox add javascript code run；\n'
+            '3. Support generating Python request code；\n'
+            '4. Fix Mac rewrite unable to select files;\n'
+            '5. Custom repeat request support random interval；\n'
+            '6. Fix external proxy to forward to each other issue；\n'
+            '7. fix tls client hello data server_name is null bug';
+    showAlertDialog(isCN ? '更新内容V1.1.0' : "Update content V1.1.0", content, () {
+      widget.appConfiguration.upgradeNoticeV10 = false;
       widget.appConfiguration.flushConfig();
     });
   }

@@ -7,11 +7,11 @@ class Vpn {
   static bool isVpnStarted = false; //vpn是否已经启动
 
   static startVpn(String host, int port, Configuration configuration) {
-    List<String>? appList = configuration.appWhitelistEnabled ? configuration.appWhitelist : null;
+    List<String>? appList = configuration.appWhitelistEnabled ? configuration.appWhitelist : [];
 
     List<String>? disallowApps;
-    if (appList == null || appList.isEmpty) {
-      disallowApps = configuration.appBlacklist;
+    if (appList.isEmpty) {
+      disallowApps = configuration.appBlacklist ?? [];
     }
 
     proxyVpnChannel.invokeMethod(
@@ -26,11 +26,11 @@ class Vpn {
 
   //重启vpn
   static restartVpn(String host, int port, Configuration configuration) {
-    List<String>? appList = configuration.appWhitelistEnabled ? configuration.appWhitelist : null;
+    List<String>? appList = configuration.appWhitelistEnabled ? configuration.appWhitelist : [];
 
     List<String>? disallowApps;
-    if (appList == null || appList.isEmpty) {
-      disallowApps = configuration.appBlacklist;
+    if (appList.isEmpty) {
+      disallowApps = configuration.appBlacklist ?? [];
     }
     proxyVpnChannel.invokeMethod(
         "restartVpn", {"proxyHost": host, "proxyPort": port, "allowApps": appList, "disallowApps": disallowApps});

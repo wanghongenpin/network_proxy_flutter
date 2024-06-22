@@ -15,7 +15,6 @@
  */
 
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:network_proxy/network/components/host_filter.dart';
@@ -52,6 +51,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
   @override
   void channelRead(ChannelContext channelContext, Channel channel, HttpRequest msg) async {
+
     //下载证书
     if (msg.uri == 'http://proxy.pin/ssl' || msg.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
       ProxyHelper.crtDownload(channel, msg);
@@ -64,9 +64,13 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     }
 
     //代理转发请求
-    forward(channelContext, channel, msg).catchError((error, trace) {
+    try {
+      forward(channelContext, channel, msg).catchError((error, trace) {
+        exceptionCaught(channelContext, channel, error, trace: trace);
+      });
+    } catch (error, trace) {
       exceptionCaught(channelContext, channel, error, trace: trace);
-    });
+    }
   }
 
   @override
@@ -95,11 +99,14 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     try {
       remoteChannel = await _getRemoteChannel(channelContext, channel, httpRequest);
     } catch (error) {
-      channel.error = error; //记录异常
-      //https代理新建连接请求
+      log.e("[${channel.id}] 连接异常 ${httpRequest.method.name} ${httpRequest.requestUrl}", error: error);
       if (httpRequest.method == HttpMethod.connect) {
+        channel.error = error; //记录异常
+        //https代理新建connect连接请求 返回ok 会继续发起正常请求 可以获取到请求内容
         await channel.write(
             HttpResponse(HttpStatus.ok.reason('Connection established'), protocolVersion: httpRequest.protocolVersion));
+      } else {
+        rethrow;
       }
       return;
     }
@@ -176,17 +183,28 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     HostAndPort? remote = channelContext.getAttribute(AttributeKeys.remote);
     //外部代理
     ProxyInfo? proxyInfo = channelContext.getAttribute(AttributeKeys.proxyInfo);
-
     if (remote != null || proxyInfo != null) {
       HostAndPort connectHost = remote ?? HostAndPort.host(proxyInfo!.host, proxyInfo.port!);
-      var proxyChannel = await connectRemote(channelContext, clientChannel, connectHost);
+      final proxyChannel = await connectRemote(channelContext, clientChannel, connectHost);
+
+      //代理建立完连接判断是否是https 需要发起connect请求
       if (httpRequest.method == HttpMethod.connect) {
-        proxyChannel.write(httpRequest);
+        await proxyChannel.write(httpRequest);
+      } else {
+        await HttpClients.connectRequest(hostAndPort, proxyChannel);
+        if (clientChannel.isSsl) {
+          await proxyChannel.secureSocket(channelContext, host: hostAndPort.host);
+        }
       }
+
       return proxyChannel;
     }
 
-    var proxyChannel = await connectRemote(channelContext, clientChannel, hostAndPort);
+    final proxyChannel = await connectRemote(channelContext, clientChannel, hostAndPort);
+    if (clientChannel.isSsl) {
+      await proxyChannel.secureSocket(channelContext, host: hostAndPort.host);
+    }
+
     //https代理新建连接请求
     if (httpRequest.method == HttpMethod.connect) {
       await clientChannel.write(
@@ -199,12 +217,6 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   Future<Channel> connectRemote(ChannelContext channelContext, Channel clientChannel, HostAndPort connectHost) async {
     var proxyHandler = HttpResponseProxyHandler(clientChannel, listener: listener, requestRewrites: requestRewrites);
     var proxyChannel = await channelContext.connectServerChannel(connectHost, proxyHandler);
-
-    if (clientChannel.isSsl) {
-      SecureSocket secureSocket = await SecureSocket.secure(proxyChannel.socket,
-          host: connectHost.host, onBadCertificate: (certificate) => true);
-      proxyChannel.secureSocket(secureSocket, channelContext);
-    }
     return proxyChannel;
   }
 }
@@ -222,6 +234,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   @override
   void channelRead(ChannelContext channelContext, Channel channel, HttpResponse msg) async {
     var request = channelContext.currentRequest;
+    request?.response = msg;
 
     //域名是否过滤
     if (HostFilter.filter(request?.hostAndPort?.host) || request?.method == HttpMethod.connect) {

@@ -85,6 +85,7 @@ class _AppWhitelistState extends State<AppWhitelist> {
               title: localizations.enable,
               subtitle: localizations.appWhitelistDescribe,
               onChanged: (val) {
+                changed = true;
                 configuration.appWhitelistEnabled = val;
                 configuration.flushConfig();
               }),

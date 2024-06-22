@@ -118,9 +118,6 @@ class Server extends Network {
 
     //ssl握手
     if (hostAndPort?.isSsl() == true || TLS.isTLSClientHello(data)) {
-      if (hostAndPort?.scheme == HostAndPort.httpScheme) {
-        hostAndPort?.scheme = HostAndPort.httpsScheme;
-      }
       ssl(channelContext, channel, data);
       return;
     }
@@ -158,9 +155,7 @@ class Server extends Network {
 
       if (remoteChannel != null && !remoteChannel.isSsl) {
         var supportProtocols = configuration.enabledHttp2 ? TLS.supportProtocols(data) : null;
-        var secureSocket = await SecureSocket.secure(remoteChannel.socket,
-            supportedProtocols: supportProtocols, host: hostAndPort.host, onBadCertificate: (certificate) => true);
-        remoteChannel.secureSocket(secureSocket, channelContext);
+        await remoteChannel.secureSocket(channelContext, host: hostAndPort.host, supportedProtocols: supportProtocols);
       }
 
       //ssl自签证书
@@ -168,9 +163,9 @@ class Server extends Network {
       var selectedProtocol = remoteChannel?.selectedProtocol;
       if (selectedProtocol != null) certificate.setAlpnProtocols([selectedProtocol], true);
 
-      //服务端等待客户端ssl握手
+      //处理客户端ssl握手
       var secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
-      channel.secureSocket(secureSocket, channelContext);
+      channel.serverSecureSocket(secureSocket, channelContext);
     } catch (error, trace) {
       try {
         channelContext.processInfo =

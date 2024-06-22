@@ -81,7 +81,19 @@ class Channel {
 
   Socket get socket => _socket;
 
-  secureSocket(SecureSocket secureSocket, ChannelContext channelContext) {
+  Future<SecureSocket> secureSocket(ChannelContext channelContext,
+      {String? host, List<String>? supportedProtocols}) async {
+    SecureSocket secureSocket = await SecureSocket.secure(socket,
+        host: host, supportedProtocols: supportedProtocols, onBadCertificate: (certificate) => true);
+
+    _socket = secureSocket;
+    _socket.done.then((value) => isOpen = false);
+    pipeline.listen(this, channelContext);
+
+    return secureSocket;
+  }
+
+  serverSecureSocket(SecureSocket secureSocket, ChannelContext channelContext) {
     _socket = secureSocket;
     _socket.done.then((value) => isOpen = false);
     pipeline.listen(this, channelContext);
@@ -275,9 +287,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
     Channel? remoteChannel =
         channelContext.serverChannel ?? await channelContext.connectServerChannel(remote, RelayHandler(clientChannel));
     if (clientChannel.isSsl && !remoteChannel.isSsl) {
-      SecureSocket secureSocket = await SecureSocket.secure(remoteChannel.socket,
-          host: channelContext.getAttribute(AttributeKeys.domain), onBadCertificate: (certificate) => true);
-      remoteChannel.secureSocket(secureSocket, channelContext);
+      await remoteChannel.secureSocket(channelContext, host: channelContext.getAttribute(AttributeKeys.domain));
     }
 
     relay(clientChannel, remoteChannel);
@@ -348,7 +358,6 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
         data.packageSize = length;
         data.remoteAddress = '${channel.remoteSocketAddress.host}:${channel.remoteSocketAddress.port}';
         data.request ??= channelContext.currentRequest;
-        channelContext.currentRequest?.response = data;
       }
 
       //websocket协议
