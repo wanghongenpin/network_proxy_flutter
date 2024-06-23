@@ -8,6 +8,7 @@ import 'package:network_proxy/ui/component/chinese_font.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/desktop/desktop.dart';
+import 'package:network_proxy/ui/desktop/window_listener.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/utils/navigator.dart';
 import 'package:network_proxy/utils/platform.dart';
@@ -34,20 +35,26 @@ void main(List<String> args) async {
   }
 
   await windowManager.ensureInitialized();
+  var appConfiguration = await instance;
+
   //设置窗口大小
+  Size windowSize = appConfiguration.windowSize ?? (Platform.isMacOS ? const Size(1230, 750) : const Size(1100, 650));
   WindowOptions windowOptions = WindowOptions(
       minimumSize: const Size(1000, 600),
-      size: Platform.isMacOS ? const Size(1230, 750) : const Size(1100, 650),
+      size: windowSize,
       center: true,
       titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
-
   windowManager.waitUntilReadyToShow(windowOptions, () async {
+    if (appConfiguration.windowPosition != null) {
+      await windowManager.setPosition(appConfiguration.windowPosition!);
+    }
     await windowManager.show();
     await windowManager.focus();
   });
 
-  var appConfiguration = await instance;
   registerMethodHandler();
+  windowManager.addListener(WindowChangeListener(appConfiguration));
+
   runApp(FluentApp(DesktopHomePage(await configuration, appConfiguration), appConfiguration));
 }
 

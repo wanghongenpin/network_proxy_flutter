@@ -220,21 +220,23 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
             '1. 更改应用程序图标；\n'
-            '2. 工具箱Javascript代码运行调试；\n'
-            '3. 支持生成python requests代码；\n'
-            '4. 修复mac重写不能选择文件；\n'
-            '5. 高级重放请求支持随机间隔；\n'
-            '6. 修复配置外部代理互相转发问题；\n'
-            '7. 修复ssl握手包域名为空的导致请求失败问题；\n'
+            '2. 桌面端记录调整窗口大小和位置；\n'
+            '3. 工具箱Javascript代码运行调试；\n'
+            '4. 支持生成python requests代码；\n'
+            '5. 修复mac重写不能选择文件；\n'
+            '6. 高级重放请求支持随机间隔；\n'
+            '7. 修复配置外部代理互相转发问题；\n'
+            '8. 修复ssl握手包域名为空的导致请求失败问题；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
             '1. Change app icon；\n'
-            '2. Toolbox add javascript code run；\n'
-            '3. Support generating Python request code；\n'
-            '4. Fix Mac rewrite unable to select files;\n'
-            '5. Custom repeat request support random interval；\n'
-            '6. Fix external proxy to forward to each other issue；\n'
-            '7. fix tls client hello data server_name is null bug';
+            '2. Desktop record adjustment of window size and position；\n'
+            '3. Toolbox add javascript code run；\n'
+            '4. Support generating Python request code；\n'
+            '5. Fix Mac rewrite unable to select files;\n'
+            '6. Custom repeat request support random interval；\n'
+            '7. Fix external proxy to forward to each other issue；\n'
+            '8. fix tls client hello data server_name is null bug';
     showAlertDialog(isCN ? '更新内容V1.1.0' : "Update content V1.1.0", content, () {
       widget.appConfiguration.upgradeNoticeV10 = false;
       widget.appConfiguration.flushConfig();

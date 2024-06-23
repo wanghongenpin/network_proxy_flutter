@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:network_proxy/utils/platform.dart';
@@ -38,6 +39,12 @@ class AppConfiguration {
   bool headerExpanded = true;
 
   bool? iosVpnBackgroundAudioEnable;
+
+  //桌面window大小
+  Size? windowSize;
+
+  //桌面window位置
+  Offset? windowPosition;
 
   AppConfiguration._();
 
@@ -123,6 +130,12 @@ class AppConfiguration {
       pipIcon.value = config['pipIcon'] ?? false;
       headerExpanded = config['headerExpanded'] ?? true;
       iosVpnBackgroundAudioEnable = config['iosVpnBackgroundAudioEnable'];
+
+      windowSize =
+          config['windowSize'] == null ? null : Size(config['windowSize']['width'], config['windowSize']['height']);
+      windowPosition = config['windowPosition'] == null
+          ? null
+          : Offset(config['windowPosition']['dx'], config['windowPosition']['dy']);
     } catch (e) {
       print(e);
     }
@@ -149,6 +162,8 @@ class AppConfiguration {
       'pipEnabled': pipEnabled.value,
       'pipIcon': pipIcon.value ? true : null,
       "headerExpanded": headerExpanded,
+      "windowSize": windowSize == null ? null : {"width": windowSize?.width, "height": windowSize?.height},
+      "windowPosition": windowPosition == null ? null : {"dx": windowPosition?.dx, "dy": windowPosition?.dy},
       "iosVpnBackgroundAudioEnable": iosVpnBackgroundAudioEnable == false ? null : iosVpnBackgroundAudioEnable
     };
   }
