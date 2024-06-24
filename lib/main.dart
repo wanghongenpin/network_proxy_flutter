@@ -44,10 +44,13 @@ void main(List<String> args) async {
       size: windowSize,
       center: true,
       titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
+
+  Offset? windowPosition = appConfiguration.windowPosition;
   windowManager.waitUntilReadyToShow(windowOptions, () async {
-    if (appConfiguration.windowPosition != null) {
-      await windowManager.setPosition(appConfiguration.windowPosition!);
+    if (windowPosition != null) {
+      await windowManager.setPosition(windowPosition);
     }
+
     await windowManager.show();
     await windowManager.focus();
   });
