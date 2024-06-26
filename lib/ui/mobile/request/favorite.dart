@@ -16,6 +16,7 @@ import 'package:network_proxy/ui/mobile/request/repeat.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/python.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MobileFavorites extends StatefulWidget {
   final ProxyServer proxyServer;
@@ -181,8 +182,9 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   //显示高级重发
   showCustomRepeat(HttpRequest request) {
     Navigator.of(context).pop();
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => MobileCustomRepeat(onRepeat: () => onRepeat(request))));
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => futureWidget(SharedPreferences.getInstance(),
+            (prefs) => MobileCustomRepeat(onRepeat: () => onRepeat(request), prefs: prefs))));
   }
 
   onRepeat(HttpRequest request) {

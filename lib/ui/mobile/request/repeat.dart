@@ -1,16 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 ///高级重放
 /// @author wang
 class MobileCustomRepeat extends StatefulWidget {
   final Function onRepeat;
+  final SharedPreferences prefs;
 
-  const MobileCustomRepeat({super.key, required this.onRepeat});
+  const MobileCustomRepeat({super.key, required this.onRepeat, required this.prefs});
 
   @override
   State<StatefulWidget> createState() => _CustomRepeatState();
@@ -24,8 +27,26 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
   TextEditingController delay = TextEditingController(text: '0');
 
   bool fixed = true;
+  bool keepSetting = true;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  @override
+  void initState() {
+    super.initState();
+
+    var customerRepeat = widget.prefs.getString('customerRepeat');
+    keepSetting = customerRepeat != null;
+    if (customerRepeat != null) {
+      Map<String, dynamic> data = jsonDecode(customerRepeat);
+      count.text = data['count'];
+      interval.text = data['interval'];
+      minInterval.text = data['minInterval'];
+      maxInterval.text = data['maxInterval'];
+      delay.text = data['delay'];
+      fixed = data['fixed'] == true;
+    }
+  }
 
   @override
   void dispose() {
@@ -49,6 +70,21 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
                 if (!formKey.currentState!.validate()) {
                   return;
                 }
+                if (keepSetting) {
+                  widget.prefs.setString(
+                      'customerRepeat',
+                      jsonEncode({
+                        'count': count.text,
+                        'interval': interval.text,
+                        'minInterval': minInterval.text,
+                        'maxInterval': maxInterval.text,
+                        'delay': delay.text,
+                        'fixed': fixed
+                      }));
+                } else {
+                  widget.prefs.remove('customerRepeat');
+                }
+
                 Future.delayed(Duration(milliseconds: int.parse(delay.text)), () => submitTask(int.parse(count.text)));
                 Navigator.of(context).pop();
               },
@@ -66,6 +102,19 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
                   intervalWidget(), //间隔
                   const SizedBox(height: 6),
                   field(localizations.repeatDelay, delay), //延时
+                  const SizedBox(height: 6),
+                  //记录选择
+                  Row(children: [
+                    Text(localizations.keepCustomSettings),
+                    Expanded(
+                        child: Checkbox(
+                            value: keepSetting,
+                            onChanged: (val) {
+                              setState(() {
+                                keepSetting = val == true;
+                              });
+                            })),
+                  ])
                 ],
               ),
             )));

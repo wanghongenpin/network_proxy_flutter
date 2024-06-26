@@ -19,6 +19,7 @@ import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/navigator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 ///请求行
 class RequestRow extends StatefulWidget {
@@ -212,8 +213,9 @@ class RequestRowState extends State<RequestRow> {
   //显示高级重发
   showCustomRepeat(HttpRequest request) {
     NavigatorHelper.pop();
-    NavigatorHelper.push(
-        MaterialPageRoute(builder: (context) => MobileCustomRepeat(onRepeat: () => onRepeat(request))));
+    NavigatorHelper.push(MaterialPageRoute(
+        builder: (context) => futureWidget(SharedPreferences.getInstance(),
+            (prefs) => MobileCustomRepeat(onRepeat: () => onRepeat(request), prefs: prefs))));
   }
 
   onRepeat(HttpRequest request) {

@@ -57,7 +57,7 @@ class HttpClients {
     await connectRequest(hostAndPort, channel);
 
     if (hostAndPort.isSsl()) {
-      await channel.secureSocket(channelContext);
+      await channel.secureSocket(channelContext, host: hostAndPort.host);
     }
 
     return channel;

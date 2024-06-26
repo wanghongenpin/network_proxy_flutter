@@ -133,6 +133,7 @@
   "repeatDelay": "Delay(ms)",
   "fixed": "fixed",
   "random": "random",
+  "keepCustomSettings": "Keep custom settings",
   "editRequest": "Edit and Request",
   "reSendRequest": "The request has been resent",
   "viewExport": "View Export",

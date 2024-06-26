@@ -1,16 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 ///高级重放
 /// @author wang
 class CustomRepeatDialog extends StatefulWidget {
   final Function onRepeat;
+  final SharedPreferences prefs;
 
-  const CustomRepeatDialog({super.key, required this.onRepeat});
+  const CustomRepeatDialog({super.key, required this.onRepeat, required this.prefs});
 
   @override
   State<StatefulWidget> createState() => _CustomRepeatState();
@@ -24,8 +27,26 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
   TextEditingController delay = TextEditingController(text: '0');
 
   bool fixed = true;
+  bool keepSetting = true;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  @override
+  void initState() {
+    super.initState();
+
+    var customerRepeat = widget.prefs.getString('customerRepeat');
+    keepSetting = customerRepeat != null;
+    if (customerRepeat != null) {
+      Map<String, dynamic> data = jsonDecode(customerRepeat);
+      count.text = data['count'];
+      interval.text = data['interval'];
+      minInterval.text = data['minInterval'];
+      maxInterval.text = data['maxInterval'];
+      delay.text = data['delay'];
+      fixed = data['fixed'] == true;
+    }
+  }
 
   @override
   void dispose() {
@@ -46,7 +67,9 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
         child: ListBody(
           children: <Widget>[
             field(localizations.repeatCount, count), //次数
-            Row( //间隔
+            const SizedBox(height: 8),
+            Row(
+              //间隔
               children: [
                 SizedBox(width: 75, child: Text(localizations.repeatInterval)),
                 const SizedBox(height: 5),
@@ -95,8 +118,21 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
                 ]),
               ],
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 8),
             field(localizations.repeatDelay, delay), //延时
+            const SizedBox(height: 8),
+            //记录选择
+            Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+              Text(localizations.keepCustomSettings),
+              Expanded(
+                  child: Checkbox(
+                      value: keepSetting,
+                      onChanged: (val) {
+                        setState(() {
+                          keepSetting = val == true;
+                        });
+                      })),
+            ])
           ],
         ),
       )),
@@ -110,6 +146,20 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
           onPressed: () {
             if (!formKey.currentState!.validate()) {
               return;
+            }
+            if (keepSetting) {
+              widget.prefs.setString(
+                  'customerRepeat',
+                  jsonEncode({
+                    'count': count.text,
+                    'interval': interval.text,
+                    'minInterval': minInterval.text,
+                    'maxInterval': maxInterval.text,
+                    'delay': delay.text,
+                    'fixed': fixed
+                  }));
+            } else {
+              widget.prefs.remove('customerRepeat');
             }
 
             //定时发起请求
@@ -152,21 +202,23 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
     );
   }
 
-  FormField textField(TextEditingController? controller, {TextStyle? style}) {
+  Widget textField(TextEditingController? controller, {TextStyle? style}) {
     Color color = Theme.of(context).colorScheme.primary;
 
-    return TextFormField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      style: style,
-      decoration: InputDecoration(
-          errorStyle: const TextStyle(height: 2, fontSize: 0),
-          contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
-          border: OutlineInputBorder(borderSide: BorderSide(width: 1, color: color.withOpacity(0.3))),
-          enabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.5, color: color.withOpacity(0.5))),
-          focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 2, color: color))),
-      validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
-    );
+    return ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 42),
+        child: TextFormField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          style: style,
+          decoration: InputDecoration(
+              errorStyle: const TextStyle(height: 2, fontSize: 0),
+              contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
+              border: OutlineInputBorder(borderSide: BorderSide(width: 1, color: color.withOpacity(0.3))),
+              enabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.5, color: color.withOpacity(0.5))),
+              focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 2, color: color))),
+          validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
+        ));
   }
 }

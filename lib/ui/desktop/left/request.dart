@@ -21,6 +21,7 @@ import 'package:network_proxy/ui/desktop/left/repeat.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/python.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// 请求 URI
@@ -247,11 +248,14 @@ class _RequestWidgetState extends State<RequestWidget> {
   }
 
   //显示高级重发
-  showCustomRepeat(HttpRequest request) {
+  showCustomRepeat(HttpRequest request) async {
+    var prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return CustomRepeatDialog(onRepeat: () => onRepeat(request));
+          return CustomRepeatDialog(onRepeat: () => onRepeat(request), prefs: prefs);
         });
   }
 

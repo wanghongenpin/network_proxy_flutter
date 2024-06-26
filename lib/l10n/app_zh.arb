@@ -133,6 +133,7 @@
   "repeatDelay": "延时(ms)",
   "fixed": "固定",
   "random": "重放",
+  "keepCustomSettings": "保持自定义设置",
   "editRequest": "编辑请求",
   "reSendRequest": "已重新发送请求",
   "viewExport": "视图导出",
