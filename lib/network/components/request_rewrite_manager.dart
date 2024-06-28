@@ -306,12 +306,16 @@ class RequestRewrites {
           queryParameters.remove(item.value);
           break;
         case RewriteType.updateQueryParam:
-          var pair = item.key?.split("=");
-          var val = queryParameters[pair!.first];
-          if (val != null && RegExp(pair.last).hasMatch(val)) {
-            var split = item.value?.split("=");
-            queryParameters.remove(pair.first);
-            queryParameters[split!.first] = split.last;
+          var itemKeySplitIdx = item.key?.indexOf('=');
+          var itemKeyK = item.key?.substring(0, itemKeySplitIdx);
+          var itemKeyV = item.key?.substring(itemKeySplitIdx + 1);
+          var val = queryParameters[itemKeyK];
+          if (val != null && RegExp(itemKeyV).hasMatch(val)) {
+            var itemValueSplitIdx = item.key?.indexOf('=');
+            var itemValueK = item.key?.substring(0, itemValueSplitIdx);
+            var itemValueV = item.key?.substring(itemValueSplitIdx + 1);
+            queryParameters.remove(itemKeyK);
+            queryParameters[itemValueK] = itemValueV;
           }
           break;
         default:
