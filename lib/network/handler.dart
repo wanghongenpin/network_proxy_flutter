@@ -25,6 +25,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/proxy_helper.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
+import 'package:network_proxy/network/util/localizations.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/uri.dart';
 import 'package:network_proxy/utils/ip.dart';
@@ -51,7 +52,6 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
   @override
   void channelRead(ChannelContext channelContext, Channel channel, HttpRequest msg) async {
-
     //下载证书
     if (msg.uri == 'http://proxy.pin/ssl' || msg.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
       ProxyHelper.crtDownload(channel, msg);
@@ -253,7 +253,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
       }
       msg = response;
     } catch (e, t) {
-      msg.status = HttpStatus(-1, '执行脚本异常');
+      msg.status = HttpStatus(-1, Localizations.isEN ? 'Script exec error' : '执行脚本异常');
       msg.body = "$e\n${msg.bodyAsString}".codeUnits;
       log.e('[${clientChannel.id}] 执行脚本异常 ', error: e, stackTrace: t);
     }

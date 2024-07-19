@@ -313,6 +313,10 @@ async function onResponse(context, request, response) {
     request.uri = Uri.parse('${request.remoteDomain()}${map['path']}?$query').toString();
 
     map['headers'].forEach((key, value) {
+      if (value is List) {
+        request.headers.addValues(key, value.map((e) => e.toString()).toList());
+        return;
+      }
       request.headers.add(key, value);
     });
     request.body = map['body'] == null ? null : utf8.encode(map['body'].toString());
@@ -324,6 +328,11 @@ async function onResponse(context, request, response) {
     response.headers.clear();
     response.status = HttpStatus.valueOf(map['statusCode']);
     map['headers'].forEach((key, value) {
+      if (value is List) {
+        response.headers.addValues(key, value.map((e) => e.toString()).toList());
+        return;
+      }
+
       response.headers.add(key, value);
     });
     response.headers.remove(HttpHeaders.CONTENT_ENCODING);
