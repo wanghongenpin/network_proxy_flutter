@@ -4,16 +4,18 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_desktop_context_menu/flutter_desktop_context_menu.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/component/transition.dart';
 import 'package:network_proxy/ui/component/utils.dart';
-import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/desktop/left/request.dart';
@@ -134,10 +136,7 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
   ///高亮处理
   highlightHandler() {
     //获取所有请求Widget
-    List<RequestWidget> requests = containerMap.values
-        .map((e) => e.body)
-        .expand((element) => element)
-        .toList();
+    List<RequestWidget> requests = containerMap.values.map((e) => e.body).expand((element) => element).toList();
     for (RequestWidget request in requests) {
       GlobalKey key = request.key as GlobalKey<State>;
       key.currentState?.setState(() {});
@@ -366,9 +365,10 @@ class _DomainRequestsState extends State<DomainRequests> {
     ]);
   }
 
+  //domain title
   Widget _hostWidget(String title) {
     var host = GestureDetector(
-        onSecondaryTapDown: menu,
+        onSecondaryTap: menu,
         child: ListTile(
             minLeadingWidth: 25,
             leading: Icon(selected ? Icons.arrow_drop_down : Icons.arrow_right, size: 18),
@@ -397,49 +397,68 @@ class _DomainRequestsState extends State<DomainRequests> {
   }
 
   //域名右键菜单
-  menu(TapDownDetails details) {
-    showContextMenu(
-      context,
-      details.globalPosition,
-      items: <PopupMenuEntry>[
-        CustomPopupMenuItem(
-            height: 35,
-            child: Text(localizations.copyHost, style: const TextStyle(fontSize: 13)),
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: Uri.parse(widget.domain).host));
-              FlutterToastr.show(localizations.copied, context);
-            }),
-        CustomPopupMenuItem(
-            height: 35,
-            child: Text(localizations.domainBlacklist, style: const TextStyle(fontSize: 13)),
-            onTap: () {
-              HostFilter.blacklist.add(Uri.parse(widget.domain).host);
-              configuration.flushConfig();
-              FlutterToastr.show(localizations.addSuccess, context);
-            }),
-        CustomPopupMenuItem(
-            height: 35,
-            child: Text(localizations.domainWhitelist, style: const TextStyle(fontSize: 13)),
-            onTap: () {
-              HostFilter.whitelist.add(Uri.parse(widget.domain).host);
-              configuration.flushConfig();
-              FlutterToastr.show(localizations.addSuccess, context);
-            }),
-        CustomPopupMenuItem(
-            height: 35,
-            child: Text(localizations.deleteWhitelist, style: const TextStyle(fontSize: 13)),
-            onTap: () {
-              HostFilter.whitelist.remove(Uri.parse(widget.domain).host);
-              configuration.flushConfig();
-              FlutterToastr.show(localizations.deleteSuccess, context);
-            }),
-        const PopupMenuDivider(height: 0.3),
-        CustomPopupMenuItem(
-            height: 35,
-            child: Text(localizations.delete, style: const TextStyle(fontSize: 13)),
-            onTap: () => _delete()),
-      ],
-    );
+  menu() {
+    Menu menu = Menu(items: [
+      MenuItem(
+          label: localizations.copyHost,
+          onClick: (_) {
+            Clipboard.setData(ClipboardData(text: Uri.parse(widget.domain).host));
+            FlutterToastr.show(localizations.copied, context);
+          }),
+      MenuItem.separator(),
+      MenuItem(
+        label: localizations.domainFilter,
+        type: 'submenu',
+        submenu: hostFilterMenu(),
+      ),
+      MenuItem.separator(),
+      MenuItem(label: localizations.repeatDomainRequests, onClick: (_) => repeatDomainRequests()),
+      MenuItem.separator(),
+      MenuItem(label: localizations.delete, onClick: (_) => _delete()),
+    ]);
+
+    popUpContextMenu(menu);
+  }
+
+  //重复域名下请求
+  void repeatDomainRequests() async {
+    var list = widget.body.toList().reversed;
+    for (var requestWidget in list) {
+      var request = requestWidget.request.copy(uri: requestWidget.request.requestUrl);
+      var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
+      try {
+        await HttpClients.proxyRequest(request, proxyInfo: proxyInfo);
+        if (mounted) FlutterToastr.show(localizations.reSendRequest, rootNavigator: true, context);
+      } catch (e) {
+        if (mounted) FlutterToastr.show('${localizations.fail}$e', rootNavigator: true, context);
+      }
+    }
+  }
+
+  Menu hostFilterMenu() {
+    return Menu(items: [
+      MenuItem(
+          label: localizations.domainBlacklist,
+          onClick: (_) {
+            HostFilter.blacklist.add(Uri.parse(widget.domain).host);
+            configuration.flushConfig();
+            FlutterToastr.show(localizations.addSuccess, context);
+          }),
+      MenuItem(
+          label: localizations.domainWhitelist,
+          onClick: (_) {
+            HostFilter.whitelist.add(Uri.parse(widget.domain).host);
+            configuration.flushConfig();
+            FlutterToastr.show(localizations.addSuccess, context);
+          }),
+      MenuItem(
+          label: localizations.deleteWhitelist,
+          onClick: (_) {
+            HostFilter.whitelist.remove(Uri.parse(widget.domain).host);
+            configuration.flushConfig();
+            FlutterToastr.show(localizations.deleteSuccess, context);
+          }),
+    ]);
   }
 
   _delete() {

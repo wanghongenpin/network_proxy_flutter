@@ -106,86 +106,72 @@ class _RequestWidgetState extends State<RequestWidget> {
   contextualMenu() {
     Menu menu = Menu(items: [
       MenuItem(
-        label: localizations.copyUrl,
-        onClick: (_) {
-          var requestUrl = widget.request.requestUrl;
-          Clipboard.setData(ClipboardData(text: requestUrl))
-              .then((value) => FlutterToastr.show(localizations.copied, context));
-        },
-      ),
+          label: localizations.copyUrl,
+          onClick: (_) {
+            var requestUrl = widget.request.requestUrl;
+            Clipboard.setData(ClipboardData(text: requestUrl))
+                .then((value) => FlutterToastr.show(localizations.copied, context));
+          }),
       MenuItem(
-        label: localizations.copy,
-        type: 'submenu',
-        submenu: Menu(items: [
-          MenuItem(
-            label: localizations.copyCurl,
-            onClick: (_) {
-              Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
-                  .then((value) => FlutterToastr.show(localizations.copied, context));
-            },
-          ),
-          MenuItem(
-            label: localizations.copyRequestResponse,
-            onClick: (_) {
-              Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))
-                  .then((value) => FlutterToastr.show(localizations.copied, context));
-            },
-          ),
-          MenuItem(
-            label: localizations.copyAsPythonRequests,
-            onClick: (_) {
-              Clipboard.setData(ClipboardData(text: copyAsPythonRequests(widget.request)))
-                  .then((value) => FlutterToastr.show(localizations.copied, context));
-            },
-          ),
-        ]),
-        onClick: (_) {
-          Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
-              .then((value) => FlutterToastr.show(localizations.copied, context));
-        },
-      ),
+          label: localizations.copy,
+          type: 'submenu',
+          submenu: Menu(items: [
+            MenuItem(
+                label: localizations.copyCurl,
+                onClick: (_) {
+                  Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
+                      .then((value) => FlutterToastr.show(localizations.copied, context));
+                }),
+            MenuItem(
+                label: localizations.copyRequestResponse,
+                onClick: (_) {
+                  Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))
+                      .then((value) => FlutterToastr.show(localizations.copied, context));
+                }),
+            MenuItem(
+              label: localizations.copyAsPythonRequests,
+              onClick: (_) {
+                Clipboard.setData(ClipboardData(text: copyAsPythonRequests(widget.request)))
+                    .then((value) => FlutterToastr.show(localizations.copied, context));
+              },
+            ),
+          ]),
+          onClick: (_) {
+            Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
+                .then((value) => FlutterToastr.show(localizations.copied, context));
+          }),
+      MenuItem.separator(),
+      MenuItem(label: localizations.repeat, onClick: (_) => onRepeat(widget.request)),
+      MenuItem(label: localizations.customRepeat, onClick: (_) => showCustomRepeat(widget.request)),
+      MenuItem(
+          label: localizations.editRequest,
+          onClick: (_) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              requestEdit();
+            });
+          }),
       MenuItem.separator(),
       MenuItem(
-        label: localizations.repeat,
-        onClick: (_) => onRepeat(widget.request),
-      ),
+          label: localizations.favorite,
+          onClick: (_) {
+            FavoriteStorage.addFavorite(widget.request);
+            FlutterToastr.show(localizations.operationSuccess, context);
+          }),
       MenuItem(
-        label: localizations.customRepeat,
-        onClick: (_) => showCustomRepeat(widget.request),
-      ),
-      MenuItem(
-        label: localizations.editRequest,
-        onClick: (_) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            requestEdit();
-          });
-        },
-      ),
+          label: localizations.highlight,
+          type: 'submenu',
+          submenu: highlightMenu(),
+          onClick: (_) {
+            setState(() {
+              highlightColor = Colors.red;
+            });
+          }),
       MenuItem.separator(),
       MenuItem(
-        label: localizations.favorite,
-        onClick: (_) {
-          FavoriteStorage.addFavorite(widget.request);
-          FlutterToastr.show(localizations.operationSuccess, context);
-        },
-      ),
-      MenuItem(
-        label: localizations.highlight,
-        type: 'submenu',
-        submenu: highlightMenu(),
-        onClick: (_) {
-          setState(() {
-            highlightColor = Colors.red;
-          });
-        },
-      ),
-      MenuItem.separator(),
-      MenuItem(
-        label: localizations.delete,
-        onClick: (_) {
-          widget.remove?.call(widget);
-        },
-      ),
+          label: localizations.delete,
+          onClick: (_) {
+            widget.remove?.call(widget);
+          }),
     ]);
 
     popUpContextMenu(menu);
@@ -264,7 +250,7 @@ class _RequestWidgetState extends State<RequestWidget> {
     var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
     HttpClients.proxyRequest(request, proxyInfo: proxyInfo);
 
-    FlutterToastr.show(localizations.reSendRequest, context);
+    FlutterToastr.show(localizations.reSendRequest, rootNavigator: true, context);
   }
 
   PopupMenuItem popupItem(String text, {VoidCallback? onTap}) {

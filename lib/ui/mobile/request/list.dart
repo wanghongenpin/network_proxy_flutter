@@ -12,6 +12,7 @@ import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
 import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
@@ -423,7 +424,8 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
         trailing: const Icon(Icons.chevron_right),
         subtitle: Text(localizations.domainListSubtitle(value?.length ?? '', time),
             maxLines: 1, overflow: TextOverflow.ellipsis),
-        onLongPress: () => menu(index), // show menus
+        onLongPress: () => menu(index),
+        // show menus
         contentPadding: const EdgeInsets.only(left: 10),
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {
@@ -491,6 +493,15 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
                   }),
               const Divider(thickness: 0.5),
               TextButton(
+                  child: SizedBox(
+                      width: double.infinity,
+                      child: Text(localizations.repeatDomainRequests, textAlign: TextAlign.center)),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    repeatDomainRequests(hostAndPort);
+                  }),
+              const Divider(thickness: 0.5),
+              TextButton(
                   child:
                       SizedBox(width: double.infinity, child: Text(localizations.delete, textAlign: TextAlign.center)),
                   onPressed: () {
@@ -522,5 +533,22 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
             ],
           );
         });
+  }
+
+  //重复域名下请求
+  void repeatDomainRequests(HostAndPort hostAndPort) async {
+    var requests = containerMap[hostAndPort];
+    if (requests == null) return;
+
+    for (var httpRequest in requests.toList()) {
+      var request = httpRequest.copy(uri: httpRequest.requestUrl);
+      var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
+      try {
+        await HttpClients.proxyRequest(request, proxyInfo: proxyInfo);
+        if (mounted) FlutterToastr.show(localizations.reSendRequest, rootNavigator: true, context);
+      } catch (e) {
+        if (mounted) FlutterToastr.show('${localizations.fail}$e', rootNavigator: true, context);
+      }
+    }
   }
 }
