@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
+import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/utils/ip.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -44,39 +46,61 @@ class _SslState extends State<SslWidget> {
           item(localizations.installCaLocal, onPressed: pcCer),
           item("${localizations.installRootCa} iOS", onPressed: () async => iosCer(await localIp())),
           item("${localizations.installRootCa} Android", onPressed: () async => androidCer(await localIp())),
-          SubmenuButton(
-              menuStyle: MenuStyle(
-                surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor),
-              ),
-              menuChildren: [
-                MenuItemButton(
-                    child: Padding(
-                        padding: const EdgeInsets.only(left: 10, right: 10),
-                        child: Text(localizations.exportCA, style: const TextStyle(fontSize: 14))),
-                    onPressed: () async {
-                      String? path = (await getSaveLocation(suggestedName: "ProxyPinCA.crt"))?.path;
-                      if (path == null) return;
-
-                      var caFile = await CertificateManager.certificateFile();
-                      await caFile.copy(path);
-                    }),
-                const Divider(thickness: 0.3, height: 8),
-                MenuItemButton(
-                    child: Padding(
-                        padding: const EdgeInsets.only(left: 10, right: 10),
-                        child: Text(localizations.exportPrivateKey, style: const TextStyle(fontSize: 14))),
-                    onPressed: () async {
-                      String? path = (await getSaveLocation(suggestedName: "ProxyPinKey.pem"))?.path;
-                      if (path == null) return;
-
-                      var keyFile = await CertificateManager.privateKeyFile();
-                      await keyFile.copy(path);
-                    }),
-              ],
-              child: Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: Text(localizations.export, style: const TextStyle(fontSize: 14))))
+          const Divider(thickness: 0.3, height: 3),
+          exportMenu(surfaceTintColor),
+          const Divider(thickness: 0.3, height: 3),
+          item(localizations.generateCA, onPressed: () async {
+            showConfirmDialog(context, title: localizations.generateCA, content: localizations.generateCADescribe,
+                onConfirm: () async {
+              await CertificateManager.generateNewRootCA();
+              if (context.mounted) FlutterToastr.show(localizations.success, context);
+            });
+          }),
+          const Divider(thickness: 0.3, height: 3),
+          item(localizations.resetDefaultCA, onPressed: () async {
+            showConfirmDialog(context,
+                title: localizations.resetDefaultCA,
+                content: localizations.resetDefaultCADescribe, onConfirm: () async {
+              await CertificateManager.resetDefaultRootCA();
+              if (context.mounted) FlutterToastr.show(localizations.success, context);
+            });
+          }),
         ]);
+  }
+
+  Widget exportMenu(Color? surfaceTintColor) {
+    return SubmenuButton(
+        menuStyle: MenuStyle(
+          surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor),
+        ),
+        menuChildren: [
+          MenuItemButton(
+              child: Padding(
+                  padding: const EdgeInsets.only(left: 10, right: 10),
+                  child: Text(localizations.exportCA, style: const TextStyle(fontSize: 14))),
+              onPressed: () async {
+                String? path = (await getSaveLocation(suggestedName: "ProxyPinCA.crt"))?.path;
+                if (path == null) return;
+
+                var caFile = await CertificateManager.certificateFile();
+                await caFile.copy(path);
+              }),
+          const Divider(thickness: 0.3, height: 8),
+          MenuItemButton(
+              child: Padding(
+                  padding: const EdgeInsets.only(left: 10, right: 10),
+                  child: Text(localizations.exportPrivateKey, style: const TextStyle(fontSize: 14))),
+              onPressed: () async {
+                String? path = (await getSaveLocation(suggestedName: "ProxyPinKey.pem"))?.path;
+                if (path == null) return;
+
+                var keyFile = await CertificateManager.privateKeyFile();
+                await keyFile.copy(path);
+              }),
+        ],
+        child: Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Text(localizations.export, style: const TextStyle(fontSize: 14))));
   }
 
   Widget item(String text, {VoidCallback? onPressed}) {

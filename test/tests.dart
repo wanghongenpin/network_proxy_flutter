@@ -1,5 +1,3 @@
-
-
 import 'dart:io';
 
 void main() async {
@@ -14,8 +12,8 @@ void main() async {
   //   return replaceAll;
   // }));
   // print(Platform.version);
-  print(Platform.localHostname);
+  print('localHostname: ${Platform.localHostname}');
   print(Platform.operatingSystem);
-  // print(Platform.localeName);
+  print(Platform.localeName);
   print(Platform.script);
 }

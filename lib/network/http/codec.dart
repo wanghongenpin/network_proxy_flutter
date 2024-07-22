@@ -71,8 +71,8 @@ abstract interface class Encoder<T> {
 
 /// 编解码器
 abstract class Codec<T> implements Decoder<T>, Encoder<T> {
-  static const int defaultMaxInitialLineLength = 409600;
-  static const int maxBodyLength = 4096000;
+  static const int defaultMaxInitialLineLength = 1024000; // 1M
+  static const int maxBodyLength = 4096000; // 4M
 }
 
 /// http编解码

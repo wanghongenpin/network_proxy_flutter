@@ -170,7 +170,7 @@ Future<T?> showConfirmDialog<T>(BuildContext context, {String? title, String? co
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(title!),
+          title: Text(title!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           content: Text(content!),
           actions: [
             TextButton(

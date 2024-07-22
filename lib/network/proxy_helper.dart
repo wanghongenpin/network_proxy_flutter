@@ -89,7 +89,7 @@ class ProxyHelper {
       ..hostAndPort = hostAndPort;
     request.processInfo ??= channelContext.processInfo;
 
-    request.response ??= HttpResponse(status)
+    request.response = HttpResponse(status)
       ..headers.contentType = 'text/plain'
       ..headers.contentLength = message.codeUnits.length
       ..body = message.codeUnits;

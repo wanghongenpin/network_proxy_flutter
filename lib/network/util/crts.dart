@@ -86,15 +86,61 @@ class CertificateManager {
     Map<String, String> x509Subject = {
       'C': 'CN',
       'ST': 'BJ',
-      'L': 'BeiJing',
+      'L': 'Beijing',
       'O': 'Proxy',
       'OU': 'ProxyPin',
     };
+
     x509Subject['CN'] = host;
 
     var csrPem = X509Generate.generateSelfSignedCertificate(caRoot, serverPubKey, caPriKey, 365,
         sans: [host], serialNumber: Random().nextInt(1000000).toString(), subject: x509Subject);
     return csrPem;
+  }
+
+  //重新生成根证书
+  static Future<void> generateNewRootCA() async {
+    if (!_initialized) {
+      await _initCAConfig();
+    }
+
+    var generateRSAKeyPair = CryptoUtils.generateRSAKeyPair();
+    var serverPubKey = generateRSAKeyPair.publicKey as RSAPublicKey;
+    var serverPriKey = generateRSAKeyPair.privateKey as RSAPrivateKey;
+
+    //根据CA证书subject来动态生成目标服务器证书的issuer和subject
+    Map<String, String> x509Subject = {
+      'C': 'CN',
+      'ST': 'BJ',
+      'L': 'Beijing',
+      'O': 'Proxy',
+      'OU': 'ProxyPin',
+    };
+    x509Subject['CN'] = 'ProxyPin CA (${Platform.localHostname})';
+
+    var csrPem = generate(_caCert, serverPubKey, serverPriKey, 'ProxyPin CA (${Platform.localHostname})');
+
+    //重新写入根证书
+    var caFile = await certificateFile();
+    await caFile.writeAsString(csrPem);
+
+    //私钥
+    var serverPriKeyPem = CryptoUtils.encodeRSAPrivateKeyToPem(serverPriKey);
+    var keyFile = await privateKeyFile();
+    await keyFile.writeAsString(serverPriKeyPem);
+    cleanCache();
+    _initialized = false;
+  }
+
+  ///重置默认根证书
+  static Future<void> resetDefaultRootCA() async {
+    var caFile = await certificateFile();
+    await caFile.delete();
+
+    var keyFile = await privateKeyFile();
+    await keyFile.delete();
+    cleanCache();
+    _initialized = false;
   }
 
   static Future<void> _initCAConfig() async {
