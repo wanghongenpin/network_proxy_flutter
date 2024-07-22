@@ -20,6 +20,7 @@ import 'dart:math';
 
 import 'package:basic_utils/basic_utils.dart';
 import 'package:network_proxy/network/util/x509.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'file_read.dart';
 
@@ -101,14 +102,38 @@ class CertificateManager {
       return;
     }
     //从项目目录加入ca根证书
-    var caPem = await FileRead.readAsString('assets/certs/ca.crt');
-    _caCert = X509Utils.x509CertificateFromPem(caPem);
+    var caPemFile = await certificateFile();
+    _caCert = X509Utils.x509CertificateFromPem(await caPemFile.readAsString());
     //根据CA证书subject来动态生成目标服务器证书的issuer和subject
 
     //从项目目录加入ca私钥
-    var privateBytes = await FileRead.read('assets/certs/ca_private.der');
-    _caPriKey = CryptoUtils.rsaPrivateKeyFromDERBytes(privateBytes.buffer.asUint8List());
+    var keyFile = await privateKeyFile();
+    _caPriKey = CryptoUtils.rsaPrivateKeyFromPem(await keyFile.readAsString());
 
     _initialized = true;
+  }
+
+  /// 证书文件
+  static Future<File> certificateFile() async {
+    final String appPath = await getApplicationSupportDirectory().then((value) => value.path);
+    var caFile = File("$appPath${Platform.pathSeparator}ca.crt");
+    if (!(await caFile.exists())) {
+      var body = await FileRead.read('assets/certs/ca.crt');
+      await caFile.writeAsBytes(body.buffer.asUint8List());
+    }
+
+    return caFile;
+  }
+
+  /// 私钥文件
+  static Future<File> privateKeyFile() async {
+    final String appPath = await getApplicationSupportDirectory().then((value) => value.path);
+    var caFile = File("$appPath${Platform.pathSeparator}ca_key.pem");
+    if (!(await caFile.exists())) {
+      var body = await FileRead.read('assets/certs/ca_key.pem');
+      await caFile.writeAsBytes(body.buffer.asUint8List());
+    }
+
+    return caFile;
   }
 }

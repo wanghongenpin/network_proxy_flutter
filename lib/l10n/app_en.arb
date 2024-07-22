@@ -171,10 +171,12 @@
 
   "enabledHttps": "Enable HTTPS Proxy",
   "installRootCa": "Install Certificate",
-  "installCaLocal": "Install Certificate to This PC",
+  "installCaLocal": "Install Certificate to Local-Machine",
   "downloadRootCa": "Download Certificate",
   "trustCa": "Trust Certificate",
   "profileDownload": "Profile Download",
+  "exportCA": "Export Root Certificate",
+  "exportPrivateKey": "Export Private Key",
   "install": "Install",
   "installCaDescribe": "Install CA Setting > Profile Download > Install",
   "trustCaDescribe": "Trust CA Setting > General > About > Certificate Trust Setting",

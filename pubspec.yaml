@@ -53,5 +53,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/certs/ca.crt
-    - assets/certs/ca_private.der
+    - assets/certs/ca_key.pem
     - assets/icon.png

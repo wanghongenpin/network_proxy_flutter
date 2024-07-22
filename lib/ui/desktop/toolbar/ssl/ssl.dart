@@ -1,13 +1,11 @@
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
 import 'package:network_proxy/utils/ip.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SslWidget extends StatefulWidget {
@@ -27,62 +25,67 @@ class _SslState extends State<SslWidget> {
     var surfaceTintColor =
         Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.background;
 
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red),
-      surfaceTintColor: surfaceTintColor,
-      tooltip: localizations.httpsProxy,
-      offset: const Offset(10, 30),
-      itemBuilder: (context) {
-        return [
-          PopupMenuItem(child: _Switch(proxyServer: widget.proxyServer, onEnableChange: (val) => setState(() {}))),
-          PopupMenuItem(
-              child: ListTile(
-                  dense: true,
-                  hoverColor: Colors.transparent,
-                  focusColor: Colors.transparent,
-                  title: Text(localizations.installCaLocal),
-                  trailing: const Icon(Icons.arrow_right),
-                  onTap: pcCer)),
-          PopupMenuItem<String>(
-            child: ListTile(
-                title: Text("${localizations.installRootCa} iOS"),
-                dense: true,
-                hoverColor: Colors.transparent,
-                focusColor: Colors.transparent,
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () async {
-                  iosCer(await localIp());
-                }),
-          ),
-          PopupMenuItem<String>(
-            child: ListTile(
-                title: Text("${localizations.installRootCa} Android"),
-                dense: true,
-                hoverColor: Colors.transparent,
-                focusColor: Colors.transparent,
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () async {
-                  androidCer(await localIp());
-                }),
-          ),
-          PopupMenuItem<String>(
-            child: ListTile(
-                title: Text(localizations.downloadRootCa),
-                dense: true,
-                hoverColor: Colors.transparent,
-                focusColor: Colors.transparent,
-                trailing: const Icon(Icons.arrow_right),
-                onTap: () async {
-                  if (!widget.proxyServer.isRunning) {
-                    FlutterToastr.show("请先启动抓包", context);
-                    return;
-                  }
-                  launchUrl(Uri.parse("http://127.0.0.1:${widget.proxyServer.port}/ssl"));
-                }),
-          )
-        ];
-      },
-    );
+    return MenuAnchor(
+        style: MenuStyle(surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor)),
+        builder: (context, controller, child) {
+          return IconButton(
+              icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red),
+              tooltip: localizations.httpsProxy,
+              onPressed: () {
+                if (controller.isOpen) {
+                  controller.close();
+                } else {
+                  controller.open();
+                }
+              });
+        },
+        menuChildren: [
+          _Switch(proxyServer: widget.proxyServer, onEnableChange: (val) => setState(() {})),
+          item(localizations.installCaLocal, onPressed: pcCer),
+          item("${localizations.installRootCa} iOS", onPressed: () async => iosCer(await localIp())),
+          item("${localizations.installRootCa} Android", onPressed: () async => androidCer(await localIp())),
+          SubmenuButton(
+              menuStyle: MenuStyle(
+                surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor),
+              ),
+              menuChildren: [
+                MenuItemButton(
+                    child: Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: Text(localizations.exportCA, style: const TextStyle(fontSize: 14))),
+                    onPressed: () async {
+                      String? path = (await getSaveLocation(suggestedName: "ProxyPinCA.crt"))?.path;
+                      if (path == null) return;
+
+                      var caFile = await CertificateManager.certificateFile();
+                      await caFile.copy(path);
+                    }),
+                const Divider(thickness: 0.3, height: 8),
+                MenuItemButton(
+                    child: Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: Text(localizations.exportPrivateKey, style: const TextStyle(fontSize: 14))),
+                    onPressed: () async {
+                      String? path = (await getSaveLocation(suggestedName: "ProxyPinKey.pem"))?.path;
+                      if (path == null) return;
+
+                      var keyFile = await CertificateManager.privateKeyFile();
+                      await keyFile.copy(path);
+                    }),
+              ],
+              child: Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Text(localizations.export, style: const TextStyle(fontSize: 14))))
+        ]);
+  }
+
+  Widget item(String text, {VoidCallback? onPressed}) {
+    return MenuItemButton(
+        trailingIcon: const Icon(Icons.arrow_right),
+        onPressed: onPressed,
+        child: Padding(
+            padding: const EdgeInsets.only(left: 10, right: 5),
+            child: Text(text, style: const TextStyle(fontSize: 14))));
   }
 
   void pcCer() async {
@@ -92,9 +95,9 @@ class _SslState extends State<SslWidget> {
     if (Platform.isMacOS || Platform.isWindows) {
       list = [
         isCN
-            ? Text(" 安装证书到本系统，${Platform.isMacOS ? "安装完双击选择“始终信任此证书”。 如安装打开失败，请下载证书拖拽到系统证书里" : "选择“受信任的根证书颁发机构”"}")
+            ? Text(" 安装证书到本系统，${Platform.isMacOS ? "安装完双击选择“始终信任此证书”。 如安装打开失败，请导出证书拖拽到系统证书里" : "选择“受信任的根证书颁发机构”"}")
             : Text(" Install certificate to this system，${Platform.isMacOS ? "After installation, double-click to select “Always Trust”。\n"
-                " If installation and opening fail，Please download the certificate and drag it to the system certificate" : "choice“Trusted Root Certificate Authority”"}"),
+                " If installation and opening fail，Please export the certificate and drag it to the system certificate" : "choice“Trusted Root Certificate Authority”"}"),
         const SizedBox(height: 10),
         FilledButton(onPressed: _installCert, child: Text(localizations.installRootCa)),
         const SizedBox(height: 10),
@@ -206,8 +209,7 @@ class _SslState extends State<SslWidget> {
                   child: DefaultTabController(
                       length: 2,
                       child: Scaffold(
-                        appBar: TabBar(
-                            tabs: <Widget>[
+                        appBar: TabBar(tabs: <Widget>[
                           Tab(text: localizations.androidRoot),
                           Tab(text: localizations.androidUserCA),
                         ]),
@@ -237,7 +239,8 @@ class _SslState extends State<SslWidget> {
                               ]),
                               ListView(
                                 children: [
-                                  Text(localizations.androidUserCATips, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                  Text(localizations.androidUserCATips,
+                                      style: const TextStyle(fontWeight: FontWeight.w500)),
                                   const SizedBox(height: 10),
                                   SelectableText.rich(TextSpan(
                                       text:
@@ -278,12 +281,7 @@ class _SslState extends State<SslWidget> {
   }
 
   void _installCert() async {
-    final String appPath = await getApplicationSupportDirectory().then((value) => value.path);
-    var caFile = File("$appPath${Platform.pathSeparator}ProxyPinCA.crt");
-    if (!(await caFile.exists())) {
-      var body = await rootBundle.load('assets/certs/ca.crt');
-      await caFile.writeAsBytes(body.buffer.asUint8List());
-    }
+    var caFile = await CertificateManager.certificateFile();
     launchUrl(Uri.file(caFile.path)).then((value) => CertificateManager.cleanCache());
   }
 }
@@ -305,19 +303,25 @@ class _SwitchState extends State<_Switch> {
 
   @override
   Widget build(BuildContext context) {
-    return SwitchListTile(
-        hoverColor: Colors.transparent,
-        title: Text(localizations.enabledHttps, style: const TextStyle(fontSize: 12)),
-        visualDensity: const VisualDensity(horizontal: -4),
-        dense: true,
-        value: widget.proxyServer.enableSsl,
-        onChanged: (val) {
-          widget.proxyServer.enableSsl = val;
-          changed = true;
-          widget.onEnableChange(val);
-          CertificateManager.cleanCache();
-          setState(() {});
-        });
+    return MenuItemButton(
+        onPressed: () {},
+        child: Row(children: [
+          Padding(
+              padding: const EdgeInsets.only(left: 10, right: 5),
+              child: Text(localizations.enabledHttps, style: const TextStyle(fontSize: 14))),
+          Transform.scale(
+              scale: 0.8,
+              child: Switch(
+                  hoverColor: Colors.transparent,
+                  value: widget.proxyServer.enableSsl,
+                  onChanged: (val) {
+                    widget.proxyServer.enableSsl = val;
+                    changed = true;
+                    widget.onEnableChange(val);
+                    CertificateManager.cleanCache();
+                    setState(() {});
+                  }))
+        ]));
   }
 
   @override

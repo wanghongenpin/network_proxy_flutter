@@ -6,7 +6,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
-import 'package:network_proxy/network/util/file_read.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -52,50 +51,79 @@ class _MobileSslState extends State<MobileSslWidget> {
                 CertificateManager.cleanCache();
                 setState(() {});
               }),
-          Expanded(child: Platform.isIOS ? ios() : const AndroidCaInstall()),
+          ListTile(
+              title: Text(localizations.installRootCa),
+              trailing: const Icon(Icons.keyboard_arrow_right),
+              onTap: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => Platform.isIOS ? ios() : const AndroidCaInstall()));
+              }),
+          ListTile(
+              title: Text(localizations.exportCA),
+              onTap: () async {
+                if (Platform.isIOS) {
+                  _downloadCert();
+                  return;
+                }
+                var caFile = await CertificateManager.certificateFile();
+                _exportFile("ProxyPinCA.crt", caFile);
+              }),
+          ListTile(
+              title: Text(localizations.exportPrivateKey),
+              onTap: () async {
+                var keyFile = await CertificateManager.privateKeyFile();
+                _exportFile("ProxyPinKey.pem", keyFile);
+              }),
+          // Expanded(child: Platform.isIOS ? ios() : const AndroidCaInstall()),
           // const SizedBox(height: 20)
         ]));
   }
 
   Widget ios() {
-    return ListView(children: [
-      // if (localizations.localeName != 'zh')
-      //   ExpansionTile(
-      //     title: Text(localizations.useGuide),
-      //     shape: const Border(),
-      //     maintainState: true,
-      //     children: [
-      //       Container(
-      //           height: 350, padding: const EdgeInsets.only(left: 15, right: 15), child: const VideoPlayerScreen())
-      //     ],
-      //   ),
-      ExpansionTile(
-          title: Text(localizations.installRootCa),
-          initiallyExpanded: true,
-          childrenPadding: const EdgeInsets.only(left: 20),
-          expandedAlignment: Alignment.topLeft,
-          expandedCrossAxisAlignment: CrossAxisAlignment.start,
-          shape: const Border(),
-          children: [
-            TextButton(onPressed: () => _downloadCert(), child: Text("1. ${localizations.downloadRootCa}")),
-            TextButton(onPressed: () {}, child: Text("2. ${localizations.installRootCa} -> ${localizations.trustCa}")),
-            TextButton(onPressed: () {}, child: Text("2.1 ${localizations.installCaDescribe}")),
-            Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: Image.network("https://foruda.gitee.com/images/1689346516243774963/c56bc546_1073801.png",
-                    height: 400)),
-            TextButton(onPressed: () {}, child: Text("2.2 ${localizations.trustCaDescribe}")),
-            Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: Image.network("https://foruda.gitee.com/images/1689346614916658100/fd9b9e41_1073801.png",
-                    height: 270)),
-          ])
-    ]);
+    return Scaffold(
+        appBar: AppBar(title: Text(localizations.installRootCa, style: const TextStyle(fontSize: 16))),
+        body: SingleChildScrollView(
+            padding: const EdgeInsets.all(10),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              // if (localizations.localeName != 'zh')
+              //   ExpansionTile(
+              //     title: Text(localizations.useGuide),
+              //     shape: const Border(),
+              //     maintainState: true,
+              //     children: [
+              //       Container(
+              //           height: 350, padding: const EdgeInsets.only(left: 15, right: 15), child: const VideoPlayerScreen())
+              //     ],
+              //   ),
+              TextButton(onPressed: () => _downloadCert(), child: Text("1. ${localizations.downloadRootCa}")),
+              TextButton(
+                  onPressed: () {}, child: Text("2. ${localizations.installRootCa} -> ${localizations.trustCa}")),
+              TextButton(onPressed: () {}, child: Text("2.1 ${localizations.installCaDescribe}")),
+              Padding(
+                  padding: const EdgeInsets.only(left: 15),
+                  child: Image.network("https://foruda.gitee.com/images/1689346516243774963/c56bc546_1073801.png",
+                      height: 400)),
+              TextButton(onPressed: () {}, child: Text("2.2 ${localizations.trustCaDescribe}")),
+              Padding(
+                  padding: const EdgeInsets.only(left: 15),
+                  child: Image.network("https://foruda.gitee.com/images/1689346614916658100/fd9b9e41_1073801.png",
+                      height: 270)),
+            ])));
   }
 
   void _downloadCert() async {
     CertificateManager.cleanCache();
     launchUrl(Uri.parse("http://127.0.0.1:${widget.proxyServer.port}/ssl"), mode: LaunchMode.externalApplication);
+  }
+
+  void _exportFile(String name, File file) async {
+    String? outputFile = await FilePicker.platform
+        .saveFile(dialogTitle: 'Please select the path to save:', fileName: name, bytes: await file.readAsBytes());
+
+    if (outputFile != null && mounted) {
+      AppLocalizations localizations = AppLocalizations.of(context)!;
+      FlutterToastr.show(localizations.success, context);
+    }
   }
 }
 
@@ -126,9 +154,7 @@ class _AndroidCaInstallState extends State<AndroidCaInstall> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        endDrawerEnableOpenDragGesture: false,
         appBar: AppBar(
-            automaticallyImplyLeading: false,
             title: Text(localizations.installRootCa, style: const TextStyle(fontSize: 16)),
             bottom: TabBar(
                 controller: _tabController,
@@ -206,10 +232,9 @@ class _AndroidCaInstallState extends State<AndroidCaInstall> with SingleTickerPr
   }
 
   void _downloadCert(String name) async {
-    String? outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: 'Please select the path to save:',
-        fileName: name,
-        bytes: await FileRead.read('assets/certs/ca.crt'));
+    var caFile = await CertificateManager.certificateFile();
+    String? outputFile = await FilePicker.platform
+        .saveFile(dialogTitle: 'Please select the path to save:', fileName: name, bytes: await caFile.readAsBytes());
 
     if (outputFile != null && mounted) {
       AppLocalizations localizations = AppLocalizations.of(context)!;

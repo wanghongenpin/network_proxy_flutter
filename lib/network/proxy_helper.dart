@@ -9,7 +9,7 @@ import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/codec.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
-import 'package:network_proxy/network/util/file_read.dart';
+import 'package:network_proxy/network/util/crts.dart';
 import 'package:network_proxy/network/util/localizations.dart';
 
 import 'components/host_filter.dart';
@@ -52,14 +52,15 @@ class ProxyHelper {
     response.headers.set("Content-Disposition", 'inline;filename=ProxyPinCA.crt');
     response.headers.set("Connection", 'close');
 
-    var body = await FileRead.read('assets/certs/ca.crt');
-    response.headers.set("Content-Length", body.lengthInBytes.toString());
+    var caFile = await CertificateManager.certificateFile();
+    var caBytes = await caFile.readAsBytes();
+    response.headers.set("Content-Length", caBytes.lengthInBytes.toString());
 
     if (request.method == HttpMethod.head) {
       channel.writeAndClose(response);
       return;
     }
-    response.body = body.buffer.asUint8List();
+    response.body = caBytes;
     channel.writeAndClose(response);
   }
 

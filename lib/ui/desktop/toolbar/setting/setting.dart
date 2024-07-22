@@ -40,6 +40,7 @@ class _SettingState extends State<Setting> {
   Widget build(BuildContext context) {
     var surfaceTintColor =
         Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.background;
+
     return MenuAnchor(
       style: MenuStyle(surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor)),
       builder: (context, controller, child) {
@@ -215,18 +216,24 @@ class _ProxyMenuState extends State<_ProxyMenu> {
 
   ///设置系统代理
   Widget setSystemProxy() {
-    return SwitchListTile(
-        hoverColor: Colors.transparent,
-        title: Text(localizations.systemProxy, maxLines: 1),
-        dense: true,
-        value: configuration.enableSystemProxy,
-        onChanged: (val) {
-          widget.proxyServer.setSystemProxyEnable(val);
-          configuration.enableSystemProxy = val;
-          setState(() {
-            changed = true;
-          });
-        });
+    return Row(children: [
+      Padding(
+          padding: const EdgeInsets.only(left: 15),
+          child: Text(localizations.systemProxy, style: const TextStyle(fontSize: 14))),
+      Expanded(
+          child: Transform.scale(
+              scale: 0.8,
+              child: Switch(
+                  hoverColor: Colors.transparent,
+                  value: configuration.enableSystemProxy,
+                  onChanged: (val) {
+                    widget.proxyServer.setSystemProxyEnable(val);
+                    configuration.enableSystemProxy = val;
+                    setState(() {
+                      changed = true;
+                    });
+                  })))
+    ]);
   }
 }
 

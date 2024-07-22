@@ -52,13 +52,20 @@ class Preference extends StatelessWidget {
                       DropdownMenuItem(value: ThemeMode.dark, child: Text(localizations.themeDark)),
                     ]),
               ]),
+
               Tooltip(
                   message: localizations.material3,
-                  child: SwitchListTile(
-                    contentPadding: const EdgeInsets.only(left: 0, right: 5),
-                    value: appConfiguration.useMaterial3,
-                    onChanged: (bool value) => appConfiguration.useMaterial3 = value,
-                    title: const Text("Material3: "),
+                  child: Row(
+                    children: [
+                      Text("Material3: ", style: titleMedium),
+                      Expanded(
+                          child: Transform.scale(
+                              scale: 0.8,
+                              child: Switch(
+                                value: appConfiguration.useMaterial3,
+                                onChanged: (bool value) => appConfiguration.useMaterial3 = value,
+                              )))
+                    ],
                   )),
               const Divider(),
               ListTile(

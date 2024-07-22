@@ -175,6 +175,8 @@
   "installCaLocal": "安装根证书到本机",
   "downloadRootCa": "下载根证书",
   "trustCa": "信任证书",
+  "exportCA": "导出根证书",
+  "exportPrivateKey": "导出私钥",
   "profileDownload": "已下载描述文件",
   "install": "安装",
   "installCaDescribe": "安装证书 设置 > 已下载描述文件 > 安装",
