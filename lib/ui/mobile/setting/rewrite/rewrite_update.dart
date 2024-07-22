@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
+import 'package:network_proxy/utils/lang.dart';
 
 class RewriteUpdateWidget extends StatefulWidget {
   final String subtitle;
@@ -288,7 +289,7 @@ class _UpdateListState extends State<UpdateList> {
                             list[index].enabled = val;
                           })),
                   const SizedBox(width: 20),
-                  Expanded(child: Text(getText(list[index]), style: const TextStyle(fontSize: 13))),
+                  Expanded(child: Text(getText(list[index]).fixAutoLines(), style: const TextStyle(fontSize: 13))),
                 ],
               )));
     });

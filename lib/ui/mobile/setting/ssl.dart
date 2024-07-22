@@ -155,6 +155,7 @@ class _AndroidCaInstallState extends State<AndroidCaInstall> with SingleTickerPr
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+            centerTitle: true,
             title: Text(localizations.installRootCa, style: const TextStyle(fontSize: 16)),
             bottom: TabBar(
                 controller: _tabController,
