@@ -6,6 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
+import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -58,6 +59,7 @@ class _MobileSslState extends State<MobileSslWidget> {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context) => Platform.isIOS ? ios() : const AndroidCaInstall()));
               }),
+          const Divider(indent: 0.2, height: 2),
           ListTile(
               title: Text(localizations.exportCA),
               onTap: () async {
@@ -74,8 +76,27 @@ class _MobileSslState extends State<MobileSslWidget> {
                 var keyFile = await CertificateManager.privateKeyFile();
                 _exportFile("ProxyPinKey.pem", keyFile);
               }),
-          // Expanded(child: Platform.isIOS ? ios() : const AndroidCaInstall()),
-          // const SizedBox(height: 20)
+          const Divider(indent: 0.2, height: 2),
+          ListTile(
+              title: Text(localizations.generateCA),
+              onTap: () async {
+                showConfirmDialog(context, title: localizations.generateCA, content: localizations.generateCADescribe,
+                    onConfirm: () async {
+                  await CertificateManager.generateNewRootCA();
+                  if (context.mounted) FlutterToastr.show(localizations.success, context);
+                });
+              }),
+          const Divider(indent: 0.2, height: 2),
+          ListTile(
+              title: Text(localizations.resetDefaultCA),
+              onTap: () async {
+                showConfirmDialog(context,
+                    title: localizations.resetDefaultCA,
+                    content: localizations.resetDefaultCADescribe, onConfirm: () async {
+                  await CertificateManager.resetDefaultRootCA();
+                  if (context.mounted) FlutterToastr.show(localizations.success, context);
+                });
+              }),
         ]));
   }
 

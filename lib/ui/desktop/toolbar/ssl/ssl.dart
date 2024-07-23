@@ -105,7 +105,6 @@ class _SslState extends State<SslWidget> {
 
   Widget item(String text, {VoidCallback? onPressed}) {
     return MenuItemButton(
-        trailingIcon: const Icon(Icons.arrow_right),
         onPressed: onPressed,
         child: Padding(
             padding: const EdgeInsets.only(left: 10, right: 5),
