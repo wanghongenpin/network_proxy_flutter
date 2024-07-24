@@ -76,9 +76,8 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        debug  {
+        debug {
             signingConfig signingConfigs.release
-            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -89,5 +88,4 @@ flutter {
 }
 
 dependencies {
-    implementation group: 'com.github.ben-manes.caffeine', name: 'guava', version: '3.1.8'
 }

@@ -253,7 +253,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
       }
       msg = response;
     } catch (e, t) {
-      msg.status = HttpStatus(-1, Localizations.isEN ? 'Script exec error' : '执行脚本异常');
+      msg.status = HttpStatus(-1, 'Script exec error');
       msg.body = "$e\n${msg.bodyAsString}".codeUnits;
       log.e('[${clientChannel.id}] 执行脚本异常 ', error: e, stackTrace: t);
     }

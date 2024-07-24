@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +60,7 @@ class _MobileSslState extends State<MobileSslWidget> {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context) => Platform.isIOS ? ios() : const AndroidCaInstall()));
               }),
-          const Divider(indent: 0.2, height: 2),
+          const Divider(indent: 0.2, height: 1),
           ListTile(
               title: Text(localizations.exportCA),
               onTap: () async {
@@ -68,15 +69,51 @@ class _MobileSslState extends State<MobileSslWidget> {
                   return;
                 }
                 var caFile = await CertificateManager.certificateFile();
-                _exportFile("ProxyPinCA.crt", caFile);
+                _exportFile("ProxyPinCA.crt", file: caFile);
+              }),
+          ListTile(
+              title: Text(localizations.exportCaP12),
+              onTap: () async {
+                //show p12 password
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return SimpleDialog(
+                          title: Text(localizations.exportCaP12, style: const TextStyle(fontSize: 16)),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: TextField(
+                                controller: TextEditingController(),
+                                decoration: const InputDecoration(
+                                  hintText: "Enter a password to protect p12 file",
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
+                              TextButton(
+                                onPressed: () async {
+                                  var password = TextEditingController().text;
+                                  var p12Bytes = await CertificateManager.generatePkcs12(password);
+                                  _exportFile("ProxyPinPkcs12.p12", bytes: p12Bytes);
+
+                                  if (context.mounted) Navigator.pop(context);
+                                },
+                                child: Text(localizations.export),
+                              )
+                            ])
+                          ]);
+                    });
               }),
           ListTile(
               title: Text(localizations.exportPrivateKey),
               onTap: () async {
                 var keyFile = await CertificateManager.privateKeyFile();
-                _exportFile("ProxyPinKey.pem", keyFile);
+                _exportFile("ProxyPinKey.pem", file: keyFile);
               }),
-          const Divider(indent: 0.2, height: 2),
+          const Divider(indent: 0.2, height: 1),
           ListTile(
               title: Text(localizations.generateCA),
               onTap: () async {
@@ -86,7 +123,7 @@ class _MobileSslState extends State<MobileSslWidget> {
                   if (context.mounted) FlutterToastr.show(localizations.success, context);
                 });
               }),
-          const Divider(indent: 0.2, height: 2),
+          const Divider(indent: 0.2, height: 1),
           ListTile(
               title: Text(localizations.resetDefaultCA),
               onTap: () async {
@@ -137,9 +174,11 @@ class _MobileSslState extends State<MobileSslWidget> {
     launchUrl(Uri.parse("http://127.0.0.1:${widget.proxyServer.port}/ssl"), mode: LaunchMode.externalApplication);
   }
 
-  void _exportFile(String name, File file) async {
+  void _exportFile(String name, {File? file, Uint8List? bytes}) async {
+    bytes ??= await file!.readAsBytes();
+
     String? outputFile = await FilePicker.platform
-        .saveFile(dialogTitle: 'Please select the path to save:', fileName: name, bytes: await file.readAsBytes());
+        .saveFile(dialogTitle: 'Please select the path to save:', fileName: name, bytes: bytes);
 
     if (outputFile != null && mounted) {
       AppLocalizations localizations = AppLocalizations.of(context)!;

@@ -89,6 +89,46 @@ class _SslState extends State<SslWidget> {
           MenuItemButton(
               child: Padding(
                   padding: const EdgeInsets.only(left: 10, right: 10),
+                  child: Text(localizations.exportCaP12, style: const TextStyle(fontSize: 14))),
+              onPressed: () async {
+                //show p12 password
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return SimpleDialog(
+                          title: Text(localizations.exportCaP12, style: const TextStyle(fontSize: 16)),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: TextField(
+                                controller: TextEditingController(),
+                                decoration: const InputDecoration(
+                                  hintText: "Enter a password to protect p12 file",
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
+                              TextButton(
+                                onPressed: () async {
+                                  String? path = (await getSaveLocation(suggestedName: "ProxyPinPkcs12.p12"))?.path;
+                                  if (path == null) return;
+
+                                  var password = TextEditingController().text;
+                                  var p12Bytes = await CertificateManager.generatePkcs12(password);
+                                  await File(path).writeAsBytes(p12Bytes);
+                                  if (context.mounted) Navigator.pop(context);
+                                },
+                                child: Text(localizations.export),
+                              )
+                            ])
+                          ]);
+                    });
+              }),
+          MenuItemButton(
+              child: Padding(
+                  padding: const EdgeInsets.only(left: 10, right: 10),
                   child: Text(localizations.exportPrivateKey, style: const TextStyle(fontSize: 14))),
               onPressed: () async {
                 String? path = (await getSaveLocation(suggestedName: "ProxyPinKey.pem"))?.path;

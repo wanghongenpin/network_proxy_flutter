@@ -5,7 +5,6 @@ import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Process
 import android.system.OsConstants
-import com.google.common.cache.CacheBuilder
 import com.network.proxy.plugin.ProcessInfo
 import com.network.proxy.vpn.Connection
 import java.net.InetSocketAddress
@@ -24,13 +23,12 @@ class ProcessInfoManager private constructor() {
 
     class NetworkInfo(val uid: Int, val remoteHost: String, val remotePort: Int)
 
-    private val localPortMap =
-        CacheBuilder.newBuilder().maximumSize(10_000).expireAfterAccess(60, TimeUnit.SECONDS)
-            .build<Int, NetworkInfo>()
+    private val localPortCache =
+        SimpleCache<Int, NetworkInfo>(10_000, 60, TimeUnit.SECONDS)
 
-    private val appInfoCache =
-        CacheBuilder.newBuilder().maximumSize(10_000).expireAfterAccess(300, TimeUnit.SECONDS)
-            .build<Int, ProcessInfo>()
+
+    private val appInfoCache = SimpleCache<Int, ProcessInfo>(10_000, 300, TimeUnit.SECONDS)
+
 
     var activity: Context? = null
 
@@ -51,7 +49,7 @@ class ProcessInfoManager private constructor() {
             val localAddress = channel.localAddress as InetSocketAddress
             val networkInfo =
                 NetworkInfo(uid, destinationAddress.hostString, destinationAddress.port)
-            localPortMap.put(localAddress.port, networkInfo)
+            localPortCache.put(localAddress.port, networkInfo)
         }
     }
 
@@ -63,7 +61,7 @@ class ProcessInfoManager private constructor() {
         val channel = connection.channel
         if (channel is SocketChannel) {
             val localAddress = channel.localAddress as InetSocketAddress
-            localPortMap.invalidate(localAddress.port)
+            localPortCache.remove(localAddress.port)
         }
     }
 
@@ -102,7 +100,7 @@ class ProcessInfoManager private constructor() {
     }
 
     fun getProcessInfoByPort(localPort: Int): ProcessInfo? {
-        val networkInfo = localPortMap.getIfPresent(localPort)
+        val networkInfo = localPortCache.get(localPort)
         if (networkInfo != null) {
             val processInfo = getProcessInfo(networkInfo.uid)
 
@@ -115,7 +113,7 @@ class ProcessInfoManager private constructor() {
     }
 
     private fun getProcessInfo(uid: Int): ProcessInfo? {
-        var appInfo = appInfoCache.getIfPresent(uid)
+        var appInfo = appInfoCache.get(uid)
         if (appInfo != null) return appInfo
 
         val packageManager = activity?.packageManager

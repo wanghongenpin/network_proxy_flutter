@@ -74,7 +74,7 @@ class ProxyHelper {
     HttpStatus status = HttpStatus(-1, message);
     if (error is HandshakeException) {
       status = HttpStatus(
-          -2, Localizations.isEN ? 'SSL handshake failed, please check the certificate' : 'SSL握手失败,请检查证书安装是否正确');
+          -2, Localizations.isEN ? 'SSL handshake failed, please check the certificate' : 'SSL handshake failed, 请检查证书安装是否正确');
     } else if (error is ParserException) {
       status = HttpStatus(-3, error.message);
     } else if (error is SocketException) {

@@ -17,6 +17,7 @@
 import 'dart:core';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
 import 'package:network_proxy/network/util/x509.dart';
@@ -94,7 +95,10 @@ class CertificateManager {
     x509Subject['CN'] = host;
 
     var csrPem = X509Generate.generateSelfSignedCertificate(caRoot, serverPubKey, caPriKey, 365,
-        sans: [host], serialNumber: Random().nextInt(1000000).toString(), subject: x509Subject);
+        extKeyUsage: [ExtendedKeyUsage.SERVER_AUTH],
+        sans: [host],
+        serialNumber: Random().nextInt(1000000).toString(),
+        subject: x509Subject);
     return csrPem;
   }
 
@@ -181,5 +185,12 @@ class CertificateManager {
     }
 
     return caFile;
+  }
+
+  ///生成 p12文件
+  static Future<Uint8List> generatePkcs12(String? password) async {
+    var caFile = await CertificateManager.certificateFile();
+    var keyFile = await CertificateManager.privateKeyFile();
+    return Pkcs12Utils.generatePkcs12(await keyFile.readAsString(), [await caFile.readAsString()], password: password);
   }
 }
