@@ -83,7 +83,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
       return const SizedBox();
     }
 
-    var tabs = Tabs.of(widget.httpMessage?.contentType);
+    var tabs = Tabs.of(widget.httpMessage?.contentType, isJsonText());
 
     if (tabIndex >= tabs.list.length) tabIndex = tabs.list.length - 1;
     bodyKey.currentState?.changeState(widget.httpMessage, tabs.list[tabIndex]);
@@ -122,6 +122,14 @@ class HttpBodyState extends State<HttpBodyWidget> {
           body: tabController);
     }
     return tabController;
+  }
+
+  //判断是否是json格式
+  bool isJsonText() {
+    var bodyString = widget.httpMessage?.bodyAsString;
+    return bodyString != null &&
+        (bodyString.startsWith('{') && bodyString.endsWith('}') ||
+            bodyString.startsWith('[') && bodyString.endsWith(']'));
   }
 
   /// 标题
@@ -365,7 +373,7 @@ class _BodyState extends State<_Body> {
 class Tabs {
   final List<ViewType> list = [];
 
-  static Tabs of(ContentType? contentType) {
+  static Tabs of(ContentType? contentType, bool isJsonText) {
     var tabs = Tabs();
     if (contentType == null) {
       return tabs;
@@ -377,8 +385,11 @@ class Tabs {
 
     tabs.list.add(ViewType.of(contentType) ?? ViewType.text);
 
+    //content-type 为text时，增加json格式化
     if (contentType == ContentType.text) {
       tabs.list.add(ViewType.jsonText);
+
+      if (isJsonText) tabs.list.add(ViewType.json);
     }
     if (contentType == ContentType.formUrl || contentType == ContentType.json) {
       tabs.list.add(ViewType.text);
