@@ -180,6 +180,7 @@
   "resetDefaultCA": "Reset Default Root Certificate",
   "resetDefaultCADescribe": "Are you sure you want to reset to the default root certificate?\nProxyPin default root certificate is the same for all users.",
   "exportCaP12": "Export Root Certificate(.p12)",
+  "importCaP12": "Import Root Certificate(.p12)",
   "trustCa": "Trust Certificate",
   "profileDownload": "Profile Download",
   "exportCA": "Export Root Certificate",

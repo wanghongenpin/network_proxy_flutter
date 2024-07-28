@@ -7,6 +7,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -41,7 +42,7 @@ class _MobileSslState extends State<MobileSslWidget> {
           title: Text(localizations.httpsProxy, style: const TextStyle(fontSize: 16)),
           centerTitle: true,
         ),
-        body: Column(children: [
+        body: ListView(children: [
           SwitchListTile(
               hoverColor: Colors.transparent,
               title: Text(localizations.enabledHttps),
@@ -68,52 +69,19 @@ class _MobileSslState extends State<MobileSslWidget> {
                   _downloadCert();
                   return;
                 }
+
                 var caFile = await CertificateManager.certificateFile();
                 _exportFile("ProxyPinCA.crt", file: caFile);
               }),
-          ListTile(
-              title: Text(localizations.exportCaP12),
-              onTap: () async {
-                //show p12 password
-                showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      String? password;
-                      return SimpleDialog(
-                          title: Text(localizations.exportCaP12, style: const TextStyle(fontSize: 16)),
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: TextField(
-                                decoration: const InputDecoration(
-                                  hintText: "Enter a password to protect p12 file",
-                                  border: OutlineInputBorder(),
-                                ),
-                                onChanged: (val) => password = val,
-                              ),
-                            ),
-                            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
-                              TextButton(
-                                onPressed: () async {
-                                  var p12Bytes = await CertificateManager.generatePkcs12(
-                                      password?.isNotEmpty == true ? password : null);
-                                  _exportFile("ProxyPinPkcs12.p12", bytes: p12Bytes);
-
-                                  if (context.mounted) Navigator.pop(context);
-                                },
-                                child: Text(localizations.export),
-                              )
-                            ])
-                          ]);
-                    });
-              }),
+          ListTile(title: Text(localizations.exportCaP12), onTap: exportP12),
           ListTile(
               title: Text(localizations.exportPrivateKey),
               onTap: () async {
                 var keyFile = await CertificateManager.privateKeyFile();
                 _exportFile("ProxyPinKey.pem", file: keyFile);
               }),
+          const Divider(indent: 0.2, height: 1),
+          ListTile(title: Text(localizations.importCaP12), onTap: importPk12),
           const Divider(indent: 0.2, height: 1),
           ListTile(
               title: Text(localizations.generateCA),
@@ -136,6 +104,83 @@ class _MobileSslState extends State<MobileSslWidget> {
                 });
               }),
         ]));
+  }
+
+  void importPk12() async {
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['p12', 'pfx']);
+    if (result == null || !mounted) return;
+    //entry password
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          String? password;
+          return SimpleDialog(title: Text(localizations.importCaP12, style: const TextStyle(fontSize: 16)), children: [
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: TextField(
+                decoration: const InputDecoration(
+                  hintText: "Enter the password of the p12 file",
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (val) => password = val,
+              ),
+            ),
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
+              TextButton(
+                onPressed: () async {
+                  var bytes = await result.files.single.xFile.readAsBytes();
+                  try {
+                    await CertificateManager.importPkcs12(bytes, password);
+                    if (context.mounted) {
+                      FlutterToastr.show(localizations.success, context);
+                      Navigator.pop(context);
+                    }
+                  } catch (e, stackTrace) {
+                    logger.e('import p12 error [$password]', error: e, stackTrace: stackTrace);
+                    if (context.mounted) FlutterToastr.show(localizations.importFailed, context);
+                    return;
+                  }
+                },
+                child: Text(localizations.import),
+              )
+            ])
+          ]);
+        });
+  }
+
+  void exportP12() async {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          String? password;
+          return SimpleDialog(title: Text(localizations.exportCaP12, style: const TextStyle(fontSize: 16)), children: [
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: TextField(
+                decoration: const InputDecoration(
+                  hintText: "Enter a password to protect p12 file",
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (val) => password = val,
+              ),
+            ),
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
+              TextButton(
+                onPressed: () async {
+                  var p12Bytes =
+                      await CertificateManager.generatePkcs12(password?.isNotEmpty == true ? password : null);
+                  _exportFile("ProxyPinPkcs12.p12", bytes: p12Bytes);
+
+                  if (context.mounted) Navigator.pop(context);
+                },
+                child: Text(localizations.export),
+              )
+            ])
+          ]);
+        });
   }
 
   Widget ios() {

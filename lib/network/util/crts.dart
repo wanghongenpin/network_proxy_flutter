@@ -205,4 +205,21 @@ class CertificateManager {
     var keyFile = await CertificateManager.privateKeyFile();
     return Pkcs12Utils.generatePkcs12(await keyFile.readAsString(), [await caFile.readAsString()], password: password);
   }
+
+  ///import p12文件
+  static Future<void> importPkcs12(Uint8List pkcs12, String? password) async {
+    var decodePkcs12 = Pkcs12Utils.parsePkcs12(pkcs12, password: password);
+
+    var caFile = await CertificateManager.certificateFile();
+    var keyFile = await CertificateManager.privateKeyFile();
+    if (decodePkcs12.length != 2) {
+      throw Exception('Invalid pkcs12 file');
+    }
+
+    await keyFile.writeAsString(decodePkcs12[0]);
+    await caFile.writeAsString(decodePkcs12[1]);
+
+    cleanCache();
+    _initialized = false;
+  }
 }

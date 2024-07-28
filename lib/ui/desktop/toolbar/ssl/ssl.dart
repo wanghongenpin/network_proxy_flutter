@@ -1,11 +1,13 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/util/crts.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/utils/ip.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -47,6 +49,8 @@ class _SslState extends State<SslWidget> {
           item("${localizations.installRootCa} iOS", onPressed: () async => iosCer(await localIp())),
           item("${localizations.installRootCa} Android", onPressed: () async => androidCer(await localIp())),
           const Divider(thickness: 0.3, height: 3),
+          importMenu(surfaceTintColor),
+          const Divider(thickness: 0.3, height: 3),
           exportMenu(surfaceTintColor),
           const Divider(thickness: 0.3, height: 3),
           item(localizations.generateCA, onPressed: () async {
@@ -66,6 +70,57 @@ class _SslState extends State<SslWidget> {
             });
           }),
         ]);
+  }
+
+  //import method
+  Widget importMenu(Color? surfaceTintColor) {
+    return item(localizations.importCaP12, onPressed: () async {
+      FilePickerResult? result =
+          await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['p12', 'pfx']);
+      if (result == null || !mounted) return;
+
+      //entry password
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            String? password;
+            return SimpleDialog(
+                title: Text(localizations.importCaP12, style: const TextStyle(fontSize: 16)),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        hintText: "Enter the password of the p12 file",
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (val) => password = val,
+                    ),
+                  ),
+                  Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
+                    TextButton(
+                      onPressed: () async {
+                        var file = File(result.files.single.path!);
+                        var bytes = await file.readAsBytes();
+                        try {
+                          await CertificateManager.importPkcs12(bytes, password);
+                          if (context.mounted) {
+                            FlutterToastr.show(localizations.success, context);
+                            Navigator.pop(context);
+                          }
+                        } catch (e, stackTrace) {
+                          logger.e('import p12 error [$password]', error: e, stackTrace: stackTrace);
+                          if (context.mounted) FlutterToastr.show(localizations.importFailed, context);
+                          return;
+                        }
+                      },
+                      child: Text(localizations.import),
+                    )
+                  ])
+                ]);
+          });
+    });
   }
 
   Widget exportMenu(Color? surfaceTintColor) {
