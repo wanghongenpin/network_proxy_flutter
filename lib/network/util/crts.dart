@@ -41,7 +41,7 @@ class CertificateManager {
   static final Map<String, String> _certificateMap = {};
 
   /// 服务端密钥
-  static final AsymmetricKeyPair _serverKeyPair = CryptoUtils.generateRSAKeyPair();
+  static AsymmetricKeyPair _serverKeyPair = CryptoUtils.generateRSAKeyPair();
 
   /// ca证书
   static late X509CertificateData _caCert;
@@ -161,6 +161,8 @@ class CertificateManager {
     if (_initialized) {
       return;
     }
+    _serverKeyPair = CryptoUtils.generateRSAKeyPair();
+
     //从项目目录加入ca根证书
     var caPemFile = await certificateFile();
     _caCert = X509Utils.x509CertificateFromPem(await caPemFile.readAsString());

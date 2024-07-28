@@ -127,6 +127,7 @@
   "delete": "删除",
   "rename": "重命名",
   "repeat": "重放",
+  "repeatAllRequests": "重放所有请求",
   "repeatDomainRequests": "重放域名下请求",
   "customRepeat": "高级重放",
   "repeatCount": "次数",

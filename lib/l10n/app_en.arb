@@ -127,6 +127,7 @@
   "delete": "Delete",
   "rename": "Rename",
   "repeat": "Repeat",
+  "repeatAllRequests": "Repeat All Requests",
   "repeatDomainRequests": "Repeat Domain Requests",
   "customRepeat": "Custom Repeat",
   "repeatCount": "Iterations",

@@ -78,25 +78,26 @@ class _MobileSslState extends State<MobileSslWidget> {
                 showDialog(
                     context: context,
                     builder: (BuildContext context) {
+                      String? password;
                       return SimpleDialog(
                           title: Text(localizations.exportCaP12, style: const TextStyle(fontSize: 16)),
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(10),
                               child: TextField(
-                                controller: TextEditingController(),
                                 decoration: const InputDecoration(
                                   hintText: "Enter a password to protect p12 file",
                                   border: OutlineInputBorder(),
                                 ),
+                                onChanged: (val) => password = val,
                               ),
                             ),
                             Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                               TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
                               TextButton(
                                 onPressed: () async {
-                                  var password = TextEditingController().text;
-                                  var p12Bytes = await CertificateManager.generatePkcs12(password);
+                                  var p12Bytes = await CertificateManager.generatePkcs12(
+                                      password?.isNotEmpty == true ? password : null);
                                   _exportFile("ProxyPinPkcs12.p12", bytes: p12Bytes);
 
                                   if (context.mounted) Navigator.pop(context);

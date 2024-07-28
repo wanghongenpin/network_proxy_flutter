@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/history_cache_time.dart';
@@ -74,9 +76,9 @@ class HistoryPageWidget extends StatelessWidget {
                     offset: const Offset(0, 32),
                     icon: const Icon(Icons.more_vert_outlined, size: 20),
                     itemBuilder: (BuildContext context) {
-                      return [
-                        PopupMenuItem(
-                            height: 32,
+                      return <PopupMenuEntry>[
+                        CustomPopupMenuItem(
+                            height: 35,
                             onTap: () {
                               String fileName = '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'
                                   .replaceAll(" ", "_")
@@ -84,9 +86,22 @@ class HistoryPageWidget extends StatelessWidget {
                               domainKey.currentState?.export(fileName);
                             },
                             child: IconText(
-                                icon: const Icon(Icons.share, size: 18),
+                                icon: const Icon(Icons.share, size: 16),
                                 text: localizations.viewExport,
-                                textStyle: const TextStyle(fontSize: 14))),
+                                textStyle: const TextStyle(fontSize: 13))),
+                        CustomPopupMenuItem(
+                            height: 35,
+                            onTap: () async {
+                              HistoryStorage storage = await HistoryStorage.instance;
+                              var requests = (await storage.getRequests(item)).reversed;
+                              //重发所有请求
+                              _repeatAllRequests(requests.toList(), proxyServer,
+                                  context: context.mounted ? context : null);
+                            },
+                            child: IconText(
+                                icon: const Icon(Icons.repeat, size: 16),
+                                text: localizations.repeatAllRequests,
+                                textStyle: const TextStyle(fontSize: 13))),
                       ];
                     }),
               ],
@@ -95,6 +110,26 @@ class HistoryPageWidget extends StatelessWidget {
           return DomainList(
               panel: panel, proxyServer: proxyServer, list: ListenableList(data), shrinkWrap: false, key: domainKey);
         }, loading: true));
+  }
+}
+
+///重发所有请求
+void _repeatAllRequests(Iterable<HttpRequest> requests, ProxyServer proxyServer, {BuildContext? context}) async {
+  var localizations = context == null ? null : AppLocalizations.of(context);
+
+  for (var request in requests) {
+    var httpRequest = request.copy(uri: request.requestUrl);
+    var proxyInfo = proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", proxyServer.port) : null;
+    try {
+      await HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo, timeout: const Duration(seconds: 3));
+      if (context != null && context.mounted) {
+        FlutterToastr.show(localizations!.reSendRequest, rootNavigator: true, context);
+      }
+    } catch (e) {
+      if (context != null && context.mounted) {
+        FlutterToastr.show('${localizations!.fail} $e', rootNavigator: true, context);
+      }
+    }
   }
 }
 
@@ -230,13 +265,23 @@ class _HistoryListState extends State<_HistoryListWidget> {
               showContextMenu(rootContext, details.globalPosition, items: [
                 CustomPopupMenuItem(
                     height: 35,
-                    child: Text(localizations.export, style: const TextStyle(fontSize: 13)),
-                    onTap: () => export(item)),
-                CustomPopupMenuItem(
-                    height: 35,
                     child: Text(localizations.rename, style: const TextStyle(fontSize: 13)),
                     onTap: () => renameHistory(storage, item)),
-                const PopupMenuDivider(height: 0.3),
+                CustomPopupMenuItem(
+                    height: 35,
+                    child: Text(localizations.export, style: const TextStyle(fontSize: 13)),
+                    onTap: () => export(item)),
+                const PopupMenuDivider(height: 3),
+                CustomPopupMenuItem(
+                    height: 35,
+                    child: Text(localizations.repeatAllRequests, style: const TextStyle(fontSize: 13)),
+                    onTap: () async {
+                      var requests = (await storage.getRequests(item)).reversed;
+                      //重发所有请求
+                      _repeatAllRequests(requests.toList(), proxyServer,
+                          context: rootContext.mounted ? rootContext : null);
+                    }),
+                const PopupMenuDivider(height: 3),
                 CustomPopupMenuItem(
                     height: 35,
                     child: Text(localizations.delete, style: const TextStyle(fontSize: 13)),
@@ -257,7 +302,7 @@ class _HistoryListState extends State<_HistoryListWidget> {
   }
 
   toRequestsView(HistoryItem item) {
-    Navigator.pushNamed(context, '/domain', arguments: {'item': item}).whenComplete(() async {
+    Navigator.pushNamed(context, "/domain", arguments: {'item': item}).whenComplete(() async {
       if (item != widget.historyTask.history && item.requests != null && item.requestLength != item.requests?.length) {
         await widget.storage.flushRequests(item, item.requests!);
         setState(() {});

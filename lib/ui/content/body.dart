@@ -385,7 +385,7 @@ class Tabs {
 
     tabs.list.add(ViewType.of(contentType) ?? ViewType.text);
 
-    //content-type 为text时，增加json格式化
+    //text 为json时，增加json格式化
     if (contentType == ContentType.text) {
       tabs.list.add(ViewType.jsonText);
 

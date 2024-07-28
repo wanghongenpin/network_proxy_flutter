@@ -24,7 +24,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/history_cache_time.dart';
@@ -47,6 +49,26 @@ class MobileHistory extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return _MobileHistoryState();
+  }
+}
+
+///重发所有请求
+void _repeatAllRequests(Iterable<HttpRequest> requests, ProxyServer proxyServer, {BuildContext? context}) async {
+  var localizations = context == null ? null : AppLocalizations.of(context);
+
+  for (var request in requests) {
+    var httpRequest = request.copy(uri: request.requestUrl);
+    var proxyInfo = proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", proxyServer.port) : null;
+    try {
+      await HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo, timeout: const Duration(seconds: 3));
+      if (context != null && context.mounted) {
+        FlutterToastr.show(localizations!.reSendRequest, rootNavigator: true, context);
+      }
+    } catch (e) {
+      if (context != null && context.mounted) {
+        FlutterToastr.show('${localizations!.fail} $e', rootNavigator: true, context);
+      }
+    }
   }
 }
 
@@ -163,6 +185,14 @@ class _MobileHistoryState extends State<MobileHistory> {
           showContextMenu(context, detail.globalPosition.translate(-50, index == 0 ? -100 : 100), items: [
             PopupMenuItem(child: Text(localizations.rename), onTap: () => renameHistory(storage, item)),
             PopupMenuItem(child: Text(localizations.share), onTap: () => export(storage, item)),
+            const PopupMenuDivider(height: 0.3),
+            PopupMenuItem(
+                child: Text(localizations.repeatAllRequests),
+                onTap: () async {
+                  var requests = (await storage.getRequests(item)).reversed;
+                  //重发所有请求
+                  _repeatAllRequests(requests.toList(), widget.proxyServer, context: mounted ? context : null);
+                }),
             const PopupMenuDivider(height: 0.3),
             PopupMenuItem(child: Text(localizations.delete), onTap: () => deleteHistory(storage, index))
           ]);
@@ -308,6 +338,14 @@ class _HistoryRecordState extends State<HistoryRecord> {
                         child: IconText(icon: const Icon(Icons.search), text: localizations.search)),
                     PopupMenuItem(
                         onTap: export, child: IconText(icon: const Icon(Icons.share), text: localizations.viewExport)),
+                    PopupMenuItem(
+                        onTap: () async {
+                          HistoryStorage storage = await HistoryStorage.instance;
+                          var requests = (await storage.getRequests(widget.history)).reversed;
+                          //重发所有请求
+                          _repeatAllRequests(requests.toList(), widget.proxyServer, context: mounted ? context : null);
+                        },
+                        child: IconText(icon: const Icon(Icons.repeat), text: localizations.repeatAllRequests)),
                   ];
                 }),
           ],
