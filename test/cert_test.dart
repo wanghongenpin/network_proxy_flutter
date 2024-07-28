@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'dart:math';
+
 import 'package:basic_utils/basic_utils.dart';
-import 'package:network_proxy/network/util/x509.dart';
+import 'package:network_proxy/network/util/x509/basic_constraints.dart';
+import 'package:network_proxy/network/util/x509/key_usage.dart' as x509;
+import 'package:network_proxy/network/util/x509/x509.dart';
 
 void main() async {
   var caPem = await File('assets/certs/ca.crt').readAsString();
@@ -11,33 +14,55 @@ void main() async {
   var serverPubKey = generateRSAKeyPair.publicKey as RSAPublicKey;
   var serverPriKey = generateRSAKeyPair.privateKey as RSAPrivateKey;
 
+  print(CryptoUtils.encodeRSAPublicKeyToPem(serverPubKey));
   //保存私钥
-  var serverPriKeyPem = CryptoUtils.encodeRSAPrivateKeyToPem(serverPriKey);
-  print(serverPriKeyPem);
-  await File('assets/certs/server.key').writeAsString(serverPriKeyPem);
-  var rsaPrivateKeyFromPem = CryptoUtils.rsaPrivateKeyFromPem(serverPriKeyPem);
-  print(rsaPrivateKeyFromPem);
-  var crt = generate(caRoot, serverPubKey, serverPriKey);
+  var serverPublicKeyPem = """-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqVXqbCErPZMS+2Eb3MUT
+eTNIYZHoCMZk5gFIo3pD70dZimQj2yMBIh9Rq4rO0/Dj9zt52vR1zbxDnmx/5TDC
+djDHk/zHYW66VLYCo4n1H4/dddFvJ8Y8syBNpa+seSAR6ljF807gZqINGeNKi8Du
+N82XiED2Ix3woE1jMQfP3E16alxHaejFBZ77SUOXJhJDM5SKD2H0bxGw9cVw9K69
+NmnZMIM9+U8+TuM9EzvMUuHTY278Ov72c9HpO5OAx2zfyXGlmUGgyUCiYnxeATX5
+LceGVEoT2MWhFibWvPBpH315xNXU57dWKWW714tPsvzzNHzKZspz/LQ36fU9goUg
+NQIDAQAB
+-----END PUBLIC KEY-----
+  """;
+  print(serverPublicKeyPem);
+  var readAsString = await File('assets/certs/server.key').readAsString();
+  // var rsaPrivateKeyFromPem = CryptoUtils.rsaPrivateKeyFromPem(serverPriKeyPem);
+  // print(rsaPrivateKeyFromPem);
+  var crt = generate(
+      caRoot, CryptoUtils.rsaPublicKeyFromPem(serverPublicKeyPem), CryptoUtils.rsaPrivateKeyFromPem(readAsString));
   print(crt);
 
-  await File('assets/certs/server.crt').writeAsString(crt);
-  //TLS服务器证书必须包含ExtendedKeyUsage（EKU）扩展，该扩展包含id-kp-serverAuth OID。
-  X509Utils.generateSelfSignedCertificate(serverPriKey, CryptoUtils.encodeRSAPublicKeyToPem(serverPubKey), 825,
-      serialNumber: Random().nextInt(1000000).toString(),
-      issuer: {
-        'C': 'CN',
-        'ST': 'BJ',
-        'L': 'Beijing',
-        'O': 'Proxy',
-        'OU': 'ProxyPin',
-        'CN': 'ProxyPin CA (${Platform.localHostname})'
-      },
-      extKeyUsage: [
-        ExtendedKeyUsage.SERVER_AUTH
-      ]);
+  // await File('assets/certs/server.crt').writeAsString(crt);
+  // var readAsString2 = File('assets/certs/server.crt').readAsStringSync();
 
-  var generatePkcs12 = Pkcs12Utils.generatePkcs12(serverPriKeyPem, [crt], password: '123456');
-  await File('C:\\Users\\wanghongen\\Downloads\\server.p12').writeAsBytes(generatePkcs12);
+  //TLS服务器证书必须包含ExtendedKeyUsage（EKU）扩展，该扩展包含id-kp-serverAuth OID。
+
+  // X509Utils.generateSelfSignedCertificate(serverPriKey, caPem, 825,
+  //     serialNumber: Random().nextInt(1000000).toString(),
+  //     sans: [
+  //       'ProxyPin CA (${Platform.localHostname})'
+  //     ],
+  //     issuer: {
+  //       'C': 'CN',
+  //       'ST': 'BJ',
+  //       'L': 'Beijing',
+  //       'O': 'Proxy',
+  //       'OU': 'ProxyPin',
+  //       'CN': 'ProxyPin CA (${Platform.localHostname})'
+  //     },
+  //     keyUsage: [
+  //       KeyUsage.DIGITAL_SIGNATURE,
+  //       KeyUsage.KEY_CERT_SIGN,
+  //       KeyUsage.CRL_SIGN
+  //     ],
+  //     extKeyUsage: [
+  //       ExtendedKeyUsage.SERVER_AUTH
+  //     ]);
+
+  var generatePkcs12 = Pkcs12Utils.generatePkcs12(readAsString, [crt], password: '123');
+  await File('/Users/wanghongen/Downloads/server.p12').writeAsBytes(generatePkcs12);
 }
 
 /// 生成证书
@@ -50,10 +75,12 @@ String generate(X509CertificateData caRoot, RSAPublicKey serverPubKey, RSAPrivat
     'O': 'Proxy',
     'OU': 'ProxyPin',
   };
-  x509Subject['CN'] = 'ProxyPin CA (${Platform.localHostname})';
+  x509Subject['CN'] = 'ProxyPin CA (wanghongen)';
 
-  var csrPem = X509Generate.generateSelfSignedCertificate(caRoot, serverPubKey, caPriKey, 825,
+  var csrPem = X509Generate.generateSelfSignedCertificate(caRoot, serverPubKey, caPriKey, 365,
+      keyUsage: x509.KeyUsage(x509.KeyUsage.keyCertSign | x509.KeyUsage.cRLSign),
       extKeyUsage: [ExtendedKeyUsage.SERVER_AUTH],
+      basicConstraints: BasicConstraints(isCA: true),
       sans: [x509Subject['CN']!],
       serialNumber: Random().nextInt(1000000).toString(),
       subject: x509Subject);

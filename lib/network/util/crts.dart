@@ -20,8 +20,10 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
-import 'package:network_proxy/network/util/x509.dart';
+import 'package:network_proxy/network/util/x509/basic_constraints.dart';
+import 'package:network_proxy/network/util/x509/x509.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:network_proxy/network/util/x509/key_usage.dart' as x509;
 
 import 'file_read.dart';
 
@@ -95,10 +97,7 @@ class CertificateManager {
     x509Subject['CN'] = host;
 
     var csrPem = X509Generate.generateSelfSignedCertificate(caRoot, serverPubKey, caPriKey, 365,
-        extKeyUsage: [ExtendedKeyUsage.SERVER_AUTH],
-        sans: [host],
-        serialNumber: Random().nextInt(1000000).toString(),
-        subject: x509Subject);
+        sans: [host], serialNumber: Random().nextInt(1000000).toString(), subject: x509Subject);
     return csrPem;
   }
 
@@ -122,7 +121,18 @@ class CertificateManager {
     };
     x509Subject['CN'] = 'ProxyPin CA (${Platform.localHostname})';
 
-    var csrPem = generate(_caCert, serverPubKey, serverPriKey, 'ProxyPin CA (${Platform.localHostname})');
+    var csrPem = X509Generate.generateSelfSignedCertificate(
+      _caCert,
+      serverPubKey,
+      serverPriKey,
+      825,
+      sans: [x509Subject['CN']!],
+      serialNumber: Random().nextInt(1000000).toString(),
+      subject: x509Subject,
+      keyUsage: x509.KeyUsage(x509.KeyUsage.keyCertSign | x509.KeyUsage.cRLSign),
+      extKeyUsage: [ExtendedKeyUsage.SERVER_AUTH, ExtendedKeyUsage.CLIENT_AUTH],
+      basicConstraints: BasicConstraints(isCA: true),
+    );
 
     //重新写入根证书
     var caFile = await certificateFile();

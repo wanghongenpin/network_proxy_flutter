@@ -92,6 +92,7 @@ class _SslState extends State<SslWidget> {
                   child: Text(localizations.exportCaP12, style: const TextStyle(fontSize: 14))),
               onPressed: () async {
                 //show p12 password
+                String? password;
                 showDialog(
                     context: context,
                     builder: (BuildContext context) {
@@ -101,11 +102,11 @@ class _SslState extends State<SslWidget> {
                             Padding(
                               padding: const EdgeInsets.all(10),
                               child: TextField(
-                                controller: TextEditingController(),
                                 decoration: const InputDecoration(
                                   hintText: "Enter a password to protect p12 file",
                                   border: OutlineInputBorder(),
                                 ),
+                                onChanged: (val) => password = val,
                               ),
                             ),
                             Row(mainAxisAlignment: MainAxisAlignment.end, children: [
@@ -115,8 +116,8 @@ class _SslState extends State<SslWidget> {
                                   String? path = (await getSaveLocation(suggestedName: "ProxyPinPkcs12.p12"))?.path;
                                   if (path == null) return;
 
-                                  var password = TextEditingController().text;
-                                  var p12Bytes = await CertificateManager.generatePkcs12(password);
+                                  var p12Bytes = await CertificateManager.generatePkcs12(
+                                      password?.isNotEmpty == true ? password : null);
                                   await File(path).writeAsBytes(p12Bytes);
                                   if (context.mounted) Navigator.pop(context);
                                 },
