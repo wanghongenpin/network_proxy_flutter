@@ -219,7 +219,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-            '1. 支持自定义根证书；\n'
+            '1. 支持导入自定义跟证书，以及生成自定义根证书；\n'
             '2. 支持重新生成根证书，以及重置默认跟证书；\n'
             '3. 支持导出根证书(P12)和私钥；\n'
             '4. 重放域名下请求；\n'
@@ -227,7 +227,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '6. 脚本headers支持同名多个值情况；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
-            '1. Support custom root certificates；\n'
+            '1. Support importing custom certificates and generating custom root certificates；\n'
             '2. Support generate new root certificates and resetting default  root certificates；\n'
             '3. Support exporting root certificates(P12) and private keys；\n'
             '4. Replay domain name request；\n'

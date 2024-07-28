@@ -25,7 +25,6 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/proxy_helper.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
-import 'package:network_proxy/network/util/localizations.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/uri.dart';
 import 'package:network_proxy/utils/ip.dart';

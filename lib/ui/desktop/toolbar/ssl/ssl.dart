@@ -49,9 +49,9 @@ class _SslState extends State<SslWidget> {
           item("${localizations.installRootCa} iOS", onPressed: () async => iosCer(await localIp())),
           item("${localizations.installRootCa} Android", onPressed: () async => androidCer(await localIp())),
           const Divider(thickness: 0.3, height: 3),
-          importMenu(surfaceTintColor),
-          const Divider(thickness: 0.3, height: 3),
           exportMenu(surfaceTintColor),
+          const Divider(thickness: 0.3, height: 3),
+          importMenu(surfaceTintColor),
           const Divider(thickness: 0.3, height: 3),
           item(localizations.generateCA, onPressed: () async {
             showConfirmDialog(context, title: localizations.generateCA, content: localizations.generateCADescribe,

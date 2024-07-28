@@ -65,7 +65,7 @@ class Har {
     title = title.contains("ProxyPin") ? title : "[ProxyPin]$title";
     har["log"] = {
       "version": "1.2",
-      "creator": {"name": "ProxyPin", "version": "1.1.0"},
+      "creator": {"name": "ProxyPin", "version": "1.1.1"},
       "pages": [
         {
           "title": title,
