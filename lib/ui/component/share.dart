@@ -45,7 +45,7 @@ class ShareWidget extends StatelessWidget {
                   }
                   var file = XFile.fromData(utf8.encode(copyRequest(request!, response)),
                       name: localizations.captureDetail, mimeType: "txt");
-                  Share.shareXFiles([file], text: localizations.proxyPinSoftware);
+                  Share.shareXFiles([file], fileNameOverrides: ['request.txt'], text: localizations.proxyPinSoftware);
                 }),
             PopupMenuItem(
                 child: Text(localizations.shareCurl),
@@ -55,7 +55,7 @@ class ShareWidget extends StatelessWidget {
                   }
                   var text = curlRequest(request!);
                   var file = XFile.fromData(utf8.encode(text), name: "cURL.txt", mimeType: "txt");
-                  Share.shareXFiles([file], text: text);
+                  Share.shareXFiles([file], fileNameOverrides: ["cURL.txt"], text: localizations.proxyPinSoftware);
                 }),
             PopupMenuItem(
                 child: Text(localizations.requestEdit),

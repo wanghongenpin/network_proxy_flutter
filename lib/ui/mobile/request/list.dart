@@ -124,7 +124,7 @@ class RequestListState extends State<RequestListWidget> {
     var view = currentView()!;
     var json = await Har.writeJson(view.toList(), title: title);
     var file = XFile.fromData(utf8.encode(json), name: fileName, mimeType: "har");
-    Share.shareXFiles([file], subject: fileName);
+    Share.shareXFiles([file], fileNameOverrides: [fileName]);
   }
 }
 

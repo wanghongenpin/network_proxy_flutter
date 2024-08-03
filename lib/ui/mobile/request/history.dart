@@ -227,8 +227,8 @@ class _MobileHistoryState extends State<MobileHistory> {
     //获取请求
     List<HttpRequest> requests = await storage.getRequests(item);
     var json = await Har.writeJson(requests, title: item.name);
-    var file = XFile.fromData(utf8.encode(json), name: fileName, mimeType: "har");
-    Share.shareXFiles([file], subject: fileName);
+    var file = XFile.fromData(utf8.encode(json), mimeType: "har");
+    Share.shareXFiles([file], fileNameOverrides: [fileName]);
     Future.delayed(const Duration(seconds: 30), () => item.requests = null);
   }
 

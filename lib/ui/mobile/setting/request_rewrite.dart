@@ -358,7 +358,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
     }
 
     final XFile file = XFile.fromData(utf8.encode(jsonEncode(list)), mimeType: 'config');
-    await Share.shareXFiles([file], subject: fileName);
+    await Share.shareXFiles([file], fileNameOverrides: [fileName]);
   }
 
   //删除

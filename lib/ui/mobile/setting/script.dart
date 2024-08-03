@@ -700,7 +700,7 @@ class _ScriptListState extends State<ScriptList> {
     }
 
     final XFile file = XFile.fromData(utf8.encode(jsonEncode(json)), mimeType: 'json');
-    Share.shareXFiles([file], subject: fileName);
+    Share.shareXFiles([file], fileNameOverrides: [fileName]);
   }
 
   enableStatus(bool enable) {

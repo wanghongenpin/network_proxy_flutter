@@ -412,7 +412,7 @@ class _DomainListState extends State<DomainList> {
     }
 
     final XFile file = XFile.fromData(utf8.encode(jsonEncode(list)), mimeType: 'config');
-    await Share.shareXFiles([file], subject: fileName);
+    await Share.shareXFiles([file], fileNameOverrides: [fileName]);
   }
 
   //删除
