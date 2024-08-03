@@ -50,11 +50,9 @@ class HttpClients {
     HostAndPort connectHost = proxyInfo == null ? hostAndPort : HostAndPort.host(proxyInfo.host, proxyInfo.port!);
     var channel = await client.connect(connectHost, channelContext);
 
-    if (proxyInfo == null || !hostAndPort.isSsl()) {
-      return channel;
+    if (proxyInfo != null) {
+      await connectRequest(hostAndPort, channel);
     }
-
-    await connectRequest(hostAndPort, channel);
 
     if (hostAndPort.isSsl()) {
       await channel.secureSocket(channelContext, host: hostAndPort.host);
@@ -131,6 +129,7 @@ class HttpClients {
     ChannelContext channelContext = ChannelContext();
     var httpResponseHandler = HttpResponseHandler();
     HostAndPort hostPort = HostAndPort.of(request.uri);
+    print("proxyRequest $proxyInfo ${request.uri}");
 
     Channel channel = await proxyConnect(proxyInfo: proxyInfo, hostPort, httpResponseHandler, channelContext);
 

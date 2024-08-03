@@ -17,9 +17,9 @@ import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/component/transition.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/panel.dart';
-import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
-import 'package:network_proxy/ui/desktop/left/request.dart';
-import 'package:network_proxy/ui/desktop/left/search.dart';
+import 'package:network_proxy/ui/desktop/request/model/search_model.dart';
+import 'package:network_proxy/ui/desktop/request/request.dart';
+import 'package:network_proxy/ui/desktop/request/search.dart';
 import 'package:network_proxy/utils/har.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
 

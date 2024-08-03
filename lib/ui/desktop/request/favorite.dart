@@ -16,7 +16,7 @@ import 'package:network_proxy/storage/favorites.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
-import 'package:network_proxy/ui/desktop/left/repeat.dart';
+import 'package:network_proxy/ui/desktop/request/repeat.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/python.dart';
 import 'package:shared_preferences/shared_preferences.dart';

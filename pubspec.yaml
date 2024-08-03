@@ -35,7 +35,7 @@ dependencies:
   brotli: ^0.6.0
   file_selector: ^1.0.3
   flutter_js: ^0.8.1
-  flutter_code_editor:
+  flutter_code_editor: ^0.3.2
   file_picker: ^8.0.5
   flutter_desktop_context_menu: ^0.2.0
   win32audio: ^1.3.1

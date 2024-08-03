@@ -13,7 +13,7 @@ import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
-import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
+import 'package:network_proxy/ui/desktop/request/model/search_model.dart';
 import 'package:network_proxy/ui/mobile/request/request.dart';
 import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
 import 'package:network_proxy/utils/har.dart';

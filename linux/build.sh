@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #打包deb
 pwd
 cd ../build/linux/x64/release

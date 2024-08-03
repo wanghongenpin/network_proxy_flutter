@@ -300,7 +300,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       //手机扫码连接转发远程
       HostAndPort? remote = channelContext.getAttribute(AttributeKeys.remote);
       if (remote != null) {
-        remoteForward(channelContext, remote, msg);
+        await remoteForward(channelContext, remote, msg);
         return;
       }
 

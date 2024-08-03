@@ -14,7 +14,7 @@ import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/js_run.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/body.dart';
-import 'package:network_proxy/ui/desktop/left/request_editor.dart';
+import 'package:network_proxy/ui/desktop/request/request_editor.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/request_rewrite.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/script.dart';
 import 'package:network_proxy/utils/platform.dart';

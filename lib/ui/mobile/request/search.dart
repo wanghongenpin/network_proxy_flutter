@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:network_proxy/ui/desktop/left/model/search_model.dart';
-import 'package:network_proxy/ui/desktop/left/search_condition.dart';
+import 'package:network_proxy/ui/desktop/request/model/search_model.dart';
+import 'package:network_proxy/ui/desktop/request/search_condition.dart';
 
 class MobileSearch extends StatefulWidget {
   final Function(SearchModel searchModel)? onSearch;

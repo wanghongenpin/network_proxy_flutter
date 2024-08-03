@@ -87,7 +87,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(ChannelContext channelContext, Channel channel, HttpRequest httpRequest) async {
-    // log.d("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+    log.d("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
     if (channel.error != null) {
       ProxyHelper.exceptionHandler(channelContext, channel, listener, httpRequest, channel.error);
       return;

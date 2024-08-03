@@ -11,7 +11,7 @@ import 'package:network_proxy/utils/ip.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-import '../left/list.dart';
+import '../request/list.dart';
 
 /// @author wanghongen
 /// 2023/10/8
