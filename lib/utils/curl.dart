@@ -102,7 +102,11 @@ HttpRequest parseCurl(String curl) {
       if (value.endsWith("'")) {
         value = value.substring(0, value.length - 1);
       }
-      requestUrl = value;
+      try {
+        requestUrl = Uri.decodeFull(value);
+      }  catch (e) {
+        requestUrl = value;
+      }
     }
   }
 
