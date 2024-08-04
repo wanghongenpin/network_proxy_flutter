@@ -154,9 +154,9 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     var currentState = requestLineKey.currentState!;
     var headers = requestKey.currentState?.getHeaders();
     var requestBody = requestKey.currentState?.getBody();
+    String url = currentState.requestUrl.text;
 
-    HttpRequest request =
-        HttpRequest(HttpMethod.valueOf(currentState.requestMethod), Uri.encodeFull(currentState.requestUrl.text));
+    HttpRequest request = HttpRequest(HttpMethod.valueOf(currentState.requestMethod), Uri.parse(url).toString());
     request.headers.addAll(headers);
     request.body = requestBody == null ? null : utf8.encode(requestBody);
 

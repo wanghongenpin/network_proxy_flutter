@@ -119,9 +119,11 @@ class HttpClients {
   /// 发送代理请求
   static Future<HttpResponse> proxyRequest(HttpRequest request,
       {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 10)}) async {
+
     if (request.headers.host == null || request.headers.host?.trim().isEmpty == true) {
       try {
-        request.headers.host = '${Uri.parse(request.uri).host}:${Uri.parse(request.uri).port}';
+        var uri = Uri.parse(request.uri);
+        request.headers.host = '${Uri.parse(request.uri).host}${uri.hasPort ? ':${uri.port}' : ''}';
       } catch (_) {}
     }
     request.protocolVersion = 'HTTP/1.1';
@@ -129,7 +131,6 @@ class HttpClients {
     ChannelContext channelContext = ChannelContext();
     var httpResponseHandler = HttpResponseHandler();
     HostAndPort hostPort = HostAndPort.of(request.uri);
-    print("proxyRequest $proxyInfo ${request.uri}");
 
     Channel channel = await proxyConnect(proxyInfo: proxyInfo, hostPort, httpResponseHandler, channelContext);
 

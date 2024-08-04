@@ -168,15 +168,13 @@ class Server extends Network {
       channel.serverSecureSocket(secureSocket, channelContext);
     } catch (error, trace) {
       try {
-        channelContext.processInfo =
+        channelContext.processInfo ??=
             await ProcessInfoUtils.getProcessByPort(channel.remoteSocketAddress, hostAndPort?.domain ?? 'unknown');
       } catch (ignore) {
         /*ignore*/
       }
 
-      if (error is HandshakeException) {
-        channelContext.host = hostAndPort;
-      }
+      channelContext.host ??= hostAndPort;
       channel.pipeline.exceptionCaught(channelContext, channel, error, trace: trace);
     }
   }
