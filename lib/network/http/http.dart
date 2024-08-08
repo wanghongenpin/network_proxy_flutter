@@ -200,6 +200,11 @@ enum ContentType {
   static ContentType valueOf(String name) {
     return ContentType.values.firstWhere((element) => element.name == name.toLowerCase(), orElse: () => http);
   }
+
+  //是否是二进制
+  bool get isBinary {
+    return this == image || this == font;
+  }
 }
 
 ///HTTP响应。

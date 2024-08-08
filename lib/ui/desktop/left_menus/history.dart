@@ -20,7 +20,7 @@ import 'package:network_proxy/utils/har.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
 
 import '../../content/panel.dart';
-import 'list.dart';
+import '../request/list.dart';
 
 /// 历史记录
 /// @author wanghongen

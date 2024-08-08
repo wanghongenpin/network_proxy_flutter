@@ -148,7 +148,6 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
         await redirect(channelContext, channel, httpRequest, redirectUrl!);
         return;
       }
-
       await remoteChannel.write(httpRequest);
     }
   }

@@ -5,6 +5,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter_js/flutter_js.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
+import 'package:network_proxy/network/util/lists.dart';
 import 'package:network_proxy/ui/component/device.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:path_provider/path_provider.dart';
@@ -297,7 +298,12 @@ async function onResponse(context, request, response) {
 
   //转换js response
   Map<String, dynamic> convertJsResponse(HttpResponse response) {
-    return {'headers': response.headers.toMap(), 'statusCode': response.status.code, 'body': response.bodyAsString};
+    dynamic body = response.bodyAsString;
+    if (response.contentType.isBinary) {
+      body = response.body;
+    }
+
+    return {'headers': response.headers.toMap(), 'statusCode': response.status.code, 'body': body};
   }
 
   //http request
@@ -308,9 +314,9 @@ async function onResponse(context, request, response) {
     map['queries']?.forEach((key, value) {
       query += '$key=$value&';
     });
-    query = query.isEmpty ? query : query.substring(0, query.length - 1);
+    query = query.isEmpty ? query : '?${query.substring(0, query.length - 1)}';
 
-    request.uri = Uri.parse('${request.remoteDomain()}${map['path']}?$query').toString();
+    request.uri = Uri.parse('${request.remoteDomain()}${map['path']}$query').toString();
 
     map['headers'].forEach((key, value) {
       if (value is List) {
@@ -336,6 +342,13 @@ async function onResponse(context, request, response) {
       response.headers.add(key, value);
     });
     response.headers.remove(HttpHeaders.CONTENT_ENCODING);
+
+    //判断是否是二进制
+    if (getListElementType(map['body']) == int) {
+      response.body = convertList<int>(map['body']);
+      return response;
+    }
+
     response.body = map['body'] == null ? null : utf8.encode(map['body'].toString());
     return response;
   }

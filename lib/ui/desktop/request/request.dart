@@ -278,12 +278,11 @@ class _RequestWidgetState extends State<RequestWidget> {
 
   //点击事件
   void onClick() {
-    if (selected) {
-      return;
+    if (!selected) {
+      setState(() {
+        selected = true;
+      });
     }
-    setState(() {
-      selected = true;
-    });
 
     //切换选中的节点
     if (selectedState?.mounted == true && selectedState != this) {
@@ -291,6 +290,7 @@ class _RequestWidgetState extends State<RequestWidget> {
         selectedState?.selected = false;
       });
     }
+
     selectedState = this;
     NetworkTabController.current?.change(widget.request, widget.response.get() ?? widget.request.response);
   }

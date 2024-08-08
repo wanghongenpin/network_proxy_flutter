@@ -313,6 +313,7 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
         relay(channel, remoteChannel!);
         handler.channelRead(channelContext, channel, buffer.bytes);
         buffer.clear();
+        logger.w("[$channel] forward large body");
         return;
       }
 
