@@ -358,6 +358,9 @@ class _BodyState extends State<_Body> {
       if (type == ViewType.image) {
         return Image.memory(Uint8List.fromList(message?.body ?? []), fit: BoxFit.none);
       }
+      if (type == ViewType.video) {
+        return const Center(child: Text("video not support preview"));
+      }
       if (type == ViewType.hex) {
         return SelectableText(message!.body!.map(intToHex).join(" "), contextMenuBuilder: contextMenu);
       }
@@ -376,6 +379,11 @@ class Tabs {
   static Tabs of(ContentType? contentType, bool isJsonText) {
     var tabs = Tabs();
     if (contentType == null) {
+      return tabs;
+    }
+
+    if (contentType == ContentType.video) {
+      tabs.list.add(ViewType.hex);
       return tabs;
     }
 
@@ -411,6 +419,7 @@ enum ViewType {
   jsonText("JSON Text"),
   html("HTML"),
   image("Image"),
+  video("Video"),
   css("CSS"),
   js("JavaScript"),
   hex("Hex"),

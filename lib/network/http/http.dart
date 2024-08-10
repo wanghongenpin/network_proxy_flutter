@@ -37,6 +37,7 @@ abstract class HttpMessage {
     "application/x-www-form-urlencoded": ContentType.formUrl,
     "form-data": ContentType.formData,
     "image": ContentType.image,
+    "video": ContentType.video,
     "application/json": ContentType.json
   };
 
@@ -195,6 +196,7 @@ enum ContentType {
   css,
   font,
   image,
+  video,
   http;
 
   static ContentType valueOf(String name) {
@@ -203,7 +205,7 @@ enum ContentType {
 
   //是否是二进制
   bool get isBinary {
-    return this == image || this == font;
+    return this == image || this == font || this == video;
   }
 }
 

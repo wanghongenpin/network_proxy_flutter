@@ -47,9 +47,6 @@ class _LeftNavigationBarState extends State<LeftNavigationBar> {
 
   @override
   Widget build(BuildContext context) {
-    widget.controller.addListener(() {
-      print('page: ${widget.controller.page}');
-    });
 
     return ValueListenableBuilder(
         valueListenable: widget.selectIndex,

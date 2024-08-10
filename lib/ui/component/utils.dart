@@ -11,6 +11,7 @@ const contentMap = {
   ContentType.html: Icons.html,
   ContentType.js: Icons.javascript,
   ContentType.image: Icons.image,
+  ContentType.video: Icons.video_call,
   ContentType.text: Icons.text_fields,
   ContentType.css: Icons.css,
   ContentType.font: Icons.font_download,
