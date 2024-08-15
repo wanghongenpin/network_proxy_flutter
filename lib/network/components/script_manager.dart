@@ -316,7 +316,7 @@ async function onResponse(context, request, response) {
     });
     query = query.isEmpty ? query : '?${query.substring(0, query.length - 1)}';
 
-    request.uri = Uri.parse('${request.remoteDomain()}${map['path']}$query').toString();
+    request.uri = Uri.parse('${map['path']}?$query').toString();
 
     map['headers'].forEach((key, value) {
       if (value is List) {
