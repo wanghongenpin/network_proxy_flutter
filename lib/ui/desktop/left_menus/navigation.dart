@@ -8,14 +8,12 @@ import 'package:url_launcher/url_launcher.dart';
 class LeftNavigationBar extends StatefulWidget {
   final AppConfiguration appConfiguration;
   final ProxyServer proxyServer;
-  final PageController controller;
   final ValueNotifier<int> selectIndex;
 
   const LeftNavigationBar(
       {super.key,
       required this.appConfiguration,
       required this.proxyServer,
-      required this.controller,
       required this.selectIndex});
 
   @override
@@ -54,7 +52,7 @@ class _LeftNavigationBarState extends State<LeftNavigationBar> {
           if (index == -1) {
             return const SizedBox();
           }
-          print('index: $index');
+
           return Container(
             width: localizations.localeName == 'zh' ? 58 : 72,
             decoration:
@@ -105,7 +103,6 @@ class _LeftNavigationBarState extends State<LeftNavigationBar> {
         destinations: destinations,
         selectedIndex: index,
         onDestinationSelected: (int index) {
-          widget.controller.jumpToPage(index);
           widget.selectIndex.value = index;
         });
   }

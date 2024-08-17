@@ -35,7 +35,6 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   static final container = ListenableList<HttpRequest>();
 
   final domainStateKey = GlobalKey<DomainWidgetState>();
-  final PageController pageController = PageController();
   final ValueNotifier<int> _selectIndex = ValueNotifier(0);
 
   late ProxyServer proxyServer = ProxyServer(widget.configuration);
@@ -80,22 +79,21 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
         body: Row(
           children: [
             LeftNavigationBar(
-                controller: pageController,
-                selectIndex: _selectIndex,
-                appConfiguration: widget.appConfiguration,
-                proxyServer: proxyServer),
+                selectIndex: _selectIndex, appConfiguration: widget.appConfiguration, proxyServer: proxyServer),
             Expanded(
               child: VerticalSplitView(
                   ratio: 0.3,
                   minRatio: 0.15,
                   maxRatio: 0.9,
-                  left: PageView(controller: pageController, physics: const NeverScrollableScrollPhysics(), children: [
-                    DomainList(key: domainStateKey, proxyServer: proxyServer, panel: panel, list: container),
-                    Favorites(panel: panel),
-                    KeepAliveWrapper(
-                        child: HistoryPageWidget(proxyServer: proxyServer, container: container, panel: panel)),
-                    const Toolbox()
-                  ]),
+                  left: ValueListenableBuilder(
+                      valueListenable: _selectIndex,
+                      builder: (_, index, __) => IndexedStack(index: index, children: [
+                            DomainList(key: domainStateKey, proxyServer: proxyServer, panel: panel, list: container),
+                            Favorites(panel: panel),
+                            KeepAliveWrapper(
+                                child: HistoryPageWidget(proxyServer: proxyServer, container: container, panel: panel)),
+                            const Toolbox()
+                          ])),
                   right: panel),
             )
           ],
