@@ -119,21 +119,24 @@ class HttpClients {
   /// 发送代理请求
   static Future<HttpResponse> proxyRequest(HttpRequest request,
       {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 10)}) async {
-
     if (request.headers.host == null || request.headers.host?.trim().isEmpty == true) {
       try {
-        var uri = Uri.parse(request.uri);
-        request.headers.host = '${Uri.parse(request.uri).host}${uri.hasPort ? ':${uri.port}' : ''}';
+        var uri = Uri.parse(request.requestUrl);
+        request.headers.host = '${uri.host}${uri.hasPort ? ':${uri.port}' : ''}';
       } catch (_) {}
     }
     request.protocolVersion = 'HTTP/1.1';
 
     ChannelContext channelContext = ChannelContext();
     var httpResponseHandler = HttpResponseHandler();
-    HostAndPort hostPort = HostAndPort.of(request.uri);
+    request.hostAndPort ??= HostAndPort.of(request.requestUrl);
 
-    Channel channel = await proxyConnect(proxyInfo: proxyInfo, hostPort, httpResponseHandler, channelContext);
+    Channel channel = await proxyConnect(proxyInfo: proxyInfo, request.hostAndPort!, httpResponseHandler, channelContext);
 
+    if (channel.isSsl && !request.uri.startsWith("/")) {
+      Uri? uri = request.requestUri;
+      request = request.copy(uri: '${uri!.path}${uri.hasQuery ? '?${uri.query}' : ''}');
+    }
     await channel.write(request);
     return httpResponseHandler.getResponse(timeout).whenComplete(() => channel.close());
   }

@@ -63,7 +63,7 @@ class _RequestWidgetState extends State<RequestWidget> {
     var response = widget.response.get() ?? request.response;
     String title = '${request.method.name} ${request.uri}';
     try {
-      title = '${request.method.name} ${Uri.parse(request.uri).path}';
+      title = '${request.method.name} ${Uri.parse(request.requestUrl).path}';
     } catch (_) {}
 
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);

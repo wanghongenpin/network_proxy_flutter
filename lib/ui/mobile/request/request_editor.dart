@@ -88,7 +88,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
                         setState(() {
                           request = parseCurl(text!);
                           requestKey.currentState?.change(request!);
-                          requestLineKey.currentState?.change(request?.uri, request?.method.name);
+                          requestLineKey.currentState?.change(request?.requestUrl, request?.method.name);
                         });
                       } catch (e) {
                         FlutterToastr.show(localizations.fail, context);

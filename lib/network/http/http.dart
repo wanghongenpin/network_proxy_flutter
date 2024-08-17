@@ -109,7 +109,7 @@ class HttpRequest extends HttpMessage {
   HttpRequest(this.method, this.uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
 
   String? remoteDomain() {
-    if (hostAndPort == null) {
+    if (hostAndPort == null && !uri.startsWith("/")) {
       try {
         var uri = Uri.parse(requestUrl);
         return '${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}';
@@ -152,6 +152,7 @@ class HttpRequest extends HttpMessage {
   HttpRequest copy({String? uri}) {
     var request = HttpRequest(method, uri ?? this.uri, protocolVersion: protocolVersion);
     request.headers.addAll(headers);
+    request.hostAndPort = uri == null ? hostAndPort : HostAndPort.of(uri);
     request.body = body;
     return request;
   }

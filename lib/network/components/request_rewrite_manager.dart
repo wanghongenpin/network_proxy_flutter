@@ -317,8 +317,8 @@ class RequestRewrites {
         default:
           return;
       }
-
-      request.uri = requestUri.replace(queryParameters: queryParameters).toString();
+      requestUri = requestUri.replace(queryParameters: queryParameters);
+      request.uri = requestUri.path + (requestUri.hasQuery ? "?${requestUri.query}" : "");
       return;
     }
 
@@ -329,7 +329,8 @@ class RequestRewrites {
   Future<void> _replaceRequest(HttpRequest request, RewriteItem item) async {
     if (item.type == RewriteType.replaceRequestLine) {
       request.method = item.method ?? request.method;
-      request.uri = Uri.parse(request.requestUrl).replace(path: item.path, query: item.queryParam).toString();
+      Uri uri = Uri.parse(request.requestUrl).replace(path: item.path, query: item.queryParam);
+      request.uri = uri.path + (uri.hasQuery ? "?${uri.query}" : "");
       return;
     }
     await _replaceHttpMessage(request, item);
