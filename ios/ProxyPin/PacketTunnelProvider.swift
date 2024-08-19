@@ -30,7 +30,11 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         proxySettings.matchDomains = [""]
 
         networkSettings.proxySettings =  proxySettings
-
+        networkSettings.mtu = 1500
+        
+        let ipv4Settings = NEIPv4Settings(addresses: ["10.0.0.2"], subnetMasks: ["255.255.255.255"])
+        networkSettings.ipv4Settings = ipv4Settings
+        
         setTunnelNetworkSettings(networkSettings) {
            error in
            guard error == nil else {
