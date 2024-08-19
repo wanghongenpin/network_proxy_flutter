@@ -119,27 +119,22 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                     },
                     child: Text(localizations.cancel))
               ],
-              title: Text(isCN ? '更新内容V1.1.1' : "Update content V1.1.1", style: const TextStyle(fontSize: 18)),
+              title: Text(isCN ? '更新内容V1.1.2' : "Update content V1.1.2", style: const TextStyle(fontSize: 18)),
               content: Text(
                   isCN
                       ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                           '点击HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
-                          '1. 支持导入自定义跟证书，以及生成自定义根证书；\n'
-                          '2. 支持重新生成根证书，以及重置默认跟证书；\n'
-                          '3. 支持导出根证书(p12)和私钥；\n'
-                          '4. 历史记录支持重放所有请求；\n'
-                          '5. 重放域名下请求；\n'
-                          '6. 修复请求重写列表换行问题；\n'
-                          '7. 脚本headers支持同名多个值情况；\n'
+                          '1. iOS 通知栏显示VPN状态；\n'
+                          '2. iOS修复停止长时间切换后台再开启抓包无网络问题；\n'
+                          '3. 修复请求重发和脚本导致URL错误；\n'
+                          '4. 修复脚本二进制body转换问题；\n'
+                          '5. 修复请求编辑中文路径编码问题；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
-                          '1. Support importing custom certificates and generating custom root certificates；\n'
-                          '2. Support generate new root certificates and resetting default  root certificates；\n'
-                          '3. Support exporting root certificates and private keys；\n'
-                          '4. History supports replaying all requests；\n'
-                          '5. Replay domain name request；\n'
-                          '6. Fix request rewrite list word wrapping；\n'
-                          '7. Script headers support multiple values with the same name；\n'
+                          '1. iOS notification bar displays VPN status；\n'
+                          '2. iOS fix: Stop switching to the background for a long time and then start packet capture without network problem；\n'
+                          '3. fix request repeat & script change url wrong；\n'
+                          '4. fix script binary body convert；\n'
                           '',
                   style: const TextStyle(fontSize: 14)));
         });

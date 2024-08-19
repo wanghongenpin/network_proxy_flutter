@@ -238,7 +238,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
     //防止频繁刷新
     if (!changing) {
       changing = true;
-      Future.delayed(const Duration(milliseconds: 50), () {
+      Future.delayed(const Duration(milliseconds: 150), () {
         setState(() {
           changing = false;
         });

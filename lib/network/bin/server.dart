@@ -15,6 +15,7 @@
  */
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/channel.dart';
@@ -84,6 +85,16 @@ class ProxyServer {
     });
   }
 
+  ///检查是否监听端口 没有监听则启动
+  Future<void> startForCheck() async {
+    try {
+      var socket = await Socket.connect('127.0.0.1', port, timeout: const Duration(milliseconds: 100));
+      socket.close();
+    } catch (e) {
+      await start();
+    }
+  }
+
   /// 停止代理服务
   Future<Server?> stop() async {
     if (!isRunning) {
@@ -115,7 +126,7 @@ class ProxyServer {
 
   /// 重启代理服务
   Future<void> restart() async {
-    await stop().then((value) => start());
+    await stop().whenComplete(() => start());
   }
 
   ///添加监听器

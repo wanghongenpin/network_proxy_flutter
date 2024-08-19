@@ -2,7 +2,7 @@ import UIKit
 import Flutter
 import NetworkExtension
 
-@UIApplicationMain
+@main
 @objc class AppDelegate: FlutterAppDelegate {
     
     var backgroundAudioEnable: Bool = true
