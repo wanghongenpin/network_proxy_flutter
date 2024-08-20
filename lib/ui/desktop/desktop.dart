@@ -65,7 +65,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
     proxyServer.addListener(this);
     panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 16), proxyServer: proxyServer);
 
-    if (widget.appConfiguration.upgradeNoticeV10) {
+    if (widget.appConfiguration.upgradeNoticeV12) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -113,7 +113,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
               actions: [
                 TextButton(
                     onPressed: () {
-                      widget.appConfiguration.upgradeNoticeV10 = false;
+                      widget.appConfiguration.upgradeNoticeV12 = false;
                       widget.appConfiguration.flushConfig();
                       Navigator.pop(context);
                     },

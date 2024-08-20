@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/http_client.dart';
@@ -141,16 +142,21 @@ class RequestEditorState extends State<RequestEditor> {
     var requestBody = requestKey.currentState?.getBody();
     String url = currentState.requestUrl.text;
 
-    HttpRequest request =
-        HttpRequest(HttpMethod.valueOf(currentState.requestMethod), Uri.parse(url).toString());
+    HttpRequest request = HttpRequest(HttpMethod.valueOf(currentState.requestMethod), Uri.parse(url).toString());
     request.headers.addAll(headers);
     request.body = requestBody == null ? null : utf8.encode(requestBody);
 
-    HttpClients.proxyRequest(request).then((response) {
+    responseKey.currentState?.change(null);
+    responseChange.value = !responseChange.value;
+
+    Map? proxyResult = await DesktopMultiWindow.invokeMethod(0, 'getProxyInfo');
+    ProxyInfo? proxyInfo = proxyResult == null ? null : ProxyInfo.of(proxyResult['host'], proxyResult['port']);
+
+    HttpClients.proxyRequest(request, proxyInfo: proxyInfo).then((response) {
       FlutterToastr.show(localizations.requestSuccess, context);
       this.response = response;
-      responseChange.value = !responseChange.value;
       responseKey.currentState?.change(response);
+      responseChange.value = !responseChange.value;
     }).catchError((e) {
       FlutterToastr.show('${localizations.fail}$e', context);
     });
@@ -256,10 +262,10 @@ class _HttpState extends State<_HttpWidget> {
     }
   }
 
-  change(HttpMessage message) {
+  change(HttpMessage? message) {
     this.message = message;
-    body?.text = message.bodyAsString;
-    headerKey.currentState?.refreshParam(message.headers.getHeaders());
+    body?.text = message?.bodyAsString ?? '';
+    headerKey.currentState?.refreshParam(message?.headers.getHeaders());
   }
 
   @override

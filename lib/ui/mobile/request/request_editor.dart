@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
@@ -161,13 +160,17 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     request.body = requestBody == null ? null : utf8.encode(requestBody);
 
     var proxyInfo =
-        Vpn.isVpnStarted && widget.proxyServer != null ? ProxyInfo.of("127.0.0.1", widget.proxyServer?.port) : null;
+        widget.proxyServer?.isRunning == true ? ProxyInfo.of("127.0.0.1", widget.proxyServer?.port) : null;
+
+    responseKey.currentState?.change(null);
+    responseChange.value = !responseChange.value;
+
     HttpClients.proxyRequest(proxyInfo: proxyInfo, request).then((response) {
       FlutterToastr.show(localizations.requestSuccess, context);
       this.response = response;
       this.response?.request = request;
-      responseChange.value = !responseChange.value;
       responseKey.currentState?.change(response);
+      responseChange.value = !responseChange.value;
       tabController.animateTo(1);
     }).catchError((e) {
       FlutterToastr.show('${localizations.fail}$e', context);
@@ -231,10 +234,13 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
     }
   }
 
-  change(HttpMessage message) {
+  change(HttpMessage? message) {
     this.message = message;
-    body = message.bodyAsString;
-    headerKey.currentState?.refreshParam(message.headers.getHeaders());
+    body = message?.bodyAsString;
+    headerKey.currentState?.refreshParam(message?.headers.getHeaders());
+    setState(() {
+
+    });
   }
 
   HttpHeaders? getHeaders() {

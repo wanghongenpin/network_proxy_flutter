@@ -131,7 +131,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
       }
     });
 
-    if (widget.appConfiguration.upgradeNoticeV10) {
+    if (widget.appConfiguration.upgradeNoticeV12) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -237,7 +237,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '4. fix script binary body convert；\n'
             '';
     showAlertDialog(isCN ? '更新内容V1.1.2' : "Update content V1.1.2", content, () {
-      widget.appConfiguration.upgradeNoticeV10 = false;
+      widget.appConfiguration.upgradeNoticeV12 = false;
       widget.appConfiguration.flushConfig();
     });
   }

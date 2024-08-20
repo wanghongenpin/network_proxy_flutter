@@ -37,6 +37,8 @@ Future<void> main() async {
 
 /// 代理服务器
 class ProxyServer {
+  static ProxyServer? current;
+
   //socket服务
   Server? server;
 
@@ -46,7 +48,9 @@ class ProxyServer {
   //配置
   final Configuration configuration;
 
-  ProxyServer(this.configuration);
+  ProxyServer(this.configuration) {
+    current = this;
+  }
 
   //是否启动
   bool get isRunning => server?.isRunning ?? false;

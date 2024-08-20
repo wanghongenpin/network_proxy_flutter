@@ -5,6 +5,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/http/http.dart';
@@ -143,6 +144,10 @@ void registerMethodHandler() {
   _registerHandler = true;
   DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
     logger.d('${call.method} $fromWindowId ${call.arguments}');
+
+    if (call.method == 'getProxyInfo') {
+      return ProxyServer.current?.isRunning == true ? {'host': '127.0.0.1', 'port': ProxyServer.current!.port} : null;
+    }
 
     if (call.method == 'refreshScript') {
       await ScriptManager.instance.then((value) {
