@@ -6,9 +6,16 @@ class VerticalSplitView extends StatefulWidget {
   final double ratio;
   final double minRatio;
   final double maxRatio;
+  final Function(double ratio)? onRatioChanged;
 
   const VerticalSplitView(
-      {super.key, required this.left, required this.right, this.ratio = 0.5, this.minRatio = 0, this.maxRatio = 1})
+      {super.key,
+      required this.left,
+      required this.right,
+      this.ratio = 0.5,
+      this.minRatio = 0,
+      this.maxRatio = 1,
+      this.onRatioChanged})
       : assert(ratio >= 0 && ratio <= 1);
 
   @override
@@ -59,6 +66,9 @@ class _VerticalSplitViewState extends State<VerticalSplitView> {
                         ? const Icon(Icons.drag_handle, size: 16)
                         : const VerticalDivider(thickness: 1),
                   )),
+              onPanEnd: (DragEndDetails details) {
+                widget.onRatioChanged?.call(_ratio);
+              },
               onPanUpdate: (DragUpdateDetails details) {
                 setState(() {
                   _ratio += details.delta.dx / _maxWidth;

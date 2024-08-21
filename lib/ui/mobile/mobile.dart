@@ -273,7 +273,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
                     child: Text(localizations.cancel))
               ],
               title: Text(title, style: const TextStyle(fontSize: 18)),
-              content: Text(content));
+              content: SelectableText(content));
         });
   }
 

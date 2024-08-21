@@ -43,6 +43,9 @@ class AppConfiguration {
   //桌面window位置
   Offset? windowPosition;
 
+  //左侧面板占比
+  double panelRatio = 0.3;
+
   AppConfiguration._();
 
   /// 单例
@@ -132,13 +135,22 @@ class AppConfiguration {
       windowPosition = config['windowPosition'] == null
           ? null
           : Offset(config['windowPosition']['dx'], config['windowPosition']['dy']);
+      if (config['panelRatio'] != null) {
+        panelRatio = config['panelRatio'];
+      }
     } catch (e) {
       print(e);
     }
   }
 
+  /// 是否正在写入
+  bool _isWriting = false;
+
   /// 刷新配置文件
   flushConfig() async {
+    if (_isWriting) return;
+    _isWriting = true;
+
     var file = await _path;
     var exists = await file.exists();
     if (!exists) {
@@ -146,7 +158,8 @@ class AppConfiguration {
     }
 
     var json = jsonEncode(toJson());
-    file.writeAsString(json);
+    await file.writeAsString(json);
+    _isWriting = false;
   }
 
   Map<String, dynamic> toJson() {
@@ -155,11 +168,16 @@ class AppConfiguration {
       'useMaterial3': _theme.useMaterial3,
       'upgradeNoticeV12': upgradeNoticeV12,
       "language": _language?.languageCode,
-      'pipEnabled': pipEnabled.value,
-      'pipIcon': pipIcon.value ? true : null,
       "headerExpanded": headerExpanded,
-      "windowSize": windowSize == null ? null : {"width": windowSize?.width, "height": windowSize?.height},
-      "windowPosition": windowPosition == null ? null : {"dx": windowPosition?.dx, "dy": windowPosition?.dy},
+
+      if (Platforms.isMobile()) 'pipEnabled': pipEnabled.value,
+      if (Platforms.isMobile()) 'pipIcon': pipIcon.value ? true : null,
+
+      if (Platforms.isDesktop())
+        "windowSize": windowSize == null ? null : {"width": windowSize?.width, "height": windowSize?.height},
+      if (Platforms.isDesktop())
+        "windowPosition": windowPosition == null ? null : {"dx": windowPosition?.dx, "dy": windowPosition?.dy},
+      if (Platforms.isDesktop()) 'panelRatio': panelRatio,
     };
   }
 }

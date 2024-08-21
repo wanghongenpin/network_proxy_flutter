@@ -82,9 +82,13 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                 selectIndex: _selectIndex, appConfiguration: widget.appConfiguration, proxyServer: proxyServer),
             Expanded(
               child: VerticalSplitView(
-                  ratio: 0.3,
+                  ratio: widget.appConfiguration.panelRatio,
                   minRatio: 0.15,
                   maxRatio: 0.9,
+                  onRatioChanged: (ratio) {
+                    widget.appConfiguration.panelRatio = double.parse(ratio.toStringAsFixed(2));
+                    widget.appConfiguration.flushConfig();
+                  },
                   left: ValueListenableBuilder(
                       valueListenable: _selectIndex,
                       builder: (_, index, __) => IndexedStack(index: index, children: [
@@ -120,21 +124,23 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                     child: Text(localizations.cancel))
               ],
               title: Text(isCN ? '更新内容V1.1.2' : "Update content V1.1.2", style: const TextStyle(fontSize: 18)),
-              content: Text(
+              content: SelectableText(
                   isCN
                       ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                           '点击HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
                           '1. iOS 通知栏显示VPN状态；\n'
                           '2. iOS修复停止长时间切换后台再开启抓包无网络问题；\n'
-                          '3. 修复请求重发和脚本导致URL错误；\n'
-                          '4. 修复脚本二进制body转换问题；\n'
-                          '5. 修复请求编辑中文路径编码问题；\n'
+                          '3. 桌面端保存调整左右面板比例；\n'
+                          '4. 修复请求重发和脚本导致URL错误；\n'
+                          '5. 修复脚本二进制body转换问题；\n'
+                          '6. 修复请求编辑中文路径编码问题；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
                           '1. iOS notification bar displays VPN status；\n'
                           '2. iOS fix: Stop switching to the background for a long time and then start packet capture without network problem；\n'
-                          '3. fix request repeat & script change url wrong；\n'
-                          '4. fix script binary body convert；\n'
+                          '3. Desktop: save the left and right panel ratio；\n'
+                          '4. fix request repeat & script change url wrong；\n'
+                          '5. fix script binary body convert；\n'
                           '',
                   style: const TextStyle(fontSize: 14)));
         });
