@@ -45,12 +45,17 @@ class _PhoneConnectState extends State<PhoneConnect> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                QrImageView(
-                  backgroundColor: Colors.white,
-                  data: "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
-                  version: QrVersions.auto,
-                  size: 200.0,
-                ),
+                if (widget.proxyServer.isRunning)
+                  QrImageView(
+                    backgroundColor: Colors.white,
+                    data: "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
+                    version: QrVersions.auto,
+                    size: 200.0,
+                  )
+                else
+                  SizedBox(
+                      height: 200,
+                      child: Center(child: Text(localizations.serverNotStart, style: const TextStyle(fontSize: 16)))),
                 const SizedBox(height: 10),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text(localizations.localIP),

@@ -360,7 +360,7 @@ class _BodyState extends State<_Body> {
         return SelectableText(Uri.decodeFull(message!.bodyAsString), contextMenuBuilder: contextMenu);
       }
       if (type == ViewType.image) {
-        return Image.memory(Uint8List.fromList(message?.body ?? []), fit: BoxFit.none);
+        return Image.memory(Uint8List.fromList(message?.body ?? []), fit: BoxFit.scaleDown);
       }
       if (type == ViewType.video) {
         return const Center(child: Text("video not support preview"));

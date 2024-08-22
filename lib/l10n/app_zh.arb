@@ -14,6 +14,7 @@
   "externalProxy": "外部代理设置",
   "proxySetting": "代理设置",
   "systemProxy": "设置为系统代理",
+  "serverNotStart": "未开启抓包",
 
   "start": "开始",
   "stop": "停止",
