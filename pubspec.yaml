@@ -16,9 +16,9 @@ dependencies:
   crypto: ^3.0.3
   cupertino_icons: ^1.0.2
   basic_utils: ^5.7.0
-  logger: ^2.0.1
-  date_format: ^2.0.7
-  window_manager: ^0.4.0
+  logger: ^2.4.0
+  date_format: ^2.0.9
+  window_manager: ^0.4.2
   desktop_multi_window:
     git:
       url: https://gitee.com/wanghongenpin/flutter-plugins.git

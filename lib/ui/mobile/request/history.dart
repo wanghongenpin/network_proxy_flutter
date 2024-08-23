@@ -318,38 +318,42 @@ class _HistoryRecordState extends State<HistoryRecord> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: ValueListenableBuilder(
-              valueListenable: searchEnabled,
-              builder: (BuildContext context, bool value, Widget? child) {
-                return value
-                    ? MobileSearch(onSearch: (val) => requestStateKey.currentState?.search(val), showSearch: true)
-                    : Text(localizations.historyRecordTitle(widget.history.requestLength, widget.history.name),
-                        style: const TextStyle(fontSize: 16));
-              }),
-          actions: [
-            PopupMenuButton(
-                offset: const Offset(0, 30),
-                icon: const Icon(Icons.more_vert_outlined),
-                itemBuilder: (BuildContext context) {
-                  return [
-                    PopupMenuItem(
-                        onTap: () => searchEnabled.value = true,
-                        child: IconText(icon: const Icon(Icons.search), text: localizations.search)),
-                    PopupMenuItem(
-                        onTap: export, child: IconText(icon: const Icon(Icons.share), text: localizations.viewExport)),
-                    PopupMenuItem(
-                        onTap: () async {
-                          HistoryStorage storage = await HistoryStorage.instance;
-                          var requests = (await storage.getRequests(widget.history)).reversed;
-                          //重发所有请求
-                          _repeatAllRequests(requests.toList(), widget.proxyServer, context: mounted ? context : null);
-                        },
-                        child: IconText(icon: const Icon(Icons.repeat), text: localizations.repeatAllRequests)),
-                  ];
-                }),
-          ],
-        ),
+        appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(38),
+            child: AppBar(
+              title: ValueListenableBuilder(
+                  valueListenable: searchEnabled,
+                  builder: (BuildContext context, bool value, Widget? child) {
+                    return value
+                        ? MobileSearch(onSearch: (val) => requestStateKey.currentState?.search(val), showSearch: true)
+                        : Text(localizations.historyRecordTitle(widget.history.requestLength, widget.history.name),
+                            style: const TextStyle(fontSize: 16));
+                  }),
+              actions: [
+                PopupMenuButton(
+                    offset: const Offset(0, 30),
+                    icon: const Icon(Icons.more_vert_outlined),
+                    itemBuilder: (BuildContext context) {
+                      return [
+                        PopupMenuItem(
+                            onTap: () => searchEnabled.value = true,
+                            child: IconText(icon: const Icon(Icons.search), text: localizations.search)),
+                        PopupMenuItem(
+                            onTap: export,
+                            child: IconText(icon: const Icon(Icons.share), text: localizations.viewExport)),
+                        PopupMenuItem(
+                            onTap: () async {
+                              HistoryStorage storage = await HistoryStorage.instance;
+                              var requests = (await storage.getRequests(widget.history)).reversed;
+                              //重发所有请求
+                              _repeatAllRequests(requests.toList(), widget.proxyServer,
+                                  context: mounted ? context : null);
+                            },
+                            child: IconText(icon: const Icon(Icons.repeat), text: localizations.repeatAllRequests)),
+                      ];
+                    }),
+              ],
+            )),
         body: futureWidget(
             loading: true,
             HistoryStorage.instance.then((storage) => storage.getRequests(widget.history)),

@@ -131,16 +131,18 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                           '1. iOS 通知栏显示VPN状态；\n'
                           '2. iOS修复停止长时间切换后台再开启抓包无网络问题；\n'
                           '3. 桌面端保存调整左右面板比例；\n'
-                          '4. 修复请求重发和脚本导致URL错误；\n'
-                          '5. 修复脚本二进制body转换问题；\n'
-                          '6. 修复请求编辑中文路径编码问题；\n'
+                          '4. 手机端请求列表增加滚动条；\n'
+                          '5. 修复请求重发和脚本导致URL错误；\n'
+                          '6. 修复脚本二进制body转换问题；\n'
+                          '7. 修复请求编辑中文路径编码问题；\n'
                       : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                           'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
                           '1. iOS notification bar displays VPN status；\n'
                           '2. iOS fix: Stop switching to the background for a long time and then start packet capture without network problem；\n'
                           '3. Desktop: save the left and right panel ratio；\n'
-                          '4. fix request repeat & script change url wrong；\n'
-                          '5. fix script binary body convert；\n'
+                          '4. Mobile：Add a scrollbar to the request list；\n'
+                          '5. fix request repeat & script change url wrong；\n'
+                          '6. fix script binary body convert；\n'
                           '',
                   style: const TextStyle(fontSize: 14)));
         });
