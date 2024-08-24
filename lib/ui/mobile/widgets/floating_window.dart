@@ -60,7 +60,6 @@ class _FloatingWindowState extends State<FloatingWindow> with TickerProviderStat
   var childSize = const Size(0, 0);
 
   void changeState() {
-    print('"changeState');
     setState(() {});
   }
 

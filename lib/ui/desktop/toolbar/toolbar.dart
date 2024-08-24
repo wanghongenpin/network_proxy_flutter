@@ -17,10 +17,10 @@ import '../request/list.dart';
 /// 2023/10/8
 class Toolbar extends StatefulWidget {
   final ProxyServer proxyServer;
-  final GlobalKey<DomainWidgetState> domainStateKey;
+  final GlobalKey<DesktopRequestListState> requestListStateKey;
   final ValueNotifier<int> sideNotifier;
 
-  const Toolbar(this.proxyServer, this.domainStateKey, {super.key, required this.sideNotifier});
+  const Toolbar(this.proxyServer, this.requestListStateKey, {super.key, required this.sideNotifier});
 
   @override
   State<StatefulWidget> createState() {
@@ -75,7 +75,7 @@ class _ToolbarState extends State<Toolbar> {
             tooltip: localizations.clear,
             icon: const Icon(Icons.cleaning_services_outlined),
             onPressed: () {
-              widget.domainStateKey.currentState?.clean();
+              widget.requestListStateKey.currentState?.clean();
             }),
         const Padding(padding: EdgeInsets.only(left: 20)),
         SslWidget(proxyServer: widget.proxyServer), // SSL配置

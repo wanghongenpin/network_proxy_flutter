@@ -343,8 +343,8 @@ class _HistoryRecordState extends State<HistoryRecord> {
                             child: IconText(icon: const Icon(Icons.share), text: localizations.viewExport)),
                         PopupMenuItem(
                             onTap: () async {
-                              HistoryStorage storage = await HistoryStorage.instance;
-                              var requests = (await storage.getRequests(widget.history)).reversed;
+                              var requests = requestStateKey.currentState?.currentView();
+                              if (requests == null) return;
                               //重发所有请求
                               _repeatAllRequests(requests.toList(), widget.proxyServer,
                                   context: mounted ? context : null);

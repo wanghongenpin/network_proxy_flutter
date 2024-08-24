@@ -429,7 +429,6 @@ class KeyValState extends State<KeyValWidget> {
 
   //监听url发生变化 更改表单
   onChange(String value) {
-    print("onChange $value");
     var query = value.split("&");
     int index = 0;
     while (index < query.length) {

@@ -11,10 +11,7 @@ class LeftNavigationBar extends StatefulWidget {
   final ValueNotifier<int> selectIndex;
 
   const LeftNavigationBar(
-      {super.key,
-      required this.appConfiguration,
-      required this.proxyServer,
-      required this.selectIndex});
+      {super.key, required this.appConfiguration, required this.proxyServer, required this.selectIndex});
 
   @override
   State<StatefulWidget> createState() {
@@ -45,7 +42,6 @@ class _LeftNavigationBarState extends State<LeftNavigationBar> {
 
   @override
   Widget build(BuildContext context) {
-
     return ValueListenableBuilder(
         valueListenable: widget.selectIndex,
         builder: (_, index, __) {

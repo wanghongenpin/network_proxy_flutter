@@ -39,8 +39,8 @@ class HistoryPageWidget extends StatelessWidget {
     return Navigator(
       onGenerateRoute: (settings) {
         switch (settings.name) {
-          case "/domain":
-            return MaterialPageRoute(builder: (_) => domainWidget(context, settings.arguments as Map));
+          case "/request_list":
+            return MaterialPageRoute(builder: (_) => requestListWidget(context, settings.arguments as Map));
           default:
             return MaterialPageRoute(
                 builder: (_) => futureWidget(
@@ -53,8 +53,8 @@ class HistoryPageWidget extends StatelessWidget {
     );
   }
 
-  Widget domainWidget(BuildContext context, Map arguments) {
-    var domainKey = GlobalKey<DomainWidgetState>();
+  Widget requestListWidget(BuildContext context, Map arguments) {
+    var requestListKey = GlobalKey<DesktopRequestListState>();
 
     HistoryItem item = arguments['item'];
     var localizations = AppLocalizations.of(context)!;
@@ -83,7 +83,7 @@ class HistoryPageWidget extends StatelessWidget {
                               String fileName = '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'
                                   .replaceAll(" ", "_")
                                   .replaceAll(":", "_");
-                              domainKey.currentState?.export(fileName);
+                              requestListKey.currentState?.export(fileName);
                             },
                             child: IconText(
                                 icon: const Icon(Icons.share, size: 16),
@@ -92,8 +92,9 @@ class HistoryPageWidget extends StatelessWidget {
                         CustomPopupMenuItem(
                             height: 35,
                             onTap: () async {
-                              HistoryStorage storage = await HistoryStorage.instance;
-                              var requests = (await storage.getRequests(item)).reversed;
+                              var requests = requestListKey.currentState?.currentView();
+                              if (requests == null) return;
+
                               //重发所有请求
                               _repeatAllRequests(requests.toList(), proxyServer,
                                   context: context.mounted ? context : null);
@@ -107,8 +108,9 @@ class HistoryPageWidget extends StatelessWidget {
               ],
             )),
         body: futureWidget(HistoryStorage.instance.then((value) => value.getRequests(item)), (data) {
-          return DomainList(
-              panel: panel, proxyServer: proxyServer, list: ListenableList(data), shrinkWrap: false, key: domainKey);
+          //shrinkWrap: false,
+          return DesktopRequestListWidget(
+              panel: panel, proxyServer: proxyServer, list: ListenableList(data), key: requestListKey);
         }, loading: true));
   }
 }
@@ -190,7 +192,7 @@ class _HistoryListState extends State<_HistoryListWidget> {
 
     return Scaffold(
         appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(32),
+            preferredSize: const Size.fromHeight(38),
             child: AppBar(
               title: Text(localizations.historyRecord, style: const TextStyle(fontSize: 14)),
               actions: [
@@ -302,7 +304,7 @@ class _HistoryListState extends State<_HistoryListWidget> {
   }
 
   toRequestsView(HistoryItem item) {
-    Navigator.pushNamed(context, "/domain", arguments: {'item': item}).whenComplete(() async {
+    Navigator.pushNamed(context, "/request_list", arguments: {'item': item}).whenComplete(() async {
       if (item != widget.historyTask.history && item.requests != null && item.requestLength != item.requests?.length) {
         await widget.storage.flushRequests(item, item.requests!);
         setState(() {});

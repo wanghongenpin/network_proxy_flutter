@@ -19,6 +19,14 @@ allprojects {
 
 rootProject.buildDir = '../build'
 subprojects {
+    afterEvaluate {
+        android {
+            compileSdkVersion 34
+        }
+    }
+}
+
+subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 subprojects {

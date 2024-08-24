@@ -10,6 +10,7 @@ import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
+import 'package:network_proxy/ui/mobile/setting/app_filter.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
 import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
@@ -43,6 +44,16 @@ class MoreMenu extends StatelessWidget {
                   onTap: () {
                     navigator(context, MobileSslWidget(proxyServer: proxyServer));
                   })),
+          if (Platform.isAndroid)
+            PopupMenuItem(
+                height: 32,
+                child: ListTile(
+                    dense: true,
+                    title: Text(localizations.appWhitelist),
+                    leading: const Icon(Icons.android_rounded),
+                    onTap: () {
+                      navigator(context, AppWhitelist(proxyServer: proxyServer));
+                    })),
           PopupMenuItem(
               height: 32,
               child: ListTile(

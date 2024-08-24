@@ -41,7 +41,6 @@ class _JavaScriptState extends State<JavaScript> {
   }
 
   dynamic consoleLog(dynamic args) async {
-    print(args);
     var level = args.removeAt(0);
     String output = args.join(' ');
     if (level == 'info') level = 'warn';

@@ -131,7 +131,7 @@ class HttpRequest extends HttpMessage {
     }
   }
 
-  String? path() {
+  String path() {
     try {
       var requestPath = Uri.parse(requestUrl).path;
       return requestPath.isEmpty ? "/" : requestPath;

@@ -73,7 +73,7 @@ class _SearchState extends State<Search> {
     }
     bool isCN = AppLocalizations.of(context)!.localeName == 'zh';
     var height = MediaQuery.of(context).size.height;
-    height = isCN ? height - 400 : height - 430;
+    height = isCN ? height - 400 : height - 485;
     showMenu(
         context: context,
         position: RelativeRect.fromLTRB(10, height, 10, height),

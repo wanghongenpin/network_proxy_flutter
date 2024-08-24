@@ -8,7 +8,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 ///高级重放
-/// @author wang
+/// @author wanghongen
 class CustomRepeatDialog extends StatefulWidget {
   final Function onRepeat;
   final SharedPreferences prefs;

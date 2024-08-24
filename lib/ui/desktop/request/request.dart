@@ -28,13 +28,17 @@ import 'package:window_manager/window_manager.dart';
 /// @author wanghongen
 /// 2023/10/8
 class RequestWidget extends StatefulWidget {
+  final int index;
   final HttpRequest request;
   final ValueWrap<HttpResponse> response = ValueWrap();
+  final bool displayDomain;
 
   final ProxyServer proxyServer;
   final Function(RequestWidget)? remove;
+  final Widget? trailing;
 
-  RequestWidget(this.request, {Key? key, required this.proxyServer, this.remove})
+  RequestWidget(this.request,
+      {Key? key, required this.proxyServer, this.remove, this.displayDomain = true, this.trailing, required this.index})
       : super(key: GlobalKey<_RequestWidgetState>());
 
   @override
@@ -61,10 +65,8 @@ class _RequestWidgetState extends State<RequestWidget> {
   Widget build(BuildContext context) {
     var request = widget.request;
     var response = widget.response.get() ?? request.response;
-    String title = '${request.method.name} ${request.uri}';
-    try {
-      title = '${request.method.name} ${Uri.parse(request.requestUrl).path}';
-    } catch (_) {}
+    String path = widget.displayDomain ? '${request.remoteDomain()}${request.path()}' : request.path();
+    String title = '${request.method.name} $path';
 
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
     String contentType = response?.contentType.name.toUpperCase() ?? '';
@@ -74,16 +76,25 @@ class _RequestWidgetState extends State<RequestWidget> {
         onSecondaryTap: contextualMenu,
         child: ListTile(
             minLeadingWidth: 5,
-            textColor: color(),
-            selectedColor: color(),
+            textColor: color(path),
+            selectedColor: color(path),
             selectedTileColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
             leading: getIcon(widget.response.get() ?? widget.request.response),
-            title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 1),
-            subtitle: Text(
-                '$time - [${response?.status.code ?? ''}]  $contentType $packagesSize ${response?.costTime() ?? ''}',
-                maxLines: 1,
-                overflow: TextOverflow.visible),
-            subtitleTextStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+            trailing: widget.trailing,
+            title: Text(title, overflow: TextOverflow.ellipsis, maxLines: 2),
+            subtitle: Container(
+                padding: const EdgeInsets.only(top: 3),
+                child: Text.rich(
+                    maxLines: 1,
+                    TextSpan(
+                      children: [
+                        TextSpan(text: '#${widget.index} ', style: const TextStyle(fontSize: 11, color: Colors.teal)),
+                        TextSpan(
+                            text:
+                                '$time - [${response?.status.code ?? ''}]  $contentType $packagesSize ${response?.costTime() ?? ''}',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey))
+                      ],
+                    ))),
             selected: selected,
             dense: true,
             visualDensity: const VisualDensity(vertical: -4),
@@ -91,12 +102,12 @@ class _RequestWidgetState extends State<RequestWidget> {
             onTap: onClick));
   }
 
-  Color? color() {
+  Color? color(String path) {
     if (highlightColor != null) {
       return highlightColor;
     }
 
-    return KeywordHighlightDialog.getHighlightColor(widget.request.uri);
+    return KeywordHighlightDialog.getHighlightColor(path);
   }
 
   void changeState() {
