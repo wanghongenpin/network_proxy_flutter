@@ -18,6 +18,7 @@ import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/request/repeat.dart';
 import 'package:network_proxy/utils/curl.dart';
+import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/python.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -37,6 +38,14 @@ class Favorites extends StatefulWidget {
 
 class _FavoritesState extends State<Favorites> {
   AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  @override
+  void initState() {
+    super.initState();
+    FavoriteStorage.addNotifier = () {
+      setState(() {});
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,23 +99,19 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   static _FavoriteItemState? selectedState;
 
   bool selected = false;
-  late HttpRequest request;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
-  void initState() {
-    super.initState();
-    request = widget.favorite.request;
-  }
-
-  @override
   Widget build(BuildContext context) {
+    var request = widget.favorite.request;
+
     var response = widget.favorite.response;
-    var title = '${request.method.name} ${request.requestUrl}';
+    var title = '${request.method.name} ${request.requestUrl}'.fixAutoLines();
     var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
+
     return GestureDetector(
-        onSecondaryLongPressDown: menu,
+        onSecondaryLongPressDown: (details) => menu(details, request),
         child: ListTile(
             minLeadingWidth: 25,
             leading: getIcon(response),
@@ -122,11 +127,11 @@ class _FavoriteItemState extends State<_FavoriteItem> {
                 ])),
             selected: selected,
             dense: true,
-            onTap: onClick));
+            onTap: () => onClick(request)));
   }
 
   ///右键菜单
-  menu(LongPressDownDetails details) {
+  menu(LongPressDownDetails details, HttpRequest request) {
     showContextMenu(
       context,
       details.globalPosition,
@@ -154,7 +159,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         popupItem(localizations.customRepeat, onTap: () => showCustomRepeat(request)),
         popupItem(localizations.editRequest, onTap: () {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            requestEdit();
+            requestEdit(request);
           });
         }),
         const PopupMenuDivider(height: 0.3),
@@ -222,7 +227,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   }
 
   ///请求编辑
-  requestEdit() async {
+  requestEdit(HttpRequest request) async {
     var size = MediaQuery.of(context).size;
     var ratio = 1.0;
     if (Platform.isWindows) {
@@ -240,7 +245,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   }
 
   //点击事件
-  void onClick() {
+  void onClick(HttpRequest request) {
     if (selected) {
       return;
     }

@@ -8,6 +8,8 @@ import 'package:network_proxy/storage/path.dart';
 class FavoriteStorage {
   static Queue<Favorite>? list;
 
+  static Function()? addNotifier;
+
   /// 获取收藏列表
   static Future<Queue<Favorite>> get favorites async {
     if (list == null) {
@@ -40,6 +42,8 @@ class FavoriteStorage {
 
     favorites.addFirst(Favorite(request));
     flushConfig();
+    //通知
+    addNotifier?.call();
   }
 
   static Future<void> removeFavorite(Favorite favorite) async {

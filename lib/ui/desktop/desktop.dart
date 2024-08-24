@@ -6,8 +6,8 @@ import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
-import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/left_menus/favorite.dart';
@@ -74,6 +74,13 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
 
   @override
   Widget build(BuildContext context) {
+    var navigationView = [
+      DomainList(key: domainStateKey, proxyServer: proxyServer, panel: panel, list: container),
+      Favorites(panel: panel),
+      HistoryPageWidget(proxyServer: proxyServer, container: container, panel: panel),
+      const Toolbox()
+    ];
+
     return Scaffold(
         appBar: Tab(child: Toolbar(proxyServer, domainStateKey, sideNotifier: _selectIndex)),
         body: Row(
@@ -91,13 +98,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                   },
                   left: ValueListenableBuilder(
                       valueListenable: _selectIndex,
-                      builder: (_, index, __) => IndexedStack(index: index, children: [
-                            DomainList(key: domainStateKey, proxyServer: proxyServer, panel: panel, list: container),
-                            Favorites(panel: panel),
-                            KeepAliveWrapper(
-                                child: HistoryPageWidget(proxyServer: proxyServer, container: container, panel: panel)),
-                            const Toolbox()
-                          ])),
+                      builder: (_, index, __) => LazyIndexedStack(index: index, children: navigationView)),
                   right: panel),
             )
           ],

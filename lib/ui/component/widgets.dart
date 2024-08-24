@@ -131,3 +131,48 @@ class IconText extends StatelessWidget {
         ]));
   }
 }
+
+class LazyIndexedStack extends StatefulWidget {
+  final List<Widget> children;
+  final int index;
+
+  const LazyIndexedStack({
+    super.key,
+    required this.children,
+    required this.index,
+  });
+
+  @override
+  State<LazyIndexedStack> createState() => _LazyIndexedStackState();
+}
+
+class _LazyIndexedStackState extends State<LazyIndexedStack> {
+  final List<Widget?> _childrenCache = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _childrenCache.length = widget.children.length;
+  }
+
+  @override
+  void didUpdateWidget(LazyIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.children.length != widget.children.length) {
+      _childrenCache.length = widget.children.length;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _childrenCache[widget.index] ??= widget.children[widget.index];
+
+    return IndexedStack(
+      index: widget.index,
+      children: List.generate(
+        widget.children.length,
+        (i) => _childrenCache[i] ?? Container(),
+      ),
+    );
+  }
+}
