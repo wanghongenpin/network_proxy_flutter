@@ -67,9 +67,9 @@ class RequestRowState extends State<RequestRow> {
 
   @override
   Widget build(BuildContext context) {
-    String path = widget.displayDomain ? '${request.remoteDomain()}${request.path()}' : request.path();
+    String url = widget.displayDomain ? request.requestUrl : request.path();
 
-    var title = Strings.autoLineString('${request.method.name} $path');
+    var title = Strings.autoLineString('${request.method.name} $url');
 
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
     var contentType = response?.contentType.name.toUpperCase() ?? '';
@@ -77,7 +77,7 @@ class RequestRowState extends State<RequestRow> {
 
     var subTitle = '$time - [${response?.status.code ?? ''}] $contentType $packagesSize ${response?.costTime() ?? ''}';
 
-    var highlightColor = KeywordHighlight.getHighlightColor(path);
+    var highlightColor = KeywordHighlight.getHighlightColor(url);
 
     return ListTile(
         visualDensity: const VisualDensity(vertical: -4),

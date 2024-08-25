@@ -55,9 +55,15 @@ class HostAndPort {
     String? scheme;
     //域名格式 直接解析
     if (schemes.any((scheme) => url.startsWith(scheme))) {
-      //httpScheme
-      scheme = schemes.firstWhere((element) => url.startsWith(element),orElse: () => httpScheme);
-      domain = url.substring(scheme.length).split("/")[0];
+      try {
+        Uri uri = Uri.parse(url);
+        return HostAndPort('${uri.scheme}://', uri.host, uri.port);
+      } catch (e) {
+        //httpScheme
+        scheme = schemes.firstWhere((element) => url.startsWith(element), orElse: () => httpScheme);
+        domain = url.substring(scheme.length).split("/")[0];
+      }
+
       //说明支持ipv6
       if (domain.startsWith('[') && domain.endsWith(']')) {
         return HostAndPort(scheme, domain, scheme == httpScheme ? 80 : 443);

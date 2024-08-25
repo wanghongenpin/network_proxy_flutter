@@ -98,9 +98,9 @@ class ConnectionManager private constructor() : CloseableConnection {
         connection.channel = channel
 
         var socketAddress: SocketAddress? = null
-        if (DEFAULT_PORTS.contains(port)) {
-            socketAddress = proxyAddress
-        }
+//        if (DEFAULT_PORTS.contains(port)) {
+//            socketAddress = proxyAddress
+//        }
 
         connection.isInitConnect = socketAddress != null
 

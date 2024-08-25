@@ -15,6 +15,7 @@ import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/mobile/request/repeat.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/curl.dart';
+import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/python.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -94,7 +95,24 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   @override
   Widget build(BuildContext context) {
     var response = request.response;
-    var title = '${request.method.name} ${request.requestUrl}';
+    Widget? title = widget.favorite.name?.isNotEmpty == true
+        ? Text(widget.favorite.name!,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TextStyle(fontSize: 14, color: Colors.blueAccent.shade200))
+        : Text.rich(
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+            TextSpan(children: [
+              TextSpan(text: '${request.method.name} ', style: const TextStyle(fontSize: 14, color: Colors.teal)),
+              TextSpan(
+                  text: '${request.remoteDomain()}${request.path()}'.fixAutoLines(),
+                  style: TextStyle(fontSize: 14, color: Colors.blueAccent.shade200)),
+              TextSpan(
+                  text: '?${request.requestUri?.query}',
+                  style: TextStyle(fontSize: 14, color: Colors.pinkAccent.shade200)),
+            ]));
+
     var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
     String subtitle =
         '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ';
@@ -102,7 +120,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
         onLongPress: menu,
         minLeadingWidth: 25,
         leading: getIcon(response),
-        title: Text(widget.favorite.name ?? title, overflow: TextOverflow.ellipsis, maxLines: 2),
+        title: title,
         subtitle: Text.rich(
             maxLines: 1,
             TextSpan(children: [
