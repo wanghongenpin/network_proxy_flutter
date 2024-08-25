@@ -22,6 +22,7 @@ import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/http/websocket.dart';
+import 'package:network_proxy/network/util/crts.dart';
 import 'package:network_proxy/utils/platform.dart';
 
 import '../handler.dart';
@@ -85,6 +86,9 @@ class ProxyServer {
       if (configuration.enableSystemProxy) {
         setSystemProxyEnable(true);
       }
+
+      //初始化证书
+      CertificateManager.initCAConfig();
       return server;
     });
   }

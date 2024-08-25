@@ -49,7 +49,7 @@ class ProxyVpnService : VpnService(), ProtectSocket {
         var host: String? = null
         var port: Int = 0
         var allowApps: ArrayList<String>? = null
-        private var disallowApps: ArrayList<String>? = null
+        var disallowApps: ArrayList<String>? = null
 
         fun stopVpnIntent(context: Context): Intent {
             return Intent(context, ProxyVpnService::class.java).also {

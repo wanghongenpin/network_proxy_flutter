@@ -129,10 +129,16 @@ class _PictureInPictureState extends State<PictureInPictureIcon> {
             child: IconButton(
                 tooltip: localizations.windowMode,
                 onPressed: () async {
+                  var configuration = widget.proxyServer.configuration;
+                  List<String>? appList = configuration.appWhitelistEnabled ? configuration.appWhitelist : [];
+                  List<String>? disallowApps;
+                  if (appList.isEmpty) {
+                    disallowApps = configuration.appBlacklist ?? [];
+                  }
+
                   PictureInPicture.enterPictureInPictureMode(
                       Platform.isAndroid ? await localIp() : "127.0.0.1", widget.proxyServer.port,
-                      appList: widget.proxyServer.configuration.appWhitelist,
-                      disallowApps: widget.proxyServer.configuration.appBlacklist);
+                      appList: appList, disallowApps: disallowApps);
                 },
                 icon: const Icon(Icons.picture_in_picture_alt))),
       )

@@ -138,7 +138,7 @@ class Server extends Network {
           domain = process?.remoteHost;
           port = process?.remotePost ?? port;
         }
-        hostAndPort = HostAndPort.host(domain!, port);
+        hostAndPort = HostAndPort.host(domain!, port, scheme: HostAndPort.httpsScheme);
       }
 
       hostAndPort.scheme = HostAndPort.httpsScheme;

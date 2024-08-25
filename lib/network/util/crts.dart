@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
+import 'dart:async';
 import 'dart:core';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/x509/basic_constraints.dart';
 import 'package:network_proxy/network/util/x509/x509.dart';
 import 'package:path_provider/path_provider.dart';
@@ -36,6 +38,8 @@ Future<void> main() async {
   print(x509certificateFromPem.plain!);
 }
 
+enum StartState { uninitialized, initializing, initialized }
+
 class CertificateManager {
   /// 证书缓存
   static final Map<String, String> _certificateMap = {};
@@ -50,7 +54,8 @@ class CertificateManager {
   static late RSAPrivateKey _caPriKey;
 
   /// 是否初始化
-  static bool _initialized = false;
+  static StartState _state = StartState.uninitialized;
+  static Completer<void> _initializationCompleter = Completer<void>();
 
   static String? get(String host) {
     return _certificateMap[host];
@@ -68,8 +73,8 @@ class CertificateManager {
     var cer = _certificateMap[host];
 
     if (cer == null) {
-      if (!_initialized) {
-        await _initCAConfig();
+      if (_state != StartState.initialized) {
+        await initCAConfig();
       }
       cer = generate(_caCert, _serverKeyPair.publicKey as RSAPublicKey, _caPriKey, host);
       _certificateMap[host] = cer;
@@ -103,8 +108,8 @@ class CertificateManager {
 
   //重新生成根证书
   static Future<void> generateNewRootCA() async {
-    if (!_initialized) {
-      await _initCAConfig();
+    if (_state != StartState.initialized) {
+      await initCAConfig();
     }
 
     var generateRSAKeyPair = CryptoUtils.generateRSAKeyPair();
@@ -143,7 +148,7 @@ class CertificateManager {
     var keyFile = await privateKeyFile();
     await keyFile.writeAsString(serverPriKeyPem);
     cleanCache();
-    _initialized = false;
+    _state = StartState.uninitialized;
   }
 
   ///重置默认根证书
@@ -154,25 +159,42 @@ class CertificateManager {
     var keyFile = await privateKeyFile();
     await keyFile.delete();
     cleanCache();
-    _initialized = false;
+    _state = StartState.uninitialized;
   }
 
-  static Future<void> _initCAConfig() async {
-    if (_initialized) {
-      return;
+  static Future<void> initCAConfig() async {
+    if (_state == StartState.initialized || _state == StartState.initializing) {
+      return _initializationCompleter.future;
     }
-    _serverKeyPair = CryptoUtils.generateRSAKeyPair();
 
-    //从项目目录加入ca根证书
-    var caPemFile = await certificateFile();
-    _caCert = X509Utils.x509CertificateFromPem(await caPemFile.readAsString());
-    //根据CA证书subject来动态生成目标服务器证书的issuer和subject
+    var startTime = DateTime.now().millisecondsSinceEpoch;
 
-    //从项目目录加入ca私钥
-    var keyFile = await privateKeyFile();
-    _caPriKey = CryptoUtils.rsaPrivateKeyFromPem(await keyFile.readAsString());
+    _state = StartState.initializing;
+    _initializationCompleter = Completer<void>();
 
-    _initialized = true;
+    try {
+      _serverKeyPair = CryptoUtils.generateRSAKeyPair();
+
+      //从项目目录加入ca根证书
+      var caPemFile = await certificateFile();
+      _caCert = X509Utils.x509CertificateFromPem(await caPemFile.readAsString());
+      //根据CA证书subject来动态生成目标服务器证书的issuer和subject
+
+      //从项目目录加入ca私钥
+      var keyFile = await privateKeyFile();
+      _caPriKey = CryptoUtils.rsaPrivateKeyFromPem(await keyFile.readAsString());
+
+      _state = StartState.initialized;
+      _initializationCompleter.complete();
+    } catch (e) {
+      logger.e('init ca config error:$e');
+      _state = StartState.uninitialized;
+      _initializationCompleter.completeError(e);
+    }
+
+    logger.d('init ca config end cost:${DateTime.now().millisecondsSinceEpoch - startTime}');
+
+    return _initializationCompleter.future;
   }
 
   /// 证书文件
@@ -220,6 +242,6 @@ class CertificateManager {
     await caFile.writeAsString(decodePkcs12[1]);
 
     cleanCache();
-    _initialized = false;
+    _state = StartState.uninitialized;
   }
 }

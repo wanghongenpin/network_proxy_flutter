@@ -64,10 +64,16 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
       if (desktop.value.connect || !Platform.isAndroid || !(await (AppConfiguration.instance)).pipEnabled.value) {
         return false;
       }
+      List<String>? appList =
+          proxyServer.configuration.appWhitelistEnabled ? proxyServer.configuration.appWhitelist : [];
+      List<String>? disallowApps;
+      if (appList.isEmpty) {
+        disallowApps = proxyServer.configuration.appBlacklist ?? [];
+      }
 
       return PictureInPicture.enterPictureInPictureMode(
           Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port,
-          appList: proxyServer.configuration.appWhitelist, disallowApps: proxyServer.configuration.appBlacklist);
+          appList: appList, disallowApps: disallowApps);
     }
     return false;
   }
