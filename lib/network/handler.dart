@@ -189,8 +189,8 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
       if (httpRequest.method == HttpMethod.connect) {
         await proxyChannel.write(httpRequest);
       } else {
-        await HttpClients.connectRequest(hostAndPort, proxyChannel);
         if (clientChannel.isSsl) {
+          await HttpClients.connectRequest(hostAndPort, proxyChannel);
           await proxyChannel.secureSocket(channelContext, host: hostAndPort.host);
         }
       }

@@ -50,7 +50,7 @@ class HttpClients {
     HostAndPort connectHost = proxyInfo == null ? hostAndPort : HostAndPort.host(proxyInfo.host, proxyInfo.port!);
     var channel = await client.connect(connectHost, channelContext);
 
-    if (proxyInfo != null) {
+    if (proxyInfo != null && hostAndPort.isSsl()) {
       await connectRequest(hostAndPort, channel);
     }
 

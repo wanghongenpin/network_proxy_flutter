@@ -89,6 +89,10 @@ class ProxyHelper {
       ..hostAndPort = hostAndPort;
     request.processInfo ??= channelContext.processInfo;
 
+    if (request.method == HttpMethod.connect && !request.requestUrl.startsWith("http")) {
+      request.uri = hostAndPort.domain;
+    }
+
     request.response = HttpResponse(status)
       ..headers.contentType = 'text/plain'
       ..headers.contentLength = message.codeUnits.length
