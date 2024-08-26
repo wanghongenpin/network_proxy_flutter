@@ -130,14 +130,14 @@ class PictureInPicturePlugin : AndroidFlutterPlugin() {
         val pIntent: PendingIntent = PendingIntent.getBroadcast(
             activity,
             if (isRunning) 0 else 1,
-            Intent(VPN_ACTION),
+            Intent(VPN_ACTION).apply { setPackage(activity.packageName) },
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val cleanIntent: PendingIntent = PendingIntent.getBroadcast(
             activity,
             2,
-            Intent(CLEAN_ACTION),
+            Intent(CLEAN_ACTION).apply { setPackage(activity.packageName) },
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
         )
 
