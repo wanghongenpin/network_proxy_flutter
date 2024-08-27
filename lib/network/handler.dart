@@ -87,7 +87,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
   /// 转发请求
   Future<void> forward(ChannelContext channelContext, Channel channel, HttpRequest httpRequest) async {
-    log.d("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+    // log.d("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
     if (channel.error != null) {
       ProxyHelper.exceptionHandler(channelContext, channel, listener, httpRequest, channel.error);
       return;
@@ -157,10 +157,16 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
       ChannelContext channelContext, Channel channel, HttpRequest httpRequest, String redirectUrl) async {
     var proxyHandler = HttpResponseProxyHandler(channel, listener: listener, requestRewrites: requestRewrites);
 
-    var redirectUri = UriBuild.build(redirectUrl, params: httpRequest.queries);
-    httpRequest.uri = redirectUri.path + (redirectUri.hasQuery ? '?${redirectUri.query}' : '');
-    httpRequest.headers.host = redirectUri.hasPort ? "${redirectUri.host}:${redirectUri.port}" : redirectUri.host;
-    var redirectChannel = await HttpClients.connect(Uri.parse(redirectUrl), proxyHandler, channelContext);
+    var redirectUri = UriBuild.build(redirectUrl, params: httpRequest.queries.isEmpty ? null : httpRequest.queries);
+    log.d("[${channel.id}] 重定向 $redirectUri");
+
+    if (redirectUri.isScheme('https')) {
+      httpRequest.uri = redirectUri.path + (redirectUri.hasQuery ? '?${redirectUri.query}' : '');
+    } else {
+      httpRequest.uri = redirectUri.toString();
+    }
+    httpRequest.headers.host = '${redirectUri.host}${redirectUri.hasPort ? ':${redirectUri.port}' : ''}';
+    var redirectChannel = await HttpClients.connect(redirectUri, proxyHandler, channelContext);
     channelContext.serverChannel = redirectChannel;
     await redirectChannel.write(httpRequest);
   }

@@ -318,7 +318,12 @@ class RequestRewrites {
           return;
       }
       requestUri = requestUri.replace(queryParameters: queryParameters);
-      request.uri = requestUri.path + (requestUri.hasQuery ? "?${requestUri.query}" : "");
+
+      if (requestUri.isScheme('https')) {
+        request.uri = requestUri.path + (requestUri.hasQuery ? "?${requestUri.query}" : "");
+      } else {
+        request.uri = requestUri.toString();
+      }
       return;
     }
 
@@ -330,7 +335,11 @@ class RequestRewrites {
     if (item.type == RewriteType.replaceRequestLine) {
       request.method = item.method ?? request.method;
       Uri uri = Uri.parse(request.requestUrl).replace(path: item.path, query: item.queryParam);
-      request.uri = uri.path + (uri.hasQuery ? "?${uri.query}" : "");
+      if (uri.isScheme('https')) {
+        request.uri = uri.path + (uri.hasQuery ? "?${uri.query}" : "");
+      } else {
+        request.uri = uri.toString();
+      }
       return;
     }
     await _replaceHttpMessage(request, item);

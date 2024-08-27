@@ -229,7 +229,9 @@ async function onResponse(context, request, response) {
         }
         request.attributes['scriptContext'] = result['scriptContext'];
         scriptSession = result['scriptContext']['session'] ?? {};
-        return convertHttpRequest(request, result);
+        var httpRequest = convertHttpRequest(request, result);
+
+        return httpRequest;
       }
     }
     return request;
@@ -315,8 +317,13 @@ async function onResponse(context, request, response) {
       query += '$key=$value&';
     });
 
-    var requestUri = request.requestUri!.replace(path: map['path'], query: query);
-    request.uri = requestUri.path + (requestUri.hasQuery ? '?${requestUri.query}' : '');
+    var requestUri = request.requestUri!
+        .replace(path: map['path'], query: query.isEmpty ? null : query.substring(0, query.length - 1));
+    if (requestUri.isScheme('https')) {
+      request.uri = requestUri.path + (requestUri.hasQuery ? '?${requestUri.query}' : '');
+    } else {
+      request.uri = requestUri.toString();
+    }
 
     map['headers'].forEach((key, value) {
       if (value is List) {
@@ -326,6 +333,7 @@ async function onResponse(context, request, response) {
       request.headers.add(key, value);
     });
     request.body = map['body'] == null ? null : utf8.encode(map['body'].toString());
+
     return request;
   }
 

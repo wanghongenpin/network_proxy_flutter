@@ -108,9 +108,10 @@ class _FavoriteItemState extends State<_FavoriteItem> {
               TextSpan(
                   text: '${request.remoteDomain()}${request.path()}'.fixAutoLines(),
                   style: TextStyle(fontSize: 14, color: Colors.blueAccent.shade200)),
-              TextSpan(
-                  text: '?${request.requestUri?.query}',
-                  style: TextStyle(fontSize: 14, color: Colors.pinkAccent.shade200)),
+              if (request.requestUri?.query.isNotEmpty == true)
+                TextSpan(
+                    text: '?${request.requestUri?.query}',
+                    style: TextStyle(fontSize: 14, color: Colors.pinkAccent.shade200))
             ]));
 
     var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
