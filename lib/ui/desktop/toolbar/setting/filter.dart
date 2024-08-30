@@ -212,7 +212,7 @@ class DomainAddDialog extends StatelessWidget {
                       onChanged: (val) => host = val)
                 ]))),
         actions: [
-          FilledButton(
+          TextButton(
               child: Text(localizations.add),
               onPressed: () {
                 if (!(formKey.currentState as FormState).validate()) {
@@ -229,7 +229,7 @@ class DomainAddDialog extends StatelessWidget {
                 }
                 Navigator.of(context).pop(host);
               }),
-          ElevatedButton(child: Text(localizations.close), onPressed: () => Navigator.of(context).pop())
+          TextButton(child: Text(localizations.close), onPressed: () => Navigator.of(context).pop())
         ]);
   }
 }

@@ -38,11 +38,7 @@ class _SettingState extends State<Setting> {
 
   @override
   Widget build(BuildContext context) {
-    var surfaceTintColor =
-        Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.background;
-
     return MenuAnchor(
-      style: MenuStyle(surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor)),
       builder: (context, controller, child) {
         return IconButton(
             icon: const Icon(Icons.settings),
@@ -159,14 +155,7 @@ class _ProxyMenuState extends State<_ProxyMenu> {
 
   @override
   Widget build(BuildContext context) {
-    var surfaceTintColor =
-        Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.background;
-
     return SubmenuButton(
-      menuStyle: MenuStyle(
-        surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor),
-        padding: const MaterialStatePropertyAll(EdgeInsets.only(top: 10, bottom: 10)),
-      ),
       menuChildren: [
         PortWidget(proxyServer: widget.proxyServer, textStyle: const TextStyle(fontSize: 13)),
         const Divider(thickness: 0.3, height: 8),
@@ -240,8 +229,9 @@ class _ProxyMenuState extends State<_ProxyMenu> {
 class PortWidget extends StatefulWidget {
   final ProxyServer proxyServer;
   final TextStyle? textStyle;
+  final String? title;
 
-  const PortWidget({super.key, required this.proxyServer, this.textStyle});
+  const PortWidget({super.key, required this.proxyServer, this.textStyle, this.title});
 
   @override
   State<StatefulWidget> createState() {
@@ -284,7 +274,7 @@ class _PortState extends State<PortWidget> {
   Widget build(BuildContext context) {
     return Row(children: [
       const Padding(padding: EdgeInsets.only(left: 15)),
-      Text(localizations.port, style: widget.textStyle),
+      Text(widget.title ?? localizations.port, style: widget.textStyle),
       SizedBox(
           width: 80,
           child: TextFormField(

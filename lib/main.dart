@@ -69,19 +69,6 @@ class FluentApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var light = lightTheme();
-    var darkTheme = config(ThemeData.dark(useMaterial3: false));
-
-    var material3Light = config(ThemeData.light(useMaterial3: true));
-    var material3Dark = config(ThemeData.dark(useMaterial3: true));
-
-    if (Platform.isWindows) {
-      material3Light = material3Light.useSystemChineseFont();
-      material3Dark = material3Dark.useSystemChineseFont();
-      light = light.useSystemChineseFont();
-      darkTheme = darkTheme.useSystemChineseFont();
-    }
-
     return ValueListenableBuilder<bool>(
         valueListenable: appConfiguration.globalChange,
         builder: (_, current, __) {
@@ -89,8 +76,8 @@ class FluentApp extends StatelessWidget {
             title: 'ProxyPin',
             debugShowCheckedModeBanner: false,
             navigatorKey: navigatorHelper.navigatorKey,
-            theme: appConfiguration.useMaterial3 ? material3Light : light,
-            darkTheme: appConfiguration.useMaterial3 ? material3Dark : darkTheme,
+            theme: theme(Brightness.light),
+            darkTheme: theme(Brightness.dark),
             themeMode: appConfiguration.themeMode,
             locale: appConfiguration.language,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -100,34 +87,45 @@ class FluentApp extends StatelessWidget {
         });
   }
 
-  ThemeData config(ThemeData themeData) {
-    return themeData.copyWith(
-        dialogTheme: themeData.dialogTheme.copyWith(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ));
-  }
+  ThemeData theme(Brightness brightness) {
+    bool isDark = brightness == Brightness.dark;
+    Color? themeColor = isDark ? appConfiguration.themeColor : appConfiguration.themeColor;
+    Color? cardColor = isDark ? Colors.grey[850]! : Colors.white;
+    Color? surfaceContainer = isDark ? Colors.grey[800] : Colors.white;
 
-  ///浅色主题
-  ThemeData lightTheme() {
-    var theme = ThemeData.light(useMaterial3: false);
-    theme = theme.copyWith(
-        dialogTheme: theme.dialogTheme.copyWith(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        expansionTileTheme: theme.expansionTileTheme.copyWith(
-          textColor: theme.textTheme.titleMedium?.color,
-        ),
-        appBarTheme: theme.appBarTheme.copyWith(
-          color: Colors.transparent,
+    var colorScheme = ColorScheme.fromSeed(
+      brightness: brightness,
+      seedColor: themeColor,
+      primary: themeColor,
+      surface: cardColor,
+      onPrimary: isDark ? Colors.white : null,
+      surfaceContainer: surfaceContainer,
+    );
+    var themeData =
+        ThemeData(brightness: brightness, useMaterial3: appConfiguration.useMaterial3, colorScheme: colorScheme);
+
+    if (!appConfiguration.useMaterial3) {
+      themeData = themeData.copyWith(
+        appBarTheme: themeData.appBarTheme.copyWith(
+          iconTheme: themeData.iconTheme.copyWith(size: 20),
+          color: themeData.canvasColor,
           elevation: 0,
-          titleTextStyle: theme.textTheme.titleMedium,
-          iconTheme: theme.iconTheme,
+          titleTextStyle: themeData.textTheme.titleMedium,
         ),
-        tabBarTheme: theme.tabBarTheme.copyWith(
-          labelColor: theme.indicatorColor,
-          unselectedLabelColor: theme.textTheme.titleMedium?.color,
-        ));
+        tabBarTheme: themeData.tabBarTheme.copyWith(
+          labelColor: themeData.colorScheme.primary,
+          indicatorColor: themeColor,
+          unselectedLabelColor: themeData.textTheme.titleMedium?.color,
+        ),
+      );
+    }
 
-    return theme;
+    if (Platform.isWindows) {
+      themeData = themeData.useSystemChineseFont();
+    }
+
+    return themeData.copyWith(
+        dialogTheme:
+            themeData.dialogTheme.copyWith(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
   }
 }

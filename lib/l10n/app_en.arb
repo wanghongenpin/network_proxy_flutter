@@ -27,6 +27,7 @@
 
   "theme": "Theme",
   "followSystem": "Follow System",
+  "themeColor": "Theme Color",
   "themeLight": "Light",
   "themeDark": "Dark",
   "language": "Language",

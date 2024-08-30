@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
 import 'package:network_proxy/ui/mobile/setting/proxy.dart';
 import 'package:network_proxy/ui/mobile/setting/theme.dart';
 
@@ -18,23 +19,33 @@ class SettingMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     AppLocalizations localizations = AppLocalizations.of(context)!;
+    bool isEn = appConfiguration.language?.languageCode == 'en';
 
     return Scaffold(
         appBar: AppBar(title: Text(localizations.setting, style: const TextStyle(fontSize: 16)), centerTitle: true),
         body: Padding(
             padding: const EdgeInsets.all(5),
             child: ListView(children: [
+              PortWidget(
+                  proxyServer: proxyServer,
+                  title: '${localizations.proxy}${isEn ? ' ' : ''}${localizations.port}',
+                  textStyle: const TextStyle(fontSize: 16)),
               ListTile(
-                  title: Text(localizations.proxy),
-                  trailing: const Icon(Icons.arrow_right),
-                  onTap: () => Navigator.push(
-                      context, MaterialPageRoute(builder: (context) => ProxySetting(proxyServer: proxyServer)))),
+                  title: Text(localizations.externalProxy),
+                  trailing: const Icon(Icons.keyboard_arrow_right),
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (_) => ExternalProxyDialog(configuration: proxyServer.configuration));
+                  }),
               ListTile(
                 title: Text(localizations.language),
                 trailing: const Icon(Icons.arrow_right),
                 onTap: () => _language(context),
               ),
               MobileThemeSetting(appConfiguration: appConfiguration),
+              ListTile(title: Text(localizations.themeColor)),
+              Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: themeColor(context)),
               ListTile(
                   title: Text(localizations.autoStartup), //默认是否启动
                   subtitle: Text(localizations.autoStartupDescribe, style: const TextStyle(fontSize: 12)),
@@ -77,6 +88,29 @@ class SettingMenu extends StatelessWidget {
                         appConfiguration.flushConfig();
                       }))
             ])));
+  }
+
+  Widget themeColor(BuildContext context) {
+    return Wrap(
+      children: ThemeModel.colors.entries.map((pair) {
+        var dividerColor = Theme.of(context).focusColor;
+        var background = appConfiguration.themeColor == pair.value ? dividerColor : Colors.transparent;
+
+        return GestureDetector(
+            onTap: () => appConfiguration.setThemeColor = pair.key,
+            child: Tooltip(
+              message: pair.key,
+              child: Container(
+                margin: const EdgeInsets.all(4.0),
+                decoration: BoxDecoration(
+                  color: background,
+                  border: Border.all(color: Colors.transparent, width: 8),
+                ),
+                child: Dot(color: pair.value, size: 15),
+              ),
+            ));
+      }).toList(),
+    );
   }
 
   //选择语言

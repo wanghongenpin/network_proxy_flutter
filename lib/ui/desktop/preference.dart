@@ -16,6 +16,7 @@ class Preference extends StatelessWidget {
   Widget build(BuildContext context) {
     AppLocalizations localizations = AppLocalizations.of(context)!;
     var titleMedium = Theme.of(context).textTheme.titleMedium;
+
     return AlertDialog(
         scrollable: true,
         title: Row(children: [
@@ -67,12 +68,33 @@ class Preference extends StatelessWidget {
                               )))
                     ],
                   )),
+              //主题颜色
+              Row(children: [
+                SizedBox(
+                    width: 120,
+                    child: Text("${localizations.themeColor}: ", style: titleMedium, textAlign: TextAlign.start)),
+              ]),
+              themeColor(context),
+              const Divider(),
+              ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(localizations.autoStartup),
+                  //默认是否启动
+                  subtitle: Text(localizations.autoStartupDescribe, style: const TextStyle(fontSize: 12)),
+                  trailing: SwitchWidget(
+                      scale: 0.8,
+                      value: configuration.startup,
+                      onChanged: (value) {
+                        configuration.startup = value;
+                        configuration.flushConfig();
+                      })),
               const Divider(),
               ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(localizations.autoStartup), //默认是否启动
-                  subtitle: Text(localizations.autoStartupDescribe, style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(localizations.autoStartupDescribe, style: const TextStyle(fontSize: 12)),
                   trailing: SwitchWidget(
+                      scale: 0.8,
                       value: configuration.startup,
                       onChanged: (value) {
                         configuration.startup = value;
@@ -81,13 +103,37 @@ class Preference extends StatelessWidget {
               ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(localizations.headerExpanded),
-                  subtitle: Text(localizations.headerExpandedSubtitle, style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(localizations.headerExpandedSubtitle, style: const TextStyle(fontSize: 12)),
                   trailing: SwitchWidget(
+                      scale: 0.8,
                       value: appConfiguration.headerExpanded,
                       onChanged: (value) {
                         appConfiguration.headerExpanded = value;
                         appConfiguration.flushConfig();
                       }))
             ])));
+  }
+
+  Widget themeColor(BuildContext context) {
+    return Wrap(
+      children: ThemeModel.colors.entries.map((pair) {
+        var dividerColor = Theme.of(context).focusColor;
+        var background = appConfiguration.themeColor == pair.value ? dividerColor : Colors.transparent;
+
+        return GestureDetector(
+            onTap: () => appConfiguration.setThemeColor = pair.key,
+            child: Tooltip(
+              message: pair.key,
+              child: Container(
+                margin: const EdgeInsets.all(4.0),
+                decoration: BoxDecoration(
+                  color: background,
+                  border: Border.all(color: Colors.transparent, width: 8),
+                ),
+                child: Dot(color: pair.value, size: 15),
+              ),
+            ));
+      }).toList(),
+    );
   }
 }

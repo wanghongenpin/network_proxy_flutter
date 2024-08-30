@@ -6,6 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
 
 class ProxySetting extends StatefulWidget {
@@ -92,8 +93,9 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
               Row(children: [
                 Expanded(flex: 2, child: Text("${localizations.enable}：")),
                 Expanded(
-                    child: Switch(
+                    child: SwitchWidget(
                   value: externalProxy.enabled,
+                  scale: 0.85,
                   onChanged: (val) {
                     setState(() => externalProxy.enabled = val);
                   },
@@ -102,8 +104,9 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
               Row(children: [
                 Expanded(flex: 2, child: Text(localizations.mobileDisplayPacketCapture)),
                 Expanded(
-                    child: Switch(
+                    child: SwitchWidget(
                   value: externalProxy.capturePacket,
+                  scale: 0.85,
                   onChanged: (val) {
                     setState(() => externalProxy.capturePacket = val);
                   },

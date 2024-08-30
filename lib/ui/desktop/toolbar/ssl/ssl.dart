@@ -26,11 +26,7 @@ class _SslState extends State<SslWidget> {
 
   @override
   Widget build(BuildContext context) {
-    var surfaceTintColor =
-        Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.background;
-
     return MenuAnchor(
-        style: MenuStyle(surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor)),
         builder: (context, controller, child) {
           return IconButton(
               icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red),
@@ -49,9 +45,9 @@ class _SslState extends State<SslWidget> {
           item("${localizations.installRootCa} iOS", onPressed: () async => iosCer(await localIp())),
           item("${localizations.installRootCa} Android", onPressed: () async => androidCer(await localIp())),
           const Divider(thickness: 0.3, height: 3),
-          exportMenu(surfaceTintColor),
+          exportMenu(),
           const Divider(thickness: 0.3, height: 3),
-          importMenu(surfaceTintColor),
+          importMenu(),
           const Divider(thickness: 0.3, height: 3),
           item(localizations.generateCA, onPressed: () async {
             showConfirmDialog(context, title: localizations.generateCA, content: localizations.generateCADescribe,
@@ -73,7 +69,7 @@ class _SslState extends State<SslWidget> {
   }
 
   //import method
-  Widget importMenu(Color? surfaceTintColor) {
+  Widget importMenu() {
     return item(localizations.importCaP12, onPressed: () async {
       FilePickerResult? result =
           await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['p12', 'pfx']);
@@ -123,11 +119,8 @@ class _SslState extends State<SslWidget> {
     });
   }
 
-  Widget exportMenu(Color? surfaceTintColor) {
+  Widget exportMenu() {
     return SubmenuButton(
-        menuStyle: MenuStyle(
-          surfaceTintColor: MaterialStatePropertyAll(surfaceTintColor),
-        ),
         menuChildren: [
           MenuItemButton(
               child: Padding(
