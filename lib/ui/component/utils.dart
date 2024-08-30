@@ -153,8 +153,6 @@ Widget futureWidget<T>(Future<T> future, Widget Function(T data) toWidget, {bool
 Future showContextMenu(BuildContext context, Offset offset, {required List<PopupMenuEntry> items}) {
   return showMenu(
       context: context,
-      surfaceTintColor:
-          Brightness.dark == Theme.of(context).brightness ? null : Theme.of(context).colorScheme.primaryContainer,
       position: RelativeRect.fromLTRB(
         offset.dx + 10,
         offset.dy - 50,

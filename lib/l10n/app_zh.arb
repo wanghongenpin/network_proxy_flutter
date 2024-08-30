@@ -26,6 +26,7 @@
   "myQRCode": "我的二维码",
 
   "theme": "主题",
+  "themeColor": "主题颜色",
   "followSystem": "跟随系统",
   "themeLight": "浅色",
   "themeDark": "深色",

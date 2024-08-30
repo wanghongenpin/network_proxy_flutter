@@ -37,79 +37,82 @@ class DrawerWidget extends StatelessWidget {
     AppLocalizations localizations = AppLocalizations.of(context)!;
 
     return Drawer(
+        backgroundColor: Theme.of(context).cardColor,
         child: ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
-          child: const Text(''),
-        ),
-        ListTile(
-            leading: const Icon(Icons.favorite),
-            title: Text(localizations.favorites),
-            onTap: () => navigator(context, MobileFavorites(proxyServer: proxyServer))),
-        ListTile(
-          leading: const Icon(Icons.history),
-          title: Text(localizations.history),
-          onTap: () => navigator(
-              context, MobileHistory(proxyServer: proxyServer, container: container, historyTask: historyTask)),
-        ),
-        const Divider(thickness: 0.3, height: 0),
-        ListTile(
-            leading: const Icon(Icons.construction),
-            title: Text(localizations.toolbox),
-            onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (BuildContext context) {
-                    return Scaffold(
-                        appBar: AppBar(title: Text(localizations.toolbox), centerTitle: true),
-                        body: Toolbox(proxyServer: proxyServer));
-                  }),
-                )),
-        ListTile(
-            title: Text(localizations.httpsProxy),
-            leading: const Icon(Icons.https),
-            onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
-        const Divider(thickness: 0.3, height: 0),
-        ListTile(
-            title: Text(localizations.filter),
-            leading: const Icon(Icons.filter_alt_outlined),
-            onTap: () => navigator(context, FilterMenu(proxyServer: proxyServer))),
-        ListTile(
-            title: Text(localizations.requestRewrite),
-            leading: const Icon(Icons.replay_outlined),
-            onTap: () async {
-              var requestRewrites = await RequestRewrites.instance;
-              if (context.mounted) {
-                navigator(context, MobileRequestRewrite(requestRewrites: requestRewrites));
-              }
-            }),
-        ListTile(
-            title: Text(localizations.requestBlock),
-            leading: const Icon(Icons.block_flipped),
-            onTap: () async {
-              var requestBlockManager = await RequestBlockManager.instance;
-              if (context.mounted) {
-                navigator(context, MobileRequestBlock(requestBlockManager: requestBlockManager));
-              }
-            }),
-        ListTile(
-            title: Text(localizations.script),
-            leading: const Icon(Icons.code),
-            onTap: () => navigator(context, const MobileScript())),
-        ListTile(
-            title: Text(localizations.setting),
-            leading: const Icon(Icons.settings),
-            onTap: () => navigator(
-                context,
-                futureWidget(AppConfiguration.instance,
-                    (appConfiguration) => SettingMenu(proxyServer: proxyServer, appConfiguration: appConfiguration)))),
-        ListTile(
-            title: Text(localizations.about),
-            leading: const Icon(Icons.info_outline),
-            onTap: () => navigator(context, const About())),
-        const SizedBox(height: 20)
-      ],
-    ));
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
+              child: const Text(''),
+            ),
+            ListTile(
+                leading: const Icon(Icons.favorite),
+                title: Text(localizations.favorites),
+                onTap: () => navigator(context, MobileFavorites(proxyServer: proxyServer))),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: Text(localizations.history),
+              onTap: () => navigator(
+                  context, MobileHistory(proxyServer: proxyServer, container: container, historyTask: historyTask)),
+            ),
+            const Divider(thickness: 0.3, height: 0),
+            ListTile(
+                leading: const Icon(Icons.construction),
+                title: Text(localizations.toolbox),
+                onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (BuildContext context) {
+                        return Scaffold(
+                            appBar: AppBar(title: Text(localizations.toolbox), centerTitle: true),
+                            body: Toolbox(proxyServer: proxyServer));
+                      }),
+                    )),
+            ListTile(
+                title: Text(localizations.httpsProxy),
+                leading: const Icon(Icons.https),
+                onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
+            const Divider(thickness: 0.3, height: 0),
+            ListTile(
+                title: Text(localizations.filter),
+                leading: const Icon(Icons.filter_alt_outlined),
+                onTap: () => navigator(context, FilterMenu(proxyServer: proxyServer))),
+            ListTile(
+                title: Text(localizations.requestRewrite),
+                leading: const Icon(Icons.replay_outlined),
+                onTap: () async {
+                  var requestRewrites = await RequestRewrites.instance;
+                  if (context.mounted) {
+                    navigator(context, MobileRequestRewrite(requestRewrites: requestRewrites));
+                  }
+                }),
+            ListTile(
+                title: Text(localizations.requestBlock),
+                leading: const Icon(Icons.block_flipped),
+                onTap: () async {
+                  var requestBlockManager = await RequestBlockManager.instance;
+                  if (context.mounted) {
+                    navigator(context, MobileRequestBlock(requestBlockManager: requestBlockManager));
+                  }
+                }),
+            ListTile(
+                title: Text(localizations.script),
+                leading: const Icon(Icons.code),
+                onTap: () => navigator(context, const MobileScript())),
+            ListTile(
+                title: Text(localizations.setting),
+                leading: const Icon(Icons.settings),
+                onTap: () => navigator(
+                    context,
+                    futureWidget(
+                        AppConfiguration.instance,
+                        (appConfiguration) =>
+                            SettingMenu(proxyServer: proxyServer, appConfiguration: appConfiguration)))),
+            ListTile(
+                title: Text(localizations.about),
+                leading: const Icon(Icons.info_outline),
+                onTap: () => navigator(context, const About())),
+            const SizedBox(height: 20)
+          ],
+        ));
   }
 }
 
@@ -156,9 +159,9 @@ class FilterMenu extends StatelessWidget {
               Platform.isIOS
                   ? const SizedBox()
                   : ListTile(
-                  title: Text(localizations.appBlacklist),
-                  trailing: const Icon(Icons.arrow_right),
-                  onTap: () => navigator(context, AppBlacklist(proxyServer: proxyServer))),
+                      title: Text(localizations.appBlacklist),
+                      trailing: const Icon(Icons.arrow_right),
+                      onTap: () => navigator(context, AppBlacklist(proxyServer: proxyServer))),
             ])));
   }
 }

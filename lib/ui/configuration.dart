@@ -8,8 +8,22 @@ import 'package:path_provider/path_provider.dart';
 /// @author wanghongen
 /// 2024/1/1
 class ThemeModel {
+  static final Map<String, Color> colors = {
+    "Blue": Colors.blue,
+    "Pink": Colors.pink,
+    "Red": Colors.red,
+    "Purple": Colors.deepPurple,
+    "Green": Colors.green,
+    "Teal": Colors.teal,
+    "Cyan": Colors.cyan,
+    "Orange": Colors.orange,
+    "Yellow": Colors.yellow[900]!,
+    "Grey": Colors.grey,
+  };
+
   ThemeMode mode;
   bool useMaterial3;
+  String color = "Blue";
 
   ThemeModel({this.mode = ThemeMode.system, this.useMaterial3 = true});
 
@@ -17,6 +31,8 @@ class ThemeModel {
         mode: mode ?? this.mode,
         useMaterial3: useMaterial3 ?? this.useMaterial3,
       );
+
+  Color get themeColor => colors[color] ?? Colors.blue;
 }
 
 class AppConfiguration {
@@ -81,6 +97,17 @@ class AppConfiguration {
     flushConfig();
   }
 
+  Color get themeColor => _theme.themeColor;
+
+  set setThemeColor(String colorName) {
+    var color = ThemeModel.colors[colorName];
+    if (color == null || color == themeColor) return;
+
+    _theme.color = colorName;
+    globalChange.value = !globalChange.value;
+    flushConfig();
+  }
+
   ///language
   Locale? get language => _language;
 
@@ -124,6 +151,8 @@ class AppConfiguration {
       var mode =
           ThemeMode.values.firstWhere((element) => element.name == config['mode'], orElse: () => ThemeMode.system);
       _theme = ThemeModel(mode: mode, useMaterial3: config['useMaterial3'] ?? true);
+      _theme.color = config['themeColor'] ?? "Blue";
+
       upgradeNoticeV12 = config['upgradeNoticeV12'] ?? true;
       _language = config['language'] == null ? null : Locale.fromSubtags(languageCode: config['language']);
       pipEnabled.value = config['pipEnabled'] ?? true;
@@ -165,6 +194,7 @@ class AppConfiguration {
   Map<String, dynamic> toJson() {
     return {
       'mode': _theme.mode.name,
+      'themeColor': _theme.color,
       'useMaterial3': _theme.useMaterial3,
       'upgradeNoticeV12': upgradeNoticeV12,
       "language": _language?.languageCode,
