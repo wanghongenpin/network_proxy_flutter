@@ -79,4 +79,17 @@ class ByteBuf {
   int get(int index) {
     return bytes[index];
   }
+
+  void truncate(int len) {
+    if (len > readableBytes()) throw Exception("insufficient data");
+    var takeBytes = _buffer.takeBytes();
+    _buffer.add(takeBytes.sublist(0, readerIndex + len));
+  }
+
+  ByteBuf dup() {
+    ByteBuf buf = ByteBuf();
+    buf.add(bytes);
+    buf.readerIndex = readerIndex;
+    return buf;
+  }
 }

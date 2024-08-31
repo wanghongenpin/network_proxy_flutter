@@ -2,9 +2,9 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:basic_utils/basic_utils.dart';
-import 'package:network_proxy/network/util/x509/basic_constraints.dart';
-import 'package:network_proxy/network/util/x509/key_usage.dart' as x509;
-import 'package:network_proxy/network/util/x509/x509.dart';
+import 'package:network_proxy/network/util/cert/basic_constraints.dart';
+import 'package:network_proxy/network/util/cert/key_usage.dart' as x509;
+import 'package:network_proxy/network/util/cert/x509.dart';
 
 void main() async {
   var caPem = await File('assets/certs/ca.crt').readAsString();

@@ -22,10 +22,11 @@ import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
 import 'package:network_proxy/network/util/logger.dart';
-import 'package:network_proxy/network/util/x509/basic_constraints.dart';
-import 'package:network_proxy/network/util/x509/x509.dart';
+import 'package:network_proxy/network/util/cert/basic_constraints.dart';
+import 'package:network_proxy/network/util/cert/pkcs12.dart';
+import 'package:network_proxy/network/util/cert/x509.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:network_proxy/network/util/x509/key_usage.dart' as x509;
+import 'package:network_proxy/network/util/cert/key_usage.dart' as x509;
 
 import 'file_read.dart';
 
@@ -225,12 +226,12 @@ class CertificateManager {
   static Future<Uint8List> generatePkcs12(String? password) async {
     var caFile = await CertificateManager.certificateFile();
     var keyFile = await CertificateManager.privateKeyFile();
-    return Pkcs12Utils.generatePkcs12(await keyFile.readAsString(), [await caFile.readAsString()], password: password);
+    return Pkcs12.generatePkcs12(await keyFile.readAsString(), [await caFile.readAsString()], password: password);
   }
 
   ///import p12文件
   static Future<void> importPkcs12(Uint8List pkcs12, String? password) async {
-    var decodePkcs12 = Pkcs12Utils.parsePkcs12(pkcs12, password: password);
+    var decodePkcs12 = Pkcs12.parsePkcs12(pkcs12, password: password);
 
     var caFile = await CertificateManager.certificateFile();
     var keyFile = await CertificateManager.privateKeyFile();

@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
-import 'package:network_proxy/network/util/x509/extension.dart';
-import 'package:network_proxy/network/util/x509/key_usage.dart' as x509;
+import 'package:network_proxy/network/util/cert/extension.dart';
+import 'package:network_proxy/network/util/cert/key_usage.dart' as x509;
 import 'package:pointycastle/asn1/unsupported_object_identifier_exception.dart';
 import 'package:pointycastle/pointycastle.dart';
 

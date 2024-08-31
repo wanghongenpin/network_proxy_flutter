@@ -88,19 +88,28 @@ class FluentApp extends StatelessWidget {
   }
 
   ThemeData theme(Brightness brightness) {
+    bool useMaterial3 = appConfiguration.useMaterial3;
     bool isDark = brightness == Brightness.dark;
+
     Color? themeColor = isDark ? appConfiguration.themeColor : appConfiguration.themeColor;
     Color? cardColor = isDark ? Colors.grey[850]! : Colors.white;
     Color? surfaceContainer = isDark ? Colors.grey[800] : Colors.white;
+
+    Color? secondary = useMaterial3 ? null : themeColor;
+    if (themeColor is MaterialColor) {
+      secondary = themeColor[500];
+    }
 
     var colorScheme = ColorScheme.fromSeed(
       brightness: brightness,
       seedColor: themeColor,
       primary: themeColor,
       surface: cardColor,
+      secondary: secondary,
       onPrimary: isDark ? Colors.white : null,
       surfaceContainer: surfaceContainer,
     );
+
     var themeData =
         ThemeData(brightness: brightness, useMaterial3: appConfiguration.useMaterial3, colorScheme: colorScheme);
 
