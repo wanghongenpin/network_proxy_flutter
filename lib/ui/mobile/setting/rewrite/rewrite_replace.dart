@@ -8,6 +8,7 @@ import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 /// 重写替换
+/// @author wanghongen
 class RewriteReplaceWidget extends StatefulWidget {
   final String subtitle;
   final RuleType ruleType;

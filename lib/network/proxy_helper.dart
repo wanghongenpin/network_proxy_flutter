@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 WangHongEn
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -74,13 +90,16 @@ class ProxyHelper {
     HttpStatus status = HttpStatus(-1, message);
     if (error is HandshakeException) {
       status = HttpStatus(
-          -2, Localizations.isEN ? 'SSL handshake failed, please check the certificate' : 'SSL handshake failed, 请检查证书安装是否正确');
+          -2,
+          Localizations.isZH
+              ? 'SSL handshake failed, 请检查证书安装是否正确'
+              : 'SSL handshake failed, please check the certificate');
     } else if (error is ParserException) {
       status = HttpStatus(-3, error.message);
     } else if (error is SocketException) {
       status = HttpStatus(-4, error.message);
     } else if (error is SignalException) {
-      status.reason('执行脚本异常');
+      status.reason(Localizations.isZH ? '执行脚本异常' : 'Execute script exception');
     }
 
     request ??= HttpRequest(HttpMethod.connect, hostAndPort.domain)

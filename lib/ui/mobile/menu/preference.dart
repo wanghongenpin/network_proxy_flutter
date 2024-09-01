@@ -10,6 +10,7 @@ import 'package:network_proxy/ui/mobile/setting/proxy.dart';
 import 'package:network_proxy/ui/mobile/setting/theme.dart';
 
 ///设置
+///@author wanghongen
 class SettingMenu extends StatelessWidget {
   final ProxyServer proxyServer;
   final AppConfiguration appConfiguration;

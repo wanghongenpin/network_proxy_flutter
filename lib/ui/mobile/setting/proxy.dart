@@ -4,45 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
-import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
-import 'package:network_proxy/ui/desktop/toolbar/setting/setting.dart';
-
-class ProxySetting extends StatefulWidget {
-  final ProxyServer proxyServer;
-
-  const ProxySetting({super.key, required this.proxyServer});
-
-  @override
-  State<StatefulWidget> createState() {
-    return _ProxySettingState();
-  }
-}
-
-class _ProxySettingState extends State<ProxySetting> {
-  AppLocalizations get localizations => AppLocalizations.of(context)!;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          title: Text(localizations.proxySetting, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
-      body: ListView(children: [
-        PortWidget(proxyServer: widget.proxyServer),
-        const Divider(height: 20, thickness: 0.3),
-        ListTile(
-          title: Text(localizations.externalProxy),
-          trailing: const Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            showDialog(
-                context: context, builder: (_) => ExternalProxyDialog(configuration: widget.proxyServer.configuration));
-          },
-        ),
-      ]),
-    );
-  }
-}
 
 class ExternalProxyDialog extends StatefulWidget {
   final Configuration configuration;

@@ -1,4 +1,19 @@
-﻿import 'dart:typed_data';
+﻿/*
+ * Copyright 2023 WangHongEn
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -8,7 +23,8 @@ import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 
-//应用白名单 目前只支持安卓 ios没办法获取安装的列表
+///应用白名单 目前只支持安卓 ios没办法获取安装的列表
+///@author wang
 class AppWhitelist extends StatefulWidget {
   final ProxyServer proxyServer;
 

@@ -9,6 +9,7 @@ import 'package:network_proxy/ui/mobile/widgets/highlight.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
 
 ///请求序列 列表
+///@author wanghongen
 class RequestSequence extends StatefulWidget {
   final ListenableList<HttpRequest> container;
   final ProxyServer proxyServer;
@@ -137,29 +138,35 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Scrollbar(
+    return PrimaryScrollController(
         controller: _scrollController,
-        child: ListView.separated(
+        child: Scrollbar(
             controller: _scrollController,
-            cacheExtent: 1000,
-            separatorBuilder: (context, index) =>
-                Divider(thickness: 0.2, height: 0, color: Theme.of(context).dividerColor),
-            itemCount: view.length,
-            itemBuilder: (context, index) {
-              GlobalKey<RequestRowState> key = GlobalKey();
-              indexes[view.elementAt(index)] = key;
-              return RequestRow(
-                  index: view.length - index,
-                  key: key,
-                  request: view.elementAt(index),
-                  proxyServer: widget.proxyServer,
-                  displayDomain: widget.displayDomain,
-                  onRemove: (request) {
-                    setState(() {
-                      view.remove(request);
-                    });
-                    widget.onRemove?.call([request]);
-                  });
-            }));
+            child: ListView.separated(
+                controller: _scrollController,
+                cacheExtent: 1000,
+                separatorBuilder: (context, index) =>
+                    Divider(thickness: 0.2, height: 0, color: Theme.of(context).dividerColor),
+                itemCount: view.length,
+                itemBuilder: (context, index) {
+                  GlobalKey<RequestRowState> key = GlobalKey();
+                  indexes[view.elementAt(index)] = key;
+                  return RequestRow(
+                      index: view.length - index,
+                      key: key,
+                      request: view.elementAt(index),
+                      proxyServer: widget.proxyServer,
+                      displayDomain: widget.displayDomain,
+                      onRemove: (request) {
+                        setState(() {
+                          view.remove(request);
+                        });
+                        widget.onRemove?.call([request]);
+                      });
+                })));
+  }
+
+  scrollToTop() {
+    _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.ease);
   }
 }

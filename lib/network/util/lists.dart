@@ -1,4 +1,5 @@
-//获取list元素类型
+///获取list元素类型
+/// @author wanghongen
 Type getListElementType(dynamic list) {
   if (list == null || list.isEmpty || list is! List) {
     return Null;

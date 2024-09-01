@@ -5,7 +5,9 @@ import android.app.AlertDialog
 import android.os.Bundle
 import kotlin.system.exitProcess
 
-
+/**
+ * @author wanghongen
+ */
 class VpnAlertDialog : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
