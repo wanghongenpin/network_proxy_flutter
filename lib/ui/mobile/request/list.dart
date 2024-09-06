@@ -42,25 +42,6 @@ class RequestListWidget extends StatefulWidget {
   }
 }
 
-class DoubleClickHandle {
-  int tabClickTime = 0;
-  final Function()? handle;
-
-  DoubleClickHandle({this.handle});
-
-  void call() {
-    if (handle == null) {
-      return;
-    }
-
-    if (DateTime.now().millisecondsSinceEpoch - tabClickTime < 500) {
-      print("double click");
-      handle?.call();
-    }
-    tabClickTime = DateTime.now().millisecondsSinceEpoch;
-  }
-}
-
 class RequestListState extends State<RequestListWidget> {
   final GlobalKey<RequestSequenceState> requestSequenceKey = GlobalKey<RequestSequenceState>();
   final GlobalKey<DomainListState> domainListKey = GlobalKey<DomainListState>();
@@ -161,5 +142,23 @@ class RequestListState extends State<RequestListWidget> {
     var json = await Har.writeJson(view.toList(), title: title);
     var file = XFile.fromData(utf8.encode(json), name: fileName, mimeType: "har");
     Share.shareXFiles([file], fileNameOverrides: [fileName]);
+  }
+}
+
+class DoubleClickHandle {
+  int tabClickTime = 0;
+  final Function()? handle;
+
+  DoubleClickHandle({this.handle});
+
+  void call() {
+    if (handle == null) {
+      return;
+    }
+
+    if (DateTime.now().millisecondsSinceEpoch - tabClickTime < 500) {
+      handle?.call();
+    }
+    tabClickTime = DateTime.now().millisecondsSinceEpoch;
   }
 }

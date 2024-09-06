@@ -170,17 +170,15 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   Widget build(BuildContext context) {
     super.build(context);
 
-    return PrimaryScrollController(
+    return Scrollbar(
         controller: _scrollController,
-        child: Scrollbar(
+        child: ListView.separated(
             controller: _scrollController,
-            child: ListView.separated(
-                controller: _scrollController,
-                padding: EdgeInsets.zero,
-                separatorBuilder: (context, index) =>
-                    Divider(thickness: 0.2, height: 0.5, color: Theme.of(context).dividerColor),
-                itemCount: view.length,
-                itemBuilder: (ctx, index) => title(index))));
+            padding: EdgeInsets.zero,
+            separatorBuilder: (context, index) =>
+                Divider(thickness: 0.2, height: 0.5, color: Theme.of(context).dividerColor),
+            itemCount: view.length,
+            itemBuilder: (ctx, index) => title(index)));
   }
 
   Widget title(int index) {

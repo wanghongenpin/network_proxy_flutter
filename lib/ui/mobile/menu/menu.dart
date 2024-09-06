@@ -200,7 +200,7 @@ class MoreMenu extends StatelessWidget {
             actionsPadding: const EdgeInsets.only(bottom: 5),
             title: Text(localizations.remoteConnectForward, style: const TextStyle(fontSize: 16)),
             content: SizedBox(
-                height: 240,
+                height: 260,
                 width: 300,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -211,7 +211,16 @@ class MoreMenu extends StatelessWidget {
                       version: QrVersions.auto,
                       size: 200.0,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('${localizations.localIP}:'),
+                        const SizedBox(width: 5),
+                        SelectableText('$host:$port'),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
                     Text(localizations.mobileScan),
                   ],
                 )),

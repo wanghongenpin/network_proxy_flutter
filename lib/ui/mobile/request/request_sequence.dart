@@ -26,9 +26,6 @@ class RequestSequence extends StatefulWidget {
 }
 
 class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliveClientMixin {
-  // Define a ScrollController
-  final ScrollController _scrollController = ScrollController();
-
   ///请求和对应的row的映射
   Map<HttpRequest, GlobalKey<RequestRowState>> indexes = HashMap();
 
@@ -58,7 +55,6 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   @override
   dispose() {
     KeywordHighlight.keywordsController.removeListener(highlightListener);
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -138,35 +134,34 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   Widget build(BuildContext context) {
     super.build(context);
 
-    return PrimaryScrollController(
-        controller: _scrollController,
-        child: Scrollbar(
-            controller: _scrollController,
-            child: ListView.separated(
-                controller: _scrollController,
-                cacheExtent: 1000,
-                separatorBuilder: (context, index) =>
-                    Divider(thickness: 0.2, height: 0, color: Theme.of(context).dividerColor),
-                itemCount: view.length,
-                itemBuilder: (context, index) {
-                  GlobalKey<RequestRowState> key = GlobalKey();
-                  indexes[view.elementAt(index)] = key;
-                  return RequestRow(
-                      index: view.length - index,
-                      key: key,
-                      request: view.elementAt(index),
-                      proxyServer: widget.proxyServer,
-                      displayDomain: widget.displayDomain,
-                      onRemove: (request) {
-                        setState(() {
-                          view.remove(request);
-                        });
-                        widget.onRemove?.call([request]);
-                      });
-                })));
+    return Scrollbar(
+        controller: PrimaryScrollController.maybeOf(context),
+        child: ListView.separated(
+            controller: PrimaryScrollController.maybeOf(context),
+            cacheExtent: 1000,
+            separatorBuilder: (context, index) =>
+                Divider(thickness: 0.2, height: 0, color: Theme.of(context).dividerColor),
+            itemCount: view.length,
+            itemBuilder: (context, index) {
+              GlobalKey<RequestRowState> key = GlobalKey();
+              indexes[view.elementAt(index)] = key;
+              return RequestRow(
+                  index: view.length - index,
+                  key: key,
+                  request: view.elementAt(index),
+                  proxyServer: widget.proxyServer,
+                  displayDomain: widget.displayDomain,
+                  onRemove: (request) {
+                    setState(() {
+                      view.remove(request);
+                    });
+                    widget.onRemove?.call([request]);
+                  });
+            }));
   }
 
   scrollToTop() {
-    _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.ease);
+    PrimaryScrollController.maybeOf(context)
+        ?.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.ease);
   }
 }
