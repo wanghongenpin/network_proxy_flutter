@@ -97,9 +97,9 @@ class Server extends Network {
     //外部代理信息
     if (configuration.externalProxy?.enabled == true) {
       ProxyInfo externalProxy = configuration.externalProxy!;
-      if (externalProxy.capturePacket == true) {
-        channelContext.putAttribute(AttributeKeys.proxyInfo, externalProxy);
-      } else {
+      channelContext.putAttribute(AttributeKeys.proxyInfo, externalProxy);
+
+      if (externalProxy.capturePacket == false) {
         //不抓包直接转发
         channelContext.putAttribute(AttributeKeys.remote, HostAndPort.host(externalProxy.host, externalProxy.port!));
       }

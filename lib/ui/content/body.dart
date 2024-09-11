@@ -386,7 +386,6 @@ class _BodyState extends State<_Body> {
         return SelectableText(message!.body!.map(intToHex).join(" "), contextMenuBuilder: contextMenu);
       }
     } catch (e) {
-      // ignore: avoid_print
       logger.e(e, stackTrace: StackTrace.current);
     }
 
@@ -404,6 +403,7 @@ class Tabs {
     }
 
     if (contentType == ContentType.video) {
+      tabs.list.add(ViewType.video);
       tabs.list.add(ViewType.hex);
       return tabs;
     }

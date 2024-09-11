@@ -294,7 +294,6 @@ class LinuxSystemProxy extends SystemProxy {
       return Future.wait([hostFuture, portFuture]).then((value) {
         var host = Strings.trimWrap(value[0], "'");
         var port = Strings.trimWrap(value[1], "'");
-        print("$host:$port");
         if (host.isNotEmpty && port.isNotEmpty) {
           return ProxyInfo.of(host, int.parse(port));
         }

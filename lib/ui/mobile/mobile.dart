@@ -172,7 +172,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   Widget build(BuildContext context) {
     return PopScope(
         canPop: false,
-        onPopInvokedWithResult: (d, result) async {
+        onPopInvoked: (d) async {
           if (await enterPictureInPicture()) {
             return;
           }
@@ -234,7 +234,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
                 }
 
                 Vpn.startVpn(
-                    Platform.isAndroid ? await localIp() : "127.0.0.1", proxyServer.port, proxyServer.configuration);
+                    Platform.isAndroid ? await localIp(readCache: false) : "127.0.0.1", proxyServer.port, proxyServer.configuration);
               },
               onStop: () => Vpn.stopVpn())),
     );

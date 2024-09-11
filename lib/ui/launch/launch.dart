@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
@@ -86,7 +87,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
 
   @override
   void onWindowClose() async {
-    print("onWindowClose");
+    logger.d("onWindowClose");
     await appExit();
   }
 
@@ -106,7 +107,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.detached) {
-      print('AppLifecycleState.detached');
+      logger.d('AppLifecycleState.detached');
       widget.onStop?.call();
       widget.proxyServer.stop();
       started = false;

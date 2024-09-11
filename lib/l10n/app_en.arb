@@ -12,6 +12,8 @@
   "port": "Port: ",
   "proxy": "Proxy",
   "externalProxy": "External Proxy",
+  "username": "Username",
+  "password": "Password",
   "proxySetting": "Proxy Setting",
   "systemProxy": "Set as System Proxy",
   "serverNotStart": "Proxy server not started",
@@ -243,6 +245,8 @@
   "headerExpanded": "Headers Expanded",
   "headerExpandedSubtitle": "Details page Headers is expanded by default",
 
+  "externalProxyAuth": "Proxy Auth (Optional)",
+  "externalProxyServer": "Proxy Server",
   "externalProxyConnectFailure": "External Proxy Connect failure",
   "externalProxyFailureConfirm": "Access to all http will fail due to network connectivity issues，Do you want to continue setting up external proxies。",
   "mobileDisplayPacketCapture": "Mobile Display Packet Capture:",

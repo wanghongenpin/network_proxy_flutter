@@ -12,6 +12,8 @@
   "port": "端口号: ",
   "proxy": "代理",
   "externalProxy": "外部代理设置",
+  "username": "用户名",
+  "password": "密码",
   "proxySetting": "代理设置",
   "systemProxy": "设置为系统代理",
   "serverNotStart": "未开启抓包",
@@ -243,6 +245,8 @@
   "headerExpanded": "Headers自动展开",
   "headerExpandedSubtitle": "详情页Headers栏是否自动展开",
 
+  "externalProxyAuth": "代理认证 (可选)",
+  "externalProxyServer": "代理服务器",
   "externalProxyConnectFailure": "外部代理连接失败",
   "externalProxyFailureConfirm": "网络不通所有接口将会访问失败，是否继续设置外部代理。",
   "mobileDisplayPacketCapture": "手机端是否展示抓包:",

@@ -63,7 +63,7 @@ class HistoryStorage {
           _histories.add(HistoryItem.formJson(entry));
         }
       } catch (e) {
-        print(e);
+        logger.e("历史记录解析错误", error: e);
       }
     }
   }

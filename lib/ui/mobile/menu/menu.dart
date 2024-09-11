@@ -24,6 +24,7 @@ import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/setting/app_filter.dart';
 import 'package:network_proxy/ui/mobile/setting/ssl.dart';
@@ -88,7 +89,7 @@ class MoreMenu extends StatelessWidget {
                 title: Text(localizations.myQRCode),
                 onTap: () async {
                   Navigator.maybePop(context);
-                  var ip = await localIp();
+                  var ip = await localIp(readCache: false);
                   if (context.mounted) {
                     connectQrCode(context, ip, proxyServer.port);
                   }
@@ -172,7 +173,7 @@ class MoreMenu extends StatelessWidget {
           }
         }
       } catch (e) {
-        print(e);
+        logger.e(e);
         if (context.mounted) {
           showDialog(
               context: context,

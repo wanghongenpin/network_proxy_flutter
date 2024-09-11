@@ -288,7 +288,13 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
     var clientChannel = channelContext.clientChannel!;
     Channel? remoteChannel =
         channelContext.serverChannel ?? await channelContext.connectServerChannel(remote, RelayHandler(clientChannel));
+    ProxyInfo? proxyInfo = channelContext.getAttribute(AttributeKeys.proxyInfo);
     if (clientChannel.isSsl && !remoteChannel.isSsl) {
+      //代理认证
+      if (proxyInfo?.isAuthenticated == true) {
+        await HttpClients.connectRequest(remote, remoteChannel, proxyInfo: proxyInfo);
+      }
+
       await remoteChannel.secureSocket(channelContext, host: channelContext.getAttribute(AttributeKeys.domain));
     }
 

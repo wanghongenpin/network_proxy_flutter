@@ -47,7 +47,6 @@ bool processCookies(StringBuffer py, List<String> headers) {
   for (String header in headers) {
     if (header.toLowerCase().startsWith("cookie:")) {
       py.write('cookies = {\n');
-      print(header);
       var cookies = header.substring(9, header.length - 1).trim().split(';');
       for (var cookie in cookies) {
         var parts = cookie.split('=');

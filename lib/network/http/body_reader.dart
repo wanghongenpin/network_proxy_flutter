@@ -76,10 +76,6 @@ class BodyReader {
 
     if (message.contentLength == -1 || _bodyBuffer.length >= message.contentLength) {
       _state = ReaderState.done;
-
-      if (message.contentLength != -1 && _bodyBuffer.length > message.contentLength) {
-        print(String.fromCharCodes(_bodyBuffer.toBytes().sublist(message.contentLength)));
-      }
     }
   }
 

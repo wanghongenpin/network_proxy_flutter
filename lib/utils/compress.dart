@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:brotli/brotli.dart';
+import 'package:network_proxy/network/util/logger.dart';
 
 ///GZIP 解压缩
 List<int> gzipDecode(List<int> byteBuffer) {
@@ -8,7 +9,7 @@ List<int> gzipDecode(List<int> byteBuffer) {
   try {
     return gzipCodec.decode(byteBuffer);
   } catch (e) {
-    print("gzipDecode error: $e");
+    logger.e("gzipDecode error: $e");
     return byteBuffer;
   }
 }
@@ -23,7 +24,7 @@ List<int> brDecode(List<int> byteBuffer) {
   try {
     return brotli.decode(byteBuffer);
   } catch (e) {
-    print("brDecode error: $e");
+    logger.e("brDecode error: $e");
     return byteBuffer;
   }
 }

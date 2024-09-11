@@ -15,6 +15,7 @@
  */
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:network_proxy/network/components/host_filter.dart';
@@ -22,6 +23,7 @@ import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
+import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/proxy_helper.dart';
 import 'package:network_proxy/network/util/attribute_keys.dart';
@@ -187,16 +189,24 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     HostAndPort? remote = channelContext.getAttribute(AttributeKeys.remote);
     //外部代理
     ProxyInfo? proxyInfo = channelContext.getAttribute(AttributeKeys.proxyInfo);
+
     if (remote != null || proxyInfo != null) {
       HostAndPort connectHost = remote ?? HostAndPort.host(proxyInfo!.host, proxyInfo.port!);
       final proxyChannel = await connectRemote(channelContext, clientChannel, connectHost);
 
       //代理建立完连接判断是否是https 需要发起connect请求
       if (httpRequest.method == HttpMethod.connect) {
+
+        //proxy Authorization
+        if (proxyInfo?.isAuthenticated == true) {
+          String auth = base64Encode(utf8.encode("${proxyInfo?.username}:${proxyInfo?.password}"));
+          httpRequest.headers.set(HttpHeaders.PROXY_AUTHORIZATION, 'Basic $auth');
+        }
+
         await proxyChannel.write(httpRequest);
       } else {
         if (clientChannel.isSsl) {
-          await HttpClients.connectRequest(hostAndPort, proxyChannel);
+          await HttpClients.connectRequest(hostAndPort, proxyChannel, proxyInfo: proxyInfo);
           await proxyChannel.secureSocket(channelContext, host: hostAndPort.host);
         }
       }

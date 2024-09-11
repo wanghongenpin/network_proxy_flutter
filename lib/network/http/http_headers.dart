@@ -25,6 +25,7 @@ class HttpHeaders {
   static const String HOST = "Host";
   static const String TRANSFER_ENCODING = "Transfer-Encoding";
   static const String Cookie = "Cookie";
+  static const String PROXY_AUTHORIZATION = "Proxy-Authorization";
 
   final LinkedHashMap<String, List<String>> _headers = LinkedHashMap<String, List<String>>();
 

@@ -16,7 +16,10 @@ void main() {
 String? ip;
 
 /// 获取本机ip (en0 or WLAN)优先
-Future<String> localIp() async {
+Future<String> localIp({bool readCache = true}) async {
+  if (!readCache) {
+    ip = null;
+  }
   ip ??= await localAddress().then((value) => value.address);
   return ip!;
 }

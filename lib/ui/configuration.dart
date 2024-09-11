@@ -19,6 +19,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -153,7 +154,7 @@ class AppConfiguration {
   Future<void> initConfig() async {
     // 读取配置文件
     var file = await _path;
-    print(file);
+    logger.d(file);
     var exits = await file.exists();
     if (!exits) {
       return;
@@ -185,7 +186,7 @@ class AppConfiguration {
         panelRatio = config['panelRatio'];
       }
     } catch (e) {
-      print(e);
+      logger.e(e);
     }
   }
 
