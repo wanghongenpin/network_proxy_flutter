@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the original author or authors.
+ * Copyright Copyright 2023 WangHongEn.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:network_proxy/network/host_port.dart';
+import 'package:network_proxy/network/http/content_type.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/process_info.dart';
@@ -26,6 +27,7 @@ import 'package:network_proxy/utils/compress.dart';
 import 'http_headers.dart';
 
 ///定义HTTP消息的接口，为HttpRequest和HttpResponse提供公共属性。
+///@author WangHongEn
 abstract class HttpMessage {
   ///内容类型
   static final Map<String, ContentType> contentTypes = {
@@ -76,15 +78,31 @@ abstract class HttpMessage {
           orElse: () => const MapEntry("unknown", ContentType.http))
       .value;
 
+  ///获取消息体编码
+  String? get charset {
+    var contentType = headers.contentType;
+    if (contentType.isEmpty) {
+      return null;
+    }
+
+    MediaType mediaType = MediaType.valueOf(contentType);
+    return mediaType.charset ?? MediaType.defaultCharset(mediaType);
+  }
+
   String get bodyAsString {
     if (body == null || body?.isEmpty == true) {
       return "";
     }
     try {
+      List<int> rawBody = body!;
       if (headers.contentEncoding == 'br') {
-        return utf8.decode(brDecode(body!));
+        rawBody = brDecode(body!);
       }
-      return utf8.decode(body!);
+      if (charset == 'utf-8') {
+        return utf8.decode(rawBody);
+      }
+
+      return String.fromCharCodes(rawBody);
     } catch (e) {
       return String.fromCharCodes(body!);
     }
@@ -148,6 +166,12 @@ class HttpRequest extends HttpMessage {
     }
   }
 
+  ///获取消息体编码
+  @override
+  String? get charset {
+    return super.charset ?? 'utf-8';
+  }
+
   ///复制请求
   HttpRequest copy({String? uri}) {
     var request = HttpRequest(method, uri ?? this.uri, protocolVersion: protocolVersion);
@@ -186,29 +210,6 @@ class HttpRequest extends HttpMessage {
   @override
   String toString() {
     return 'HttpRequest{version: $protocolVersion, url: $uri, method: ${method.name}, headers: $headers, contentLength: $contentLength, bodyLength: ${body?.length}}';
-  }
-}
-
-enum ContentType {
-  json,
-  formUrl,
-  formData,
-  js,
-  html,
-  text,
-  css,
-  font,
-  image,
-  video,
-  http;
-
-  static ContentType valueOf(String name) {
-    return ContentType.values.firstWhere((element) => element.name == name.toLowerCase(), orElse: () => http);
-  }
-
-  //是否是二进制
-  bool get isBinary {
-    return this == image || this == font || this == video;
   }
 }
 

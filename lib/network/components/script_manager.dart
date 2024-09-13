@@ -310,7 +310,8 @@ async function onResponse(context, request, response) {
       'queries': requestUri?.queryParameters,
       'headers': request.headers.toMap(),
       'method': request.method.name,
-      'body': request.bodyAsString
+      'body': request.bodyAsString,
+      'rawBody': request.body
     };
   }
 
@@ -320,8 +321,12 @@ async function onResponse(context, request, response) {
     if (response.contentType.isBinary) {
       body = response.body;
     }
-
-    return {'headers': response.headers.toMap(), 'statusCode': response.status.code, 'body': body};
+    return {
+      'headers': response.headers.toMap(),
+      'statusCode': response.status.code,
+      'body': body,
+      'rawBody': response.body
+    };
   }
 
   //http request
@@ -348,8 +353,11 @@ async function onResponse(context, request, response) {
       }
       request.headers.add(key, value);
     });
-    request.body = map['body'] == null ? null : utf8.encode(map['body'].toString());
+    request.body = map['body']?.toString().codeUnits;
 
+    if (request.body != null && request.charset == 'utf-8') {
+      request.body = utf8.encode(map['body'].toString());
+    }
     return request;
   }
 
@@ -365,6 +373,7 @@ async function onResponse(context, request, response) {
 
       response.headers.add(key, value);
     });
+
     response.headers.remove(HttpHeaders.CONTENT_ENCODING);
 
     //判断是否是二进制
@@ -373,7 +382,11 @@ async function onResponse(context, request, response) {
       return response;
     }
 
-    response.body = map['body'] == null ? null : utf8.encode(map['body'].toString());
+    response.body = map['body']?.toString().codeUnits;
+    if (response.body != null && response.charset == 'utf-8') {
+      response.body = utf8.encode(map['body'].toString());
+    }
+
     return response;
   }
 }

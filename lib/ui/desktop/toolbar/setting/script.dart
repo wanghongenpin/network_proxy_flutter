@@ -104,15 +104,17 @@ class _ScriptWidgetState extends State<ScriptWidget> {
                         children: [
                           Row(children: [
                             SizedBox(
-                                width: 300,
-                                child: SwitchWidget(
-                                    title: localizations.enableScript,
-                                    subtitle: localizations.scriptUseDescribe,
-                                    value: data.enabled,
-                                    onChanged: (value) {
-                                      data.enabled = value;
-                                      _refreshScript();
-                                    })),
+                                width: 350,
+                                child: ListTile(
+                                    title: Text(localizations.enableScript),
+                                    subtitle: Text(localizations.scriptUseDescribe),
+                                    trailing: SwitchWidget(
+                                        value: data.enabled,
+                                        scale: 0.9,
+                                        onChanged: (value) {
+                                          data.enabled = value;
+                                          _refreshScript();
+                                        }))),
                             Expanded(
                                 child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,

@@ -1,6 +1,9 @@
 import 'dart:io';
 
 main() async {
+  var contentType = ContentType.parse("application/json");
+  print(contentType);
+  print(contentType.charset);
   print(Uri.parse("https://www.v2ex.com").scheme);
   // await socketTest();
   await webTest();

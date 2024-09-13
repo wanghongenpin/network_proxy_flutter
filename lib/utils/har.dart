@@ -17,6 +17,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:network_proxy/network/host_port.dart';
+import 'package:network_proxy/network/http/content_type.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/process_info.dart';
@@ -80,7 +81,7 @@ class Har {
     title = title.contains("ProxyPin") ? title : "[ProxyPin]$title";
     har["log"] = {
       "version": "1.2",
-      "creator": {"name": "ProxyPin", "version": "1.1.1"},
+      "creator": {"name": "ProxyPin", "version": "1.1.3"},
       "pages": [
         {
           "title": title,

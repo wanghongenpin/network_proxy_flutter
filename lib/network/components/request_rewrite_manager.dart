@@ -388,12 +388,13 @@ class RequestRewrites {
   //修改消息
   _updateMessage(HttpMessage message, RewriteItem item) {
     if (item.type == RewriteType.updateBody && message.body != null) {
-      message.body = utf8.encode(message.bodyAsString.replaceAllMapped(RegExp(item.key!), (match) {
+      String body = message.bodyAsString.replaceAllMapped(RegExp(item.key!), (match) {
         if (match.groupCount > 0 && item.value?.contains("\$1") == true) {
           return item.value!.replaceAll("\$1", match.group(1)!);
         }
         return item.value ?? '';
-      }));
+      });
+      message.body = message.charset == 'utf-8' ? utf8.encode(body) : body.codeUnits;
 
       message.headers.remove(HttpHeaders.CONTENT_ENCODING);
       message.headers.contentLength = message.body!.length;
@@ -453,7 +454,7 @@ class RequestRewrites {
       }
 
       if (item.body != null) {
-        message.body = utf8.encode(item.body!);
+        message.body = message.charset == 'utf-8' ? utf8.encode(item.body!) : item.body?.codeUnits;
         message.headers.contentLength = message.body!.length;
       }
       return;
