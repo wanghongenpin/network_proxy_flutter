@@ -114,7 +114,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
     //实现抓包代理转发
     if (httpRequest.method != HttpMethod.connect) {
-      log.i("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
+      log.d("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
       if (HostFilter.filter(httpRequest.hostAndPort?.host)) {
         await remoteChannel.write(httpRequest);
         return;

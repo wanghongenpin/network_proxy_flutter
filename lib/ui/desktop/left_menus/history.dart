@@ -79,7 +79,7 @@ class HistoryPageWidget extends StatelessWidget {
             preferredSize: const Size.fromHeight(40),
             child: AppBar(
               leadingWidth: 50,
-              leading: BackButton(style: ButtonStyle(iconSize: MaterialStateProperty.all(15))),
+              leading: BackButton(style: ButtonStyle(iconSize: WidgetStateProperty.all(15))),
               centerTitle: false,
               title: Text(
                   textAlign: TextAlign.start,

@@ -245,25 +245,24 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-            '1. 桌面端增加全部请求列表；\n'
-            '2. iOS 通知栏显示VPN状态；\n'
-            '3. iOS修复停止长时间切换后台再开启抓包无网络问题；\n'
-            '4. 桌面端保存调整左右面板比例；\n'
-            '5. 手机端请求列表增加滚动条；\n'
-            '6. 修复请求重发和脚本导致URL错误；\n'
-            '7. 修复脚本二进制body转换问题；\n'
-            '8. 修复请求编辑中文路径编码问题；\n'
+            '1. 支持多种主题颜色选择；\n'
+            '2. 外部代理支持身份验证；\n'
+            '3. 双击列表tab滚动到顶部；\n'
+            '4. 修复部分p12证书导入失败的问题；\n'
+            '5. 修复Transfer-Encoding有空格解析错误问题；\n'
+            '6. 脚本增加rawBody原始字节参数, body支持字节数组修改；\n'
+            '7. 修复脚本消息体编码错误导致错误响应；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
-            '1. Desktop: Add all requests list；\n'
-            '2. iOS notification bar displays VPN status；\n'
-            '3. iOS fix: Stop switching to the background for a long time and then start packet capture without network problem；\n'
-            '4. Desktop: save the left and right panel ratio；\n'
-            '5. Mobile：Add a scrollbar to the request list；\n'
-            '6. fix request repeat & script change url wrong；\n'
-            '7. fix script binary body convert；\n'
+            '1. Support multiple theme colors；\n'
+            '2. External proxy support authentication；\n'
+            '3. Double-click the list tab to scroll to the top；\n'
+            '4. Fix the issue of partial p12 certificate import failure；\n'
+            '5. Fix header Transfer-Encoding with spaces；\n'
+            '6. The script add rawBody raw byte parameter, body supports byte array modification；\n'
+            '7. Fix script message body encoding error causing incorrect response；\n'
             '';
-    showAlertDialog(isCN ? '更新内容V1.1.2' : "Update content V1.1.2", content, () {
+    showAlertDialog(isCN ? '更新内容V1.1.3' : "Update content V1.1.3", content, () {
       widget.appConfiguration.upgradeNoticeV12 = false;
       widget.appConfiguration.flushConfig();
     });

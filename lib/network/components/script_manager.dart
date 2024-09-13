@@ -353,6 +353,13 @@ async function onResponse(context, request, response) {
       }
       request.headers.add(key, value);
     });
+
+    //判断是否是二进制
+    if (getListElementType(map['body']) == int) {
+      request.body = convertList<int>(map['body']);
+      return request;
+    }
+
     request.body = map['body']?.toString().codeUnits;
 
     if (request.body != null && request.charset == 'utf-8') {

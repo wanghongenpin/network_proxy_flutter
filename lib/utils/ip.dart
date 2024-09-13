@@ -26,7 +26,10 @@ Future<String> localIp({bool readCache = true}) async {
 
 Future<InternetAddress> localAddress() async {
   return await NetworkInterface.list(type: InternetAddressType.IPv4).then((interfaces) {
-    return interfaces.firstWhere(primary, orElse: () => interfaces.first).addresses.first;
+    interfaces.sort((a, b) {
+      return weight(a) - weight(b);
+    });
+    return interfaces.first.addresses.first;
   });
 }
 
@@ -40,10 +43,7 @@ Future<List<String>> localIps() async {
 
   var list = await NetworkInterface.list(type: InternetAddressType.IPv4);
   list.sort((a, b) {
-    if (primary(a)) {
-      return -1;
-    }
-    return 1;
+    return weight(a) - weight(b);
   });
 
   ipList = [];
@@ -56,11 +56,24 @@ Future<List<String>> localIps() async {
 }
 
 Future<String> networkName() {
-  return NetworkInterface.list(type: InternetAddressType.IPv4)
-      .then((interfaces) => interfaces.firstWhere(primary, orElse: () => interfaces.first).name);
+  return NetworkInterface.list(type: InternetAddressType.IPv4).then((interfaces) {
+    interfaces.sort((a, b) {
+      return weight(a) - weight(b);
+    });
+    return interfaces.first.name;
+  });
 }
 
 // en0(macos系统) or WLAN(widows设备名)优先
-bool primary(NetworkInterface it) {
-  return it.name == 'en0' || it.name.startsWith('WLAN') || it.name.startsWith("wlan") || it.name.startsWith('ccmn');
+int weight(NetworkInterface it) {
+  if (it.name.toUpperCase().startsWith('WLAN')) {
+    return -10;
+  }
+  if (it.name == 'en0') {
+    return -1;
+  }
+  if (it.name.startsWith('ccmn')) {
+    return 0;
+  }
+  return 1;
 }
