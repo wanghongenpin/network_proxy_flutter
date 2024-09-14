@@ -35,6 +35,8 @@ import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/python.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// 收藏列表页面
+/// @author WangHongEn
 class MobileFavorites extends StatefulWidget {
   final ProxyServer proxyServer;
 
@@ -69,8 +71,8 @@ class _FavoritesState extends State<MobileFavorites> {
                     return _FavoriteItem(
                       favorite,
                       index: index,
-                      onRemove: (Favorite favorite) {
-                        FavoriteStorage.removeFavorite(favorite);
+                      onRemove: (Favorite favorite) async {
+                        await FavoriteStorage.removeFavorite(favorite);
                         setState(() {});
                       },
                       proxyServer: widget.proxyServer,
@@ -110,6 +112,8 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
   @override
   Widget build(BuildContext context) {
+    request = widget.favorite.request;
+
     var response = request.response;
     Widget? title = widget.favorite.name?.isNotEmpty == true
         ? Text(widget.favorite.name!,

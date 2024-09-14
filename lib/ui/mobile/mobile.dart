@@ -152,7 +152,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
       }
     });
 
-    if (widget.appConfiguration.upgradeNoticeV12) {
+    if (widget.appConfiguration.upgradeNoticeV13) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -233,8 +233,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
                   await proxyServer.restart();
                 }
 
-                Vpn.startVpn(
-                    Platform.isAndroid ? await localIp(readCache: false) : "127.0.0.1", proxyServer.port, proxyServer.configuration);
+                Vpn.startVpn(Platform.isAndroid ? await localIp(readCache: false) : "127.0.0.1", proxyServer.port,
+                    proxyServer.configuration);
               },
               onStop: () => Vpn.stopVpn())),
     );
@@ -249,21 +249,25 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '2. 外部代理支持身份验证；\n'
             '3. 双击列表tab滚动到顶部；\n'
             '4. 修复部分p12证书导入失败的问题；\n'
-            '5. 修复Transfer-Encoding有空格解析错误问题；\n'
-            '6. 脚本增加rawBody原始字节参数, body支持字节数组修改；\n'
-            '7. 修复脚本消息体编码错误导致错误响应；\n'
+            '5. 脚本增加rawBody原始字节参数, body支持字节数组修改；\n'
+            '6. 修复脚本消息体编码错误导致错误响应；\n'
+            '7. 修复扫码链接多个IP优先级问题；\n'
+            '8. 修复Transfer-Encoding有空格解析错误问题；\n'
+            '9. 修复Har导出serverIPAddress不正确；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
             '1. Support multiple theme colors；\n'
             '2. External proxy support authentication；\n'
             '3. Double-click the list tab to scroll to the top；\n'
             '4. Fix the issue of partial p12 certificate import failure；\n'
-            '5. Fix header Transfer-Encoding with spaces；\n'
-            '6. The script add rawBody raw byte parameter, body supports byte array modification；\n'
-            '7. Fix script message body encoding error causing incorrect response；\n'
+            '5. The script add rawBody raw byte parameter, body supports byte array modification；\n'
+            '6. Fix script message body encoding error causing incorrect response；\n'
+            '7. Fix the issue of scanning QR code to connect to multiple IP priorities；\n'
+            '8. Fix header Transfer-Encoding with spaces；\n'
+            '9. Fix export HAR serverIPAddress incorrect；\n'
             '';
     showAlertDialog(isCN ? '更新内容V1.1.3' : "Update content V1.1.3", content, () {
-      widget.appConfiguration.upgradeNoticeV12 = false;
+      widget.appConfiguration.upgradeNoticeV13 = false;
       widget.appConfiguration.flushConfig();
     });
   }
