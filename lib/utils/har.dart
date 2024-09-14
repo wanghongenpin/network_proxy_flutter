@@ -54,7 +54,7 @@ class Har {
         'wait': request.response?.responseTime.difference(request.requestTime).inMilliseconds,
         'receive': 0,
       },
-      'serverIPAddress': request.response?.remoteAddress
+      'serverIPAddress': request.response?.remoteHost, // 服务器IP地址
     };
 
     har['response'] = {
@@ -157,6 +157,8 @@ class Har {
     httpRequest.response = httpResponse;
     httpResponse?.request = httpRequest;
     httpRequest.hostAndPort = HostAndPort.of(httpRequest.requestUrl);
+    httpResponse?.remoteHost = har['serverIPAddress']; // 服务器IP地址
+
     //请求时间
     if (har['startedDateTime'] != null) {
       httpRequest.requestTime = DateTime.parse(har['startedDateTime']).toLocal();

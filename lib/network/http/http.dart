@@ -53,7 +53,8 @@ abstract class HttpMessage {
   int? packageSize;
 
   List<int>? body;
-  String? remoteAddress;
+  String? remoteHost;
+  int? remotePort;
 
   String requestId = (DateTime.now().millisecondsSinceEpoch + Random().nextInt(99999)).toRadixString(36);
   int? streamId; // http2 streamId

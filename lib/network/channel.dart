@@ -345,9 +345,14 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       buffer.clearRead();
 
       var data = decodeResult.data;
+      if (data is HttpMessage) {
+        data.packageSize = length;
+        data.remoteHost = channel.remoteSocketAddress.host;
+        data.remotePort = channel.remoteSocketAddress.port;
+      }
+
       if (data is HttpRequest) {
         channelContext.currentRequest = data;
-        data.packageSize = length;
         data.hostAndPort = channelContext.host ?? getHostAndPort(data, ssl: channel.isSsl);
         if (data.headers.host != null && data.headers.host?.contains(":") == false) {
           data.hostAndPort?.host = data.headers.host!;
@@ -365,8 +370,6 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
 
       if (data is HttpResponse) {
         data.requestId = channelContext.currentRequest?.requestId ?? data.requestId;
-        data.packageSize = length;
-        data.remoteAddress = '${channel.remoteSocketAddress.host}:${channel.remoteSocketAddress.port}';
         data.request ??= channelContext.currentRequest;
       }
 
