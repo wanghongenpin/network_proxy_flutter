@@ -49,6 +49,8 @@ class MediaType {
   static List<MediaType> defaultCharsetMediaTypes = [
     MediaType("text", "plain", charset: "utf-8"),
     MediaType("text", "html", charset: "utf-8"),
+    MediaType("text", "javascript", charset: "utf-8"),
+    MediaType("text", "css", charset: "utf-8"),
     MediaType("application", "json", charset: "utf-8"),
     MediaType("application", "problem+json", charset: "utf-8"),
     MediaType("application", "xml", charset: "utf-8"),
@@ -61,9 +63,10 @@ class MediaType {
   final String subtype;
   final Map<String, String> parameters;
 
-  MediaType(this.type, this.subtype, {this.parameters = const {}, String? charset}) {
+  MediaType(this.type, this.subtype, {Map<String, String>? parameters, String? charset})
+      : parameters = parameters ?? {} {
     if (charset != null) {
-      parameters["charset"] = charset;
+      this.parameters["charset"] = charset;
     }
   }
 

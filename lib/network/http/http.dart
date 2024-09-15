@@ -83,7 +83,7 @@ abstract class HttpMessage {
   String? get charset {
     var contentType = headers.contentType;
     if (contentType.isEmpty) {
-      return null;
+      return 'utf-8';
     }
 
     MediaType mediaType = MediaType.valueOf(contentType);
