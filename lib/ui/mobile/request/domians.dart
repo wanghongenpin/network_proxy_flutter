@@ -102,8 +102,8 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   }
 
   addResponse(HttpResponse response) {
-    var hostAndPort = response.request!.hostAndPort;
-    if (response.isWebSocket && containerMap[hostAndPort]?.contains(response.request) == false) {
+    HostAndPort? hostAndPort = response.request!.hostAndPort;
+    if (response.isWebSocket) {
       add(response.request!);
     }
 
@@ -202,7 +202,6 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {
             showHostAndPort = view.elementAt(index);
-            print(containerMap.keys);
             return Scaffold(
                 appBar: AppBar(title: Text(view.elementAt(index).domain, style: const TextStyle(fontSize: 16))),
                 body: RequestSequence(

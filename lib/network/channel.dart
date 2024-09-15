@@ -376,9 +376,9 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
       //websocket协议
       if (data is HttpResponse && data.isWebSocket && remoteChannel != null) {
         data.request?.response = data;
+        channelContext.host = channelContext.host?.copyWith(scheme: channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme);
+        channelContext.currentRequest?.hostAndPort = channelContext.host;
 
-        channelContext.currentRequest?.hostAndPort?.scheme =
-            channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme;
         logger.d("webSocket ${data.request?.hostAndPort}");
         remoteChannel.write(data);
 

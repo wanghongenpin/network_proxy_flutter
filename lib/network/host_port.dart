@@ -84,6 +84,10 @@ class HostAndPort {
     return '$scheme$host${(port == 80 || port == 443) ? "" : ":$port"}';
   }
 
+  HostAndPort copyWith({String? scheme, String? host, int? port}) {
+    return HostAndPort(scheme ?? this.scheme, host ?? this.host, port ?? this.port);
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
