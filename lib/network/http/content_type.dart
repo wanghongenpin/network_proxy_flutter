@@ -81,7 +81,7 @@ class MediaType {
 
   ///编码
   String? get charset {
-    return parameters["charset"];
+    return parameters["charset"]?.toLowerCase();
   }
 
   ///获取默认编码

@@ -136,7 +136,7 @@ class _RequestWidgetState extends State<RequestWidget> {
           onClick: (_) {
             var requestUrl = widget.request.requestUrl;
             Clipboard.setData(ClipboardData(text: requestUrl))
-                .then((value) => FlutterToastr.show(localizations.copied, context));
+                .then((value) => FlutterToastr.show(localizations.copied, rootNavigator: true, context));
           }),
       MenuItem(
           label: localizations.copy,
@@ -146,25 +146,25 @@ class _RequestWidgetState extends State<RequestWidget> {
                 label: localizations.copyCurl,
                 onClick: (_) {
                   Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
-                      .then((value) => FlutterToastr.show(localizations.copied, context));
+                      .then((value) => FlutterToastr.show(localizations.copied, rootNavigator: true, context));
                 }),
             MenuItem(
                 label: localizations.copyRequestResponse,
                 onClick: (_) {
                   Clipboard.setData(ClipboardData(text: copyRequest(widget.request, widget.response.get())))
-                      .then((value) => FlutterToastr.show(localizations.copied, context));
+                      .then((value) => FlutterToastr.show(localizations.copied, rootNavigator: true, context));
                 }),
             MenuItem(
               label: localizations.copyAsPythonRequests,
               onClick: (_) {
                 Clipboard.setData(ClipboardData(text: copyAsPythonRequests(widget.request)))
-                    .then((value) => FlutterToastr.show(localizations.copied, context));
+                    .then((value) => FlutterToastr.show(localizations.copied, rootNavigator: true, context));
               },
             ),
           ]),
           onClick: (_) {
             Clipboard.setData(ClipboardData(text: curlRequest(widget.request)))
-                .then((value) => FlutterToastr.show(localizations.copied, context));
+                .then((value) => FlutterToastr.show(localizations.copied, rootNavigator: true, context));
           }),
       MenuItem.separator(),
       MenuItem(label: localizations.repeat, onClick: (_) => onRepeat(widget.request)),

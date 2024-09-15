@@ -102,7 +102,12 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   }
 
   addResponse(HttpResponse response) {
-    if (showHostAndPort == response.request?.hostAndPort) {
+    var hostAndPort = response.request!.hostAndPort;
+    if (response.isWebSocket && containerMap[hostAndPort]?.contains(response.request) == false) {
+      add(response.request!);
+    }
+
+    if (showHostAndPort == hostAndPort) {
       requestSequenceKey.currentState?.addResponse(response);
     }
   }
@@ -197,12 +202,13 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {
             showHostAndPort = view.elementAt(index);
+            print(containerMap.keys);
             return Scaffold(
                 appBar: AppBar(title: Text(view.elementAt(index).domain, style: const TextStyle(fontSize: 16))),
                 body: RequestSequence(
                     key: requestSequenceKey,
                     displayDomain: false,
-                    container: ListenableList(containerMap[view.elementAt(index)]!),
+                    container: ListenableList(containerMap[view.elementAt(index)]),
                     onRemove: widget.onRemove,
                     proxyServer: widget.proxyServer));
           }));

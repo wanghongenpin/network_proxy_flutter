@@ -157,6 +157,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                               '6. 脚本增加rawBody原始字节参数, body支持字节数组修改；\n'
                               '7. 修复脚本消息体编码错误导致错误响应；\n'
                               '8. 修复Har导出serverIPAddress不正确；\n'
+                              '9. 修复Websocket Response不展示；\n'
                           : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                               'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
                               '1. Support multiple theme colors；\n'
@@ -167,6 +168,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                               '6. The script add rawBody raw byte parameter, body supports byte array modification；\n'
                               '7. Fix script message body encoding error causing incorrect response；\n'
                               '8. Fix export HAR serverIPAddress incorrect；\n'
+                              '9. Fix Websocket Response not displayed；\n'
                               '',
                       style: const TextStyle(fontSize: 14))));
         });

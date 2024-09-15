@@ -328,8 +328,12 @@ class WebSocketChannelHandler extends ChannelHandler<Uint8List> {
   @override
   void channelRead(ChannelContext channelContext, Channel channel, Uint8List msg) {
     proxyChannel.write(msg);
-
-    var frame = decoder.decode(msg);
+    WebSocketFrame? frame;
+    try {
+      frame = decoder.decode(msg);
+    } catch (e) {
+      log.e("websocket decode error", error: e);
+    }
     if (frame == null) {
       return;
     }

@@ -375,10 +375,14 @@ class ChannelPipeline extends ChannelHandler<Uint8List> {
 
       //websocket协议
       if (data is HttpResponse && data.isWebSocket && remoteChannel != null) {
+        data.request?.response = data;
+
         channelContext.currentRequest?.hostAndPort?.scheme =
             channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme;
         logger.d("webSocket ${data.request?.hostAndPort}");
         remoteChannel.write(data);
+
+        channelContext.listener?.onResponse(channelContext, data);
 
         var rawCodec = RawCodec();
         channel.pipeline.handle(rawCodec, rawCodec, WebSocketChannelHandler(remoteChannel, data));

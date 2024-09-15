@@ -64,9 +64,9 @@ class _RewriteReplaceState extends State<RewriteReplaceWidget> {
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
             title: ListTile(
-                title: Text(isCN ? widget.ruleType.name : widget.ruleType.name,
+                title: Text(isCN ? widget.ruleType.label : widget.ruleType.name,
                     textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: Text(widget.subtitle,
+                subtitle: Text(widget.subtitle.fixAutoLines(),
                     maxLines: 1,
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 12, color: Colors.grey))),

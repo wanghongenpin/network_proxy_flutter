@@ -254,6 +254,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '7. 修复扫码链接多个IP优先级问题；\n'
             '8. 修复Transfer-Encoding有空格解析错误问题；\n'
             '9. 修复Har导出serverIPAddress不正确；\n'
+            '10. 修复Websocket Response不展示；\n'
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
             '1. Support multiple theme colors；\n'
@@ -265,6 +266,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '7. Fix the issue of scanning QR code to connect to multiple IP priorities；\n'
             '8. Fix header Transfer-Encoding with spaces；\n'
             '9. Fix export HAR serverIPAddress incorrect；\n'
+            '10. Fix Websocket Response not displayed；\n'
             '';
     showAlertDialog(isCN ? '更新内容V1.1.3' : "Update content V1.1.3", content, () {
       widget.appConfiguration.upgradeNoticeV13 = false;
