@@ -26,7 +26,7 @@ class Har {
   static int maxBodyLength = 1024 * 1024 * 4;
 
   static List<Map> _entries(List<HttpRequest> list) {
-    return list.map((e) => toHar(e)).toList();
+    return list.map((e) => toHar(e)).toList().reversed.toList();
   }
 
   static Map toHar(HttpRequest request) {
@@ -43,7 +43,7 @@ class Har {
         "httpVersion": request.protocolVersion, // HTTP协议版本
         "cookies": [], // 请求携带的cookie
         "headers": _headers(request), // 请求头
-        "queryString": [], // 请求参数
+        "queryString": _getQueryString(request), // 请求参数
         "postData": _getPostData(request), // 请求体
         "headersSize": -1, // 请求头大小
         "bodySize": request.body?.length ?? -1, // 请求体大小
@@ -54,7 +54,7 @@ class Har {
         'wait': request.response?.responseTime.difference(request.requestTime).inMilliseconds,
         'receive': 0,
       },
-      'serverIPAddress': request.response?.remoteHost, // 服务器IP地址
+      'serverIPAddress': request.response?.remoteHost ?? "", // 服务器IP地址
     };
 
     har['response'] = {
@@ -168,6 +168,17 @@ class Har {
           httpRequest.requestTime.add(Duration(milliseconds: double.parse(har['time'].toString()).toInt()));
     }
     return httpRequest;
+  }
+
+  static List<Map<String, String>> _getQueryString(HttpRequest request) {
+    final queryStringList = <Map<String, String>>[];
+    final queries = Uri.parse(request.uri).queryParametersAll;
+    queries.forEach((key, valueList) {
+      for (var value in valueList) {
+        queryStringList.add({"name": key, "value": value});
+      }
+    });
+    return queryStringList;
   }
 
   static Map<String, dynamic> _getPostData(HttpRequest request) {
