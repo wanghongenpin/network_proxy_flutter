@@ -63,11 +63,7 @@ class ProxyVpnThread(
                 if (length > 0) {
                     try {
                         readBuffer.flip()
-                        val byteArray = ByteArray(length)
-                        readBuffer.get(byteArray)
-
-                        val packet = ByteBuffer.wrap(byteArray)
-                        handler.handlePacket(packet)
+                        handler.handlePacket(readBuffer)
                     } catch (e: Exception) {
                         val errorMessage = (e.message ?: e.toString())
                         Log.e(TAG, errorMessage, e)

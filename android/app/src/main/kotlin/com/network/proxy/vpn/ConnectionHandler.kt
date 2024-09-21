@@ -48,8 +48,6 @@ class ConnectionHandler(
      */
     @Throws(IOException::class)
     fun handlePacket(stream: ByteBuffer) {
-        val rawPacket = ByteArray(stream.limit())
-        stream[rawPacket, 0, stream.limit()]
         stream.rewind()
 
         val ipHeader = IPPacketFactory.createIP4Header(stream)
@@ -105,7 +103,7 @@ class ConnectionHandler(
      * 是否支持协议
      */
     private val methods: List<String> =
-        mutableListOf("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "CONNECT")
+        mutableListOf("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE", "CONNECT", "PROPFIND", "REPORT")
 
     private fun supperProtocol(packetData: ByteBuffer): Boolean {
         val position = packetData.position()

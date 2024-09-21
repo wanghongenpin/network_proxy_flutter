@@ -92,6 +92,13 @@ class _ToolboxState extends State<Toolbox> {
                   )),
               const SizedBox(width: 15),
               InkWell(
+                  onTap: () => encodeWindow(EncoderType.unicode, context),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    child: const Column(children: [Icon(Icons.format_underline), Text('Unicode')]),
+                  )),
+              const SizedBox(width: 15),
+              InkWell(
                   onTap: () => encodeWindow(EncoderType.md5, context),
                   child: Container(
                     padding: const EdgeInsets.all(10),

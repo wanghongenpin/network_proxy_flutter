@@ -116,6 +116,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
       SizedBox(
           height: 36,
           child: TabBar(
+              labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               labelPadding: const EdgeInsets.only(left: 3, right: 5),
               tabs: tabs.tabList(),
               onTap: (index) {
@@ -184,7 +185,7 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
     list.add(const SizedBox(width: 3));
     list.add(IconButton(
-        icon: const Icon(Icons.abc, size: 20),
+        icon: const Icon(Icons.text_format, size: 21),
         tooltip: localizations.encode,
         onPressed: () {
           encodeWindow(EncoderType.base64, context, bodyKey.currentState?.body);
@@ -415,12 +416,12 @@ class Tabs {
 
     tabs.list.add(ViewType.of(contentType) ?? ViewType.text);
 
-    //text 为json时，增加json格式化
-    if (contentType == ContentType.text) {
+    //为json时，增加json格式化
+    if (isJsonText && !tabs.list.contains(ViewType.jsonText)) {
       tabs.list.add(ViewType.jsonText);
-
-      if (isJsonText) tabs.list.add(ViewType.json);
+      tabs.list.add(ViewType.json);
     }
+
     if (contentType == ContentType.formUrl || contentType == ContentType.json) {
       tabs.list.add(ViewType.text);
     }
@@ -430,7 +431,7 @@ class Tabs {
   }
 
   List<Tab> tabList() {
-    return list.map((e) => Tab(child: Text(e.title, style: const TextStyle(fontSize: 14)))).toList();
+    return list.map((e) => Tab(text: e.title)).toList();
   }
 }
 

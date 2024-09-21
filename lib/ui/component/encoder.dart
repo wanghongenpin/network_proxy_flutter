@@ -12,6 +12,7 @@ import 'package:network_proxy/network/util/logger.dart';
 enum EncoderType {
   url,
   base64,
+  unicode,
   md5;
 
   static EncoderType nameOf(String name) {
@@ -39,6 +40,7 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
   var tabs = const [
     Tab(text: 'URL'),
     Tab(text: 'Base64'),
+    Tab(text: 'Unicode'),
     Tab(text: 'MD5'),
   ];
 
@@ -154,6 +156,8 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
           result = base64.encode(utf8.encode(inputText));
         case EncoderType.md5:
           result = md5.convert(inputText.codeUnits).toString();
+        case EncoderType.unicode:
+          result = encodeToUnicode(inputText);
       }
     } catch (e) {
       FlutterToastr.show(localizations.encodeFail, context);
@@ -181,11 +185,23 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
             result = String.fromCharCodes(compressed);
           }
         case EncoderType.md5:
+        case EncoderType.unicode:
+          result = decodeFromUnicode(inputText);
       }
     } catch (e, t) {
       logger.e("$e", error: e, stackTrace: t);
       FlutterToastr.show(localizations.decodeFail, context);
     }
     outputTextController.text = result;
+  }
+
+  String encodeToUnicode(String input) {
+    return input.runes.map((rune) => '\\u${rune.toRadixString(16).padLeft(4, '0')}').join();
+  }
+
+  String decodeFromUnicode(String input) {
+    return input.replaceAllMapped(RegExp(r'\\u([0-9a-fA-F]{4})'), (match) {
+      return String.fromCharCode(int.parse(match.group(1)!, radix: 16));
+    });
   }
 }

@@ -9,9 +9,6 @@ import java.nio.ByteOrder
 
 /**
  * Helper class to perform various useful task
- *
- * @author Borey Sao
- * Date: May 8, 2014
  */
 object PacketUtil {
     @get:Synchronized

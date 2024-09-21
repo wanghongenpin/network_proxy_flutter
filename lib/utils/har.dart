@@ -26,7 +26,7 @@ class Har {
   static int maxBodyLength = 1024 * 1024 * 4;
 
   static List<Map> _entries(List<HttpRequest> list) {
-    return list.map((e) => toHar(e)).toList().reversed.toList();
+    return list.map((e) => toHar(e)).toList();
   }
 
   static Map toHar(HttpRequest request) {
@@ -54,7 +54,7 @@ class Har {
         'wait': request.response?.responseTime.difference(request.requestTime).inMilliseconds,
         'receive': 0,
       },
-      'serverIPAddress': request.response?.remoteHost ?? "", // 服务器IP地址
+      'serverIPAddress': request.response?.remoteHost ?? '', // 服务器IP地址
     };
 
     har['response'] = {
@@ -172,8 +172,8 @@ class Har {
 
   static List<Map<String, String>> _getQueryString(HttpRequest request) {
     final queryStringList = <Map<String, String>>[];
-    final queries = Uri.parse(request.uri).queryParametersAll;
-    queries.forEach((key, valueList) {
+    final queries = request.requestUri?.queryParametersAll;
+    queries?.forEach((key, valueList) {
       for (var value in valueList) {
         queryStringList.add({"name": key, "value": value});
       }
