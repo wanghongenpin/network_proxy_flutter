@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 WangHongEn
+ * Copyright 2023 Hongen Wang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,11 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
   bool fixed = true;
   bool keepSetting = true;
 
+  TimeOfDay? time;
+
   AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  bool get isCN => Localizations.localeOf(context).languageCode == "zh";
 
   @override
   void initState() {
@@ -74,83 +78,105 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
   @override
   Widget build(BuildContext context) {
     final formKey = GlobalKey<FormState>();
+
     return AlertDialog(
       title: Text(localizations.customRepeat, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
       content: SingleChildScrollView(
           child: Form(
-        key: formKey,
-        child: ListBody(
-          children: <Widget>[
-            field(localizations.repeatCount, count), //次数
-            const SizedBox(height: 8),
-            Row(
-              //间隔
-              children: [
-                SizedBox(width: 75, child: Text(localizations.repeatInterval)),
-                const SizedBox(height: 5),
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  //Checkbox样式 固定和随机
-                  Row(children: [
-                    SizedBox(
-                        width: 78,
-                        height: 35,
-                        child: Transform.scale(
-                            scale: 0.83,
-                            child: CheckboxListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: Text("${localizations.fixed}:"),
-                                value: fixed,
-                                dense: true,
-                                onChanged: (val) {
+              key: formKey,
+              child: ListBody(
+                children: <Widget>[
+                  field(localizations.repeatCount, textField(count)), //次数
+                  const SizedBox(height: 8),
+                  Row(
+                    //间隔
+                    children: [
+                      SizedBox(width: isCN ? 90 : 100, child: Text(localizations.repeatInterval)),
+                      const SizedBox(height: 5),
+                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        //Checkbox样式 固定和随机
+                        Row(children: [
+                          SizedBox(
+                              width: isCN ? 78 : 100,
+                              height: 35,
+                              child: Transform.scale(
+                                  scale: 0.83,
+                                  child: CheckboxListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Text("${localizations.fixed}:"),
+                                      value: fixed,
+                                      dense: true,
+                                      onChanged: (val) {
+                                        setState(() {
+                                          fixed = true;
+                                        });
+                                      }))),
+                          SizedBox(
+                              width: 152, height: 32, child: textField(interval, style: const TextStyle(fontSize: 13))),
+                        ]),
+                        Row(children: [
+                          SizedBox(
+                              width: isCN ? 78 : 100,
+                              height: 35,
+                              child: Transform.scale(
+                                  scale: 0.83,
+                                  child: CheckboxListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Text("${localizations.random}:"),
+                                      value: !fixed,
+                                      dense: true,
+                                      onChanged: (val) {
+                                        setState(() {
+                                          fixed = false;
+                                        });
+                                      }))),
+                          SizedBox(
+                              width: 65,
+                              height: 32,
+                              child: textField(minInterval, style: const TextStyle(fontSize: 13))),
+                          const Padding(padding: EdgeInsets.symmetric(horizontal: 5), child: Text("-")),
+                          SizedBox(
+                              width: 70,
+                              height: 32,
+                              child: textField(maxInterval, style: const TextStyle(fontSize: 13))),
+                        ]),
+                      ]),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  field(localizations.repeatDelay, textField(delay)), //延时
+                  const SizedBox(height: 8),
+                  field(
+                      localizations.scheduleTime,
+                      Row(children: [
+                        Text(time?.format(context) ?? ''),
+                        TextButton(
+                            onPressed: () {
+                              showTimePicker(context: context, initialTime: time ?? TimeOfDay.now()).then((value) {
+                                if (value != null) {
                                   setState(() {
-                                    fixed = true;
+                                    time = value;
                                   });
-                                }))),
-                    SizedBox(width: 152, height: 32, child: textField(interval, style: const TextStyle(fontSize: 13))),
-                  ]),
-                  Row(children: [
-                    SizedBox(
-                        width: 78,
-                        height: 35,
-                        child: Transform.scale(
-                            scale: 0.83,
-                            child: CheckboxListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: Text("${localizations.random}:"),
-                                value: !fixed,
-                                dense: true,
-                                onChanged: (val) {
-                                  setState(() {
-                                    fixed = false;
-                                  });
-                                }))),
-                    SizedBox(
-                        width: 65, height: 32, child: textField(minInterval, style: const TextStyle(fontSize: 13))),
-                    const Padding(padding: EdgeInsets.symmetric(horizontal: 5), child: Text("-")),
-                    SizedBox(
-                        width: 70, height: 32, child: textField(maxInterval, style: const TextStyle(fontSize: 13))),
-                  ]),
-                ]),
-              ],
-            ),
-            const SizedBox(height: 8),
-            field(localizations.repeatDelay, delay), //延时
-            const SizedBox(height: 8),
-            //记录选择
-            Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-              Text(localizations.keepCustomSettings),
-              Expanded(
-                  child: Checkbox(
-                      value: keepSetting,
-                      onChanged: (val) {
-                        setState(() {
-                          keepSetting = val == true;
-                        });
-                      })),
-            ])
-          ],
-        ),
-      )),
+                                }
+                              });
+                            },
+                            child: Text(MaterialLocalizations.of(context).timePickerDialHelpText))
+                      ])), //指定时间
+                  const SizedBox(height: 8),
+                  //记录选择
+                  Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                    Text(localizations.keepCustomSettings),
+                    Expanded(
+                        child: Checkbox(
+                            value: keepSetting,
+                            onChanged: (val) {
+                              setState(() {
+                                keepSetting = val == true;
+                              });
+                            })),
+                  ])
+                ],
+              ))),
       actions: <Widget>[
         TextButton(
           child: Text(localizations.cancel),
@@ -177,8 +203,18 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
               widget.prefs.remove('customerRepeat');
             }
 
+            int delayValue = int.parse(delay.text);
+            if (time != null) {
+              DateTime now = DateTime.now();
+              DateTime schedule = DateTime(now.year, now.month, now.day, time!.hour, time!.minute);
+              if (schedule.isBefore(now)) {
+                schedule = schedule.add(const Duration(days: 1));
+              }
+              delayValue += schedule.difference(now).inMilliseconds;
+            }
+
             //定时发起请求
-            Future.delayed(Duration(milliseconds: int.parse(delay.text)), () => submitTask(int.parse(count.text)));
+            Future.delayed(Duration(milliseconds: delayValue), () => submitTask(int.parse(count.text)));
             Navigator.of(context).pop();
           },
         ),
@@ -208,11 +244,11 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
     });
   }
 
-  Widget field(String label, TextEditingController controller) {
+  Widget field(String label, Widget child) {
     return Row(
       children: [
-        SizedBox(width: 90, child: Text(label)),
-        Expanded(child: textField(controller)),
+        SizedBox(width: isCN ? 95 : 110, child: Text(label)),
+        Expanded(child: child),
       ],
     );
   }

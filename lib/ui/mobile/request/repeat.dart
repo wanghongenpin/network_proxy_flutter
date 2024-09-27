@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 WangHongEn
+ * Copyright 2023 Hongen Wang All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,8 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
 
   bool fixed = true;
   bool keepSetting = true;
+
+  TimeOfDay? time;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
@@ -100,7 +102,17 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
                   widget.prefs.remove('customerRepeat');
                 }
 
-                Future.delayed(Duration(milliseconds: int.parse(delay.text)), () => submitTask(int.parse(count.text)));
+                int delayValue = int.parse(delay.text);
+                if (time != null) {
+                  DateTime now = DateTime.now();
+                  DateTime schedule = DateTime(now.year, now.month, now.day, time!.hour, time!.minute);
+                  if (schedule.isBefore(now)) {
+                    schedule = schedule.add(const Duration(days: 1));
+                  }
+                  delayValue += schedule.difference(now).inMilliseconds;
+                }
+
+                Future.delayed(Duration(milliseconds: delayValue), () => submitTask(int.parse(count.text)));
                 Navigator.of(context).pop();
               },
             )
@@ -112,11 +124,28 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
               key: formKey,
               child: Column(
                 children: <Widget>[
-                  field(localizations.repeatCount, count), //次数
+                  field(localizations.repeatCount, textField(count)), //次数
                   const SizedBox(height: 6),
                   intervalWidget(), //间隔
                   const SizedBox(height: 6),
-                  field(localizations.repeatDelay, delay), //延时
+                  field(localizations.repeatDelay, textField(delay)), //延时
+                  const SizedBox(height: 6),
+                  field(
+                      localizations.scheduleTime,
+                      Row(children: [
+                        Text(time?.format(context) ?? ''),
+                        TextButton(
+                            onPressed: () {
+                              showTimePicker(context: context, initialTime: time ?? TimeOfDay.now()).then((value) {
+                                if (value != null) {
+                                  setState(() {
+                                    time = value;
+                                  });
+                                }
+                              });
+                            },
+                            child: Text(MaterialLocalizations.of(context).timePickerDialHelpText))
+                      ])), //指定时间
                   const SizedBox(height: 6),
                   //记录选择
                   Row(children: [
@@ -208,13 +237,11 @@ class _CustomRepeatState extends State<MobileCustomRepeat> {
     );
   }
 
-  Widget field(String label, TextEditingController controller) {
+  Widget field(String label, Widget child) {
     return Row(
       children: [
         SizedBox(width: 95, child: Text("$label :")),
-        Expanded(
-          child: textField(controller),
-        ),
+        Expanded(child: child),
       ],
     );
   }

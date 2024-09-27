@@ -137,6 +137,7 @@
   "repeatCount": "Iterations",
   "repeatInterval": "Interval(ms)",
   "repeatDelay": "Delay(ms)",
+  "scheduleTime": "Schedule Time",
   "fixed": "fixed",
   "random": "random",
   "keepCustomSettings": "Keep custom settings",

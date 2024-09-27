@@ -137,6 +137,7 @@
   "repeatCount": "次数",
   "repeatInterval": "间隔(ms)",
   "repeatDelay": "延时(ms)",
+  "scheduleTime": "指定时间",
   "fixed": "固定",
   "random": "随机",
   "keepCustomSettings": "保持自定义设置",
