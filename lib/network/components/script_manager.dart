@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 WangHongEn
+ * Copyright 2023 Hongen Wang All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import 'package:flutter_js/flutter_js.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/lists.dart';
+import 'package:network_proxy/network/util/random.dart';
 import 'package:network_proxy/ui/component/device.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:path_provider/path_provider.dart';
@@ -179,7 +180,7 @@ async function onResponse(context, request, response) {
   ///添加脚本
   Future<void> addScript(ScriptItem item, String script) async {
     final path = await homePath();
-    String scriptPath = "${separator}scripts$separator${DateTime.now().millisecondsSinceEpoch}.js";
+    String scriptPath = "${separator}scripts$separator${RandomUtil.randomString(16)}.js";
     var file = File(path + scriptPath);
     await file.create(recursive: true);
     file.writeAsString(script);

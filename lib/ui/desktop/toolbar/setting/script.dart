@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 WangHongEn
+ * Copyright 2023 Hongen Wang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -302,8 +302,9 @@ class _ScriptConsoleState extends State<ScriptConsoleWidget> {
 class ScriptEdit extends StatefulWidget {
   final ScriptItem? scriptItem;
   final String? script;
+  final String? url;
 
-  const ScriptEdit({super.key, this.scriptItem, this.script});
+  const ScriptEdit({super.key, this.scriptItem, this.script, this.url});
 
   @override
   State<StatefulWidget> createState() => _ScriptEditState();
@@ -321,7 +322,7 @@ class _ScriptEditState extends State<ScriptEdit> {
     super.initState();
     script = CodeController(language: javascript, text: widget.script ?? ScriptManager.template);
     nameController = TextEditingController(text: widget.scriptItem?.name);
-    urlController = TextEditingController(text: widget.scriptItem?.url);
+    urlController = TextEditingController(text: widget.scriptItem?.url ?? widget.url);
   }
 
   @override

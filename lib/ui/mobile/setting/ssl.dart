@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 WangHongEn
+ * Copyright 2023 Hongen Wang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -175,6 +175,7 @@ class _MobileSslState extends State<MobileSslWidget> {
               padding: const EdgeInsets.all(10),
               child: TextField(
                 decoration: const InputDecoration(
+                  hintStyle: TextStyle(color: Colors.grey),
                   hintText: "Enter a password to protect p12 file",
                   border: OutlineInputBorder(),
                 ),

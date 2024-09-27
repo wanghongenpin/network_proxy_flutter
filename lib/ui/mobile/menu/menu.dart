@@ -100,6 +100,18 @@ class MoreMenu extends StatelessWidget {
               height: 32,
               child: ListTile(
                 dense: true,
+                leading: const Icon(Icons.search),
+                title: Text(localizations.search),
+                onTap: () async {
+                  await Navigator.maybePop(context);
+
+                  MobileHomeState.searchStateKey.currentState?.showSearch();
+                },
+              )),
+          PopupMenuItem(
+              height: 32,
+              child: ListTile(
+                dense: true,
                 leading: const Icon(Icons.highlight_outlined),
                 title: Text(localizations.highlight),
                 onTap: () {

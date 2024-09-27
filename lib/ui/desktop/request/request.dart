@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 WangHongEn
+ * Copyright 2023 Hongen Wang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import 'package:flutter_desktop_context_menu/flutter_desktop_context_menu.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
@@ -33,6 +34,7 @@ import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/desktop/request/repeat.dart';
+import 'package:network_proxy/ui/desktop/toolbar/setting/script.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/python.dart';
@@ -175,6 +177,18 @@ class _RequestWidgetState extends State<RequestWidget> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               requestEdit();
             });
+          }),
+      MenuItem(
+          label: localizations.script,
+          onClick: (_) async {
+            var scriptManager = await ScriptManager.instance;
+            var url = '${widget.request.remoteDomain()}${widget.request.path()}';
+            var scriptItem = (scriptManager).list.firstWhereOrNull((it) => it.url == url);
+
+            String? script = scriptItem == null ? null : await scriptManager.getScript(scriptItem);
+            if (!mounted) return;
+            showDialog(
+                context: context, builder: (context) => ScriptEdit(scriptItem: scriptItem, script: script, url: url));
           }),
       MenuItem.separator(),
       MenuItem(

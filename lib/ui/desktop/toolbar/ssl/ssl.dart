@@ -151,6 +151,7 @@ class _SslState extends State<SslWidget> {
                               padding: const EdgeInsets.all(10),
                               child: TextField(
                                 decoration: const InputDecoration(
+                                  hintStyle: TextStyle(color: Colors.grey),
                                   hintText: "Enter a password to protect p12 file",
                                   border: OutlineInputBorder(),
                                 ),
