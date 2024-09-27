@@ -31,9 +31,9 @@ class MobileSearch extends StatefulWidget {
 
 class MobileSearchState extends State<MobileSearch> {
   SearchModel searchModel = SearchModel();
-  bool searched = false;
-  TextEditingController keywordController = TextEditingController();
-  bool changing = false;
+  bool _searched = false;
+  final TextEditingController _keywordController = TextEditingController();
+  bool _changing = false;
 
   @override
   void initState() {
@@ -47,21 +47,27 @@ class MobileSearchState extends State<MobileSearch> {
   }
 
   @override
+  dispose() {
+    _keywordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
         padding: const EdgeInsets.only(left: 20),
         child: TextFormField(
-            controller: keywordController,
+            controller: _keywordController,
             cursorHeight: 20,
             keyboardType: TextInputType.url,
             onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
             onChanged: (val) {
               searchModel.keyword = val;
-              if (!changing) {
-                changing = true;
+              if (!_changing) {
+                _changing = true;
                 Future.delayed(const Duration(milliseconds: 500), () {
-                  changing = false;
-                  if (!searched) {
+                  _changing = false;
+                  if (!_searched) {
                     searchModel.searchOptions = {Option.url, Option.method, Option.responseContentType};
                   }
                   widget.onSearch?.call(searchModel);
@@ -71,7 +77,7 @@ class MobileSearchState extends State<MobileSearch> {
             decoration: InputDecoration(
                 border: InputBorder.none,
                 prefixIcon:
-                    InkWell(onTap: showSearch, child: Icon(Icons.search, color: searched ? Colors.green : Colors.blue)),
+                    InkWell(onTap: showSearch, child: Icon(Icons.search, color: _searched ? Colors.green : Colors.blue)),
                 hintText: 'Search')));
   }
 
@@ -81,7 +87,7 @@ class MobileSearchState extends State<MobileSearch> {
         isScrollControlled: true,
         context: context,
         builder: (context) {
-          if (!searched) {
+          if (!_searched) {
             searchModel.searchOptions = {Option.url};
           }
           return Padding(
@@ -94,8 +100,8 @@ class MobileSearchState extends State<MobileSearch> {
                     onSearch: (val) {
                       setState(() {
                         searchModel = val;
-                        searched = searchModel.isNotEmpty;
-                        keywordController.text = searchModel.keyword ?? '';
+                        _searched = searchModel.isNotEmpty;
+                        _keywordController.text = searchModel.keyword ?? '';
                         widget.onSearch?.call(searchModel);
                       });
                     },

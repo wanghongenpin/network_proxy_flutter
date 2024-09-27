@@ -376,8 +376,9 @@ class _ScriptLogSmallWindowState extends State<ScriptLogSmallWindow> {
 class ScriptEdit extends StatefulWidget {
   final ScriptItem? scriptItem;
   final String? script;
+  final String? url;
 
-  const ScriptEdit({super.key, this.scriptItem, this.script});
+  const ScriptEdit({super.key, this.scriptItem, this.script, this.url});
 
   @override
   State<StatefulWidget> createState() => _ScriptEditState();
@@ -395,7 +396,7 @@ class _ScriptEditState extends State<ScriptEdit> {
     super.initState();
     script = CodeController(language: javascript, text: widget.script ?? ScriptManager.template);
     nameController = TextEditingController(text: widget.scriptItem?.name);
-    urlController = TextEditingController(text: widget.scriptItem?.url);
+    urlController = TextEditingController(text: widget.url ?? widget.scriptItem?.url);
   }
 
   @override
@@ -446,6 +447,7 @@ class _ScriptEditState extends State<ScriptEdit> {
 
                     _refreshScript();
                     if (context.mounted) {
+                      FlutterToastr.show(localizations.saveSuccess, context);
                       Navigator.of(context).maybePop(true);
                     }
                   },

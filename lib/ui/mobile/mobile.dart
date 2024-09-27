@@ -59,7 +59,13 @@ class MobileHomePage extends StatefulWidget {
 }
 
 class MobileHomeState extends State<MobileHomePage> implements EventListener, LifecycleListener {
+  ///请求列表key
   static final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
+
+  ///搜索key
+  static final GlobalKey<MobileSearchState> searchStateKey = GlobalKey<MobileSearchState>();
+
+  ///请求列表容器
   static final container = ListenableList<HttpRequest>();
 
   /// 远程连接
@@ -207,15 +213,17 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   }
 
   AppBar appBar() {
-    return AppBar(title: MobileSearch(onSearch: (val) => requestStateKey.currentState?.search(val)), actions: [
-      IconButton(
-          tooltip: localizations.clear,
-          icon: const Icon(Icons.cleaning_services_outlined),
-          onPressed: () => requestStateKey.currentState?.clean()),
-      const SizedBox(width: 2),
-      MoreMenu(proxyServer: proxyServer, desktop: desktop),
-      const SizedBox(width: 10),
-    ]);
+    return AppBar(
+        title: MobileSearch(key: searchStateKey, onSearch: (val) => requestStateKey.currentState?.search(val)),
+        actions: [
+          IconButton(
+              tooltip: localizations.clear,
+              icon: const Icon(Icons.cleaning_services_outlined),
+              onPressed: () => requestStateKey.currentState?.clean()),
+          const SizedBox(width: 2),
+          MoreMenu(proxyServer: proxyServer, desktop: desktop),
+          const SizedBox(width: 10),
+        ]);
   }
 
   FloatingActionButton _launchActionButton() {
