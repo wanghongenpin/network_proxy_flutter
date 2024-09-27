@@ -22,6 +22,7 @@ import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/file_read.dart';
 import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/network/util/random.dart';
 import 'package:network_proxy/utils/lang.dart';
 
 /// @author wanghongen
@@ -178,7 +179,8 @@ class RequestRewrites {
   ///添加规则
   Future<void> addRule(RequestRewriteRule rule, List<RewriteItem> items) async {
     final home = await FileRead.homeDir();
-    String rewritePath = "${separator}rewrite$separator${DateTime.now().millisecondsSinceEpoch}.json";
+
+    String rewritePath = "${separator}rewrite$separator${RandomUtil.randomString(16)}.json";
     var file = File(home.path + rewritePath);
     await file.create(recursive: true);
     file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()));
@@ -200,7 +202,7 @@ class RequestRewrites {
     }
     bool isExist = rule.rewritePath != null;
     if (rule.rewritePath == null) {
-      String rewritePath = "${separator}rewrite$separator${DateTime.now().millisecondsSinceEpoch}.json";
+      String rewritePath = "${separator}rewrite$separator${RandomUtil.randomString(16)}.json";
       rule.rewritePath = rewritePath;
     }
 
