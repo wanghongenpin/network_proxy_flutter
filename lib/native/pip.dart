@@ -15,7 +15,7 @@ class PictureInPicture {
     ..setMethodCallHandler((call) async {
       logger.d("pictureInPicture MethodCallHandler ${call.method}");
       if (call.method == 'cleanSession') {
-        MobileHomeState.requestStateKey.currentState?.clean();
+        MobileApp.requestStateKey.currentState?.clean();
       } else if (call.method == 'exitPictureInPictureMode') {
         inPip = false;
         Vpn.isRunning().then((value) {

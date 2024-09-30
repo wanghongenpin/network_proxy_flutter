@@ -3,6 +3,7 @@
   "favorites": "收藏",
   "history": "历史",
   "toolbox": "工具箱",
+  "me": "我的",
   "preference": "偏好设置",
   "feedback": "反馈",
   "about": "关于",
@@ -245,6 +246,8 @@
   "windowIconDescribe": "展示快捷进入小窗口Icon",
   "headerExpanded": "Headers自动展开",
   "headerExpandedSubtitle": "详情页Headers栏是否自动展开",
+  "bottomNavigation": "底部导航",
+  "bottomNavigationSubtitle": "底部导航栏是否显示，重启后生效",
 
   "externalProxyAuth": "代理认证 (可选)",
   "externalProxyServer": "代理服务器",

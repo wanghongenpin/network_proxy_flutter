@@ -71,6 +71,9 @@ class AppConfiguration {
   /// header默认展示
   bool headerExpanded = true;
 
+  /// 底部导航栏
+  bool bottomNavigation = true;
+
   //桌面window大小
   Size? windowSize;
 
@@ -176,6 +179,7 @@ class AppConfiguration {
       pipEnabled.value = config['pipEnabled'] ?? true;
       pipIcon.value = config['pipIcon'] ?? false;
       headerExpanded = config['headerExpanded'] ?? true;
+      bottomNavigation = config['bottomNavigation'] ?? true;
 
       windowSize =
           config['windowSize'] == null ? null : Size(config['windowSize']['width'], config['windowSize']['height']);
@@ -220,6 +224,7 @@ class AppConfiguration {
 
       if (Platforms.isMobile()) 'pipEnabled': pipEnabled.value,
       if (Platforms.isMobile()) 'pipIcon': pipIcon.value ? true : null,
+      if (Platforms.isMobile()) 'bottomNavigation': bottomNavigation ? true : null,
 
       if (Platforms.isDesktop())
         "windowSize": windowSize == null ? null : {"width": windowSize?.width, "height": windowSize?.height},

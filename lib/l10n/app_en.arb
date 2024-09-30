@@ -3,6 +3,7 @@
   "favorites": "Favorites",
   "history": "History",
   "toolbox": "Toolbox",
+  "me": "Me",
   "preference": "Preferences",
   "feedback": "Feedback",
   "about": "About",
@@ -245,6 +246,8 @@
   "windowIconDescribe": "Show quick access to small window Icon",
   "headerExpanded": "Headers Expanded",
   "headerExpandedSubtitle": "Details page Headers is expanded by default",
+  "bottomNavigation": "Bottom Navigation",
+  "bottomNavigationSubtitle": "Bottom navigation bar is displayed, effective after restart",
 
   "externalProxyAuth": "Proxy Auth (Optional)",
   "externalProxyServer": "Proxy Server",

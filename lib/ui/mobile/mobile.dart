@@ -31,10 +31,13 @@ import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/ui/component/toolbox.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/content/panel.dart';
 import 'package:network_proxy/ui/launch/launch.dart';
 import 'package:network_proxy/ui/mobile/menu/drawer.dart';
+import 'package:network_proxy/ui/mobile/menu/me.dart';
 import 'package:network_proxy/ui/mobile/menu/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/request/search.dart';
@@ -58,7 +61,7 @@ class MobileHomePage extends StatefulWidget {
   }
 }
 
-class MobileHomeState extends State<MobileHomePage> implements EventListener, LifecycleListener {
+class MobileApp {
   ///请求列表key
   static final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
 
@@ -67,13 +70,113 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   ///请求列表容器
   static final container = ListenableList<HttpRequest>();
+}
 
-  /// 远程连接
-  final ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
+class MobileHomeState extends State<MobileHomePage> implements EventListener, LifecycleListener {
+  /// 选择索引
+  final ValueNotifier<int> _selectIndex = ValueNotifier(0);
 
   late ProxyServer proxyServer;
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
+
+  @override
+  void onRequest(Channel channel, HttpRequest request) {
+    MobileApp.requestStateKey.currentState!.add(channel, request);
+    PictureInPicture.addData(request.requestUrl);
+  }
+
+  @override
+  void onResponse(ChannelContext channelContext, HttpResponse response) {
+    MobileApp.requestStateKey.currentState!.addResponse(channelContext, response);
+  }
+
+  @override
+  void onMessage(Channel channel, HttpMessage message, WebSocketFrame frame) {
+    var panel = NetworkTabController.current;
+    if (panel?.request.get() == message || panel?.response.get() == message) {
+      panel?.changeState();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    AppLifecycleBinding.instance.addListener(this);
+    proxyServer = ProxyServer(widget.configuration);
+    proxyServer.addListener(this);
+    proxyServer.start();
+
+    if (widget.appConfiguration.upgradeNoticeV13) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showUpgradeNotice();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    AppLifecycleBinding.instance.removeListener(this);
+    super.dispose();
+  }
+
+  int exitTime = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    var navigationView = [
+      Workspace(proxyServer: proxyServer, appConfiguration: widget.appConfiguration),
+      Scaffold(
+          appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(42),
+              child: AppBar(
+                  title: Text(localizations.toolbox, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                  centerTitle: true)),
+          body: Toolbox(proxyServer: proxyServer)),
+      MePage(proxyServer: proxyServer),
+    ];
+
+    if (!widget.appConfiguration.bottomNavigation) _selectIndex.value = 0;
+
+    return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop || await enterPictureInPicture()) {
+            return;
+          }
+
+          if (DateTime.now().millisecondsSinceEpoch - exitTime > 2000) {
+            exitTime = DateTime.now().millisecondsSinceEpoch;
+            if (mounted) {
+              FlutterToastr.show(localizations.appExitTips, this.context,
+                  rootNavigator: true, duration: FlutterToastr.lengthLong);
+            }
+            return;
+          }
+          //退出程序
+          SystemNavigator.pop();
+        },
+        child: ValueListenableBuilder<int>(
+            valueListenable: _selectIndex,
+            builder: (context, index, child) => Scaffold(
+                body: LazyIndexedStack(index: index, children: navigationView),
+                bottomNavigationBar: widget.appConfiguration.bottomNavigation
+                    ? SizedBox(
+                        height: 72,
+                        child: BottomNavigationBar(
+                          selectedFontSize: 0,
+                          items: [
+                            BottomNavigationBarItem(icon: const Icon(Icons.workspaces), label: localizations.requests),
+                            BottomNavigationBarItem(icon: const Icon(Icons.construction), label: localizations.toolbox),
+                            BottomNavigationBarItem(icon: const Icon(Icons.person), label: localizations.me),
+                          ],
+                          currentIndex: _selectIndex.value,
+                          onTap: (index) => _selectIndex.value = index,
+                        ),
+                      )
+                    : null)));
+  }
 
   @override
   void onUserLeaveHint() {
@@ -82,9 +185,10 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   Future<bool> enterPictureInPicture() async {
     if (Vpn.isVpnStarted) {
-      if (desktop.value.connect || !Platform.isAndroid || !(await (AppConfiguration.instance)).pipEnabled.value) {
+      if (_selectIndex.value != 0 || !Platform.isAndroid || !(await (AppConfiguration.instance)).pipEnabled.value) {
         return false;
       }
+
       List<String>? appList =
           proxyServer.configuration.appWhitelistEnabled ? proxyServer.configuration.appWhitelist : [];
       List<String>? disallowApps;
@@ -107,7 +211,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
           PageRouteBuilder(
               transitionDuration: Duration.zero,
               pageBuilder: (context, animation, secondaryAnimation) {
-                return PictureInPictureWindow(container);
+                return PictureInPictureWindow(MobileApp.container);
               }));
       return;
     }
@@ -121,32 +225,83 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     }
   }
 
-  @override
-  void onRequest(Channel channel, HttpRequest request) {
-    requestStateKey.currentState!.add(channel, request);
-    PictureInPicture.addData(request.requestUrl);
+  showUpgradeNotice() {
+    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+
+    String content = isCN
+        ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
+            '1. 手机端增加底部导航，可在设置中切换；\n'
+            '2. 外部代理支持身份验证；\n'
+            '3. 双击列表tab滚动到顶部；\n'
+            '4. 修复部分p12证书导入失败的问题；\n'
+            '5. 脚本增加rawBody原始字节参数, body支持字节数组修改；\n'
+            '6. 修复脚本消息体编码错误导致错误响应；\n'
+            '7. 修复扫码链接多个IP优先级问题；\n'
+            '8. 修复Transfer-Encoding有空格解析错误问题；\n'
+            '9. 修复Har导出serverIPAddress不正确；\n'
+            '10. 修复Websocket Response不展示；\n'
+        : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
+            'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
+            '1. Mobile: Add bottom navigation bar，which can be switched in settings；\n'
+            '2. External proxy support authentication；\n'
+            '3. Double-click the list tab to scroll to the top；\n'
+            '4. Fix the issue of partial p12 certificate import failure；\n'
+            '5. The script add rawBody raw byte parameter, body supports byte array modification；\n'
+            '6. Fix script message body encoding error causing incorrect response；\n'
+            '7. Fix the issue of scanning QR code to connect to multiple IP priorities；\n'
+            '8. Fix header Transfer-Encoding with spaces；\n'
+            '9. Fix export HAR serverIPAddress incorrect；\n'
+            '10. Fix Websocket Response not displayed；\n'
+            '';
+    showAlertDialog(isCN ? '更新内容V1.1.3' : "Update content V1.1.3", content, () {
+      widget.appConfiguration.upgradeNoticeV13 = false;
+      widget.appConfiguration.flushConfig();
+    });
   }
 
-  @override
-  void onResponse(ChannelContext channelContext, HttpResponse response) {
-    requestStateKey.currentState!.addResponse(channelContext, response);
+  showAlertDialog(String title, String content, Function onClose) {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) {
+          return AlertDialog(
+              scrollable: true,
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      onClose.call();
+                      Navigator.pop(context);
+                    },
+                    child: Text(localizations.cancel))
+              ],
+              title: Text(title, style: const TextStyle(fontSize: 18)),
+              content: SelectableText(content));
+        });
   }
+}
+
+class Workspace extends StatefulWidget {
+  final ProxyServer proxyServer;
+  final AppConfiguration appConfiguration;
+
+  const Workspace({super.key, required this.proxyServer, required this.appConfiguration});
 
   @override
-  void onMessage(Channel channel, HttpMessage message, WebSocketFrame frame) {
-    var panel = NetworkTabController.current;
-    if (panel?.request.get() == message || panel?.response.get() == message) {
-      panel?.changeState();
-    }
-  }
+  State<Workspace> createState() => WorkspaceState();
+}
+
+class WorkspaceState extends State<Workspace> {
+  /// 远程连接
+  final ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
+
+  late ProxyServer proxyServer;
+
+  AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   @override
   void initState() {
     super.initState();
-    AppLifecycleBinding.instance.addListener(this);
-    proxyServer = ProxyServer(widget.configuration);
-    proxyServer.addListener(this);
-    proxyServer.start();
+    proxyServer = widget.proxyServer;
 
     //远程连接
     desktop.addListener(() {
@@ -157,73 +312,35 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         proxyServer.configuration.remoteHost = null;
       }
     });
-
-    if (widget.appConfiguration.upgradeNoticeV13) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showUpgradeNotice();
-      });
-    }
   }
 
   @override
   void dispose() {
     desktop.dispose();
-    AppLifecycleBinding.instance.removeListener(this);
     super.dispose();
   }
 
-  int exitTime = 0;
-
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-        canPop: false,
-        onPopInvoked: (d) async {
-          if (await enterPictureInPicture()) {
-            return;
-          }
-
-          if (DateTime.now().millisecondsSinceEpoch - exitTime > 2000) {
-            exitTime = DateTime.now().millisecondsSinceEpoch;
-            if (mounted) {
-              FlutterToastr.show(localizations.appExitTips, this.context,
-                  rootNavigator: true, duration: FlutterToastr.lengthLong);
-            }
-            return;
-          }
-          //退出程序
-          SystemNavigator.pop();
-        },
-        child: Scaffold(
-            floatingActionButton: PictureInPictureIcon(proxyServer),
-            body: Scaffold(
-              appBar: PreferredSize(preferredSize: const Size.fromHeight(42), child: appBar()),
-              drawer: DrawerWidget(proxyServer: proxyServer, container: container),
-              floatingActionButton: _launchActionButton(),
-              body: ValueListenableBuilder(
-                  valueListenable: desktop,
-                  builder: (context, value, _) {
-                    return Column(children: [
-                      value.connect ? remoteConnect(value) : const SizedBox(),
-                      Expanded(
-                          child: RequestListWidget(key: requestStateKey, proxyServer: proxyServer, list: container))
-                    ]);
-                  }),
-            )));
-  }
-
-  AppBar appBar() {
-    return AppBar(
-        title: MobileSearch(key: searchStateKey, onSearch: (val) => requestStateKey.currentState?.search(val)),
-        actions: [
-          IconButton(
-              tooltip: localizations.clear,
-              icon: const Icon(Icons.cleaning_services_outlined),
-              onPressed: () => requestStateKey.currentState?.clean()),
-          const SizedBox(width: 2),
-          MoreMenu(proxyServer: proxyServer, desktop: desktop),
-          const SizedBox(width: 10),
-        ]);
+    return Scaffold(
+        floatingActionButton: PictureInPictureIcon(proxyServer),
+        body: Scaffold(
+          appBar: _MobileAppBar(widget.appConfiguration, proxyServer, desktop: desktop),
+          drawer: widget.appConfiguration.bottomNavigation
+              ? null
+              : DrawerWidget(proxyServer: proxyServer, container: MobileApp.container),
+          floatingActionButton: _launchActionButton(),
+          body: ValueListenableBuilder(
+              valueListenable: desktop,
+              builder: (context, value, _) {
+                return Column(children: [
+                  value.connect ? remoteConnect(value) : const SizedBox(),
+                  Expanded(
+                      child: RequestListWidget(
+                          key: MobileApp.requestStateKey, proxyServer: proxyServer, list: MobileApp.container))
+                ]);
+              }),
+        ));
   }
 
   FloatingActionButton _launchActionButton() {
@@ -248,40 +365,6 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     );
   }
 
-  showUpgradeNotice() {
-    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
-
-    String content = isCN
-        ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
-            '1. 支持多种主题颜色选择；\n'
-            '2. 外部代理支持身份验证；\n'
-            '3. 双击列表tab滚动到顶部；\n'
-            '4. 修复部分p12证书导入失败的问题；\n'
-            '5. 脚本增加rawBody原始字节参数, body支持字节数组修改；\n'
-            '6. 修复脚本消息体编码错误导致错误响应；\n'
-            '7. 修复扫码链接多个IP优先级问题；\n'
-            '8. 修复Transfer-Encoding有空格解析错误问题；\n'
-            '9. 修复Har导出serverIPAddress不正确；\n'
-            '10. 修复Websocket Response不展示；\n'
-        : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
-            'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
-            '1. Support multiple theme colors；\n'
-            '2. External proxy support authentication；\n'
-            '3. Double-click the list tab to scroll to the top；\n'
-            '4. Fix the issue of partial p12 certificate import failure；\n'
-            '5. The script add rawBody raw byte parameter, body supports byte array modification；\n'
-            '6. Fix script message body encoding error causing incorrect response；\n'
-            '7. Fix the issue of scanning QR code to connect to multiple IP priorities；\n'
-            '8. Fix header Transfer-Encoding with spaces；\n'
-            '9. Fix export HAR serverIPAddress incorrect；\n'
-            '10. Fix Websocket Response not displayed；\n'
-            '';
-    showAlertDialog(isCN ? '更新内容V1.1.3' : "Update content V1.1.3", content, () {
-      widget.appConfiguration.upgradeNoticeV13 = false;
-      widget.appConfiguration.flushConfig();
-    });
-  }
-
   /// 远程连接
   Widget remoteConnect(RemoteModel value) {
     return Container(
@@ -295,26 +378,6 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
           child: Text(localizations.remoteConnected(desktop.value.os ?? ''),
               style: Theme.of(context).textTheme.titleMedium),
         ));
-  }
-
-  showAlertDialog(String title, String content, Function onClose) {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) {
-          return AlertDialog(
-              scrollable: true,
-              actions: [
-                TextButton(
-                    onPressed: () {
-                      onClose.call();
-                      Navigator.pop(context);
-                    },
-                    child: Text(localizations.cancel))
-              ],
-              title: Text(title, style: const TextStyle(fontSize: 18)),
-              content: SelectableText(content));
-        });
   }
 
   /// 检查远程连接
@@ -348,5 +411,35 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         }
       }
     });
+  }
+}
+
+/// 移动端AppBar
+class _MobileAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final AppConfiguration appConfiguration;
+  final ProxyServer proxyServer;
+  final ValueNotifier<RemoteModel> desktop;
+
+  const _MobileAppBar(this.appConfiguration, this.proxyServer, {required this.desktop});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(42);
+
+  @override
+  Widget build(BuildContext context) {
+    AppLocalizations localizations = AppLocalizations.of(context)!;
+
+    return AppBar(
+        title: MobileSearch(
+            key: MobileApp.searchStateKey, onSearch: (val) => MobileApp.requestStateKey.currentState?.search(val)),
+        actions: [
+          IconButton(
+              tooltip: localizations.clear,
+              icon: const Icon(Icons.cleaning_services_outlined),
+              onPressed: () => MobileApp.requestStateKey.currentState?.clean()),
+          const SizedBox(width: 2),
+          MoreMenu(proxyServer: proxyServer, desktop: desktop),
+          const SizedBox(width: 10),
+        ]);
   }
 }

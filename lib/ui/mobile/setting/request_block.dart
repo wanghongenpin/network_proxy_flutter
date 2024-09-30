@@ -23,7 +23,7 @@ class _RequestBlockState extends State<MobileRequestBlock> {
         appBar: AppBar(title: Text(localizations.requestBlock, style: const TextStyle(fontSize: 16))),
         body: Container(
             padding: const EdgeInsets.all(10),
-            child: Column(children: [
+            child: Wrap(children: [
               Row(children: [
                 const SizedBox(width: 8),
                 Text(localizations.enable),
@@ -42,9 +42,9 @@ class _RequestBlockState extends State<MobileRequestBlock> {
                     label: Text(localizations.add, style: const TextStyle(fontSize: 14))),
                 const SizedBox(width: 5),
               ]),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Container(
-                  height: 620,
+                  height: 600,
                   decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
                   child: Column(children: [
                     const SizedBox(height: 5),

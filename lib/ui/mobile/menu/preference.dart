@@ -87,6 +87,16 @@ class SettingMenu extends StatelessWidget {
                       onChanged: (value) {
                         appConfiguration.headerExpanded = value;
                         appConfiguration.flushConfig();
+                      })),
+              ListTile(
+                  title: Text(localizations.bottomNavigation),
+                  subtitle: Text(localizations.bottomNavigationSubtitle, style: const TextStyle(fontSize: 12)),
+                  trailing: SwitchWidget(
+                      value: appConfiguration.bottomNavigation,
+                      scale: 0.8,
+                      onChanged: (value) {
+                        appConfiguration.bottomNavigation = value;
+                        appConfiguration.flushConfig();
                       }))
             ])));
   }

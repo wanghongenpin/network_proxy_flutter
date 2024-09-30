@@ -105,7 +105,7 @@ class MoreMenu extends StatelessWidget {
                 onTap: () async {
                   await Navigator.maybePop(context);
 
-                  MobileHomeState.searchStateKey.currentState?.showSearch();
+                  MobileApp.searchStateKey.currentState?.showSearch();
                 },
               )),
           PopupMenuItem(
@@ -127,7 +127,7 @@ class MoreMenu extends StatelessWidget {
                 onTap: () async {
                   Navigator.maybePop(context);
                   var name = formatDate(DateTime.now(), [m, '-', d, ' ', HH, ':', nn, ':', ss]);
-                  MobileHomeState.requestStateKey.currentState?.export('ProxyPin$name');
+                  MobileApp.requestStateKey.currentState?.export('ProxyPin$name');
                 },
               )),
         ];
