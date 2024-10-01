@@ -113,15 +113,13 @@ class RequestRowState extends State<RequestRow> {
             Platform.isIOS ? const EdgeInsets.symmetric(horizontal: 8) : const EdgeInsets.only(left: 3, right: 5),
         onLongPress: menu,
         onTap: () {
-          NavigatorHelper.push(MaterialPageRoute(
-              settings: const RouteSettings(name: "NetworkTabController"),
-              builder: (context) {
-                return NetworkTabController(
-                    proxyServer: widget.proxyServer,
-                    httpRequest: request,
-                    httpResponse: response,
-                    title: Text(localizations.captureDetail, style: const TextStyle(fontSize: 16)));
-              }));
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+            return NetworkTabController(
+                proxyServer: widget.proxyServer,
+                httpRequest: request,
+                httpResponse: response,
+                title: Text(localizations.captureDetail, style: const TextStyle(fontSize: 16)));
+          }));
         });
   }
 
@@ -171,7 +169,7 @@ class RequestRowState extends State<RequestRow> {
               child: SizedBox(width: double.infinity, child: Text(localizations.repeat, textAlign: TextAlign.center)),
               onPressed: () {
                 onRepeat(widget.request);
-                NavigatorHelper.pop();
+                Navigator.maybePop(context);
               }),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
@@ -183,10 +181,15 @@ class RequestRowState extends State<RequestRow> {
               child:
                   SizedBox(width: double.infinity, child: Text(localizations.editRequest, textAlign: TextAlign.center)),
               onPressed: () {
-                NavigatorHelper.pop();
-                NavigatorHelper.push(MaterialPageRoute(
+                Navigator.maybePop(context);
+                var pageRoute = MaterialPageRoute(
                     builder: (context) =>
-                        MobileRequestEditor(request: widget.request, proxyServer: widget.proxyServer)));
+                        MobileRequestEditor(request: widget.request, proxyServer: widget.proxyServer));
+                if (mounted) {
+                  Navigator.push(context, pageRoute);
+                } else {
+                  NavigatorHelper.push(pageRoute);
+                }
               }),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
@@ -194,7 +197,7 @@ class RequestRowState extends State<RequestRow> {
               onPressed: () {
                 FavoriteStorage.addFavorite(widget.request);
                 FlutterToastr.show(localizations.addSuccess, context);
-                NavigatorHelper.pop();
+                Navigator.maybePop(context);
               }),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
@@ -202,20 +205,17 @@ class RequestRowState extends State<RequestRow> {
               onPressed: () {
                 widget.onRemove?.call(request);
                 FlutterToastr.show(localizations.deleteSuccess, context);
-                NavigatorHelper.pop();
+                Navigator.maybePop(context);
               }),
-          Container(
-            color: Theme.of(context).hoverColor,
-            height: 8,
-          ),
+          Container(color: Theme.of(context).hoverColor, height: 8),
           TextButton(
             child: Container(
-                height: 55,
+                height: 45,
                 width: double.infinity,
                 padding: const EdgeInsets.only(top: 10),
                 child: Text(localizations.cancel, textAlign: TextAlign.center)),
             onPressed: () {
-              NavigatorHelper.pop();
+              Navigator.maybePop(context);
             },
           ),
         ]);
@@ -228,10 +228,15 @@ class RequestRowState extends State<RequestRow> {
 
   //显示高级重发
   showCustomRepeat(HttpRequest request) {
-    NavigatorHelper.pop();
-    NavigatorHelper.push(MaterialPageRoute(
+    Navigator.maybePop(context);
+    var pageRoute = MaterialPageRoute(
         builder: (context) => futureWidget(SharedPreferences.getInstance(),
-            (prefs) => MobileCustomRepeat(onRepeat: () => onRepeat(request), prefs: prefs))));
+            (prefs) => MobileCustomRepeat(onRepeat: () => onRepeat(request), prefs: prefs)));
+    if (mounted) {
+      Navigator.push(context, pageRoute);
+    } else {
+      NavigatorHelper.push(pageRoute);
+    }
   }
 
   onRepeat(HttpRequest request) {
@@ -249,8 +254,10 @@ class RequestRowState extends State<RequestRow> {
         child: SizedBox(width: double.infinity, child: Text(title, textAlign: TextAlign.center)),
         onPressed: () {
           Clipboard.setData(ClipboardData(text: callback.call())).then((value) {
-            FlutterToastr.show(localizations.copied, context);
-            NavigatorHelper.pop();
+            if (mounted) {
+              FlutterToastr.show(localizations.copied, context);
+              Navigator.maybePop(context);
+            }
           });
         });
   }

@@ -35,26 +35,17 @@ import 'package:network_proxy/ui/mobile/widgets/about.dart';
 
 /// @author wanghongen
 /// 2024/9/30
-class MePage extends StatelessWidget {
+class MePage extends StatefulWidget {
   final ProxyServer proxyServer;
 
   const MePage({super.key, required this.proxyServer});
 
   @override
-  Widget build(BuildContext context) {
-    return Navigator(
-      initialRoute: '/',
-      onGenerateRoute: (settings) {
-        return MaterialPageRoute(builder: (context) => _MeMenus(proxyServer: proxyServer), settings: settings);
-      },
-    );
-  }
+  State<StatefulWidget> createState() => _MePageState();
 }
 
-class _MeMenus extends StatelessWidget {
-  final ProxyServer proxyServer;
-
-  const _MeMenus({required this.proxyServer});
+class _MePageState extends State<MePage> {
+  late ProxyServer proxyServer = widget.proxyServer;
 
   @override
   Widget build(BuildContext context) {
@@ -66,14 +57,16 @@ class _MeMenus extends StatelessWidget {
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(42),
             child: AppBar(
-                title: Text(localizations.me, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)))),
+              title: Text(localizations.me, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400)),
+              centerTitle: true,
+            )),
         body: ListView(
           padding: const EdgeInsets.only(top: 5, left: 5),
           children: [
             const SizedBox(height: 10),
             ListTile(
                 title: Text(localizations.httpsProxy),
-                leading: Icon(Icons.https, color: proxyServer.enableSsl ? color : Colors.red),
+                leading: Icon(Icons.https, color: color),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
             const Divider(thickness: 0.35),
@@ -145,7 +138,6 @@ class _MeMenus extends StatelessWidget {
   }
 
   void navigator(BuildContext context, Widget widget) async {
-    await Navigator.maybePop(context);
     if (context.mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) => widget),

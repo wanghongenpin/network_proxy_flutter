@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class NavigatorHelper {
+  static final NavigatorHelper _instance = NavigatorHelper._internal();
+
   //私有构造方法
   NavigatorHelper._internal();
 
@@ -10,10 +12,7 @@ class NavigatorHelper {
 
   GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
 
-  BuildContext get context =>
-      NavigatorHelper().navigatorKey.currentState!.context;
-
-  static final NavigatorHelper _instance = NavigatorHelper._internal();
+  BuildContext get context => NavigatorHelper().navigatorKey.currentState!.context;
 
   //保存单例
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
@@ -29,10 +28,39 @@ class NavigatorHelper {
   }
 
   //返回上一页
-  static Future<bool> maybePop<T extends Object?>( [ T? result ]) {
+  static Future<bool> maybePop<T extends Object?>([T? result]) {
     return Navigator.of(NavigatorHelper().context).maybePop<T>(result);
   }
 }
 
 ///定义全局的NavigatorHelper对象，页面引入该文件后可以直接使用
 NavigatorHelper navigatorHelper = NavigatorHelper();
+
+class NavigatorPage extends StatelessWidget {
+  final GlobalKey navigatorKey;
+  final Widget child;
+
+  const NavigatorPage({super.key, required this.child, required this.navigatorKey});
+
+  bool onPopInvoked() {
+    var context = navigatorKey.currentState?.context;
+    if (context == null) return false;
+    if (Navigator.canPop(context)) {
+      Navigator.maybePop(context);
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+        child: Navigator(
+      key: navigatorKey,
+      initialRoute: '/',
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(builder: (context) => child, settings: settings);
+      },
+    ));
+  }
+}

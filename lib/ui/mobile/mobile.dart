@@ -46,6 +46,7 @@ import 'package:network_proxy/ui/mobile/widgets/pip.dart';
 import 'package:network_proxy/utils/ip.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
+import 'package:network_proxy/utils/navigator.dart';
 
 ///移动端首页
 ///@author wanghongen
@@ -123,18 +124,27 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
   int exitTime = 0;
 
+  var requestPageNavigatorKey = GlobalKey<NavigatorState>();
+  var toolboxNavigatorKey = GlobalKey<NavigatorState>();
+  var mePageNavigatorKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
     var navigationView = [
-      Workspace(proxyServer: proxyServer, appConfiguration: widget.appConfiguration),
-      Scaffold(
-          appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(42),
-              child: AppBar(
-                  title: Text(localizations.toolbox, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
-                  centerTitle: true)),
-          body: Toolbox(proxyServer: proxyServer)),
-      MePage(proxyServer: proxyServer),
+      NavigatorPage(
+          navigatorKey: requestPageNavigatorKey,
+          child: RequestPage(proxyServer: proxyServer, appConfiguration: widget.appConfiguration)),
+      NavigatorPage(
+          navigatorKey: toolboxNavigatorKey,
+          child: Scaffold(
+              appBar: PreferredSize(
+                  preferredSize: const Size.fromHeight(42),
+                  child: AppBar(
+                      title: Text(localizations.toolbox,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400)),
+                      centerTitle: true)),
+              body: Toolbox(proxyServer: proxyServer))),
+      NavigatorPage(navigatorKey: mePageNavigatorKey, child: MePage(proxyServer: proxyServer)),
     ];
 
     if (!widget.appConfiguration.bottomNavigation) _selectIndex.value = 0;
@@ -143,6 +153,10 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         canPop: false,
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop || await enterPictureInPicture()) {
+            return;
+          }
+
+          if (navigationView[_selectIndex.value].onPopInvoked()) {
             return;
           }
 
@@ -162,19 +176,23 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             builder: (context, index, child) => Scaffold(
                 body: LazyIndexedStack(index: index, children: navigationView),
                 bottomNavigationBar: widget.appConfiguration.bottomNavigation
-                    ? SizedBox(
-                        height: 72,
-                        child: BottomNavigationBar(
-                          selectedFontSize: 0,
-                          items: [
-                            BottomNavigationBarItem(icon: const Icon(Icons.workspaces), label: localizations.requests),
-                            BottomNavigationBarItem(icon: const Icon(Icons.construction), label: localizations.toolbox),
-                            BottomNavigationBarItem(icon: const Icon(Icons.person), label: localizations.me),
-                          ],
-                          currentIndex: _selectIndex.value,
-                          onTap: (index) => _selectIndex.value = index,
-                        ),
-                      )
+                    ? Container(
+                        constraints: const BoxConstraints(maxHeight: 72),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(splashColor: Colors.transparent),
+                          child: BottomNavigationBar(
+                            selectedFontSize: 0,
+                            items: [
+                              BottomNavigationBarItem(
+                                  icon: const Icon(Icons.workspaces), label: localizations.requests),
+                              BottomNavigationBarItem(
+                                  icon: const Icon(Icons.construction), label: localizations.toolbox),
+                              BottomNavigationBarItem(icon: const Icon(Icons.person), label: localizations.me),
+                            ],
+                            currentIndex: _selectIndex.value,
+                            onTap: (index) => _selectIndex.value = index,
+                          ),
+                        ))
                     : null)));
   }
 
@@ -280,17 +298,17 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   }
 }
 
-class Workspace extends StatefulWidget {
+class RequestPage extends StatefulWidget {
   final ProxyServer proxyServer;
   final AppConfiguration appConfiguration;
 
-  const Workspace({super.key, required this.proxyServer, required this.appConfiguration});
+  const RequestPage({super.key, required this.proxyServer, required this.appConfiguration});
 
   @override
-  State<Workspace> createState() => WorkspaceState();
+  State<RequestPage> createState() => RequestPageState();
 }
 
-class WorkspaceState extends State<Workspace> {
+class RequestPageState extends State<RequestPage> {
   /// 远程连接
   final ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
 
@@ -428,8 +446,10 @@ class _MobileAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     AppLocalizations localizations = AppLocalizations.of(context)!;
+    var bottomNavigation = appConfiguration.bottomNavigation;
 
     return AppBar(
+        leading: bottomNavigation ? const SizedBox() : null,
         title: MobileSearch(
             key: MobileApp.searchStateKey, onSearch: (val) => MobileApp.requestStateKey.currentState?.search(val)),
         actions: [

@@ -80,6 +80,10 @@ class ProxyVpnThread(
             } catch (e: Exception) {
                 val errorMessage = (e.message ?: e.toString())
                 Log.e(TAG, errorMessage, e)
+                if (!vpnReadChannel.isOpen) {
+                    Log.i(TAG, "VPN read channel closed")
+                    running = false
+                }
             }
         }
 

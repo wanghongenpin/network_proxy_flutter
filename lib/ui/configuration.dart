@@ -224,7 +224,7 @@ class AppConfiguration {
 
       if (Platforms.isMobile()) 'pipEnabled': pipEnabled.value,
       if (Platforms.isMobile()) 'pipIcon': pipIcon.value ? true : null,
-      if (Platforms.isMobile()) 'bottomNavigation': bottomNavigation ? true : null,
+      if (Platforms.isMobile()) 'bottomNavigation': bottomNavigation,
 
       if (Platforms.isDesktop())
         "windowSize": windowSize == null ? null : {"width": windowSize?.width, "height": windowSize?.height},
