@@ -41,8 +41,8 @@ import 'package:network_proxy/ui/mobile/menu/me.dart';
 import 'package:network_proxy/ui/mobile/menu/menu.dart';
 import 'package:network_proxy/ui/mobile/request/list.dart';
 import 'package:network_proxy/ui/mobile/request/search.dart';
-import 'package:network_proxy/ui/mobile/widgets/connect_remote.dart';
 import 'package:network_proxy/ui/mobile/widgets/pip.dart';
+import 'package:network_proxy/ui/mobile/widgets/remote_device.dart';
 import 'package:network_proxy/utils/ip.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
@@ -177,7 +177,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
                 body: LazyIndexedStack(index: index, children: navigationView),
                 bottomNavigationBar: widget.appConfiguration.bottomNavigation
                     ? Container(
-                        constraints: const BoxConstraints(maxHeight: 72),
+                        constraints: const BoxConstraints(maxHeight: 80),
                         child: Theme(
                           data: Theme.of(context).copyWith(splashColor: Colors.transparent),
                           child: BottomNavigationBar(
@@ -249,7 +249,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     String content = isCN
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
             '1. 手机端增加底部导航，可在设置中切换；\n'
-            '2. 外部代理支持身份验证；\n'
+            '2. 增加远程设备管理，可快速连接设备；\n'
             '3. 双击列表tab滚动到顶部；\n'
             '4. 修复部分p12证书导入失败的问题；\n'
             '5. 脚本增加rawBody原始字节参数, body支持字节数组修改；\n'
@@ -261,7 +261,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n\n'
             'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
             '1. Mobile: Add bottom navigation bar，which can be switched in settings；\n'
-            '2. External proxy support authentication；\n'
+            '2. Support remote device management to quickly connect to devices；\n'
             '3. Double-click the list tab to scroll to the top；\n'
             '4. Fix the issue of partial p12 certificate import failure；\n'
             '5. The script add rawBody raw byte parameter, body supports byte array modification；\n'
@@ -310,7 +310,7 @@ class RequestPage extends StatefulWidget {
 
 class RequestPageState extends State<RequestPage> {
   /// 远程连接
-  final ValueNotifier<RemoteModel> desktop = ValueNotifier(RemoteModel(connect: false));
+  final ValueNotifier<RemoteModel> remoteDevice = ValueNotifier(RemoteModel(connect: false));
 
   late ProxyServer proxyServer;
 
@@ -322,9 +322,9 @@ class RequestPageState extends State<RequestPage> {
     proxyServer = widget.proxyServer;
 
     //远程连接
-    desktop.addListener(() {
-      if (desktop.value.connect) {
-        proxyServer.configuration.remoteHost = "http://${desktop.value.host}:${desktop.value.port}";
+    remoteDevice.addListener(() {
+      if (remoteDevice.value.connect) {
+        proxyServer.configuration.remoteHost = "http://${remoteDevice.value.host}:${remoteDevice.value.port}";
         checkConnectTask(context);
       } else {
         proxyServer.configuration.remoteHost = null;
@@ -334,7 +334,7 @@ class RequestPageState extends State<RequestPage> {
 
   @override
   void dispose() {
-    desktop.dispose();
+    remoteDevice.dispose();
     super.dispose();
   }
 
@@ -343,13 +343,13 @@ class RequestPageState extends State<RequestPage> {
     return Scaffold(
         floatingActionButton: PictureInPictureIcon(proxyServer),
         body: Scaffold(
-          appBar: _MobileAppBar(widget.appConfiguration, proxyServer, desktop: desktop),
+          appBar: _MobileAppBar(widget.appConfiguration, proxyServer, remoteDevice: remoteDevice),
           drawer: widget.appConfiguration.bottomNavigation
               ? null
               : DrawerWidget(proxyServer: proxyServer, container: MobileApp.container),
           floatingActionButton: _launchActionButton(),
           body: ValueListenableBuilder(
-              valueListenable: desktop,
+              valueListenable: remoteDevice,
               builder: (context, value, _) {
                 return Column(children: [
                   value.connect ? remoteConnect(value) : const SizedBox(),
@@ -387,13 +387,16 @@ class RequestPageState extends State<RequestPage> {
   Widget remoteConnect(RemoteModel value) {
     return Container(
         margin: const EdgeInsets.only(top: 5, bottom: 5),
-        height: 55,
+        height: 56,
         width: double.infinity,
         child: ElevatedButton(
+          style: ButtonStyle(
+              shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-            return ConnectRemote(desktop: desktop, proxyServer: proxyServer);
+            return RemoteDevicePage(remoteDevice: remoteDevice, proxyServer: proxyServer);
           })),
-          child: Text(localizations.remoteConnected(desktop.value.os ?? ''),
+          child: Text(localizations.remoteConnected(remoteDevice.value.os ?? ', ${remoteDevice.value.hostname}'),
               style: Theme.of(context).textTheme.titleMedium),
         ));
   }
@@ -401,14 +404,14 @@ class RequestPageState extends State<RequestPage> {
   /// 检查远程连接
   checkConnectTask(BuildContext context) async {
     int retry = 0;
-    Timer.periodic(const Duration(milliseconds: 3000), (timer) async {
-      if (desktop.value.connect == false) {
+    Timer.periodic(const Duration(milliseconds: 10000), (timer) async {
+      if (remoteDevice.value.connect == false) {
         timer.cancel();
         return;
       }
 
       try {
-        var response = await HttpClients.get("http://${desktop.value.host}:${desktop.value.port}/ping")
+        var response = await HttpClients.get("http://${remoteDevice.value.host}:${remoteDevice.value.port}/ping")
             .timeout(const Duration(seconds: 1));
         if (response.bodyAsString == "pong") {
           retry = 0;
@@ -419,13 +422,16 @@ class RequestPageState extends State<RequestPage> {
       }
 
       if (retry > 5) {
-        timer.cancel();
-        desktop.value = RemoteModel(connect: false);
+        retry = 0;
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(localizations.remoteConnectDisconnect),
               action: SnackBarAction(
-                  label: localizations.reconnect, onPressed: () => desktop.value = RemoteModel(connect: true))));
+                  label: localizations.disconnect,
+                  onPressed: () {
+                    timer.cancel();
+                    remoteDevice.value = RemoteModel(connect: false);
+                  })));
         }
       }
     });
@@ -436,9 +442,9 @@ class RequestPageState extends State<RequestPage> {
 class _MobileAppBar extends StatelessWidget implements PreferredSizeWidget {
   final AppConfiguration appConfiguration;
   final ProxyServer proxyServer;
-  final ValueNotifier<RemoteModel> desktop;
+  final ValueNotifier<RemoteModel> remoteDevice;
 
-  const _MobileAppBar(this.appConfiguration, this.proxyServer, {required this.desktop});
+  const _MobileAppBar(this.appConfiguration, this.proxyServer, {required this.remoteDevice});
 
   @override
   Size get preferredSize => const Size.fromHeight(42);
@@ -458,7 +464,7 @@ class _MobileAppBar extends StatelessWidget implements PreferredSizeWidget {
               icon: const Icon(Icons.cleaning_services_outlined),
               onPressed: () => MobileApp.requestStateKey.currentState?.clean()),
           const SizedBox(width: 2),
-          MoreMenu(proxyServer: proxyServer, desktop: desktop),
+          MoreMenu(proxyServer: proxyServer, remoteDevice: remoteDevice),
           const SizedBox(width: 10),
         ]);
   }
