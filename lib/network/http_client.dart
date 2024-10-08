@@ -103,14 +103,14 @@ class HttpClients {
   }
 
   /// 发送get请求
-  static Future<HttpResponse> get(String url, {Duration duration = const Duration(seconds: 3)}) async {
+  static Future<HttpResponse> get(String url, {Duration timeout = const Duration(seconds: 3)}) async {
     HttpRequest msg = HttpRequest(HttpMethod.get, url);
-    return request(HostAndPort.of(url), msg, duration: duration);
+    return request(HostAndPort.of(url), msg, timeout: timeout);
   }
 
   /// 发送请求
   static Future<HttpResponse> request(HostAndPort hostAndPort, HttpRequest request,
-      {Duration duration = const Duration(seconds: 3)}) async {
+      {Duration timeout = const Duration(seconds: 3)}) async {
     var httpResponseHandler = HttpResponseHandler();
 
     var client = Client()
@@ -120,7 +120,7 @@ class HttpClients {
     Channel channel = await client.connect(hostAndPort, channelContext);
     await channel.write(request);
 
-    return httpResponseHandler.getResponse(duration).whenComplete(() => channel.close());
+    return httpResponseHandler.getResponse(timeout).whenComplete(() => channel.close());
   }
 
   /// 发送代理请求

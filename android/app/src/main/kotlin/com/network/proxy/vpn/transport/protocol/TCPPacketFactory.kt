@@ -73,6 +73,7 @@ object TCPPacketFactory {
         tcp.isNS = false
         tcp.setIsRST(true)
 
+        tcp.dataOffset = 5
         tcp.options = null
         tcp.windowSize = 0
 
@@ -109,6 +110,8 @@ object TCPPacketFactory {
         tcp.setIsFIN(false)
         tcp.timeStampSender = timeSender
         tcp.timeStampReplyTo = timeReplyTo
+        tcp.dataOffset = 5
+        tcp.options = null
 
         var totalLength = ip.getIPHeaderLength() + tcp.getTCPHeaderLength()
         if (packetData != null) {
@@ -142,6 +145,8 @@ object TCPPacketFactory {
         tcp.setIsSYN(false)
         tcp.setIsPSH(false)
         tcp.setIsFIN(false)
+        tcp.dataOffset = 5
+        tcp.options = null
 
         ip.totalLength = ip.getIPHeaderLength() + tcp.getTCPHeaderLength()
         return createPacketData(ip, tcp, null)
@@ -184,6 +189,9 @@ object TCPPacketFactory {
         tcp.timeStampReplyTo = tcp.timeStampSender
         tcp.timeStampSender = PacketUtil.currentTime
 
+        tcp.dataOffset = 5
+        tcp.options = null
+
         return Packet(ip, tcp, createPacketData(ip, tcp, null))
     }
 
@@ -209,6 +217,9 @@ object TCPPacketFactory {
         tcp.setIsPSH(false)
         tcp.setIsFIN(isFin)
 
+        tcp.dataOffset = 5
+        tcp.options = null
+
         ip.totalLength = ip.getIPHeaderLength() + tcp.getTCPHeaderLength()
         return createPacketData(ip, tcp, null)
     }
@@ -233,6 +244,7 @@ object TCPPacketFactory {
         tcp.setIsACK(true)
         tcp.setIsFIN(true)
 
+        tcp.dataOffset = 5
         tcp.options = null
         //窗口大小应为零
         tcp.windowSize = 0

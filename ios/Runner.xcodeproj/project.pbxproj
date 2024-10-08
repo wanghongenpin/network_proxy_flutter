@@ -21,10 +21,27 @@
 		9B09122A2A54593A001108B7 /* ProxyPin.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9B0912202A54593A001108B7 /* ProxyPin.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9B2A10C62B4CA9A6001C443F /* PictureInPictureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B2A10C52B4CA9A6001C443F /* PictureInPictureView.swift */; };
 		9B2A10C82B4CBE32001C443F /* silience.mov in Resources */ = {isa = PBXBuildFile; fileRef = 9B2A10C72B4CBE32001C443F /* silience.mov */; };
+		9B5125AA2CAEE3350027996E /* ICMPPacket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5125A92CAEE3350027996E /* ICMPPacket.swift */; };
 		9B70772D2A5718FB00F184A9 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B70772C2A5718FB00F184A9 /* AudioManager.swift */; };
 		9B7077362A5728B900F184A9 /* silence.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 9B7077352A5728B900F184A9 /* silence.mp3 */; };
 		9B90F5802C183CDE007D7A81 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9B90F5822C183CDE007D7A81 /* InfoPlist.strings */; };
 		9BC4B8CC2B4B48710047DBDD /* PictureInPictureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BC4B8CB2B4B48710047DBDD /* PictureInPictureManager.swift */; };
+		9BCA28662C9772DD00C2B46C /* ConnectionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28652C9772DD00C2B46C /* ConnectionHandler.swift */; };
+		9BCA286A2C97748100C2B46C /* IP4Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28692C97748100C2B46C /* IP4Header.swift */; };
+		9BCA286D2C977E3800C2B46C /* TCPHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA286C2C977E3800C2B46C /* TCPHeader.swift */; };
+		9BCA286F2C977E4C00C2B46C /* TCPPacketFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA286E2C977E4C00C2B46C /* TCPPacketFactory.swift */; };
+		9BCA28712C987B0C00C2B46C /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28702C987B0B00C2B46C /* ConnectionManager.swift */; };
+		9BCA28732C988E9D00C2B46C /* Packet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28722C988E9D00C2B46C /* Packet.swift */; };
+		9BCA28752C988EC400C2B46C /* TransportHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28742C988EC400C2B46C /* TransportHeader.swift */; };
+		9BCA28782C98902900C2B46C /* PacketUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28772C98902900C2B46C /* PacketUtil.swift */; };
+		9BCA287A2C989A7200C2B46C /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28792C989A7200C2B46C /* Connection.swift */; };
+		9BCA287D2C989A9F00C2B46C /* CloseableConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA287C2C989A9F00C2B46C /* CloseableConnection.swift */; };
+		9BCA287F2C989AF300C2B46C /* NWProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA287E2C989AF300C2B46C /* NWProtocol.swift */; };
+		9BCA28812C98A42A00C2B46C /* ClientPacketWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28802C98A42A00C2B46C /* ClientPacketWriter.swift */; };
+		9BCA28832C98AA9000C2B46C /* ProxyVpnService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28822C98AA9000C2B46C /* ProxyVpnService.swift */; };
+		9BCA28852C98C6B300C2B46C /* QueueFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28842C98C6B300C2B46C /* QueueFactory.swift */; };
+		9BCA288A2C98C82000C2B46C /* SocketIOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA28892C98C82000C2B46C /* SocketIOService.swift */; };
+		9BCA288C2C995B3700C2B46C /* UDPHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCA288B2C995B3700C2B46C /* UDPHeader.swift */; };
 		B375908E625E0AED772FA2C0 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D37E307095F2B3E689A68827 /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -100,6 +117,7 @@
 		9B0912272A54593A001108B7 /* ProxyPin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ProxyPin.entitlements; sourceTree = "<group>"; };
 		9B2A10C52B4CA9A6001C443F /* PictureInPictureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureInPictureView.swift; sourceTree = "<group>"; };
 		9B2A10C72B4CBE32001C443F /* silience.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = silience.mov; sourceTree = "<group>"; };
+		9B5125A92CAEE3350027996E /* ICMPPacket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICMPPacket.swift; sourceTree = "<group>"; };
 		9B70772C2A5718FB00F184A9 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		9B7077352A5728B900F184A9 /* silence.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = silence.mp3; sourceTree = "<group>"; };
 		9B90F57C2C183C7E007D7A81 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
@@ -107,6 +125,22 @@
 		9B90F5812C183CDE007D7A81 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		9B90F5832C183CE0007D7A81 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		9BC4B8CB2B4B48710047DBDD /* PictureInPictureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureInPictureManager.swift; sourceTree = "<group>"; };
+		9BCA28652C9772DD00C2B46C /* ConnectionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionHandler.swift; sourceTree = "<group>"; };
+		9BCA28692C97748100C2B46C /* IP4Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IP4Header.swift; sourceTree = "<group>"; };
+		9BCA286C2C977E3800C2B46C /* TCPHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCPHeader.swift; sourceTree = "<group>"; };
+		9BCA286E2C977E4C00C2B46C /* TCPPacketFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCPPacketFactory.swift; sourceTree = "<group>"; };
+		9BCA28702C987B0B00C2B46C /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
+		9BCA28722C988E9D00C2B46C /* Packet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Packet.swift; sourceTree = "<group>"; };
+		9BCA28742C988EC400C2B46C /* TransportHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportHeader.swift; sourceTree = "<group>"; };
+		9BCA28772C98902900C2B46C /* PacketUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketUtil.swift; sourceTree = "<group>"; };
+		9BCA28792C989A7200C2B46C /* Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
+		9BCA287C2C989A9F00C2B46C /* CloseableConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseableConnection.swift; sourceTree = "<group>"; };
+		9BCA287E2C989AF300C2B46C /* NWProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NWProtocol.swift; sourceTree = "<group>"; };
+		9BCA28802C98A42A00C2B46C /* ClientPacketWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientPacketWriter.swift; sourceTree = "<group>"; };
+		9BCA28822C98AA9000C2B46C /* ProxyVpnService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyVpnService.swift; sourceTree = "<group>"; };
+		9BCA28842C98C6B300C2B46C /* QueueFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueFactory.swift; sourceTree = "<group>"; };
+		9BCA28892C98C82000C2B46C /* SocketIOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketIOService.swift; sourceTree = "<group>"; };
+		9BCA288B2C995B3700C2B46C /* UDPHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UDPHeader.swift; sourceTree = "<group>"; };
 		D37E307095F2B3E689A68827 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E328C7F89A365CDC0EAD15C6 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -228,6 +262,7 @@
 		9B0912232A54593A001108B7 /* ProxyPin */ = {
 			isa = PBXGroup;
 			children = (
+				9BCA28642C97729000C2B46C /* vpn */,
 				9B0912242A54593A001108B7 /* PacketTunnelProvider.swift */,
 				9B0912262A54593A001108B7 /* Info.plist */,
 				9B0912272A54593A001108B7 /* ProxyPin.entitlements */,
@@ -243,6 +278,62 @@
 				9B2A10C52B4CA9A6001C443F /* PictureInPictureView.swift */,
 			);
 			path = pip;
+			sourceTree = "<group>";
+		};
+		9BCA28642C97729000C2B46C /* vpn */ = {
+			isa = PBXGroup;
+			children = (
+				9BCA287B2C989A8700C2B46C /* socket */,
+				9BCA28762C98901800C2B46C /* utils */,
+				9BCA28672C97746200C2B46C /* transport */,
+				9BCA28652C9772DD00C2B46C /* ConnectionHandler.swift */,
+				9BCA28702C987B0B00C2B46C /* ConnectionManager.swift */,
+				9BCA28792C989A7200C2B46C /* Connection.swift */,
+				9BCA287E2C989AF300C2B46C /* NWProtocol.swift */,
+				9BCA28822C98AA9000C2B46C /* ProxyVpnService.swift */,
+				9BCA28842C98C6B300C2B46C /* QueueFactory.swift */,
+			);
+			path = vpn;
+			sourceTree = "<group>";
+		};
+		9BCA28672C97746200C2B46C /* transport */ = {
+			isa = PBXGroup;
+			children = (
+				9BCA28682C97747000C2B46C /* protocol */,
+				9BCA28722C988E9D00C2B46C /* Packet.swift */,
+			);
+			path = transport;
+			sourceTree = "<group>";
+		};
+		9BCA28682C97747000C2B46C /* protocol */ = {
+			isa = PBXGroup;
+			children = (
+				9BCA28692C97748100C2B46C /* IP4Header.swift */,
+				9BCA286C2C977E3800C2B46C /* TCPHeader.swift */,
+				9BCA286E2C977E4C00C2B46C /* TCPPacketFactory.swift */,
+				9BCA28742C988EC400C2B46C /* TransportHeader.swift */,
+				9BCA288B2C995B3700C2B46C /* UDPHeader.swift */,
+				9B5125A92CAEE3350027996E /* ICMPPacket.swift */,
+			);
+			path = protocol;
+			sourceTree = "<group>";
+		};
+		9BCA28762C98901800C2B46C /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				9BCA28772C98902900C2B46C /* PacketUtil.swift */,
+			);
+			path = utils;
+			sourceTree = "<group>";
+		};
+		9BCA287B2C989A8700C2B46C /* socket */ = {
+			isa = PBXGroup;
+			children = (
+				9BCA287C2C989A9F00C2B46C /* CloseableConnection.swift */,
+				9BCA28802C98A42A00C2B46C /* ClientPacketWriter.swift */,
+				9BCA28892C98C82000C2B46C /* SocketIOService.swift */,
+			);
+			path = socket;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -504,7 +595,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9BCA28832C98AA9000C2B46C /* ProxyVpnService.swift in Sources */,
+				9BCA287D2C989A9F00C2B46C /* CloseableConnection.swift in Sources */,
+				9B5125AA2CAEE3350027996E /* ICMPPacket.swift in Sources */,
+				9BCA28662C9772DD00C2B46C /* ConnectionHandler.swift in Sources */,
+				9BCA28712C987B0C00C2B46C /* ConnectionManager.swift in Sources */,
+				9BCA28812C98A42A00C2B46C /* ClientPacketWriter.swift in Sources */,
 				9B0912252A54593A001108B7 /* PacketTunnelProvider.swift in Sources */,
+				9BCA286D2C977E3800C2B46C /* TCPHeader.swift in Sources */,
+				9BCA28782C98902900C2B46C /* PacketUtil.swift in Sources */,
+				9BCA288C2C995B3700C2B46C /* UDPHeader.swift in Sources */,
+				9BCA28732C988E9D00C2B46C /* Packet.swift in Sources */,
+				9BCA288A2C98C82000C2B46C /* SocketIOService.swift in Sources */,
+				9BCA28852C98C6B300C2B46C /* QueueFactory.swift in Sources */,
+				9BCA286A2C97748100C2B46C /* IP4Header.swift in Sources */,
+				9BCA287A2C989A7200C2B46C /* Connection.swift in Sources */,
+				9BCA28752C988EC400C2B46C /* TransportHeader.swift in Sources */,
+				9BCA287F2C989AF300C2B46C /* NWProtocol.swift in Sources */,
+				9BCA286F2C977E4C00C2B46C /* TCPPacketFactory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

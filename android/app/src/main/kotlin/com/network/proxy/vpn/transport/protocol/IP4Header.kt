@@ -102,8 +102,7 @@ object IPPacketFactory {
         val versionAndHeaderLength: Byte = buffer.get()
         val ipVersion = (versionAndHeaderLength.toInt() shr 4).toByte()
         if (ipVersion.toInt() != IP4_VERSION) {
-//            throw IllegalArgumentException("Invalid IP version $ipVersion")
-            return null
+            throw IllegalArgumentException("Invalid IP version $ipVersion")
         }
 
         val internetHeaderLength = (versionAndHeaderLength.toInt() and 0x0F).toByte()

@@ -56,7 +56,7 @@ class _SettingState extends State<Setting> {
     return MenuAnchor(
       builder: (context, controller, child) {
         return IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, size: 22),
             tooltip: localizations.setting,
             onPressed: () {
               if (controller.isOpen) {

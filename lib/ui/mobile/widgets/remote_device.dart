@@ -47,6 +47,7 @@ class RemoteModel {
   final int? port;
   final String? os;
   final String? hostname;
+  final bool? ipProxy;
 
   RemoteModel({
     required this.connect,
@@ -54,6 +55,7 @@ class RemoteModel {
     this.port,
     this.os,
     this.hostname,
+    this.ipProxy,
   });
 
   factory RemoteModel.fromJson(Map<String, dynamic> json) {
@@ -63,7 +65,33 @@ class RemoteModel {
       port: json['port'],
       os: json['os'],
       hostname: json['hostname'],
+      ipProxy: json['ipProxy'],
     );
+  }
+
+  RemoteModel copyWith({
+    bool? connect,
+    String? host,
+    int? port,
+    String? os,
+    String? hostname,
+    bool? ipProxy,
+  }) {
+    return RemoteModel(
+      connect: connect ?? this.connect,
+      host: host ?? this.host,
+      port: port ?? this.port,
+      os: os ?? this.os,
+      hostname: hostname ?? this.hostname,
+      ipProxy: ipProxy ?? this.ipProxy,
+    );
+  }
+
+  String get identification => '$host:$port';
+
+  //host和端口是否相等
+  bool equals(RemoteModel remoteModel) {
+    return identification == remoteModel.identification;
   }
 
   Map<String, dynamic> toJson() {
@@ -73,6 +101,7 @@ class RemoteModel {
       'port': port,
       'os': os,
       'hostname': hostname,
+      'ipProxy': ipProxy,
     };
   }
 }
@@ -110,13 +139,16 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
                         dense: true,
                         title: Text(localizations.scanCode),
                         onTap: () => connectRemote(context))),
-                // CustomPopupMenuItem(
-                //     height: 32,
-                //     child: ListTile(
-                //         leading: const Icon(Icons.edit_rounded),
-                //         dense: true,
-                //         title: Text(localizations.inputAddress),
-                //         onTap: () {})),
+                CustomPopupMenuItem(
+                    height: 32,
+                    child: ListTile(
+                        leading: const Icon(Icons.edit_rounded),
+                        dense: true,
+                        title: Text(localizations.inputAddress),
+                        onTap: () async {
+                          Navigator.maybePop(context);
+                          inputAddress(await localIp());
+                        })),
                 PopupMenuItem(
                     height: 32,
                     child: ListTile(
@@ -154,20 +186,28 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
   }
 
   Widget rows(SharedPreferences prefs) {
-    var remoteDeviceList = prefs.getStringList('remoteDeviceList') ?? [];
+    var remoteDeviceList = getRemoteDeviceList(prefs);
 
     return ListView(
-      children: remoteDeviceList.map((it) {
-        var remoteDevice = RemoteModel.fromJson(jsonDecode(it));
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 5),
-          title: Text(remoteDevice.hostname ?? ''),
-          subtitle: Text('${remoteDevice.host}:${remoteDevice.port}'),
-          trailing: getIcon(remoteDevice.os!),
-          onTap: () {
-            doConnect(remoteDevice.host!, remoteDevice.port!);
-          },
-        );
+      children: remoteDeviceList.map((remoteDevice) {
+        return Dismissible(
+            key: Key(remoteDevice.identification),
+            onDismissed: (direction) async {
+              remoteDeviceList.removeWhere((it) => it.equals(remoteDevice));
+              await setRemoteDeviceList(prefs, remoteDeviceList);
+
+              setState(() {});
+              if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
+            },
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 5),
+              title: Text(remoteDevice.hostname ?? ''),
+              subtitle: Text('${remoteDevice.host}:${remoteDevice.port}'),
+              trailing: getIcon(remoteDevice.os!),
+              onTap: () {
+                doConnect(remoteDevice.host!, remoteDevice.port!, ipProxy: remoteDevice.ipProxy);
+              },
+            ));
       }).toList(),
     );
   }
@@ -186,6 +226,16 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
     }
   }
 
+  List<RemoteModel> getRemoteDeviceList(SharedPreferences prefs) {
+    var remoteDeviceList = prefs.getStringList('remoteDeviceList') ?? [];
+    return remoteDeviceList.map((it) => RemoteModel.fromJson(jsonDecode(it))).toList();
+  }
+
+  Future<bool> setRemoteDeviceList(SharedPreferences prefs, Iterable<RemoteModel> remoteDeviceList) {
+    var list = remoteDeviceList.map((it) => jsonEncode(it.toJson())).toList();
+    return prefs.setStringList('remoteDeviceList', list);
+  }
+
   ///远程设备状态
   Widget remoteDeviceStatus() {
     if (widget.remoteDevice.value.connect) {
@@ -193,6 +243,32 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
           child: Column(
         children: [
           const Icon(Icons.check_circle_outline_outlined, size: 55, color: Colors.green),
+          Row(
+            children: [
+              if (Platform.isIOS) Expanded(child: ListTile(title: Text(localizations.ipLayerProxy))),
+              const SizedBox(height: 6),
+              SwitchWidget(
+                  value: widget.remoteDevice.value.ipProxy ?? false,
+                  scale: 0.85,
+                  onChanged: (val) async {
+                    widget.remoteDevice.value = widget.remoteDevice.value.copyWith(ipProxy: val);
+                    SharedPreferences.getInstance().then((prefs) {
+                      var remoteDeviceList = getRemoteDeviceList(prefs);
+                      remoteDeviceList.removeWhere((it) => it.equals(widget.remoteDevice.value));
+                      remoteDeviceList.insert(0, widget.remoteDevice.value);
+
+                      setRemoteDeviceList(prefs, remoteDeviceList);
+                    });
+
+                    if ((await Vpn.isRunning())) {
+                      print('重启VPN');
+                      Vpn.restartVpn(widget.remoteDevice.value.host!, widget.remoteDevice.value.port!,
+                          widget.proxyServer.configuration,
+                          ipProxy: val);
+                    }
+                  }),
+            ],
+          ),
           Text('${localizations.connected}：${widget.remoteDevice.value.hostname}',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(height: 6),
@@ -230,6 +306,59 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
     ]));
   }
 
+  ///输入地址链接
+  inputAddress(var host) {
+    //输入账号密码连接
+    host = host.substring(0, host.contains('.') ? host.lastIndexOf('.') + 1 : host.length);
+    int? port = 9099;
+    if (!context.mounted) return;
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(localizations.inputAddress),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  initialValue: host,
+                  decoration: const InputDecoration(hintText: 'Host'),
+                  keyboardType: TextInputType.url,
+                  onChanged: (value) => host = value,
+                ),
+                TextFormField(
+                    initialValue: port.toString(),
+                    decoration: const InputDecoration(hintText: 'Port'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      port = value.isEmpty ? null : int.tryParse(value);
+                    }),
+              ],
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(localizations.cancel)),
+              TextButton(
+                  onPressed: () async {
+                    if (host.isEmpty || port == null) {
+                      FlutterToastr.show(localizations.cannotBeEmpty, context);
+                      return;
+                    }
+
+                    if ((await doConnect(host, port!)) && context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: Text(localizations.connected)),
+            ],
+          );
+        });
+  }
+
   ///扫码连接
   connectRemote(BuildContext context) async {
     AppLocalizations localizations = AppLocalizations.of(context)!;
@@ -260,34 +389,39 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
     }
   }
 
-  doConnect(String host, int port) async {
+  ///
+  Future<bool> doConnect(String host, int port, {bool? ipProxy}) async {
     try {
-      var response = await HttpClients.get("http://$host:$port/ping").timeout(const Duration(seconds: 3));
+      var response = await HttpClients.get("http://$host:$port/ping", timeout: const Duration(milliseconds: 3000));
       if (response.bodyAsString == "pong") {
         widget.remoteDevice.value = RemoteModel(
-            connect: true,
-            host: host,
-            port: port,
-            os: response.headers.get("os"),
-            hostname: response.headers.get("hostname"));
+          connect: true,
+          host: host,
+          port: port,
+          os: response.headers.get("os"),
+          hostname: response.headers.get("hostname"),
+          ipProxy: ipProxy,
+        );
 
         //去重记录5条连接记录
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        var remoteDeviceList = prefs.getStringList('remoteDeviceList') ?? [];
-        var value = jsonEncode(widget.remoteDevice.value.toJson());
-        remoteDeviceList.remove(value);
-        remoteDeviceList.insert(0, value);
-        prefs.setStringList('remoteDeviceList', remoteDeviceList).then((value) {
+        var remoteDeviceList = getRemoteDeviceList(prefs);
+        remoteDeviceList.removeWhere((it) => it.equals(widget.remoteDevice.value));
+        remoteDeviceList.insert(0, widget.remoteDevice.value);
+
+        var list = remoteDeviceList.take(5);
+        setRemoteDeviceList(prefs, list).whenComplete(() {
           setState(() {});
         });
 
-        if (mounted && Navigator.canPop(context)) {
+        if (mounted) {
           FlutterToastr.show(
               "${localizations.connectSuccess}${Vpn.isVpnStarted ? '' : ', ${localizations.remoteConnectSuccessTips}'}",
               context,
               duration: 3);
         }
       }
+      return true;
     } catch (e) {
       logger.e(e);
       if (mounted) {
@@ -297,6 +431,7 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
               return AlertDialog(content: Text(localizations.remoteConnectFail));
             });
       }
+      return false;
     }
   }
 

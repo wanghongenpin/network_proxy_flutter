@@ -14,8 +14,9 @@ enum VPNStatus {
 class VpnManager{
     var activeVPN: NETunnelProviderManager?;
     
-    public var proxyHost: String = "127.0.0.01"
+    public var proxyHost: String = "127.0.0.1"
     public var proxyPort: Int = 9099
+    public var ipProxy: Bool = false
 
     static let shared = VpnManager()
     var observerAdded: Bool = false
@@ -73,7 +74,6 @@ class VpnManager{
 // load VPN Profiles
 extension VpnManager{
 
-
     fileprivate func createProviderManager() -> NETunnelProviderManager {
         let manager = NETunnelProviderManager()
         let conf = NETunnelProviderProtocol()
@@ -96,6 +96,7 @@ extension VpnManager{
             var conf = [String:AnyObject]()
             conf["proxyHost"] = self.proxyHost as AnyObject
             conf["proxyPort"] = self.proxyPort as AnyObject
+            conf["ipProxy"] = self.ipProxy as AnyObject
             
             let orignConf = manager.protocolConfiguration as! NETunnelProviderProtocol
  
@@ -140,10 +141,11 @@ extension VpnManager{
 // Actions
 extension VpnManager{
     
-    func connect(host: String?, port: Int?){
+    func connect(host: String?, port: Int?, ipProxy: Bool? = false) {
         self.proxyHost = host ?? self.proxyHost
         self.proxyPort = port ?? self.proxyPort
-        
+        self.ipProxy = ipProxy ?? false
+
         self.loadAndCreatePrividerManager { (manager) in
             guard let manager = manager else{return}
             do{
@@ -157,7 +159,6 @@ extension VpnManager{
 
     func disconnect() {
         if (activeVPN != nil) {
-            print("stopVPNTunnel activeVPN")
             activeVPN?.connection.stopVPNTunnel()
             activeVPN = nil
             return

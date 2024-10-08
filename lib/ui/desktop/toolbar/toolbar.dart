@@ -85,21 +85,21 @@ class _ToolbarState extends State<Toolbar> {
       children: [
         Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 80 : 30)),
         SocketLaunch(proxyServer: widget.proxyServer, startup: widget.proxyServer.configuration.startup),
-        const Padding(padding: EdgeInsets.only(left: 20)),
+        const Padding(padding: EdgeInsets.only(left: 18)),
         IconButton(
             tooltip: localizations.clear,
-            icon: const Icon(Icons.cleaning_services_outlined),
+            icon: const Icon(Icons.cleaning_services_outlined, size: 22),
             onPressed: () {
               widget.requestListStateKey.currentState?.clean();
             }),
-        const Padding(padding: EdgeInsets.only(left: 20)),
+        const Padding(padding: EdgeInsets.only(left: 18)),
         SslWidget(proxyServer: widget.proxyServer), // SSL配置
-        const Padding(padding: EdgeInsets.only(left: 20)),
+        const Padding(padding: EdgeInsets.only(left: 18)),
         Setting(proxyServer: widget.proxyServer), // 设置
-        const Padding(padding: EdgeInsets.only(left: 20)),
+        const Padding(padding: EdgeInsets.only(left: 18)),
         IconButton(
             tooltip: localizations.mobileConnect,
-            icon: const Icon(Icons.phone_iphone),
+            icon: const Icon(Icons.phone_iphone, size: 22),
             onPressed: () async {
               final ips = await localIps();
               phoneConnect(ips, widget.proxyServer.port);

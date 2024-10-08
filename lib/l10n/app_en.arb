@@ -236,6 +236,7 @@
   "connected": "Connected",
   "notConnected": "Not connected",
   "disconnect": "Disconnect",
+  "ipLayerProxy": "IP Layer Proxy(Beta)",
   "inputAddress": "Input Address",
   "syncConfig": "Sync configuration",
   "pullConfigFail": "Failed to pull configuration, please check the network connection",

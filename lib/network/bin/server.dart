@@ -137,6 +137,15 @@ class ProxyServer {
     await stop().whenComplete(() => start());
   }
 
+  Future<void> retryBind() async {
+    //检测端口是否被占用
+    try {
+      await Socket.connect('127.0.0.1', port, timeout: const Duration(milliseconds: 350));
+    } catch (e) {
+      await restart();
+    }
+  }
+
   ///添加监听器
   addListener(EventListener listener) {
     listeners.add(listener);

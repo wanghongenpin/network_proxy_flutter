@@ -39,7 +39,6 @@ object UDPPacketFactory {
         }
         val srcPort = udp.destinationPort
         val destPort = udp.sourcePort
-        val checksum: Short = 0
         val ipHeader = ip.copy()
         val srcIp = ip.destinationIP
         val destIp = ip.sourceIP
@@ -68,15 +67,19 @@ object UDPPacketFactory {
         var start = ipData.size
         val intContainer = ByteArray(4)
         PacketUtil.writeIntToBytes(srcPort, intContainer, 0)
+
         //extract the last two bytes of int value
         System.arraycopy(intContainer, 2, buffer, start, 2)
         start += 2
+
         PacketUtil.writeIntToBytes(destPort, intContainer, 0)
         System.arraycopy(intContainer, 2, buffer, start, 2)
         start += 2
         PacketUtil.writeIntToBytes(udpLen, intContainer, 0)
         System.arraycopy(intContainer, 2, buffer, start, 2)
         start += 2
+
+        val checksum: Short = 0
         PacketUtil.writeIntToBytes(checksum.toInt(), intContainer, 0)
         System.arraycopy(intContainer, 2, buffer, start, 2)
         start += 2

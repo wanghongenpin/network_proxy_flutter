@@ -29,7 +29,7 @@ class _SslState extends State<SslWidget> {
     return MenuAnchor(
         builder: (context, controller, child) {
           return IconButton(
-              icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red),
+              icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red, size: 22),
               tooltip: localizations.httpsProxy,
               onPressed: () {
                 if (controller.isOpen) {

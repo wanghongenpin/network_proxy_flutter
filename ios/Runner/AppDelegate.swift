@@ -12,16 +12,19 @@ import NetworkExtension
         GeneratedPluginRegistrant.register(with: self)
 
         let controller: FlutterViewController = window.rootViewController as! FlutterViewController ;
-        let batteryChannel = FlutterMethodChannel.init(name: "com.proxy/proxyVpn", binaryMessenger: controller as! FlutterBinaryMessenger);
-            batteryChannel.setMethodCallHandler({(call: FlutterMethodCall, result: FlutterResult) -> Void in
+        let vpnChannel = FlutterMethodChannel.init(name: "com.proxy/proxyVpn", binaryMessenger: controller as! FlutterBinaryMessenger);
+            vpnChannel.setMethodCallHandler({(call: FlutterMethodCall, result: FlutterResult) -> Void in
                 if ("stopVpn" == call.method) {
                     VpnManager.shared.disconnect()
                 } else if ("isRunning" == call.method){
                     result(Bool(VpnManager.shared.isRunning()))
+                } else if ("restartVpn" == call.method){
+                    let arguments = call.arguments as? Dictionary<String, AnyObject>
+//                    VpnManager.shared.disconnect()
+                    VpnManager.shared.connect(host: arguments?["proxyHost"] as? String ,port: arguments?["proxyPort"] as? Int, ipProxy: arguments?["ipProxy"] as? Bool)
                 } else {
                     let arguments = call.arguments as? Dictionary<String, AnyObject>
-//                  self.backgroundAudioEnable = (arguments!["backgroundAudioEnable"]) as! Bool
-                    VpnManager.shared.connect(host: arguments?["proxyHost"] as? String ,port: arguments?["proxyPort"] as? Int)
+                    VpnManager.shared.connect(host: arguments?["proxyHost"] as? String ,port: arguments?["proxyPort"] as? Int, ipProxy: arguments?["ipProxy"] as? Bool)
               }
           })
       

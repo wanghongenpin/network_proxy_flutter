@@ -160,7 +160,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             return;
           }
 
-          if (DateTime.now().millisecondsSinceEpoch - exitTime > 2000) {
+          if (DateTime.now().millisecondsSinceEpoch - exitTime > 1500) {
             exitTime = DateTime.now().millisecondsSinceEpoch;
             if (mounted) {
               FlutterToastr.show(localizations.appExitTips, this.context,
@@ -371,13 +371,18 @@ class RequestPageState extends State<RequestPage> {
               startup: proxyServer.configuration.startup,
               serverLaunch: false,
               onStart: () async {
-                //ios端口可能会被系统杀掉
+                String host = Platform.isAndroid ? await localIp(readCache: false) : "127.0.0.1";
+                int port = proxyServer.port;
                 if (Platform.isIOS) {
-                  await proxyServer.restart();
+                  await proxyServer.retryBind();
                 }
 
-                Vpn.startVpn(Platform.isAndroid ? await localIp(readCache: false) : "127.0.0.1", proxyServer.port,
-                    proxyServer.configuration);
+                if (remoteDevice.value.ipProxy == true) {
+                  host = remoteDevice.value.host!;
+                  port = remoteDevice.value.port!;
+                }
+
+                Vpn.startVpn(host, port, proxyServer.configuration, ipProxy: remoteDevice.value.ipProxy);
               },
               onStop: () => Vpn.stopVpn())),
     );

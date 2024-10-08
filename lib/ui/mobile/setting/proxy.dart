@@ -37,7 +37,6 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
   Widget build(BuildContext context) {
     bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
 
-
     return AlertDialog(
         scrollable: true,
         title: Text(localizations.externalProxy, style: const TextStyle(fontSize: 15)),

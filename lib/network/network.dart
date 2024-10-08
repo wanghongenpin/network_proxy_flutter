@@ -167,6 +167,7 @@ class Server extends Network {
       var secureSocket = await SecureSocket.secureServer(channel.socket, certificate, bufferedData: data);
       channel.serverSecureSocket(secureSocket, channelContext);
     } catch (error, trace) {
+      print('$hostAndPort ssl error: $error');
       try {
         channelContext.processInfo ??=
             await ProcessInfoUtils.getProcessByPort(channel.remoteSocketAddress, hostAndPort?.domain ?? 'unknown');
@@ -181,14 +182,15 @@ class Server extends Network {
 }
 
 class Client extends Network {
-  Future<Channel> connect(HostAndPort hostAndPort, ChannelContext channelContext) async {
+  Future<Channel> connect(HostAndPort hostAndPort, ChannelContext channelContext,
+      {Duration timeout = const Duration(seconds: 3)}) async {
     String host = hostAndPort.host;
     //说明支持ipv6
     if (host.startsWith("[") && host.endsWith(']')) {
       host = host.substring(host.lastIndexOf(":") + 1, host.length - 1);
     }
 
-    return Socket.connect(host, hostAndPort.port, timeout: const Duration(seconds: 3)).then((socket) {
+    return Socket.connect(host, hostAndPort.port, timeout: timeout).then((socket) {
       if (socket.address.type != InternetAddressType.unix) {
         socket.setOption(SocketOption.tcpNoDelay, true);
       }

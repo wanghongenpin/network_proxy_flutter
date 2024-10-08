@@ -177,7 +177,7 @@ class PictureInPictureManager: NSObject,AVPictureInPictureControllerDelegate {
             VpnManager.shared.disconnect()
             playButton.setImage(UIImage(systemName: "play.fill"), for: .normal)
         } else {
-            VpnManager.shared.connect(host: nil, port: proxyPort)
+            VpnManager.shared.connect(host: nil, port: proxyPort, ipProxy: nil)
             playButton.setImage(UIImage(systemName: "pause.fill"), for: .normal)
         }
 //        pipView?.addData(text: "hello")
