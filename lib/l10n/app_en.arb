@@ -282,7 +282,9 @@
   "gray" : "Gray",
   "underline" : "Underline",
 
-  "requestBlock": "Request Block"
+  "requestBlock": "Request Block",
+  "blockRequestUrl": "Block the request URL",
+  "requestUrlBlocked": "The URL is blocked"
 
 
 }

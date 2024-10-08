@@ -21,6 +21,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/components/request_block_manager.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
@@ -199,6 +200,18 @@ class RequestRowState extends State<RequestRow> {
                 FlutterToastr.show(localizations.addSuccess, context);
                 Navigator.maybePop(context);
               }),
+          const Divider(thickness: 0.5, height: 5),
+          TextButton(
+            onPressed: () async {
+              var requestBlockManager = await RequestBlockManager.instance;
+              requestBlockManager.addBlockRequest(RequestBlockItem(true, widget.request.requestUrl, BlockType.blockRequest));
+              if (mounted) {
+                FlutterToastr.show(localizations.requestUrlBlocked, context);
+                Navigator.maybePop(context);
+              }
+            },
+            child: SizedBox(width: double.infinity, child: Text(localizations.blockRequestUrl, textAlign: TextAlign.center)),
+          ),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
               child: SizedBox(width: double.infinity, child: Text(localizations.delete, textAlign: TextAlign.center)),

@@ -281,5 +281,7 @@
   "gray": "灰色",
   "underline": "下划线",
 
-  "requestBlock": "请求屏蔽"
+  "requestBlock": "请求屏蔽",
+  "blockRequestUrl": "屏蔽请求URL",
+  "requestUrlBlocked": "URL已屏蔽"
 }
