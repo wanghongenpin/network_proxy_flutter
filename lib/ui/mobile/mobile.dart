@@ -409,7 +409,7 @@ class RequestPageState extends State<RequestPage> {
 
       try {
         var response = await HttpClients.get("http://${remoteDevice.value.host}:${remoteDevice.value.port}/ping")
-            .timeout(const Duration(seconds: 1));
+            .timeout(const Duration(seconds: 3));
         if (response.bodyAsString == "pong") {
           retry = 0;
           return;
@@ -418,7 +418,7 @@ class RequestPageState extends State<RequestPage> {
         retry++;
       }
 
-      if (retry > 5) {
+      if (retry > 3) {
         retry = 0;
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
