@@ -28,7 +28,7 @@ class ByteBuf {
       _buffer = Uint8List.fromList(bytes);
       writerIndex = bytes.length;
     } else {
-      _buffer = Uint8List(256); // Initial buffer size
+      _buffer = Uint8List(0); // Initial buffer size
     }
   }
 
@@ -47,9 +47,10 @@ class ByteBuf {
     writerIndex = 0;
   }
 
+  ///释放已读的空间
   void clearRead() {
     if (readerIndex > 0) {
-      _buffer.setRange(0, writerIndex - readerIndex, _buffer, readerIndex);
+      _buffer = Uint8List.sublistView(_buffer, readerIndex, writerIndex);
       writerIndex -= readerIndex;
       readerIndex = 0;
     }
@@ -62,18 +63,12 @@ class ByteBuf {
   Uint8List readAvailableBytes() => readBytes(readableBytes());
 
   Uint8List readBytes(int length) {
-    if (readerIndex + length > writerIndex) {
-      throw Exception("Not enough readable bytes");
-    }
     Uint8List result = Uint8List.sublistView(_buffer, readerIndex, readerIndex + length);
     readerIndex += length;
     return result;
   }
 
   void skipBytes(int length) {
-    if (readerIndex + length > writerIndex) {
-      throw Exception("Not enough readable bytes");
-    }
     readerIndex += length;
   }
 
@@ -89,9 +84,9 @@ class ByteBuf {
 
   int readInt() {
     int value = (_buffer[readerIndex] << 24) |
-    (_buffer[readerIndex + 1] << 16) |
-    (_buffer[readerIndex + 2] << 8) |
-    _buffer[readerIndex + 3];
+        (_buffer[readerIndex + 1] << 16) |
+        (_buffer[readerIndex + 2] << 8) |
+        _buffer[readerIndex + 3];
     readerIndex += 4;
     return value;
   }
@@ -102,6 +97,7 @@ class ByteBuf {
     if (len > readableBytes()) {
       throw Exception("Insufficient data");
     }
+
     writerIndex = readerIndex + len;
   }
 
@@ -115,7 +111,7 @@ class ByteBuf {
 
   void _ensureCapacity(int required) {
     if (_buffer.length < required) {
-      int newSize = _buffer.length * 2;
+      int newSize = _buffer.length <= 1 ? required : _buffer.length * 2;
       while (newSize < required) {
         newSize *= 2;
       }

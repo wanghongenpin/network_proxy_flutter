@@ -61,8 +61,8 @@ NQIDAQAB
   //       ExtendedKeyUsage.SERVER_AUTH
   //     ]);
 
-  var generatePkcs12 = Pkcs12Utils.generatePkcs12(readAsString, [crt], password: '123');
-  await File('/Users/wanghongen/Downloads/server.p12').writeAsBytes(generatePkcs12);
+  // var generatePkcs12 = Pkcs12Utils.generatePkcs12(readAsString, [crt], password: '123');
+  // await File('/Users/wanghongen/Downloads/server.p12').writeAsBytes(generatePkcs12);
 }
 
 /// 生成证书

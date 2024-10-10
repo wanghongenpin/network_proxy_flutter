@@ -1,18 +1,31 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
+import 'package:crypto/crypto.dart';
 import 'package:network_proxy/network/util/cert/basic_constraints.dart';
 import 'package:pointycastle/pointycastle.dart';
 
-void main() {
-  encoding();
+void main() async {
+  // encoding();
   // Add ext key usage 2.5.29.37
 // // Add key usage  2.5.29.15
 //   var keyUsage = [KeyUsage.KEY_CERT_SIGN, KeyUsage.CRL_SIGN];
 //
 //   var encode = keyUsageSequence(keyUsage)?.encode();
 //   print(Int8List.view(encode!.buffer));
+
+  var caPem = await File('assets/certs/ca.crt').readAsString();
+  var certPath = 'assets/certs/ca.crt';
+  //生成 公钥和私钥
+  var caRoot = X509Utils.x509CertificateFromPem(caPem);
+  print(caRoot.tbsCertificate.);
+  caRoot.subject = X509Utils.getSubject(caRoot.subject);
 }
+
+
+//获取证书 subject hash
 
 void encoding() {
   var basicConstraints = BasicConstraints(isCA: true);

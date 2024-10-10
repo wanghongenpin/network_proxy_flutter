@@ -18,3 +18,10 @@ dynamic getFirstElement(List? list) {
 List<T> convertList<T>(List list) {
   return list.map((e) => e as T).toList();
 }
+
+class Lists {
+  //转换指定类型
+  static List<T> convertList<T>(List list) {
+    return list.map((e) => e as T).toList();
+  }
+}

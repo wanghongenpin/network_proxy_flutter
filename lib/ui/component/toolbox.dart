@@ -8,6 +8,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/js_run.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
+import 'package:network_proxy/ui/component/qr_code.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
@@ -70,7 +71,7 @@ class _ToolboxState extends State<Toolbox> {
                 },
                 child: Container(
                   padding: const EdgeInsets.all(10),
-                  child: const Column(children: [Icon(Icons.javascript), Text("JavaScript")]),
+                  child: const Column(children: [Icon(Icons.javascript), SizedBox(height: 3), Text("JavaScript")]),
                 )),
           ]),
           const Divider(thickness: 0.3),
@@ -81,31 +82,56 @@ class _ToolboxState extends State<Toolbox> {
                   onTap: () => encodeWindow(EncoderType.url, context),
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    child: const Column(children: [Icon(Icons.link), Text(' URL')]),
+                    child: const Column(children: [Icon(Icons.link), SizedBox(height: 3), Text(' URL')]),
                   )),
               const SizedBox(width: 10),
               InkWell(
                   onTap: () => encodeWindow(EncoderType.base64, context),
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    child: const Column(children: [Icon(Icons.currency_bitcoin), Text('Base64')]),
+                    child: const Column(children: [Icon(Icons.currency_bitcoin), SizedBox(height: 3), Text('Base64')]),
                   )),
               const SizedBox(width: 15),
               InkWell(
                   onTap: () => encodeWindow(EncoderType.unicode, context),
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    child: const Column(children: [Icon(Icons.format_underline), Text('Unicode')]),
+                    child: const Column(children: [Icon(Icons.format_underline), SizedBox(height: 3), Text('Unicode')]),
                   )),
               const SizedBox(width: 15),
               InkWell(
                   onTap: () => encodeWindow(EncoderType.md5, context),
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    child: const Column(children: [Icon(Icons.enhanced_encryption), Text('MD5')]),
+                    child: const Column(children: [Icon(Icons.enhanced_encryption), SizedBox(height: 3), Text('MD5')]),
                   )),
             ],
-          )
+          ),
+          const Divider(thickness: 0.3),
+          Text(localizations.other, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              // IconText(
+              //     onTap: () async {
+              //       if (Platforms.isMobile()) {
+              //         Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CertHashWidget()));
+              //         return;
+              //       }
+              //     },
+              //     icon: Icons.near_me,
+              //     text: "证书Hash名称"),
+              IconText(
+                  onTap: () async {
+                    if (Platforms.isMobile()) {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const QrCodeWidget()));
+                      return;
+                    }
+                    MultiWindow.openWindow(localizations.qrCode, 'QrCodeWidget');
+                  },
+                  icon: Icons.qr_code_2,
+                  text: localizations.qrCode),
+            ],
+          ),
         ],
       ),
     );
@@ -132,5 +158,25 @@ class _ToolboxState extends State<Toolbox> {
       ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
       ..center()
       ..show();
+  }
+}
+
+class IconText extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  /// Called when the user taps this part of the material.
+  final GestureTapCallback? onTap;
+
+  const IconText({super.key, required this.icon, required this.text, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          child: Column(children: [Icon(icon), SizedBox(height: 3), Text(text)]),
+        ));
   }
 }

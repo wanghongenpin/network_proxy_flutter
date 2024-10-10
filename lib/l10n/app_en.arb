@@ -284,7 +284,14 @@
   "gray" : "Gray",
   "underline" : "Underline",
 
-  "requestBlock": "Request Block"
+  "requestBlock": "Request Block",
 
-
+  "other": "Other",
+  "qrCode": "QR Code",
+  "scanQrCode": "Scan QR Code",
+  "generateQRcode": "Generate QR Code",
+  "saveImage": "Save Image",
+  "selectImage": "Select Image",
+  "inputContent": "Input Content",
+  "errorCorrectLevel": "Error Correct Level"
 }

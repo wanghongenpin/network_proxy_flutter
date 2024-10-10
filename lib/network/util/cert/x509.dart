@@ -1,9 +1,11 @@
 // ignore_for_file: constant_identifier_names, depend_on_referenced_packages
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
+import 'package:crypto/crypto.dart';
 import 'package:network_proxy/network/util/cert/extension.dart';
 import 'package:network_proxy/network/util/cert/key_usage.dart' as x509;
 import 'package:pointycastle/asn1/unsupported_object_identifier_exception.dart';
@@ -13,6 +15,25 @@ import 'basic_constraints.dart';
 
 /// @author wanghongen
 /// 2023/7/26
+void main() {
+  var caPem = File('assets/certs/ca.crt').readAsStringSync();
+  var certPath = 'assets/certs/ca.crt';
+  //生成 公钥和私钥
+  var caRoot = X509Utils.x509CertificateFromPem(caPem);
+  var subject = caRoot.subject;
+  // Add Issuer
+  var issuerSeq = ASN1Sequence();
+  for (var k in subject.keys) {
+    var s = X509Generate._identifier(k, subject[k]!);
+    issuerSeq.add(s);
+  }
+  var d = X509Generate.x509NameHashOld(issuerSeq);
+
+  //16进制
+  print(d);
+  print(d.toRadixString(16).padLeft(8, '0'));
+}
+
 class X509Generate {
   static const String BEGIN_CERT = '-----BEGIN CERTIFICATE-----';
   static const String END_CERT = '-----END CERTIFICATE-----';
@@ -21,6 +42,14 @@ class X509Generate {
   static const String COUNTRY_NAME = "2.5.4.6";
   static const String SERIAL_NUMBER = "2.5.4.5";
   static const String DN_QUALIFIER = "2.5.4.46";
+
+  static int x509NameHashOld(ASN1Object subject) {
+    // Convert ASN1Object to DER encoded byte array
+    final derEncoded = subject.encode();
+
+    var convert = md5.convert(derEncoded!);
+    return convert.bytes[0] << 24 | convert.bytes[1] << 16 | convert.bytes[2] << 8 | convert.bytes[3];
+  }
 
   ///
   /// Generates a self signed certificate

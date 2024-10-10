@@ -581,7 +581,7 @@ class KeyValState extends State<KeyValWidget> {
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(localizations.cancel)),
               TextButton(
                   onPressed: () {
                     setState(() {
@@ -589,7 +589,7 @@ class KeyValState extends State<KeyValWidget> {
                       keyVal.value = val;
                     });
                     notifierChange();
-                    Navigator.pop(context);
+                    Navigator.pop(ctx);
                   },
                   child: Text(localizations.modify)),
             ],
@@ -605,12 +605,12 @@ class KeyValState extends State<KeyValWidget> {
           return AlertDialog(
             title: Text(localizations.deleteHeaderConfirm, style: const TextStyle(fontSize: 18)),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(localizations.cancel)),
               TextButton(
                   onPressed: () {
                     setState(() => _params.remove(keyVal));
                     notifierChange();
-                    Navigator.pop(context);
+                    Navigator.pop(ctx);
                   },
                   child: Text(localizations.delete)),
             ],

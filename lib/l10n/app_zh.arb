@@ -283,5 +283,14 @@
   "gray": "灰色",
   "underline": "下划线",
 
-  "requestBlock": "请求屏蔽"
+  "requestBlock": "请求屏蔽",
+
+  "other": "其他",
+  "qrCode": "二维码",
+  "generateQRcode": "生成二维码",
+  "scanQrCode": "扫描二维码",
+  "saveImage": "保存图片",
+  "selectImage": "选择图片",
+  "inputContent": "输入内容",
+  "errorCorrectLevel": "纠错等级"
 }
