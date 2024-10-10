@@ -324,16 +324,35 @@ class RequestRewrites {
           queryParameters.remove(item.value);
           break;
         case RewriteType.updateQueryParam:
-          var pair = item.key?.split("=");
-          var val = queryParameters[pair!.first];
-          if (val != null && RegExp(pair.last).hasMatch(val)) {
-            var split = item.value?.split("=");
-            queryParameters.remove(pair.first);
-            queryParameters[split!.first] = split.last;
+          var itemKey = item.key;
+          var itemValue = item.value;
+          if (itemKey == null || itemValue == null) {
+            break;
+          }
+
+          var itemKeySplitIdx = itemKey.indexOf('='); //key=value
+          itemKeySplitIdx = itemKeySplitIdx == -1 ? itemKey.length : itemKeySplitIdx;
+          var itemKeyK = itemKey.substring(0, itemKeySplitIdx);
+          var itemKeyV = itemKeySplitIdx >= itemKey.length ? null : itemKey.substring(itemKeySplitIdx + 1);
+
+          var val = queryParameters[itemKeyK];
+          //not match
+          if (val == null) {
+            return;
+          }
+
+          if (itemKeyV == null || RegExp(itemKeyV).hasMatch(val)) {
+            var itemValueSplitIdx = itemValue.indexOf('=');
+            itemValueSplitIdx = itemValueSplitIdx == -1 ? itemValue.length : itemValueSplitIdx;
+            var itemValueK = itemValue.substring(0, itemValueSplitIdx);
+            var itemValueV = itemValueSplitIdx >= itemValue.length ? '' : itemValue.substring(itemValueSplitIdx + 1);
+
+            queryParameters.remove(itemKeyK);
+            queryParameters[itemValueK] = itemValueV;
           }
           break;
         default:
-          return;
+          break;
       }
       requestUri = requestUri.replace(queryParameters: queryParameters);
 

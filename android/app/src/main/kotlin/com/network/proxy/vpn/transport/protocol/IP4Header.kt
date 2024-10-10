@@ -1,5 +1,6 @@
 package com.network.proxy.vpn.transport.protocol
 
+import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -102,7 +103,8 @@ object IPPacketFactory {
         val versionAndHeaderLength: Byte = buffer.get()
         val ipVersion = (versionAndHeaderLength.toInt() shr 4).toByte()
         if (ipVersion.toInt() != IP4_VERSION) {
-            throw IllegalArgumentException("Invalid IP version $ipVersion")
+            Log.e("IPPacketFactory", "Invalid IP version $ipVersion")
+            return null
         }
 
         val internetHeaderLength = (versionAndHeaderLength.toInt() and 0x0F).toByte()

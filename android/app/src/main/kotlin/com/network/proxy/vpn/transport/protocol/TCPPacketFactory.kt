@@ -191,6 +191,7 @@ object TCPPacketFactory {
 
         tcp.dataOffset = 5
         tcp.options = null
+        ip.totalLength = ip.getIPHeaderLength() + tcp.getTCPHeaderLength()
 
         return Packet(ip, tcp, createPacketData(ip, tcp, null))
     }
@@ -244,7 +245,6 @@ object TCPPacketFactory {
         tcp.setIsACK(true)
         tcp.setIsFIN(true)
 
-        tcp.dataOffset = 5
         tcp.options = null
         //窗口大小应为零
         tcp.windowSize = 0

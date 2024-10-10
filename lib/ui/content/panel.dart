@@ -244,13 +244,13 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     var scrollController = ScrollController(); //处理body也有滚动条问题
     var path = widget.request.get()?.path() ?? '';
     try {
-      path = Uri.decodeFull(widget.request.get()?.path() ?? '');
+      path = Uri.decodeFull(path);
     } catch (_) {}
 
     return ListView(
         controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        children: [rowWidget("URI", path), ...message(widget.request.get(), "Request", scrollController)]);
+        children: [rowWidget("Path", path), ...message(widget.request.get(), "Request", scrollController)]);
   }
 
   Widget response() {

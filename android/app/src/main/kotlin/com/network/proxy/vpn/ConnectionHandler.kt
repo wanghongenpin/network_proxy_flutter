@@ -468,7 +468,7 @@ class ConnectionHandler(
 
     private fun handleICMPPacket(clientPacketData: ByteBuffer, ipHeader: IP4Header) {
         val requestPacket = ICMPPacketFactory.parseICMPPacket(clientPacketData)
-        Log.d(TAG, "Got an ICMP ping packet, type $requestPacket")
+//        Log.d(TAG, "Got an ICMP ping packet, type $requestPacket")
         if (requestPacket.type == ICMPPacket.DESTINATION_UNREACHABLE_TYPE) {
             // This is a packet from the phone, telling somebody that a destination is unreachable.
             // Might be caused by issues on our end, but it's unclear what kind of issues. Regardless,

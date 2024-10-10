@@ -1,6 +1,8 @@
 import 'dart:io';
 
 void main() async {
+  String str = "^dd\$";
+  print(RegExp(str).hasMatch("ddd"));
   // print(RegExp('^www.baidu.com').hasMatch("https://www.baidu.com/wqeqweqe"));
   // String text = "http://dddd/hello/world?name=dad&val=12a";
   // print("mame=\$1123".replaceAll(RegExp('\\\$\\d'), "123"));

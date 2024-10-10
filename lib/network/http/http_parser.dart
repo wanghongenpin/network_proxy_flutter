@@ -51,7 +51,6 @@ class HttpParse {
     return lines;
   }
 
-
   /// 解析请求头
   bool parseHeaders(ByteBuf data, HttpHeaders headers) {
     if (!data.isReadable()) {
@@ -61,7 +60,6 @@ class HttpParse {
     if (data.length > defaultMaxLength) {
       throw Exception("header too long");
     }
-
     for (int i = data.readerIndex; i < data.length; i++) {
       if (_isLineEnd(data, i)) {
         Uint8List line = data.readBytes(i - data.readerIndex);
@@ -87,13 +85,17 @@ class HttpParse {
   List<String> _splitHeader(List<int> data) {
     List<String> headers = [];
     for (int i = 0; i < data.length; i++) {
-      if (data[i] == HttpConstants.colon && data[i + 1] == HttpConstants.sp) {
+      if (data[i] == HttpConstants.colon) {
         headers.add(String.fromCharCodes(data.sublist(0, i)));
-        headers.add(String.fromCharCodes(data.sublist(i + 2)));
+
+        if (data[i + 1] == HttpConstants.sp) {
+          headers.add(String.fromCharCodes(data.sublist(i + 2)));
+        } else {
+          headers.add(String.fromCharCodes(data.sublist(i + 1)));
+        }
         break;
       }
     }
     return headers;
   }
 }
-

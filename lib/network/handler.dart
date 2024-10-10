@@ -99,8 +99,9 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     Channel remoteChannel;
     try {
       remoteChannel = await _getRemoteChannel(channelContext, channel, httpRequest);
-    } catch (error) {
-      log.e("[${channel.id}] 连接异常 ${httpRequest.method.name} ${httpRequest.requestUrl}", error: error);
+    } catch (error, stackTrace) {
+      log.e("[${channel.id}] 连接异常 ${httpRequest.method.name} ${httpRequest.requestUrl}",
+          error: error, stackTrace: stackTrace);
       if (httpRequest.method == HttpMethod.connect) {
         channel.error = error; //记录异常
         //https代理新建connect连接请求 返回ok 会继续发起正常请求 可以获取到请求内容
@@ -196,7 +197,6 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
       //代理建立完连接判断是否是https 需要发起connect请求
       if (httpRequest.method == HttpMethod.connect) {
-
         //proxy Authorization
         if (proxyInfo?.isAuthenticated == true) {
           String auth = base64Encode(utf8.encode("${proxyInfo?.username}:${proxyInfo?.password}"));

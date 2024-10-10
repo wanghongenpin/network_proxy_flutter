@@ -45,6 +45,11 @@ class HostAndPort {
     return HostAndPort(scheme ?? (port == 443 ? httpsScheme : httpScheme), host, port);
   }
 
+  /// 是否是url
+  static bool startsWithScheme(String url) {
+    return schemes.any((scheme) => url.startsWith(scheme));
+  }
+
   bool isSsl() {
     return httpsScheme.startsWith(scheme);
   }
@@ -54,7 +59,7 @@ class HostAndPort {
     String domain = url;
     String? scheme;
     //域名格式 直接解析
-    if (schemes.any((scheme) => url.startsWith(scheme))) {
+    if (startsWithScheme(url)) {
       try {
         Uri uri = Uri.parse(url);
         return HostAndPort('${uri.scheme}://', uri.host, uri.port);
