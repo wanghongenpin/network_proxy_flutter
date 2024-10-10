@@ -37,7 +37,7 @@ class Connection{
         self.connectionCloser = connectionCloser
     }
     
-  //发送缓冲区，用于存储要从vpn客户端发送到目标主机的数据
+    //发送缓冲区，用于存储要从vpn客户端发送到目标主机的数据
     var sendBuffer = Data()
 
     var hasReceivedLastSegment = false
@@ -73,30 +73,35 @@ class Connection{
     }
 
     func addSendData(data: Data) {
-        QueueFactory.instance.getQueue().sync {
-//            sendBuffer.append(data)
-//            if (channel?.state != .ready) {
-//                return
-//            }
-            self.sendToDestination(data: data)
+
+        QueueFactory.instance.getQueue().async(flags: .barrier) {
+           self.sendBuffer.append(data)
+
+            if (self.nwProtocol == .TCP && self.channel?.state != .ready) {
+               return
+           }
+            self.sendToDestination()
         }
     }
     
     //发送到目标服务器的数据
-    func sendToDestination(data: Data) {
-//        QueueFactory.instance.getQueue().sync {
-            //             os_log("Sending data to destination key %{public}@", log: OSLog.default, type: .debug, self.description)
-            //发送数据, 数据包大拆分
-            
-          
-            self.channel?.send(content: data, completion: .contentProcessed { error in
+    func sendToDestination() {
+       QueueFactory.instance.getQueue().async(flags: .barrier) {
+            os_log("Sending data to destination key %{public}@", log: OSLog.default, type: .debug, self.description)
+            if (self.sendBuffer.count == 0) {
+                return
+            }
+
+            let data = self.sendBuffer
+            self.sendBuffer.removeAll()
+
+            self.channel?.send(content: data, completion: .contentProcessed({ error in
                 if let error = error {
-                    os_log("Error sending data to destination %{public}@: %{public}@", log: OSLog.default, type: .error, self.description, error.localizedDescription)
-                    return
+                    os_log("Failed to send data to destination key %{public}@ error: %{public}@", log: OSLog.default, type: .error, self.description, error.localizedDescription)
+                    self.closeConnection()
                 }
-            })
-      
-//        }
+            }))
+       }
     }
 
     var description: String {

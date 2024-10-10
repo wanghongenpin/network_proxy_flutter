@@ -60,13 +60,7 @@ class RemoteModel {
 
   factory RemoteModel.fromJson(Map<String, dynamic> json) {
     return RemoteModel(
-      connect: json['connect'],
-      host: json['host'],
-      port: json['port'],
-      os: json['os'],
-      hostname: json['hostname'],
-      ipProxy: json['ipProxy'],
-    );
+        connect: json['connect'], host: json['host'], port: json['port'], os: json['os'], hostname: json['hostname']);
   }
 
   RemoteModel copyWith({
@@ -95,14 +89,7 @@ class RemoteModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'connect': connect,
-      'host': host,
-      'port': port,
-      'os': os,
-      'hostname': hostname,
-      'ipProxy': ipProxy,
-    };
+    return {'connect': connect, 'host': host, 'port': port, 'os': os, 'hostname': hostname};
   }
 }
 
@@ -243,32 +230,38 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
           child: Column(
         children: [
           const Icon(Icons.check_circle_outline_outlined, size: 55, color: Colors.green),
-          Row(
-            children: [
-              if (Platform.isIOS) Expanded(child: ListTile(title: Text(localizations.ipLayerProxy))),
-              const SizedBox(height: 6),
-              SwitchWidget(
-                  value: widget.remoteDevice.value.ipProxy ?? false,
-                  scale: 0.85,
-                  onChanged: (val) async {
-                    widget.remoteDevice.value = widget.remoteDevice.value.copyWith(ipProxy: val);
-                    SharedPreferences.getInstance().then((prefs) {
-                      var remoteDeviceList = getRemoteDeviceList(prefs);
-                      remoteDeviceList.removeWhere((it) => it.equals(widget.remoteDevice.value));
-                      remoteDeviceList.insert(0, widget.remoteDevice.value);
+          const SizedBox(height: 6),
+          if (Platform.isIOS)
+            Row(
+              children: [
+                Expanded(
+                    child: ListTile(
+                        title: Text(localizations.ipLayerProxy), subtitle: Text(localizations.ipLayerProxyDesc))),
+                SwitchWidget(
+                    value: widget.remoteDevice.value.ipProxy ?? false,
+                    scale: 0.85,
+                    onChanged: (val) async {
+                      widget.remoteDevice.value = widget.remoteDevice.value.copyWith(ipProxy: val);
+                      SharedPreferences.getInstance().then((prefs) {
+                        var remoteDeviceList = getRemoteDeviceList(prefs);
+                        remoteDeviceList.removeWhere((it) => it.equals(widget.remoteDevice.value));
+                        remoteDeviceList.insert(0, widget.remoteDevice.value);
 
-                      setRemoteDeviceList(prefs, remoteDeviceList);
-                    });
+                        setRemoteDeviceList(prefs, remoteDeviceList);
+                      });
 
-                    if ((await Vpn.isRunning())) {
-                      print('重启VPN');
-                      Vpn.restartVpn(widget.remoteDevice.value.host!, widget.remoteDevice.value.port!,
-                          widget.proxyServer.configuration,
-                          ipProxy: val);
-                    }
-                  }),
-            ],
-          ),
+                      if ((await Vpn.isRunning())) {
+                        Vpn.stopVpn();
+                        Future.delayed(const Duration(milliseconds: 1500), () {
+                          Vpn.startVpn(widget.remoteDevice.value.host!, widget.remoteDevice.value.port!,
+                              widget.proxyServer.configuration,
+                              ipProxy: val);
+                        });
+                      }
+                    }),
+              ],
+            ),
+          const SizedBox(height: 6),
           Text('${localizations.connected}：${widget.remoteDevice.value.hostname}',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(height: 6),
@@ -524,7 +517,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
       title: Text(localizations.syncConfig, style: const TextStyle(fontSize: 16)),
       content: Wrap(children: [
         SwitchWidget(
-            title: "${localizations.sync}${localizations.domainWhitelist}",
+            title: "${localizations.sync} ${localizations.domainWhitelist}",
             value: syncWhiteList,
             onChanged: (val) {
               setState(() {
@@ -533,7 +526,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
             }),
         const SizedBox(height: 5),
         SwitchWidget(
-            title: "${localizations.sync}${localizations.domainBlacklist}",
+            title: "${localizations.sync} ${localizations.domainBlacklist}",
             value: syncBlackList,
             onChanged: (val) {
               setState(() {
@@ -542,7 +535,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
             }),
         const SizedBox(height: 5),
         SwitchWidget(
-            title: "${localizations.sync}${localizations.requestRewrite}",
+            title: "${localizations.sync} ${localizations.requestRewrite}",
             value: syncRewrite,
             onChanged: (val) {
               setState(() {
@@ -551,7 +544,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
             }),
         const SizedBox(height: 5),
         SwitchWidget(
-            title: "${localizations.sync}${localizations.script}",
+            title: "${localizations.sync} ${localizations.script}",
             value: syncScript,
             onChanged: (val) {
               setState(() {
@@ -566,7 +559,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
               Navigator.pop(context);
             }),
         TextButton(
-            child: Text('${localizations.start}${localizations.sync}'),
+            child: Text('${localizations.start} ${localizations.sync}'),
             onPressed: () async {
               if (syncWhiteList) {
                 HostFilter.whitelist.load(widget.config['whitelist']);

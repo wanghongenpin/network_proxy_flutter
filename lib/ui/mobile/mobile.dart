@@ -109,7 +109,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     proxyServer.addListener(this);
     proxyServer.start();
 
-    if (widget.appConfiguration.upgradeNoticeV13) {
+    if (widget.appConfiguration.upgradeNoticeV14) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -250,8 +250,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
         ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n\n'
             '1. 手机端增加底部导航，可在设置中切换；\n'
             '2. 增加远程设备管理，可快速连接设备；\n'
-            '3. 双击列表tab滚动到顶部；\n'
-            '4. 修复部分p12证书导入失败的问题；\n'
+            '3. iOS支持抓取Flutter应用，需要通过设备管理连接到电脑开启IP层代理(Beta)；\n'
+            '4. 工具箱支持Unicode编码；\n'
             '5. 脚本增加rawBody原始字节参数, body支持字节数组修改；\n'
             '6. 修复脚本消息体编码错误导致错误响应；\n'
             '7. 修复扫码链接多个IP优先级问题；\n'
@@ -262,8 +262,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
             '1. Mobile: Add bottom navigation bar，which can be switched in settings；\n'
             '2. Support remote device management to quickly connect to devices；\n'
-            '3. Double-click the list tab to scroll to the top；\n'
-            '4. Fix the issue of partial p12 certificate import failure；\n'
+            '3. IOS supports capturing Flutter applications, You need to connect to the computer through device management to enable IP layer proxy (Beta)；\n'
+            '4. Toolbox supports Unicode encode；\n'
             '5. The script add rawBody raw byte parameter, body supports byte array modification；\n'
             '6. Fix script message body encoding error causing incorrect response；\n'
             '7. Fix the issue of scanning QR code to connect to multiple IP priorities；\n'
@@ -271,8 +271,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
             '9. Fix export HAR serverIPAddress incorrect；\n'
             '10. Fix Websocket Response not displayed；\n'
             '';
-    showAlertDialog(isCN ? '更新内容V1.1.3' : "Update content V1.1.3", content, () {
-      widget.appConfiguration.upgradeNoticeV13 = false;
+    showAlertDialog(isCN ? '更新内容V1.1.4' : "Update content V1.1.4", content, () {
+      widget.appConfiguration.upgradeNoticeV14 = false;
       widget.appConfiguration.flushConfig();
     });
   }

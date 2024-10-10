@@ -127,7 +127,7 @@ class ConnectionHandler {
 //         os_log("Handling TCP packet for %{public}@ flags:%d", log: OSLog.default, type: .default, Connection.getConnectionKey(nwProtocol: .TCP, destIp: destinationIP, destPort: destinationPort, sourceIp: sourceIP, sourcePort: sourcePort), tcpHeader.flags)
         
         if (tcpHeader.isSYN()) {
-            os_log("Received SYN packet %{public}@ seq:%u", log: OSLog.default, type: .default, Connection.getConnectionKey(nwProtocol: .TCP, destIp: destinationIP, destPort: destinationPort, sourceIp: sourceIP, sourcePort: sourcePort), tcpHeader.sequenceNumber)
+//            os_log("Received SYN packet %{public}@ seq:%u", log: OSLog.default, type: .default, Connection.getConnectionKey(nwProtocol: .TCP, destIp: destinationIP, destPort: destinationPort, sourceIp: sourceIP, sourcePort: sourcePort), tcpHeader.sequenceNumber)
             // 3-way handshake + create new session
             replySynAck(ipHeader: ipHeader, tcpHeader: tcpHeader)
         } else if (tcpHeader.isACK()) {

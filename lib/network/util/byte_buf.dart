@@ -17,95 +17,111 @@
 import 'dart:typed_data';
 
 ///类似于netty ByteBuf
+
 class ByteBuf {
-  final BytesBuilder _buffer = BytesBuilder();
+  late Uint8List _buffer;
   int readerIndex = 0;
-
-  Uint8List get bytes => _buffer.toBytes();
-
-  int get length => _buffer.length;
+  int writerIndex = 0;
 
   ByteBuf([List<int>? bytes]) {
-    if (bytes != null) _buffer.add(bytes);
+    if (bytes != null) {
+      _buffer = Uint8List.fromList(bytes);
+      writerIndex = bytes.length;
+    } else {
+      _buffer = Uint8List(256); // Initial buffer size
+    }
   }
 
-  ///添加
+  int get length => writerIndex;
+
+  Uint8List get bytes => Uint8List.sublistView(_buffer, 0, writerIndex);
+
   void add(List<int> bytes) {
-    _buffer.add(bytes);
+    _ensureCapacity(writerIndex + bytes.length);
+    _buffer.setRange(writerIndex, writerIndex + bytes.length, bytes);
+    writerIndex += bytes.length;
   }
 
-  ///清空
-  clear() {
-    _buffer.clear();
+  void clear() {
     readerIndex = 0;
+    writerIndex = 0;
   }
 
-  ///释放
-  clearRead() {
-    var takeBytes = _buffer.takeBytes();
-    _buffer.add(Uint8List.sublistView(takeBytes, readerIndex, takeBytes.length));
-    readerIndex = 0;
+  void clearRead() {
+    if (readerIndex > 0) {
+      _buffer.setRange(0, writerIndex - readerIndex, _buffer, readerIndex);
+      writerIndex -= readerIndex;
+      readerIndex = 0;
+    }
   }
 
-  bool isReadable() => readerIndex < _buffer.length;
+  bool isReadable() => readerIndex < writerIndex;
 
-  ///可读字节数
-  int readableBytes() {
-    return _buffer.length - readerIndex;
-  }
+  int readableBytes() => writerIndex - readerIndex;
 
-  ///读取所有可用字节
-  Uint8List readAvailableBytes() {
-    return readBytes(readableBytes());
-  }
+  Uint8List readAvailableBytes() => readBytes(readableBytes());
 
-  ///读取字节
   Uint8List readBytes(int length) {
-    Uint8List list = bytes.sublist(readerIndex, readerIndex + length);
+    if (readerIndex + length > writerIndex) {
+      throw Exception("Not enough readable bytes");
+    }
+    Uint8List result = Uint8List.sublistView(_buffer, readerIndex, readerIndex + length);
     readerIndex += length;
-    return list;
+    return result;
   }
 
-  ///跳过
-  skipBytes(int length) {
+  void skipBytes(int length) {
+    if (readerIndex + length > writerIndex) {
+      throw Exception("Not enough readable bytes");
+    }
     readerIndex += length;
   }
 
-  ///读取字节
-  int read() {
-    return bytes[readerIndex++];
-  }
+  int read() => _buffer[readerIndex++];
 
-  ///读取字节
-  int readByte() {
-    return bytes[readerIndex++];
-  }
+  int readByte() => _buffer[readerIndex++];
 
   int readShort() {
-    int value = bytes[readerIndex++] << 8 | bytes[readerIndex++];
+    int value = (_buffer[readerIndex] << 8) | _buffer[readerIndex + 1];
+    readerIndex += 2;
     return value;
   }
 
   int readInt() {
-    int value =
-        bytes[readerIndex++] << 24 | bytes[readerIndex++] << 16 | bytes[readerIndex++] << 8 | bytes[readerIndex++];
+    int value = (_buffer[readerIndex] << 24) |
+    (_buffer[readerIndex + 1] << 16) |
+    (_buffer[readerIndex + 2] << 8) |
+    _buffer[readerIndex + 3];
+    readerIndex += 4;
     return value;
   }
 
-  int get(int index) {
-    return bytes[index];
-  }
+  int get(int index) => _buffer[index];
 
   void truncate(int len) {
-    if (len > readableBytes()) throw Exception("insufficient data");
-    var takeBytes = _buffer.takeBytes();
-    _buffer.add(takeBytes.sublist(0, readerIndex + len));
+    if (len > readableBytes()) {
+      throw Exception("Insufficient data");
+    }
+    writerIndex = readerIndex + len;
   }
 
   ByteBuf dup() {
     ByteBuf buf = ByteBuf();
-    buf.add(bytes);
+    buf._buffer = Uint8List.fromList(_buffer);
     buf.readerIndex = readerIndex;
+    buf.writerIndex = writerIndex;
     return buf;
+  }
+
+  void _ensureCapacity(int required) {
+    if (_buffer.length < required) {
+      int newSize = _buffer.length * 2;
+      while (newSize < required) {
+        newSize *= 2;
+      }
+      Uint8List newBuffer = Uint8List(newSize);
+      newBuffer.setRange(0, writerIndex, _buffer);
+      _buffer = newBuffer;
+    }
   }
 }

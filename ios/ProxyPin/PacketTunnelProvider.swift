@@ -24,7 +24,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         let proxyPort =  conf["proxyPort"] as! Int
         let ipProxy =  conf["ipProxy"] as! Bool? ?? false
 
-        let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
+        let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: host)
 //         let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: host)
         NSLog(conf.debugDescription)
         //http代理
@@ -39,7 +39,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         networkSettings.mtu = 1480
         
         let ipv4Settings = NEIPv4Settings(addresses: ["10.0.0.2"], subnetMasks: ["255.255.255.255"])
-        
+       
         if (ipProxy){
             ipv4Settings.includedRoutes = [NEIPv4Route.default()]
 //            ipv4Settings.excludedRoutes = [

@@ -20,8 +20,8 @@ import NetworkExtension
                     result(Bool(VpnManager.shared.isRunning()))
                 } else if ("restartVpn" == call.method){
                     let arguments = call.arguments as? Dictionary<String, AnyObject>
-//                    VpnManager.shared.disconnect()
-                    VpnManager.shared.connect(host: arguments?["proxyHost"] as? String ,port: arguments?["proxyPort"] as? Int, ipProxy: arguments?["ipProxy"] as? Bool)
+//                     VpnManager.shared.disconnect()
+                    VpnManager.shared.restartConnect(host: arguments?["proxyHost"] as? String ,port: arguments?["proxyPort"] as? Int, ipProxy: arguments?["ipProxy"] as? Bool)
                 } else {
                     let arguments = call.arguments as? Dictionary<String, AnyObject>
                     VpnManager.shared.connect(host: arguments?["proxyHost"] as? String ,port: arguments?["proxyPort"] as? Int, ipProxy: arguments?["ipProxy"] as? Bool)

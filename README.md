@@ -4,7 +4,7 @@
 
 ## 开源免费抓包工具，支持Windows、Mac、Android、IOS、Linux 全平台系统
 
-您可以使用它来拦截、检查和重写HTTP（S）流量，ProxyPin基于Flutter开发，UI美观易用。
+您可以使用它来拦截、检查和重写HTTP（S）流量，支持Flutter应用抓包，ProxyPin基于Flutter开发，UI美观易用。
 
 ## 核心特性
 
@@ -20,9 +20,7 @@
 
 国内下载地址： https://gitee.com/wanghongenpin/network-proxy-flutter/releases
 
-AppStore下载地址： https://apps.apple.com/app/proxypin/id6450932949      
-
-iOS国内TF下载地址(有1万名额限制)： https://testflight.apple.com/join/gURGH6B4
+iOS AppStore下载地址： https://apps.apple.com/app/proxypin/id6450932949      
 
 TG: https://t.me/proxypin_tg
 

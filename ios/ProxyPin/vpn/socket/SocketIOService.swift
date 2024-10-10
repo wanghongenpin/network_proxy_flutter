@@ -10,7 +10,7 @@ import NetworkExtension
 import os.log
 
 class SocketIOService {
-    //private static let maxReceiveBufferSize = 16384
+//    private static let maxReceiveBufferSize = 16384
     private static let maxReceiveBufferSize = 1024
 
     private let queue: DispatchQueue = DispatchQueue(label: "ProxyPin.SocketIOService", attributes: .concurrent)
@@ -40,7 +40,7 @@ class SocketIOService {
                 connection.isConnected = true
                 os_log("Connected to %{public}@ on receiveMessage", log: OSLog.default, type: .default, connection.description)
                 //接受远程服务器的数据
-//                connection.sendToDestination()
+                connection.sendToDestination()
                 self.receiveMessage(connection: connection)
             case .cancelled:
                 connection.isConnected = false
@@ -90,8 +90,8 @@ class SocketIOService {
                 return
             }
             
-            channel.receive(minimumIncompleteLength: 1, maximumLength: Self.maxReceiveBufferSize) { (data, context, isComplete, error) in
-//                 os_log("Received TCP data packet %{public}@ length %d", log: OSLog.default, type: .default, connection.description, data?.count ?? 0)
+            channel.receive(minimumIncompleteLength: 0, maximumLength: Self.maxReceiveBufferSize) { (data, context, isComplete, error) in
+//                os_log("Received TCP data packet %{public}@ length %d", log: OSLog.default, type: .default, connection.description, data?.count ?? 0)
                 if let error = error {
                     os_log("Failed to read from TCP socket: %@", log: OSLog.default, type: .error, error as CVarArg)
                     self.sendFin(connection: connection)

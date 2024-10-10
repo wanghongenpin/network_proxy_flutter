@@ -18,9 +18,7 @@ class ConnectionManager : CloseableConnection{
 
     public var proxyAddress: NWEndpoint?
     
-    private let defaultPorts: [UInt16] = [80, 443]
-    
-//    private init() {}
+    private let defaultPorts: [UInt16] = [80, 8080, 8888, 443]
     
    
     func getConnection(nwProtocol: NWProtocol, ip: UInt32, port: UInt16, srcIp: UInt32, srcPort: UInt16) -> Connection? {

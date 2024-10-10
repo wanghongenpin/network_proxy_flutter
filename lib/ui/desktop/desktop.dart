@@ -82,7 +82,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
     proxyServer.addListener(this);
     panel = NetworkTabController(tabStyle: const TextStyle(fontSize: 16), proxyServer: proxyServer);
 
-    if (widget.appConfiguration.upgradeNoticeV13) {
+    if (widget.appConfiguration.upgradeNoticeV14) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showUpgradeNotice();
       });
@@ -136,7 +136,7 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
               actions: [
                 TextButton(
                     onPressed: () {
-                      widget.appConfiguration.upgradeNoticeV13 = false;
+                      widget.appConfiguration.upgradeNoticeV14 = false;
                       widget.appConfiguration.flushConfig();
                       Navigator.pop(context);
                     },
@@ -149,10 +149,10 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                       isCN
                           ? '提示：默认不会开启HTTPS抓包，请安装证书后再开启HTTPS抓包。\n'
                               '点击HTTPS抓包(加锁图标)，选择安装根证书，按照提示操作即可。\n\n'
-                              '1. 支持多种主题颜色选择；\n'
-                              '2. 外部代理支持身份验证；\n'
-                              '3. 双击列表tab滚动到顶部；\n'
-                              '4. 修复部分p12证书导入失败的问题；\n'
+                              '1. 手机端增加底部导航，可在设置中切换；\n'
+                              '2. 增加远程设备管理，可快速连接设备；\n'
+                              '3. iOS支持抓取Flutter应用，需要通过设备管理连接到电脑开启IP层代理(Beta)；\n'
+                              '4. 工具箱支持Unicode编码；\n'
                               '5. 修复Transfer-Encoding有空格解析错误问题；\n'
                               '6. 脚本增加rawBody原始字节参数, body支持字节数组修改；\n'
                               '7. 修复脚本消息体编码错误导致错误响应；\n'
@@ -160,10 +160,10 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                               '9. 修复Websocket Response不展示；\n'
                           : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                               'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
-                              '1. Support multiple theme colors；\n'
-                              '2. External proxy support authentication；\n'
-                              '3. Double-click the list tab to scroll to the top；\n'
-                              '4. Fix the issue of partial p12 certificate import failure；\n'
+                              '1. Mobile: Add bottom navigation bar，which can be switched in settings；\n'
+                              '2. Support remote device management to quickly connect to devices；\n'
+                              '3. IOS supports capturing Flutter applications, You need to connect to the computer through device management to enable IP layer proxy (Beta)；\n'
+                              '4. Toolbox supports Unicode encode；\n'
                               '5. Fix header Transfer-Encoding with spaces；\n'
                               '6. The script add rawBody raw byte parameter, body supports byte array modification；\n'
                               '7. Fix script message body encoding error causing incorrect response；\n'

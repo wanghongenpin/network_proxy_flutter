@@ -156,6 +156,19 @@ extension VpnManager{
             }
         }
     }
+    
+    func restartConnect(host: String?, port: Int?, ipProxy: Bool? = false) {
+        self.proxyHost = host ?? self.proxyHost
+        self.proxyPort = port ?? self.proxyPort
+        self.ipProxy = ipProxy ?? false
+
+        if (activeVPN != nil) {
+            activeVPN?.connection.stopVPNTunnel()
+            activeVPN = nil
+        }
+        
+        self.connect(host: host, port: port, ipProxy: ipProxy)
+    }
 
     func disconnect() {
         if (activeVPN != nil) {
