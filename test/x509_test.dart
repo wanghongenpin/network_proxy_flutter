@@ -14,6 +14,8 @@ void main() {
 //   print(Int8List.view(encode!.buffer));
 }
 
+//获取证书 subject hash
+
 void encoding() {
   var basicConstraints = BasicConstraints(isCA: true);
 

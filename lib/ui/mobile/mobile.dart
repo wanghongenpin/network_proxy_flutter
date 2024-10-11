@@ -181,6 +181,8 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
                         child: Theme(
                           data: Theme.of(context).copyWith(splashColor: Colors.transparent),
                           child: BottomNavigationBar(
+                            selectedIconTheme: const IconThemeData(size: 27),
+                            unselectedIconTheme: const IconThemeData(size: 27),
                             selectedFontSize: 0,
                             items: [
                               BottomNavigationBarItem(

@@ -5,8 +5,10 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/ui/component/cert_hash.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/js_run.dart';
+import 'package:network_proxy/ui/component/json/qr_code.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/platform.dart';
@@ -106,19 +108,40 @@ class _ToolboxState extends State<Toolbox> {
                   )),
             ],
           ),
-          // const Divider(thickness: 0.3),
-          // Text("其他", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          // Row(
-          //   children: [
-          //     InkWell(
-          //         onTap: () async {},
-          //         child: Container(
-          //           padding: const EdgeInsets.all(10),
-          //           child: const Column(children: [Icon(Icons.near_me), SizedBox(height: 3), Text("证书Hash名称")]),
-          //         )),
-          //     IconText(onTap: () async {}, icon: Icons.qr_code_2, text: "二维码"),
-          //   ],
-          // ),
+          const Divider(thickness: 0.3),
+          Text("其他", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              IconText(onTap: () async {
+                if (Platforms.isMobile()) {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CertHashWidget()));
+                  return;
+                }
+
+                var size = MediaQuery.of(context).size;
+                var ratio = 1.0;
+                if (Platform.isWindows) {
+                  ratio = WindowManager.instance.getDevicePixelRatio();
+                }
+
+                final window = await DesktopMultiWindow.createWindow(jsonEncode(
+                  {'name': 'CertHash'},
+                ));
+                window.setTitle('证书Hash名称');
+                window
+                  ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
+                  ..center()
+                  ..show();
+              }, icon: Icons.near_me, text: "证书Hash名称"),
+              IconText(onTap: () async {
+                if (Platforms.isMobile()) {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const QrCodeWidget()));
+                  return;
+                }
+
+              }, icon: Icons.qr_code_2, text: "二维码"),
+            ],
+          ),
         ],
       ),
     );
