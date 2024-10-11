@@ -1,17 +1,44 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
 import 'package:network_proxy/network/util/cert/basic_constraints.dart';
 import 'package:pointycastle/pointycastle.dart';
 
-void main() {
-  encoding();
+void main() async {
+  // encoding();
   // Add ext key usage 2.5.29.37
 // // Add key usage  2.5.29.15
 //   var keyUsage = [KeyUsage.KEY_CERT_SIGN, KeyUsage.CRL_SIGN];
 //
 //   var encode = keyUsageSequence(keyUsage)?.encode();
 //   print(Int8List.view(encode!.buffer));
+
+  var caPem = await File('assets/certs/ca.crt').readAsString();
+  var certPath = 'assets/certs/ca.crt';
+  print(await getSubjectHashOld(certPath));
+  //生成 公钥和私钥
+  var caRoot = X509Utils.x509CertificateFromPem(caPem);
+  print(caRoot.subject);
+}
+
+Future<String> getSubjectHashOld(String certPath) async {
+  // Load the certificate
+  var certData = await File(certPath).readAsBytes();
+  var cert = X509Utils.x509CertificateFromPem(utf8.decode(certData));
+
+  // Extract the subject name
+  var subject = cert.subject;
+
+  // Normalize the subject name by converting it to DER-encoded byte array
+  var subjectBytes = Uint8List.fromList(utf8.encode(cert.tbsCertificateSeqAsString!));
+
+  // Hash the subject name using MD5
+  var md5 = Digest("MD5");
+  var md5Hash = md5.process(subjectBytes);
+
+  return md5Hash.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
 }
 
 //获取证书 subject hash

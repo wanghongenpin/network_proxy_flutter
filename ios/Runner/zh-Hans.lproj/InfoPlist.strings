@@ -1,2 +1,3 @@
 "NSCameraUsageDescription"="扫描二维码";
-"NSPhotoLibraryUsageDescription"="请求重写选择文件";
+"NSPhotoLibraryUsageDescription"="访问相册";
+"PhotoLibraryAddUsageDescription"= "保存图片到相册";

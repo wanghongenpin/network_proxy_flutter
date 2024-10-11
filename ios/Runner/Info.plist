@@ -41,9 +41,9 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>扫描二维码</string>
+	<string>Scan QR code</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>请求重写选择文件</string>
+	<string>Access to Photo Library</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

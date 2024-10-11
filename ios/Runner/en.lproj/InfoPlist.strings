@@ -1,2 +1,3 @@
 "NSCameraUsageDescription"="Scan QR code";
-"NSPhotoLibraryUsageDescription"="Request to rewrite selection file";
+"NSPhotoLibraryUsageDescription"="Access to Photo Library";
+"PhotoLibraryAddUsageDescription"= "Save image to Photo Library";

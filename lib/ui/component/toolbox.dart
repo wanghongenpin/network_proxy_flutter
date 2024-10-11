@@ -8,7 +8,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/cert_hash.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/js_run.dart';
-import 'package:network_proxy/ui/component/json/qr_code.dart';
+import 'package:network_proxy/ui/component/qr_code.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/platform.dart';
