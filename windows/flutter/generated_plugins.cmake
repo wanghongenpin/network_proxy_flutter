@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   flutter_desktop_context_menu
   flutter_js
+  permission_handler_windows
   proxy_manager
   screen_retriever
   share_plus

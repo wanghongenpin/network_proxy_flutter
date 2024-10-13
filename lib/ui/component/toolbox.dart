@@ -8,7 +8,7 @@ import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/js_run.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
-import 'package:network_proxy/ui/component/qr_code.dart';
+import 'package:network_proxy/ui/component/qr_code_page.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
@@ -123,10 +123,10 @@ class _ToolboxState extends State<Toolbox> {
               IconText(
                   onTap: () async {
                     if (Platforms.isMobile()) {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const QrCodeWidget()));
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const QrCodePage()));
                       return;
                     }
-                    MultiWindow.openWindow(localizations.qrCode, 'QrCodeWidget');
+                    MultiWindow.openWindow(localizations.qrCode, 'QrCodePage');
                   },
                   icon: Icons.qr_code_2,
                   text: localizations.qrCode),

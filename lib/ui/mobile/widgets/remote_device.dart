@@ -17,9 +17,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:easy_permission/easy_permission.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/native/vpn.dart';
@@ -30,13 +28,13 @@ import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/logger.dart';
+import 'package:network_proxy/ui/component/qrcode/qr_scan_view.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/utils/ip.dart';
-import 'package:qrscan/qrscan.dart' as scanner;
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:zxing_widget/qrcode.dart';
 
 ///远程设备
 ///Remote device
@@ -355,15 +353,14 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
   ///扫码连接
   connectRemote(BuildContext context) async {
     AppLocalizations localizations = AppLocalizations.of(context)!;
+    String? scanRes = await QrCodeScanner.scan(context);
+    if (scanRes == null) return;
 
-    String scanRes;
-    if (Platform.isAndroid) {
-      await EasyPermission.requestPermissions([PermissionType.CAMERA]);
-      scanRes = await scanner.scan() ?? "-1";
-    } else {
-      scanRes = await FlutterBarcodeScanner.scanBarcode("#ff6666", localizations.cancel, true, ScanMode.QR);
+    if (scanRes == "-1") {
+      if (context.mounted) FlutterToastr.show(localizations.invalidQRCode, context);
+      return;
     }
-    if (scanRes == "-1") return;
+
     if (scanRes.startsWith("http")) {
       launchUrl(Uri.parse(scanRes), mode: LaunchMode.externalApplication);
       return;
@@ -445,10 +442,11 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    BarcodeWidget(
-                        size: const Size(200, 200),
-                        QrcodePainter("proxypin://connect?host=$host&port=${widget.proxyServer.port}",
-                            errorCorrectionLevel: ErrorCorrectionLevel.M)),
+                    QrImageView(
+                        backgroundColor: Colors.white,
+                        data: "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
+                        version: QrVersions.auto,
+                        size: 200.0),
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -473,7 +471,7 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
   pullConfig() {
     var desktopModel = widget.remoteDevice.value;
     HttpClients.get('http://${desktopModel.host}:${desktopModel.port}/config').then((response) {
-      if (response.status.isSuccessful()) {
+      if (response.status.isSuccessful() && mounted) {
         var config = jsonDecode(response.bodyAsString);
         syncConfig = true;
         showDialog(
@@ -484,7 +482,7 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
       }
     }).onError((error, stackTrace) {
       logger.e('拉取配置失败', error: error, stackTrace: stackTrace);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(localizations.pullConfigFail)));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(localizations.pullConfigFail)));
     });
   }
 }

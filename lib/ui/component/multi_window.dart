@@ -15,7 +15,7 @@ import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/device.dart';
 import 'package:network_proxy/ui/component/encoder.dart';
 import 'package:network_proxy/ui/component/js_run.dart';
-import 'package:network_proxy/ui/component/qr_code.dart';
+import 'package:network_proxy/ui/component/qr_code_page.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/content/body.dart';
 import 'package:network_proxy/ui/desktop/request/request_editor.dart';
@@ -62,8 +62,8 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
         RequestRewrites.instance, (data) => RequestRewriteWidget(windowId: windowId, requestRewrites: data));
   }
 
-  if (argument['name'] == 'QrCodeWidget') {
-    return QrCodeWidget(windowId: windowId);
+  if (argument['name'] == 'QrCodePage') {
+    return QrCodePage(windowId: windowId);
   }
 
   //脚本日志

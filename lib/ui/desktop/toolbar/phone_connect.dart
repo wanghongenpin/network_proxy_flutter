@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 import 'package:flutter/material.dart';
-import 'package:network_proxy/network/bin/server.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:zxing_widget/qrcode.dart';
+import 'package:network_proxy/network/bin/server.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 /// @author wanghongen
 /// 2023/10/8
@@ -61,10 +61,10 @@ class _PhoneConnectState extends State<PhoneConnect> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (widget.proxyServer.isRunning)
-                  BarcodeWidget(
-                      size: const Size(200, 200),
-                      QrcodePainter("proxypin://connect?host=$host&port=${widget.proxyServer.port}",
-                          errorCorrectionLevel: ErrorCorrectionLevel.M))
+                  QrImageView(
+                      backgroundColor: Colors.white,
+                      data: "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
+                      size: 200.0)
                 else
                   SizedBox(
                       height: 200,
