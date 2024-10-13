@@ -153,16 +153,18 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
                               '2. 增加远程设备管理，可快速连接设备；\n'
                               '3. iOS支持抓取Flutter应用，需要通过设备管理连接到电脑开启IP层代理(Beta)；\n'
                               '4. 工具箱支持Unicode编码；\n'
-                              '5. 高级重放支持指定时间执行；\n'
-                              '6. 修复请求重写批量导入规则混乱问题；\n'
+                              '5. 工具箱支持二维码编解码；\n'
+                              '6. 高级重放支持指定时间执行；\n'
+                              '7. 修复请求重写批量导入规则混乱问题；\n'
                           : 'Tips：By default, HTTPS packet capture will not be enabled. Please install the certificate before enabling HTTPS packet capture。\n'
                               'Click HTTPS Capture packets(Lock icon)，Choose to install the root certificate and follow the prompts to proceed。\n\n'
                               '1. Mobile: Add bottom navigation bar，which can be switched in settings；\n'
                               '2. Support remote device management to quickly connect to devices；\n'
                               '3. IOS supports capturing Flutter applications, You need to connect to the computer through device management to enable IP layer proxy (Beta)；\n'
                               '4. Toolbox supports Unicode encode；\n'
-                              '5. Custom Repeat support for specified time execution；\n'
-                              '6. Fix request rewrite batch import rule confusion；\n'
+                              '5. Toolbox supports QR code encoding and decoding；\n'
+                              '6. Custom Repeat support for specified time execution；\n'
+                              '7. Fix request rewrite batch import rule confusion；\n'
                               '',
                       style: const TextStyle(fontSize: 14))));
         });

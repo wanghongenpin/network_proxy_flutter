@@ -13,7 +13,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
-  crypto: ^3.0.3
+  crypto: ^3.0.5
   cupertino_icons: ^1.0.2
   basic_utils: ^5.7.0
   logger: ^2.4.0
@@ -27,9 +27,10 @@ dependencies:
   url_launcher: ^6.3.1
   proxy_manager: ^0.0.3
   easy_permission: ^1.0.0
-  qr_flutter: ^4.1.0
   qrscan: ^0.3.3
   flutter_barcode_scanner: ^2.0.0
+  zxing_scanner: ^1.0.0
+  zxing_widget: ^1.1.0
   flutter_toastr: ^1.0.3
   share_plus: ^10.0.3
   brotli: ^0.6.0

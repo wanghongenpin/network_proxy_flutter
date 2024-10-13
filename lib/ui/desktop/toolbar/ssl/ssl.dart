@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
@@ -127,7 +126,8 @@ class _SslState extends State<SslWidget> {
                   padding: const EdgeInsets.only(left: 10, right: 10),
                   child: Text(localizations.exportCA, style: const TextStyle(fontSize: 14))),
               onPressed: () async {
-                String? path = (await getSaveLocation(suggestedName: "ProxyPinCA.crt"))?.path;
+
+                String? path = (await FilePicker.platform.saveFile(fileName: "ProxyPinCA.crt"));
                 if (path == null) return;
 
                 var caFile = await CertificateManager.certificateFile();
@@ -162,7 +162,7 @@ class _SslState extends State<SslWidget> {
                               TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
                               TextButton(
                                 onPressed: () async {
-                                  String? path = (await getSaveLocation(suggestedName: "ProxyPinPkcs12.p12"))?.path;
+                                  String? path = (await FilePicker.platform.saveFile(fileName: "ProxyPinPkcs12.p12"));
                                   if (path == null) return;
 
                                   var p12Bytes = await CertificateManager.generatePkcs12(
@@ -181,7 +181,7 @@ class _SslState extends State<SslWidget> {
                   padding: const EdgeInsets.only(left: 10, right: 10),
                   child: Text(localizations.exportPrivateKey, style: const TextStyle(fontSize: 14))),
               onPressed: () async {
-                String? path = (await getSaveLocation(suggestedName: "ProxyPinKey.pem"))?.path;
+                String? path = (await FilePicker.platform.saveFile(fileName: "ProxyPinKey.pem"));
                 if (path == null) return;
 
                 var keyFile = await CertificateManager.privateKeyFile();

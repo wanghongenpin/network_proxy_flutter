@@ -33,10 +33,10 @@ import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/utils/ip.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:zxing_widget/qrcode.dart';
 
 ///远程设备
 ///Remote device
@@ -445,12 +445,10 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    QrImageView(
-                      backgroundColor: Colors.white,
-                      data: "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
-                      version: QrVersions.auto,
-                      size: 200.0,
-                    ),
+                    BarcodeWidget(
+                        size: const Size(200, 200),
+                        QrcodePainter("proxypin://connect?host=$host&port=${widget.proxyServer.port}",
+                            errorCorrectionLevel: ErrorCorrectionLevel.M)),
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

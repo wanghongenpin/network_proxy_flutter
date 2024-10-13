@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
-import 'package:crypto/crypto.dart';
 import 'package:network_proxy/network/util/cert/basic_constraints.dart';
 import 'package:pointycastle/pointycastle.dart';
 
@@ -17,11 +15,11 @@ void main() async {
 //   print(Int8List.view(encode!.buffer));
 
   var caPem = await File('assets/certs/ca.crt').readAsString();
-  var certPath = 'assets/certs/ca.crt';
+  // var certPath = 'assets/certs/ca.crt';
   //生成 公钥和私钥
-  var caRoot = X509Utils.x509CertificateFromPem(caPem);
-  print(caRoot.tbsCertificate.);
-  caRoot.subject = X509Utils.getSubject(caRoot.subject);
+  // var caRoot = X509Utils.x509CertificateFromPem(caPem);
+  // print(caRoot.tbsCertificate.);
+  // caRoot.subject = X509Utils.getSubject(caRoot.subject);
 }
 
 

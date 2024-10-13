@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:file_selector/file_selector.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -162,14 +163,15 @@ class _DomainFilterState extends State<DomainFilter> {
 
   //导入
   import() async {
-    XTypeGroup typeGroup = const XTypeGroup(extensions: <String>['config']);
-    final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+    final FilePickerResult? result =
+        await FilePicker.platform.pickFiles(allowedExtensions: ['config'], type: FileType.custom);
+    var file = result?.files.single;
     if (file == null) {
       return;
     }
 
     try {
-      List json = jsonDecode(await file.readAsString());
+      List json = jsonDecode(await file.xFile.readAsString());
       for (var item in json) {
         widget.hostList.add(item);
       }
@@ -317,7 +319,8 @@ class _DomainListState extends State<DomainList> {
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
           hoverColor: primaryColor.withOpacity(0.3),
-          onSecondaryTapDown: (details) => showMenus(details, index), //right click menus
+          onSecondaryTapDown: (details) => showMenus(details, index),
+          //right click menus
           onDoubleTap: () => showEdit(index),
           onHover: (hover) {
             if (isPress && selected[index] != true) {
@@ -363,19 +366,18 @@ class _DomainListState extends State<DomainList> {
     if (indexes.isEmpty) return;
 
     String fileName = 'host-filters.config';
-    String? saveLocation = (await getSaveLocation(suggestedName: fileName))?.path;
+    String? saveLocation = (await FilePicker.platform.saveFile(fileName: fileName));
     if (saveLocation == null) {
       return;
     }
 
     var list = [];
     for (var index in indexes) {
-      String rule = widget.hostList.list[index].pattern;
+      String rule = widget.hostList.list[index].pattern.replaceAll(".*", "*");
       list.add(rule);
     }
 
-    final XFile xFile = XFile.fromData(utf8.encode(jsonEncode(list)), mimeType: 'json');
-    await xFile.saveTo(saveLocation);
+    await File(saveLocation).writeAsBytes(utf8.encode(jsonEncode(list)));
 
     if (mounted) {
       FlutterToastr.show(localizations.exportSuccess, context);
@@ -440,10 +442,13 @@ class _DomainListState extends State<DomainList> {
     });
 
     showContextMenu(context, details.globalPosition, items: [
-      PopupMenuItem(height: 35, child: Text(localizations.copy), onTap: () {
-        Clipboard.setData(ClipboardData(text: widget.hostList.list[index].pattern.replaceAll(".*", "*")));
-        FlutterToastr.show(localizations.copied, context);
-      }),
+      PopupMenuItem(
+          height: 35,
+          child: Text(localizations.copy),
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: widget.hostList.list[index].pattern.replaceAll(".*", "*")));
+            FlutterToastr.show(localizations.copied, context);
+          }),
       PopupMenuItem(height: 35, child: Text(localizations.edit), onTap: () => showEdit(index)),
       PopupMenuItem(height: 35, onTap: () => export([index]), child: Text(localizations.export)),
       const PopupMenuDivider(),

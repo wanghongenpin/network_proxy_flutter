@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -195,6 +196,12 @@ void registerMethodHandler() {
       return path;
     }
 
+    if (call.method == 'saveFile') {
+      String? path = (await FilePicker.platform.saveFile(fileName: call.arguments));
+      if (Platform.isWindows) windowManager.blur();
+      return path;
+    }
+
     if (call.method == 'openFile') {
       List<String> extensions =
           call.arguments is List ? Lists.convertList<String>(call.arguments) : <String>[call.arguments];
@@ -202,6 +209,16 @@ void registerMethodHandler() {
       XTypeGroup typeGroup =
           XTypeGroup(extensions: extensions, uniformTypeIdentifiers: Platform.isMacOS ? const ['public.item'] : null);
       final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+      if (Platform.isWindows) windowManager.blur();
+      return file?.path;
+    }
+
+    if (call.method == 'pickFile') {
+      List<String> extensions =
+          call.arguments is List ? Lists.convertList<String>(call.arguments) : <String>[call.arguments];
+
+      var file =
+          (await FilePicker.platform.pickFiles(allowedExtensions: extensions, type: FileType.custom))?.files.single;
       if (Platform.isWindows) windowManager.blur();
       return file?.path;
     }
