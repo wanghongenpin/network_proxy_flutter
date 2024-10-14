@@ -18,6 +18,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -151,9 +152,11 @@ class _QrDecodeState extends State<_QrDecode> with AutomaticKeepAliveClientMixin
               },
               icon: const Icon(Icons.photo, size: 18),
               style: ButtonStyle(
+                  padding: WidgetStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
                   shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
               label: Text(localizations.selectImage)),
+          const SizedBox(width: 10),
           if (Platforms.isMobile())
             FilledButton.icon(
                 onPressed: () async {
@@ -167,11 +170,12 @@ class _QrDecodeState extends State<_QrDecode> with AutomaticKeepAliveClientMixin
                   decodeData.text = scanRes;
                 },
                 style: ButtonStyle(
+                    padding: WidgetStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
                     shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                         RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
                 icon: const Icon(Icons.qr_code_scanner_outlined, size: 18),
                 label: Text(localizations.scanQrCode, style: TextStyle(fontSize: 14))),
-          const SizedBox(width: 20),
+          const SizedBox(width: 10),
         ],
       ),
       const SizedBox(height: 20),
@@ -275,7 +279,7 @@ class _QrEncodeState extends State<_QrEncode> with AutomaticKeepAliveClientMixin
                   });
                 }),
           ]),
-          const SizedBox(width: 20),
+          const SizedBox(width: 15),
           FilledButton.icon(
               onPressed: () {
                 setState(() {
@@ -283,11 +287,12 @@ class _QrEncodeState extends State<_QrEncode> with AutomaticKeepAliveClientMixin
                 });
               },
               style: ButtonStyle(
+                  padding: WidgetStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
                   shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
               icon: const Icon(Icons.qr_code, size: 18),
               label: Text(localizations.generateQrCode, style: TextStyle(fontSize: 14))),
-          const SizedBox(width: 20),
+          const SizedBox(width: 10),
         ],
       ),
       const SizedBox(height: 10),
@@ -327,8 +332,7 @@ class _QrEncodeState extends State<_QrEncode> with AutomaticKeepAliveClientMixin
     }
 
     if (Platforms.isDesktop()) {
-      String? path = await DesktopMultiWindow.invokeMethod(0, 'saveFile', "qrcode.png");
-      if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).show();
+      String? path = (await FilePicker.platform.saveFile(fileName: "qrcode.png"));
       if (path == null) return;
 
       var imageBytes = await toImageBytes();

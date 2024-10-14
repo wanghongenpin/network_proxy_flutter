@@ -203,7 +203,6 @@ void registerMethodHandler() {
 
     if (call.method == 'saveFile') {
       String? path = (await FilePicker.platform.saveFile(fileName: call.arguments));
-      if (Platform.isWindows) windowManager.blur();
       return path;
     }
 

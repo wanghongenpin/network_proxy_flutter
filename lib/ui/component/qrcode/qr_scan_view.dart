@@ -163,6 +163,7 @@ class _QrReaderViewState extends State<QeCodeScanView> with TickerProviderStateM
                   child: QrReaderView(
                     width: constraints.maxWidth,
                     height: constraints.maxHeight,
+                    autoFocusIntervalInMs: 1000,
                     callback: _onCreateController,
                   )),
               Positioned(
