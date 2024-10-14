@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:basic_utils/basic_utils.dart';
 import 'package:network_proxy/network/util/cert/basic_constraints.dart';
+import 'package:network_proxy/network/util/cert/x509.dart';
 import 'package:pointycastle/pointycastle.dart';
 
 void main() async {
@@ -15,13 +16,21 @@ void main() async {
 //   print(Int8List.view(encode!.buffer));
 
   var caPem = await File('assets/certs/ca.crt').readAsString();
+
+  // var caPem = File('/Users/wanghongen/Downloads/proxyman.crt').readAsStringSync();
+  //生成 公钥和私钥
+  var caRoot = X509Utils.x509CertificateFromPem(caPem);
+  var subject = caRoot.tbsCertificate!.subject;
+  var d = X509Generate.getSubjectHashName(subject);
+
+  //16进制
+  print(d);
   // var certPath = 'assets/certs/ca.crt';
   //生成 公钥和私钥
   // var caRoot = X509Utils.x509CertificateFromPem(caPem);
   // print(caRoot.tbsCertificate.);
   // caRoot.subject = X509Utils.getSubject(caRoot.subject);
 }
-
 
 //获取证书 subject hash
 

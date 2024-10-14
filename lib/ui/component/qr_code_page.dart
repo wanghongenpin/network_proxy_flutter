@@ -252,7 +252,7 @@ class _QrEncodeState extends State<_QrEncode> with AutomaticKeepAliveClientMixin
     return ListView(children: [
       Container(
           padding: const EdgeInsets.all(10),
-          height: 160,
+          height: 180,
           child: TextField(
               controller: inputData,
               maxLines: 8,
@@ -286,7 +286,7 @@ class _QrEncodeState extends State<_QrEncode> with AutomaticKeepAliveClientMixin
                   shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
               icon: const Icon(Icons.qr_code, size: 18),
-              label: Text(localizations.generateQRcode, style: TextStyle(fontSize: 14))),
+              label: Text(localizations.generateQrCode, style: TextStyle(fontSize: 14))),
           const SizedBox(width: 20),
         ],
       ),

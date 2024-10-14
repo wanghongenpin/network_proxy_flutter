@@ -301,7 +301,9 @@ class _AndroidCaInstallState extends State<AndroidCaInstall> with SingleTickerPr
       const SizedBox(height: 15),
       SelectableText(localizations.androidRootRename, style: const TextStyle(fontWeight: FontWeight.w500)),
       const SizedBox(height: 10),
-      FilledButton(onPressed: () => _downloadCert('243f0bfb.0'), child: Text(localizations.androidRootCADownload)),
+      FilledButton(
+          onPressed: () async => _downloadCert('${await CertificateManager.subjectHashName()}.0'),
+          child: Text(localizations.androidRootCADownload)),
       const SizedBox(height: 10),
       Text(
           "Android 13: ${isCN ? "将证书挂载到" : "Mount the certificate to"} '/system/etc/security/cacerts' ${isCN ? "目录" : "Directory"}"

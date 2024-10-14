@@ -287,11 +287,13 @@
   "requestBlock": "Request Block",
 
   "other": "Other",
+  "certHashName": "CA Hash Name",
+  "systemCertName": "System Certificate Name",
   "qrCode": "QR Code",
   "scanQrCode": "Scan QR Code",
-  "generateQRcode": "Generate QR Code",
+  "generateQrCode": "Generate",
   "saveImage": "Save Image",
   "selectImage": "Select Image",
   "inputContent": "Input Content",
-  "errorCorrectLevel": "Error Correct Level"
+  "errorCorrectLevel": "Error Correct"
 }

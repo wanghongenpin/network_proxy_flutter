@@ -66,7 +66,7 @@ class _MePageState extends State<MePage> {
             const SizedBox(height: 10),
             ListTile(
                 title: Text(localizations.httpsProxy),
-                leading: Icon(Icons.https, color: color),
+                leading: Icon(proxyServer.enableSsl ? Icons.lock_open : Icons.https, color: color),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
             const Divider(thickness: 0.35),

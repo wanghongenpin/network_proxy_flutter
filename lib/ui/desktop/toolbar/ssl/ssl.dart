@@ -28,7 +28,9 @@ class _SslState extends State<SslWidget> {
     return MenuAnchor(
         builder: (context, controller, child) {
           return IconButton(
-              icon: Icon(Icons.https, color: widget.proxyServer.enableSsl ? null : Colors.red, size: 22),
+              icon: widget.proxyServer.enableSsl
+                  ? Icon(Icons.lock_open, size: 22)
+                  : Icon(Icons.https_outlined, color: Colors.red, size: 22),
               tooltip: localizations.httpsProxy,
               onPressed: () {
                 if (controller.isOpen) {
@@ -126,7 +128,6 @@ class _SslState extends State<SslWidget> {
                   padding: const EdgeInsets.only(left: 10, right: 10),
                   child: Text(localizations.exportCA, style: const TextStyle(fontSize: 14))),
               onPressed: () async {
-
                 String? path = (await FilePicker.platform.saveFile(fileName: "ProxyPinCA.crt"));
                 if (path == null) return;
 

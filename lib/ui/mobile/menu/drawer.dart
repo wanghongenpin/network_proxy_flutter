@@ -83,7 +83,7 @@ class DrawerWidget extends StatelessWidget {
                     )),
             ListTile(
                 title: Text(localizations.httpsProxy),
-                leading: const Icon(Icons.https),
+                leading: proxyServer.enableSsl ? Icon(Icons.lock_open) : Icon(Icons.https),
                 onTap: () => navigator(context, MobileSslWidget(proxyServer: proxyServer))),
             const Divider(thickness: 0.3, height: 0),
             ListTile(

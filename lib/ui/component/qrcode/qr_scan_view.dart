@@ -4,9 +4,12 @@ import 'package:flutter_qr_reader/flutter_qr_reader.dart';
 import 'package:image_pickers/image_pickers.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+///@Author: Hongen Wang
+/// qr code scanner
 class QrCodeScanner {
   static Future<String?> scan(BuildContext context) async {
     var status = await Permission.camera.status;
+
     if (status.isRestricted || status.isPermanentlyDenied) {
       openAppSettings();
       return Future.value(null);
@@ -14,8 +17,7 @@ class QrCodeScanner {
       status = await Permission.camera.request();
     }
 
-    //用户拒绝
-    if (!status.isGranted) {
+    if (status.isDenied) {
       if (!context.mounted) return Future.value(null);
       AppLocalizations localizations = AppLocalizations.of(context)!;
       bool isCN = localizations.localeName == 'zh';
@@ -72,13 +74,19 @@ class _QrReaderViewState extends State<QeCodeScanView> with TickerProviderStateM
 
   void startScan() async {
     isScan = true;
+
     _controller?.startCamera((data, _) async {
-      _controller?.stopCamera();
-      stop();
-      if (mounted) Navigator.of(context, rootNavigator: true).pop(data);
+      await handle(data);
     });
 
     _initAnimation();
+  }
+
+  handle(String data) async {
+    if (!isScan) return;
+    _controller?.stopCamera();
+    stop();
+    if (mounted) await Navigator.of(context, rootNavigator: true).maybePop(data);
   }
 
   void _initAnimation() {

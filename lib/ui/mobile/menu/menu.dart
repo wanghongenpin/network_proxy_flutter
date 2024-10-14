@@ -46,7 +46,8 @@ class MoreMenu extends StatelessWidget {
               child: ListTile(
                   dense: true,
                   title: Text(localizations.httpsProxy),
-                  leading: Icon(Icons.https_outlined, color: proxyServer.enableSsl ? null : Colors.red),
+                  leading:
+                      proxyServer.enableSsl ? Icon(Icons.lock_open) : Icon(Icons.https_outlined, color: Colors.red),
                   onTap: () {
                     navigator(context, MobileSslWidget(proxyServer: proxyServer));
                   })),

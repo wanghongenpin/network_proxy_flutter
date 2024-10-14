@@ -286,8 +286,10 @@
   "requestBlock": "请求屏蔽",
 
   "other": "其他",
+  "certHashName": "证书Hash名称",
+  "systemCertName": "系统证书名称",
   "qrCode": "二维码",
-  "generateQRcode": "生成二维码",
+  "generateQrCode": "生成二维码",
   "scanQrCode": "扫描二维码",
   "saveImage": "保存图片",
   "selectImage": "选择图片",
