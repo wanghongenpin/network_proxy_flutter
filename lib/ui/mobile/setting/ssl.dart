@@ -98,15 +98,16 @@ class _MobileSslState extends State<MobileSslWidget> {
           const Divider(indent: 0.2, height: 1),
           ListTile(title: Text(localizations.importCaP12), onTap: importPk12),
           const Divider(indent: 0.2, height: 1),
-          ListTile(
-              title: Text(localizations.generateCA),
-              onTap: () async {
-                showConfirmDialog(context, title: localizations.generateCA, content: localizations.generateCADescribe,
-                    onConfirm: () async {
-                  await CertificateManager.generateNewRootCA();
-                  if (context.mounted) FlutterToastr.show(localizations.success, context);
-                });
-              }),
+          if (Platform.isAndroid)
+            ListTile(
+                title: Text(localizations.generateCA),
+                onTap: () async {
+                  showConfirmDialog(context, title: localizations.generateCA, content: localizations.generateCADescribe,
+                      onConfirm: () async {
+                    await CertificateManager.generateNewRootCA();
+                    if (context.mounted) FlutterToastr.show(localizations.success, context);
+                  });
+                }),
           const Divider(indent: 0.2, height: 1),
           ListTile(
               title: Text(localizations.resetDefaultCA),
@@ -205,16 +206,6 @@ class _MobileSslState extends State<MobileSslWidget> {
         body: SingleChildScrollView(
             padding: const EdgeInsets.all(10),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // if (localizations.localeName != 'zh')
-              //   ExpansionTile(
-              //     title: Text(localizations.useGuide),
-              //     shape: const Border(),
-              //     maintainState: true,
-              //     children: [
-              //       Container(
-              //           height: 350, padding: const EdgeInsets.only(left: 15, right: 15), child: const VideoPlayerScreen())
-              //     ],
-              //   ),
               TextButton(onPressed: () => _downloadCert(), child: Text("1. ${localizations.downloadRootCa}")),
               TextButton(
                   onPressed: () {}, child: Text("2. ${localizations.installRootCa} -> ${localizations.trustCa}")),
@@ -300,12 +291,12 @@ class _AndroidCaInstallState extends State<AndroidCaInstall> with SingleTickerPr
           }),
       const SizedBox(height: 15),
       futureWidget(
-          CertificateManager.subjectHashName(),
+          CertificateManager.systemCertificateName(),
           (name) => SelectableText(localizations.androidRootRename(name),
               style: const TextStyle(fontWeight: FontWeight.w500))),
       const SizedBox(height: 10),
       FilledButton(
-          onPressed: () async => _downloadCert('${await CertificateManager.subjectHashName()}.0'),
+          onPressed: () async => _downloadCert(await CertificateManager.systemCertificateName()),
           child: Text(localizations.androidRootCADownload)),
       const SizedBox(height: 10),
       Text(

@@ -175,13 +175,12 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     request.headers.addAll(headers);
     request.body = requestBody == null ? null : utf8.encode(requestBody);
 
-    var proxyInfo =
-        widget.proxyServer?.isRunning == true ? ProxyInfo.of("127.0.0.1", widget.proxyServer?.port) : null;
+    var proxyInfo = widget.proxyServer?.isRunning == true ? ProxyInfo.of("127.0.0.1", widget.proxyServer?.port) : null;
 
     responseKey.currentState?.change(null);
     responseChange.value = !responseChange.value;
 
-    HttpClients.proxyRequest(proxyInfo: proxyInfo, request).then((response) {
+    HttpClients.proxyRequest(proxyInfo: proxyInfo, request, timeout: Duration(seconds: 15)).then((response) {
       FlutterToastr.show(localizations.requestSuccess, context);
       this.response = response;
       this.response?.request = request;
@@ -254,9 +253,7 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
     this.message = message;
     body = message?.bodyAsString;
     headerKey.currentState?.refreshParam(message?.headers.getHeaders());
-    setState(() {
-
-    });
+    setState(() {});
   }
 
   HttpHeaders? getHeaders() {

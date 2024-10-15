@@ -340,7 +340,7 @@ class _SslState extends State<SslWidget> {
                                           "https://${isCN ? 'gitee' : 'github'}.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
                                     }),
                                 const SizedBox(height: 10),
-                                futureWidget(CertificateManager.subjectHashName(),
+                                futureWidget(CertificateManager.systemCertificateName(),
                                     (name) => SelectableText(localizations.androidRootRename(name))),
                                 const SizedBox(height: 10),
                                 ClipRRect(

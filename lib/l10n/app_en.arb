@@ -237,7 +237,7 @@
   "notConnected": "Not connected",
   "disconnect": "Disconnect",
   "ipLayerProxy": "IP Layer Proxy(Beta)",
-  "ipLayerProxyDesc": "IP layer proxy can capture Flutter app requests, currently not very stable",
+  "ipLayerProxyDesc": "IP layer proxy can capture Flutter app requests, currently not very stable, welcome to submit PR",
   "inputAddress": "Input Address",
   "syncConfig": "Sync configuration",
   "pullConfigFail": "Failed to pull configuration, please check the network connection",

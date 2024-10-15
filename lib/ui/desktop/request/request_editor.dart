@@ -152,7 +152,7 @@ class RequestEditorState extends State<RequestEditor> {
     Map? proxyResult = await DesktopMultiWindow.invokeMethod(0, 'getProxyInfo');
     ProxyInfo? proxyInfo = proxyResult == null ? null : ProxyInfo.of(proxyResult['host'], proxyResult['port']);
 
-    HttpClients.proxyRequest(request, proxyInfo: proxyInfo).then((response) {
+    HttpClients.proxyRequest(request, proxyInfo: proxyInfo, timeout: Duration(seconds: 15)).then((response) {
       FlutterToastr.show(localizations.requestSuccess, context);
       this.response = response;
       responseKey.currentState?.change(response);

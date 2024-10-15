@@ -16,6 +16,7 @@
 import 'dart:math';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -226,7 +227,11 @@ class _RewriteReplaceState extends State<RewriteReplaceDialog> {
       const SizedBox(width: 10),
       FilledButton(
           onPressed: () async {
-            var path = await DesktopMultiWindow.invokeMethod(0, "openFile", 'txt');
+            FilePickerResult? result = await FilePicker.platform.pickFiles();
+            if (result == null || result.files.isEmpty) {
+              return;
+            }
+            var path = result.files.first.path;
             if (widget.windowId != null) {
               WindowController.fromWindowId(widget.windowId!).show();
             }

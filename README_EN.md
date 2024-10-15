@@ -7,9 +7,9 @@ and easy to use.
 ## Features
 * Mobile scan code connection: no need to manually configure WiFi proxy, including configuration synchronization. All terminals can scan codes to connect and forward traffic to each other.
 * Domain name filtering: Only intercept the traffic you need, and do not intercept other traffic to avoid interference with other applications.
+* Script: Support writing JavaScript scripts to process requests or responses.
 * Request rewrite: Support redirection, support replacement of request or response message, and can also modify request or response according to the increase.
 * Request blocking: Support blocking requests according to URL, and do not send requests to the server.
-* Script: Support writing JavaScript scripts to process requests or responses.
 * Search: Search requests according to keywords, response types and other conditions
 * Others: Favorites, history, toolbox, etc.
 

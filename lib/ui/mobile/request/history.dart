@@ -305,6 +305,10 @@ class HistoryRecord extends StatefulWidget {
 
 class _HistoryRecordState extends State<HistoryRecord> {
   GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
+
+  ///搜索key
+  final GlobalKey<MobileSearchState> searchStateKey = GlobalKey<MobileSearchState>();
+
   var searchEnabled = ValueNotifier(false);
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
@@ -325,7 +329,10 @@ class _HistoryRecordState extends State<HistoryRecord> {
                   valueListenable: searchEnabled,
                   builder: (BuildContext context, bool value, Widget? child) {
                     return value
-                        ? MobileSearch(onSearch: (val) => requestStateKey.currentState?.search(val), showSearch: true)
+                        ? MobileSearch(
+                            key: searchStateKey,
+                            onSearch: (val) => requestStateKey.currentState?.search(val),
+                            showSearch: true)
                         : Text(localizations.historyRecordTitle(widget.history.requestLength, widget.history.name),
                             style: const TextStyle(fontSize: 16));
                   }),
@@ -336,7 +343,13 @@ class _HistoryRecordState extends State<HistoryRecord> {
                     itemBuilder: (BuildContext context) {
                       return [
                         PopupMenuItem(
-                            onTap: () => searchEnabled.value = true,
+                            onTap: () {
+                              if (searchEnabled.value) {
+                                searchStateKey.currentState?.showSearch();
+                                return;
+                              }
+                              searchEnabled.value = true;
+                            },
                             child: IconText(icon: const Icon(Icons.search), text: localizations.search)),
                         PopupMenuItem(
                             onTap: export,

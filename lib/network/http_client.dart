@@ -125,7 +125,7 @@ class HttpClients {
 
   /// 发送代理请求
   static Future<HttpResponse> proxyRequest(HttpRequest request,
-      {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 10)}) async {
+      {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 15)}) async {
     if (request.headers.host == null || request.headers.host?.trim().isEmpty == true) {
       try {
         var uri = Uri.parse(request.requestUrl);
