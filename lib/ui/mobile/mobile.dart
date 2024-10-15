@@ -279,7 +279,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
     showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) {
+        builder: (context) {
           return AlertDialog(
               scrollable: true,
               actions: [

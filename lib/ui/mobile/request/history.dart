@@ -237,7 +237,7 @@ class _MobileHistoryState extends State<MobileHistory> {
     String name = "";
     showDialog(
         context: context,
-        builder: (_) {
+        builder: (context) {
           return AlertDialog(
             content: TextField(
               decoration: InputDecoration(label: Text(localizations.name)),
@@ -268,7 +268,7 @@ class _MobileHistoryState extends State<MobileHistory> {
   deleteHistory(HistoryStorage storage, int index) {
     showDialog(
         context: context,
-        builder: (ctx) {
+        builder: (context) {
           return AlertDialog(
             title: Text(localizations.historyDeleteConfirm, style: const TextStyle(fontSize: 18)),
             actions: [

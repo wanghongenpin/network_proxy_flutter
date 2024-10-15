@@ -299,7 +299,10 @@ class _AndroidCaInstallState extends State<AndroidCaInstall> with SingleTickerPr
             launchUrl(Uri.parse("https://${isCN ? 'gitee' : 'github'}.com/wanghongenpin/Magisk-ProxyPinCA/releases"));
           }),
       const SizedBox(height: 15),
-      SelectableText(localizations.androidRootRename, style: const TextStyle(fontWeight: FontWeight.w500)),
+      futureWidget(
+          CertificateManager.subjectHashName(),
+          (name) => SelectableText(localizations.androidRootRename(name),
+              style: const TextStyle(fontWeight: FontWeight.w500))),
       const SizedBox(height: 10),
       FilledButton(
           onPressed: () async => _downloadCert('${await CertificateManager.subjectHashName()}.0'),
