@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 pwd
 cd ../build/linux/x64/release
 rm -rf package

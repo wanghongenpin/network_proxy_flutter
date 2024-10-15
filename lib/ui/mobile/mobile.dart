@@ -151,7 +151,7 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
 
     return PopScope(
         canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
+        onPopInvoked: (didPop) async {
           if (didPop || await enterPictureInPicture()) {
             return;
           }
@@ -394,7 +394,7 @@ class RequestPageState extends State<RequestPage> {
         width: double.infinity,
         child: ElevatedButton(
           style: ButtonStyle(
-              shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
             return RemoteDevicePage(remoteDevice: remoteDevice, proxyServer: proxyServer);

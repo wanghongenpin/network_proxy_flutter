@@ -266,7 +266,7 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
           Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
             TextButton.icon(
               style: ButtonStyle(
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)))),
               onPressed: pullConfig,
               icon: const Icon(Icons.sync),
@@ -275,7 +275,7 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
             TextButton.icon(
               label: Text(localizations.disconnect),
               style: ButtonStyle(
-                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0))),
               ),
               icon: const Icon(Icons.cancel_outlined),

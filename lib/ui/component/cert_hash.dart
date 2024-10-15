@@ -126,9 +126,9 @@ class _CertHashPageState extends State<CertHashPage> {
 
   ButtonStyle get buttonStyle =>
       ButtonStyle(
-          padding: WidgetStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
-          textStyle: WidgetStateProperty.all<TextStyle>(TextStyle(fontSize: 14)),
-          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+          padding: MaterialStateProperty.all<EdgeInsets>(const EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
+          textStyle: MaterialStateProperty.all<TextStyle>(const TextStyle(fontSize: 14)),
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))));
 
   InputDecoration decoration(String label, {String? hintText}) {

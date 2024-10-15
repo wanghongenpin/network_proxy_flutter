@@ -70,7 +70,7 @@ class _QrCodePageState extends State<QrCodePage> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     if (Platforms.isDesktop()) {
       return Scaffold(
-          appBar: AppBar(title: Text(localizations.qrCode, style: TextStyle(fontSize: 16)), centerTitle: true),
+          appBar: AppBar(title: Text(localizations.qrCode, style: const TextStyle(fontSize: 16)), centerTitle: true),
           body: _QrEncode(windowId: widget.windowId));
     }
 
@@ -81,7 +81,7 @@ class _QrCodePageState extends State<QrCodePage> with SingleTickerProviderStateM
 
     return Scaffold(
         appBar: AppBar(
-            title: Text(localizations.qrCode, style: TextStyle(fontSize: 16)),
+            title: Text(localizations.qrCode, style: const TextStyle(fontSize: 16)),
             centerTitle: true,
             bottom: TabBar(tabs: tabs, controller: tabController)),
         resizeToAvoidBottomInset: false,
@@ -152,8 +152,8 @@ class _QrDecodeState extends State<_QrDecode> with AutomaticKeepAliveClientMixin
               },
               icon: const Icon(Icons.photo, size: 18),
               style: ButtonStyle(
-                  padding: WidgetStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  padding: MaterialStateProperty.all<EdgeInsets>(const EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
               label: Text(localizations.selectImage)),
           const SizedBox(width: 10),
@@ -170,11 +170,11 @@ class _QrDecodeState extends State<_QrDecode> with AutomaticKeepAliveClientMixin
                   decodeData.text = scanRes;
                 },
                 style: ButtonStyle(
-                    padding: WidgetStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
-                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                    padding: MaterialStateProperty.all<EdgeInsets>(const EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                         RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
                 icon: const Icon(Icons.qr_code_scanner_outlined, size: 18),
-                label: Text(localizations.scanQrCode, style: TextStyle(fontSize: 14))),
+                label: Text(localizations.scanQrCode, style: const TextStyle(fontSize: 14))),
           const SizedBox(width: 10),
         ],
       ),
@@ -287,8 +287,8 @@ class _QrEncodeState extends State<_QrEncode> with AutomaticKeepAliveClientMixin
                 });
               },
               style: ButtonStyle(
-                  padding: WidgetStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  padding: MaterialStateProperty.all<EdgeInsets>(const EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
               icon: const Icon(Icons.qr_code, size: 18),
               label: Text(localizations.generateQrCode, style: TextStyle(fontSize: 14))),

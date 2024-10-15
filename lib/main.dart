@@ -124,8 +124,7 @@ class FluentApp extends StatelessWidget {
       primary: themeColor,
       surface: cardColor,
       secondary: secondary,
-      onPrimary: isDark ? Colors.white : null,
-      surfaceContainer: surfaceContainer,
+      onPrimary: isDark ? Colors.white : null
     );
 
     var themeData =
