@@ -63,10 +63,10 @@ class AppConfiguration {
   bool upgradeNoticeV14 = true;
 
   /// 是否启用画中画
-  ValueNotifier<bool> pipEnabled = ValueNotifier(true);
+  ValueNotifier<bool> pipEnabled = ValueNotifier(Platform.isAndroid);
 
   /// 显示画中画图标
-  ValueNotifier<bool> pipIcon = ValueNotifier(true);
+  ValueNotifier<bool> pipIcon = ValueNotifier(Platform.isAndroid);
 
   /// header默认展示
   bool headerExpanded = true;

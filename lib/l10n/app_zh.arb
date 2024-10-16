@@ -248,8 +248,8 @@
 
   "windowMode": "窗口模式",
   "windowModeSubTitle": "开启抓包后 如果应用退回到后台，显示一个小窗口",
-  "windowIcon": "窗口快捷图标",
-  "windowIconDescribe": "展示快捷进入小窗口Icon",
+  "pipIcon": "窗口快捷图标",
+  "pipIconDescribe": "展示快捷进入小窗口Icon",
   "headerExpanded": "Headers自动展开",
   "headerExpandedSubtitle": "详情页Headers栏是否自动展开",
   "bottomNavigation": "底部导航",

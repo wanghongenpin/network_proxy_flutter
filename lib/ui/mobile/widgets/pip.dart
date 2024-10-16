@@ -100,11 +100,6 @@ class _PictureInPictureState extends State<PictureInPictureIcon> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isIOS) {
-      AppConfiguration.current?.pipEnabled.addListener(() {
-        setState(() {});
-      });
-    }
 
     AppConfiguration.current?.pipIcon.addListener(() {
       setState(() {});
@@ -113,8 +108,7 @@ class _PictureInPictureState extends State<PictureInPictureIcon> {
 
   @override
   Widget build(BuildContext context) {
-    if (Platform.isIOS && AppConfiguration.current?.pipEnabled.value == false) return const SizedBox();
-    if (Platform.isAndroid && AppConfiguration.current?.pipIcon.value != true) return const SizedBox();
+    if (AppConfiguration.current?.pipIcon.value != true) return const SizedBox();
 
     size ??= MediaQuery.sizeOf(context);
     if (size == null || size!.isEmpty) {

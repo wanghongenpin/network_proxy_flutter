@@ -57,27 +57,27 @@ class SettingMenu extends StatelessWidget {
                         proxyServer.configuration.startup = value;
                         proxyServer.configuration.flushConfig();
                       })),
-              ListTile(
-                  title: Text(localizations.windowMode),
-                  subtitle: Text(localizations.windowModeSubTitle, style: const TextStyle(fontSize: 12)),
-                  trailing: SwitchWidget(
-                      value: appConfiguration.pipEnabled.value,
-                      scale: 0.8,
-                      onChanged: (value) {
-                        appConfiguration.pipEnabled.value = value;
-                        appConfiguration.flushConfig();
-                      })),
               if (Platform.isAndroid)
                 ListTile(
-                    title: Text(localizations.windowIcon),
-                    subtitle: Text(localizations.windowIconDescribe, style: const TextStyle(fontSize: 12)),
+                    title: Text(localizations.windowMode),
+                    subtitle: Text(localizations.windowModeSubTitle, style: const TextStyle(fontSize: 12)),
                     trailing: SwitchWidget(
-                        value: appConfiguration.pipIcon.value,
+                        value: appConfiguration.pipEnabled.value,
                         scale: 0.8,
                         onChanged: (value) {
-                          appConfiguration.pipIcon.value = value;
+                          appConfiguration.pipEnabled.value = value;
                           appConfiguration.flushConfig();
                         })),
+              ListTile(
+                  title: Text(localizations.pipIcon),
+                  subtitle: Text(localizations.pipIconDescribe, style: const TextStyle(fontSize: 12)),
+                  trailing: SwitchWidget(
+                      value: appConfiguration.pipIcon.value,
+                      scale: 0.8,
+                      onChanged: (value) {
+                        appConfiguration.pipIcon.value = value;
+                        appConfiguration.flushConfig();
+                      })),
               ListTile(
                   title: Text(localizations.headerExpanded),
                   subtitle: Text(localizations.headerExpandedSubtitle, style: const TextStyle(fontSize: 12)),

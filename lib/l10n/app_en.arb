@@ -248,8 +248,8 @@
 
   "windowMode": "Window Mode",
   "windowModeSubTitle": "Enabled Packet Capture, Enter the background, Display a small window",
-  "windowIcon": "Window shortcut icon",
-  "windowIconDescribe": "Show quick access to small window Icon",
+  "pipIcon": "Window shortcut icon",
+  "pipIconDescribe": "Show quick access to small window Icon",
   "headerExpanded": "Headers Expanded",
   "headerExpandedSubtitle": "Details page Headers is expanded by default",
   "bottomNavigation": "Bottom Navigation",
