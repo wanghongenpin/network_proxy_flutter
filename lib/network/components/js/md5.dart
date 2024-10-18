@@ -22,7 +22,7 @@ import 'package:network_proxy/network/util/lists.dart';
 
 /// JsMd5
 /// @author Hongen Wang
-class JsMd5Bridge {
+class Md5Bridge {
   static const String _md5 = '''
     function md5(input) {
       return sendMessage('md5', JSON.stringify(input));

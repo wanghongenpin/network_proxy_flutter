@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_js/extensions/fetch.dart';
-import 'package:flutter_js/extensions/xhr.dart';
 import 'package:flutter_js/flutter_js.dart';
+import 'package:network_proxy/network/components/js/file.dart';
 import 'package:network_proxy/network/components/js/md5.dart';
 
 // Convert JS request
@@ -20,7 +17,8 @@ import 'package:network_proxy/network/components/js/md5.dart';
 main() async {
   WidgetsFlutterBinding.ensureInitialized();
   var flutterJs = getJavascriptRuntime();
-  JsMd5Bridge.registerMd5(flutterJs);
+  Md5Bridge.registerMd5(flutterJs);
+  FileBridge.registerFile(flutterJs);
 
   // var httpRequest = HttpRequest(HttpMethod.get, "https://www.v2ex.com");
   // httpRequest.headers.set('user-agent', 'Dart/3.0 (dart:io)');
@@ -29,16 +27,26 @@ main() async {
     var context ='test';
     var d = md5('value');
     console.log(d);
-    console.log(md5('你阿红asd'));
-    console.log('Hello, World!');
+    var file = File('/Users/wanghongen/Downloads/test.html');
+    console.log(file.path);
+    // console.log(file.readAsStringSync());
+   
+    async function onRequest() {
+       await file.writeAsString('await');
+    
+       var text = await file.readAsString();
+       console.log(text);
+       File('/Users/wanghongen/Downloads/test.txt').create();
+    }
+    onRequest();
   """;
 
   // var jsRequest = jsonEncode(convertJsRequest(httpRequest));
 
   var evaluate = await flutterJs.evaluateAsync(code);
-  print(evaluate.stringResult);
+  // print(evaluate.stringResult);
+  await flutterJs.handlePromise(evaluate);
   flutterJs.dartContext.clear();
   flutterJs.localContext.clear();
-  flutterJs.evaluate('console.log("Hello, World!", d)');
   flutterJs.evaluate('console.log(context)');
 }

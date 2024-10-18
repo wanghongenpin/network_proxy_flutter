@@ -6,6 +6,7 @@ import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_js/flutter_js.dart';
 import 'package:highlight/languages/javascript.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
+import 'package:network_proxy/network/components/js/file.dart';
 import 'package:network_proxy/network/components/js/md5.dart';
 
 class JavaScript extends StatefulWidget {
@@ -31,7 +32,8 @@ class _JavaScriptState extends State<JavaScript> {
     // register channel callback
     final channelCallbacks = JavascriptRuntime.channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
     channelCallbacks!["ConsoleLog"] = consoleLog;
-    JsMd5Bridge.registerMd5(flutterJs);
+    Md5Bridge.registerMd5(flutterJs);
+    FileBridge.registerFile(flutterJs);
 
     code = CodeController(language: javascript, text: 'console.log("Hello, World!")');
   }
