@@ -19,12 +19,13 @@ import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter_js/flutter_js.dart';
+import 'package:network_proxy/network/components/js/md5.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/http_headers.dart';
 import 'package:network_proxy/network/util/lists.dart';
+import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/network/util/random.dart';
 import 'package:network_proxy/ui/component/device.dart';
-import 'package:network_proxy/network/util/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// @author wanghongen
@@ -84,6 +85,7 @@ async function onResponse(context, request, response) {
       final channelCallbacks = JavascriptRuntime.channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
       channelCallbacks!["ConsoleLog"] = _instance!.consoleLog;
       deviceId = await DeviceUtils.deviceId();
+      JsMd5Bridge.registerMd5(flutterJs);
       logger.d('init script manager $deviceId');
     }
     return _instance!;
@@ -356,8 +358,8 @@ async function onResponse(context, request, response) {
     });
 
     //判断是否是二进制
-    if (getListElementType(map['body']) == int) {
-      request.body = convertList<int>(map['body']);
+    if (Lists.getElementType(map['body']) == int) {
+      request.body = Lists.convertList<int>(map['body']);
       return request;
     }
 
@@ -385,8 +387,8 @@ async function onResponse(context, request, response) {
     response.headers.remove(HttpHeaders.CONTENT_ENCODING);
 
     //判断是否是二进制
-    if (getListElementType(map['body']) == int) {
-      response.body = convertList<int>(map['body']);
+    if (Lists.getElementType(map['body']) == int) {
+      response.body = Lists.convertList<int>(map['body']);
       return response;
     }
 

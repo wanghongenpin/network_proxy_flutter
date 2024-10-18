@@ -155,7 +155,7 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
         case EncoderType.base64:
           result = base64.encode(utf8.encode(inputText));
         case EncoderType.md5:
-          result = md5.convert(inputText.codeUnits).toString();
+          result = md5.convert(utf8.encode(inputText)).toString();
         case EncoderType.unicode:
           result = encodeToUnicode(inputText);
       }
