@@ -619,7 +619,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
         decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-            contentPadding: const EdgeInsets.all(10),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
             errorStyle: const TextStyle(height: 0, fontSize: 0),
             focusedBorder: focusedBorder(),
             isDense: true,

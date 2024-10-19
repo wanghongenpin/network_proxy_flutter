@@ -494,7 +494,7 @@ class _RewriteRuleState extends State<RewriteRule> {
               child: ListView(children: <Widget>[
                 Row(children: [
                   SizedBox(
-                      width: 58,
+                      width: 60,
                       child: Text('${localizations.enable}:',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
                   SwitchWidget(value: rule.enabled, onChanged: (val) => rule.enabled = val, scale: 0.8)
@@ -504,7 +504,7 @@ class _RewriteRuleState extends State<RewriteRule> {
                     required: true, keyboardType: TextInputType.url),
                 Row(children: [
                   SizedBox(
-                      width: 58,
+                      width: 60,
                       child: Text('${localizations.action}:',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
                   SizedBox(
@@ -546,7 +546,7 @@ class _RewriteRuleState extends State<RewriteRule> {
   Widget textField(String label, TextEditingController controller, String hint,
       {bool required = false, TextInputType? keyboardType, FormFieldSetter<String>? onSaved}) {
     return Row(children: [
-      SizedBox(width: 58, child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+      SizedBox(width: 60, child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
       Expanded(
           child: TextFormField(
         controller: controller,
@@ -556,7 +556,7 @@ class _RewriteRuleState extends State<RewriteRule> {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey.shade500),
-          contentPadding: const EdgeInsets.all(10),
+          contentPadding: const EdgeInsets.only(),
           errorStyle: const TextStyle(height: 0, fontSize: 0),
         ),
       ))

@@ -72,8 +72,8 @@
   "type": "Type",
   "enable": "Enable",
   "example": "Example: ",
-  "responseHeader": "Response Header",
-  "requestHeader": "Request Header",
+  "responseHeader": "Headers",
+  "requestHeader": "Headers",
   "requestLine": "Request Line",
   "requestMethod": "Request Method",
   "param": "Param",
@@ -124,6 +124,7 @@
   "deleteWhitelist": "Delete Proxy Whitelist",
   "domainListSubtitle": "Last Request Time: {time},  Count: {count}",
 
+  "selectAction": "Select action",
   "copy": "Copy",
   "copyHost": "Copy Host",
   "copyUrl": "Copy URL",

@@ -347,9 +347,7 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
   Widget statusCodeEdit() {
     var rewriteItem = items.firstWhere((item) => item.type == RewriteType.replaceResponseStatus);
 
-    return Container(
-        padding: const EdgeInsets.all(10),
-        child: Column(children: [
+    return Column(children: [
           Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             Text(localizations.statusCode),
             const SizedBox(width: 10),
@@ -379,7 +377,7 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
             ])),
             const SizedBox(width: 10),
           ])
-        ]));
+        ]);
   }
 
   InputDecoration decoration(String label, {String? hintText}) {

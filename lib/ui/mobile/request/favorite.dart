@@ -32,7 +32,6 @@ import 'package:network_proxy/ui/mobile/request/repeat.dart';
 import 'package:network_proxy/ui/mobile/request/request_editor.dart';
 import 'package:network_proxy/utils/curl.dart';
 import 'package:network_proxy/utils/lang.dart';
-import 'package:network_proxy/utils/python.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 收藏列表页面
@@ -163,8 +162,6 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           menuItem(localizations.copyUrl, () => request.requestUrl),
           const Divider(thickness: 0.5, height: 5),
           menuItem(localizations.copyCurl, () => curlRequest(request)),
-          const Divider(thickness: 0.5, height: 5),
-          menuItem(localizations.copyAsPythonRequests, () => copyAsPythonRequests(request)),
           const Divider(thickness: 0.5, height: 5),
           TextButton(
               child: SizedBox(width: double.infinity, child: Text(localizations.rename, textAlign: TextAlign.center)),

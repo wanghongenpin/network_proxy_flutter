@@ -10,6 +10,7 @@ class CustomPopupMenuItem<T> extends PopupMenuItem<T> {
     super.height,
     super.value,
     super.enabled,
+    super.padding,
     required Widget super.child,
     this.color,
   });
@@ -27,6 +28,28 @@ class _CustomPopupMenuItemState<T> extends PopupMenuItemState<T, CustomPopupMenu
       ),
       child: super.build(context),
     );
+  }
+}
+
+class PopupMenuContainer extends PopupMenuEntry {
+  final Widget child;
+
+  @override
+  final double height;
+
+  const PopupMenuContainer({super.key, required this.child, this.height = 40});
+
+  @override
+  bool represents(value) => false;
+
+  @override
+  State<StatefulWidget> createState() => _PopupMenuContainerState();
+}
+
+class _PopupMenuContainerState extends State<PopupMenuContainer> {
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }
 

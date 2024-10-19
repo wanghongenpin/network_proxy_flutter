@@ -90,7 +90,7 @@ class _ToolboxState extends State<Toolbox> {
                   onTap: () => encodeWindow(EncoderType.base64, context),
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    child: const Column(children: [Icon(Icons.currency_bitcoin), SizedBox(height: 3), Text('Base64')]),
+                    child: const Column(children: [Icon(Icons.format_bold), SizedBox(height: 3), Text('Base64')]),
                   )),
               const SizedBox(width: 15),
               InkWell(

@@ -14,16 +14,24 @@
  * limitations under the License.
  */
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
+import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
+import 'package:network_proxy/storage/favorites.dart';
 import 'package:network_proxy/ui/component/share.dart';
 import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/utils.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
+import 'package:network_proxy/ui/mobile/request/request_editor.dart';
+import 'package:network_proxy/ui/mobile/setting/script.dart';
 import 'package:network_proxy/utils/lang.dart';
 import 'package:network_proxy/utils/platform.dart';
+import 'package:network_proxy/utils/python.dart';
 
 import 'body.dart';
 
@@ -114,7 +122,61 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
             bottom: tabBar,
             actions: [
               ShareWidget(
-                  proxyServer: widget.proxyServer, request: widget.request.get(), response: widget.response.get())
+                  proxyServer: widget.proxyServer, request: widget.request.get(), response: widget.response.get()),
+              const SizedBox(width: 3),
+              PopupMenuButton(
+                  offset: const Offset(0, 30),
+                  padding: const EdgeInsets.all(0),
+                  itemBuilder: (context) => [
+                        PopupMenuItem(
+                            child: Text(localizations.favorite),
+                            onTap: () {
+                              var request = widget.request.get();
+                              if (request == null) return;
+
+                              FavoriteStorage.addFavorite(request);
+                              FlutterToastr.show(localizations.addSuccess, context);
+                            }),
+                        PopupMenuItem(
+                            child: Text(localizations.requestEdit),
+                            onTap: () {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => MobileRequestEditor(
+                                        request: widget.request.get(), proxyServer: widget.proxyServer)));
+                              });
+                            }),
+                        PopupMenuItem(
+                            child: Text(localizations.script),
+                            onTap: () {
+                              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                                var scriptManager = await ScriptManager.instance;
+                                var request = widget.request.get();
+                                var url = '${request?.remoteDomain()}${request?.path()}';
+                                var scriptItem = (scriptManager).list.firstWhereOrNull((it) => it.url == url);
+                                String? script = scriptItem == null ? null : await scriptManager.getScript(scriptItem);
+
+                                if (!context.mounted) return;
+
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => ScriptEdit(
+                                        scriptItem: scriptItem, script: script, url: scriptItem?.url ?? url)));
+                              });
+                            }),
+                        CustomPopupMenuItem(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: Text(localizations.copyAsPythonRequests),
+                            onTap: () {
+                              var request = widget.request.get();
+                              if (request == null) return;
+
+                              var text = copyAsPythonRequests(request);
+                              Clipboard.setData(ClipboardData(text: text));
+                              FlutterToastr.show(localizations.copied, context);
+                            })
+                      ],
+                  child: const SizedBox(height: 38, width: 38, child: Icon(Icons.more_vert, size: 28))),
+              const SizedBox(width: 10),
             ],
           );
 
