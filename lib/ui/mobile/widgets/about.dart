@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Hongen Wang
+ * Copyright 2023 Hongen Wang All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -58,7 +57,10 @@ class About extends StatelessWidget {
                 title: Text(isCN ? "下载地址" : "Download"),
                 trailing: const Icon(Icons.arrow_right),
                 onTap: () {
-                  launchUrl(Uri.parse("https://gitee.com/wanghongenpin/network-proxy-flutter/releases"),
+                  launchUrl(
+                      Uri.parse(isCN
+                          ? "https://gitee.com/wanghongenpin/network-proxy-flutter/releases"
+                          : "https://github.com/wanghongenpin/network_proxy_flutter/releases"),
                       mode: LaunchMode.externalApplication);
                 })
           ],

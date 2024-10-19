@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 Hongen Wang All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
@@ -5,18 +21,18 @@ import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/utils/lang.dart';
 
-class RewriteUpdateWidget extends StatefulWidget {
-  final String subtitle;
+class MobileRewriteUpdate extends StatefulWidget {
   final RuleType ruleType;
   final List<RewriteItem>? items;
 
-  const RewriteUpdateWidget({super.key, required this.subtitle, required this.ruleType, this.items});
+  const MobileRewriteUpdate({super.key, required this.ruleType, this.items});
 
   @override
-  State<RewriteUpdateWidget> createState() => _RewriteUpdateState();
+  State<MobileRewriteUpdate> createState() => RewriteUpdateState();
 }
 
-class _RewriteUpdateState extends State<RewriteUpdateWidget> {
+class RewriteUpdateState extends State<MobileRewriteUpdate> {
+  late RuleType ruleType;
   List<RewriteItem> items = [];
 
   AppLocalizations get i18n => AppLocalizations.of(context)!;
@@ -24,56 +40,49 @@ class _RewriteUpdateState extends State<RewriteUpdateWidget> {
   @override
   void initState() {
     super.initState();
-    if (widget.items?.isNotEmpty == true) {
-      items.addAll(widget.items!);
-      return;
+    initItems(widget.ruleType, widget.items);
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   add();
+    // });
+  }
+
+  ///初始化重写项
+  initItems(RuleType ruleType, List<RewriteItem>? items) {
+    this.ruleType = ruleType;
+    this.items.clear();
+    if (items != null) {
+      this.items.addAll(items);
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      add();
-    });
+  }
+
+  List<RewriteItem> getItems() {
+    return items;
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isCN = Localizations.localeOf(context).languageCode == "zh";
-    return Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: Text(isCN ? widget.ruleType.label : widget.ruleType.name,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(items);
-                },
-                child: Text(i18n.done)),
-            const SizedBox(width: 10)
+    return Column(
+      children: [
+        Row(
+          children: [
+            SizedBox(
+                width: 260,
+                child: Text(i18n.requestRewriteRule,
+                    maxLines: 1, style: const TextStyle(fontSize: 13, color: Colors.grey))),
+            Expanded(
+                child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [IconButton(onPressed: add, icon: const Icon(Icons.add)), const SizedBox(width: 10)],
+            ))
           ],
         ),
-        body: Padding(
-            padding: const EdgeInsets.all(8),
-            child: ListView(
-              children: [
-                Row(
-                  children: [
-                    SizedBox(
-                        width: 260,
-                        child: Text(widget.subtitle,
-                            maxLines: 1, style: const TextStyle(fontSize: 13, color: Colors.grey))),
-                    Expanded(
-                        child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [IconButton(onPressed: add, icon: const Icon(Icons.add)), const SizedBox(width: 10)],
-                    ))
-                  ],
-                ),
-                UpdateList(items: items, ruleType: widget.ruleType),
-              ],
-            )));
+        UpdateList(items: items, ruleType: ruleType),
+      ],
+    );
   }
 
   add() {
-    showDialog(context: context, builder: (context) => RewriteUpdateAddDialog(ruleType: widget.ruleType)).then((value) {
+    showDialog(context: context, builder: (context) => RewriteUpdateAddDialog(ruleType: ruleType)).then((value) {
       if (value != null) {
         setState(() {
           items.add(value);
@@ -143,8 +152,7 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
               child: Text(i18n.confirm)),
         ],
         content: SizedBox(
-            width: 320,
-            height: 180,
+            height: 243,
             child: Form(
                 key: formKey,
                 child: ListView(children: [
@@ -189,6 +197,7 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
           child: TextFormField(
         initialValue: val,
         style: const TextStyle(fontSize: 14),
+        maxLines: 3,
         validator: (val) => val?.isNotEmpty == true || !required ? null : "",
         onSaved: onSaved,
         decoration: InputDecoration(
@@ -230,8 +239,7 @@ class _UpdateListState extends State<UpdateList> {
   Widget build(BuildContext context) {
     return Container(
         padding: const EdgeInsets.only(top: 10),
-        height: 320,
-        width: 550,
+        constraints: const BoxConstraints(minHeight: 350),
         decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
         child: SingleChildScrollView(
             child: Column(children: [

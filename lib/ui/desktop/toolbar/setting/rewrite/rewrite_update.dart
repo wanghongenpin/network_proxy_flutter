@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Hongen Wang
+ * Copyright 2023 Hongen Wang All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,18 @@ import 'package:network_proxy/utils/lang.dart';
 
 /// @author wanghongen
 /// 2023/10/8
-class RewriteUpdateDialog extends StatefulWidget {
-  final String subtitle;
+class DesktopRewriteUpdate extends StatefulWidget {
   final RuleType ruleType;
   final List<RewriteItem>? items;
 
-  const RewriteUpdateDialog({super.key, required this.subtitle, required this.ruleType, this.items});
+  const DesktopRewriteUpdate({super.key, required this.ruleType, this.items});
 
   @override
-  State<RewriteUpdateDialog> createState() => _RewriteUpdateState();
+  State<DesktopRewriteUpdate> createState() => RewriteUpdateState();
 }
 
-class _RewriteUpdateState extends State<RewriteUpdateDialog> {
+class RewriteUpdateState extends State<DesktopRewriteUpdate> {
+  late RuleType ruleType;
   List<RewriteItem> items = [];
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
@@ -42,53 +42,51 @@ class _RewriteUpdateState extends State<RewriteUpdateDialog> {
   @override
   void initState() {
     super.initState();
-    if (widget.items?.isNotEmpty == true) {
-      items.addAll(widget.items!);
-      return;
+
+    initItems(widget.ruleType, widget.items);
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   add();
+    // });
+  }
+
+  ///初始化重写项
+  initItems(RuleType ruleType, List<RewriteItem>? items) {
+    this.ruleType = ruleType;
+    this.items.clear();
+
+    if (items != null) {
+      this.items.addAll(items);
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      add();
-    });
+  }
+
+  List<RewriteItem> getItems() {
+    return items;
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
-
-    return AlertDialog(
-        titlePadding: const EdgeInsets.all(0),
-        actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
-        contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 5),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(localizations.cancel)),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(items);
-              },
-              child: Text(localizations.done)),
-        ],
-        title: ListTile(title: Text(isCN ? widget.ruleType.label : widget.ruleType.name, textAlign: TextAlign.center)),
-        content: SizedBox(
-            height: 380,
-            child: Column(
+    return SizedBox(
+        height: 340,
+        width: 500,
+        child: Column(
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Text(widget.subtitle, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                    Expanded(
-                        child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [IconButton(onPressed: add, icon: const Icon(Icons.add)), const SizedBox(width: 10)],
-                    ))
-                  ],
-                ),
-                UpdateList(items: items, ruleType: widget.ruleType),
+                Text(localizations.requestRewriteRule, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                Expanded(
+                    child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [IconButton(onPressed: add, icon: const Icon(Icons.add)), const SizedBox(width: 10)],
+                ))
               ],
-            )));
+            ),
+            UpdateList(items: items, ruleType: ruleType),
+          ],
+        ));
   }
 
   add() {
-    showDialog(context: context, builder: (context) => RewriteUpdateAddDialog(ruleType: widget.ruleType)).then((value) {
+    showDialog(context: context, builder: (context) => RewriteUpdateAddDialog(ruleType: ruleType)).then((value) {
       if (value != null) {
         setState(() {
           items.add(value);
@@ -158,8 +156,8 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
               child: Text(localizations.confirm)),
         ],
         content: SizedBox(
-            width: 320,
-            height: 150,
+            width: 330,
+            height: 170,
             child: Form(
                 key: formKey,
                 child: Column(children: [
@@ -204,6 +202,7 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
           child: TextFormField(
         initialValue: val,
         style: const TextStyle(fontSize: 14),
+        maxLines: 2,
         validator: (val) => val?.isNotEmpty == true || !required ? null : "",
         onSaved: onSaved,
         decoration: InputDecoration(
@@ -245,8 +244,7 @@ class _UpdateListState extends State<UpdateList> {
   Widget build(BuildContext context) {
     return Container(
         padding: const EdgeInsets.only(top: 10),
-        height: 320,
-        width: 550,
+        height: 290,
         decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
         child: SingleChildScrollView(
             child: Column(children: [

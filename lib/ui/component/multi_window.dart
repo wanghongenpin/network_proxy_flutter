@@ -1,4 +1,20 @@
-﻿import 'dart:convert';
+﻿/*
+ * Copyright 2023 Hongen Wang
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -108,7 +124,8 @@ class MultiWindow {
     });
   }
 
-  static Future<WindowController> openWindow(String title, String widgetName) async {
+  static Future<WindowController> openWindow(String title, String widgetName,
+      {Size size = const Size(800, 680)}) async {
     var ratio = 1.0;
     if (Platform.isWindows) {
       ratio = WindowManager.instance.getDevicePixelRatio();
@@ -119,7 +136,7 @@ class MultiWindow {
     ));
     window.setTitle(title);
     window
-      ..setFrame(const Offset(50, -10) & Size(800 * ratio, 680 * ratio))
+      ..setFrame(const Offset(50, -10) & Size(size.width * ratio, size.height * ratio))
       ..center();
     window.show();
 
@@ -208,10 +225,10 @@ void registerMethodHandler() {
 
     if (call.method == 'openFile') {
       List<String> extensions =
-      call.arguments is List ? Lists.convertList<String>(call.arguments) : <String>[call.arguments];
+          call.arguments is List ? Lists.convertList<String>(call.arguments) : <String>[call.arguments];
 
       XTypeGroup typeGroup =
-      XTypeGroup(extensions: extensions, uniformTypeIdentifiers: Platform.isMacOS ? const ['public.item'] : null);
+          XTypeGroup(extensions: extensions, uniformTypeIdentifiers: Platform.isMacOS ? const ['public.item'] : null);
       final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
       if (Platform.isWindows) windowManager.blur();
       return file?.path;
@@ -219,7 +236,7 @@ void registerMethodHandler() {
 
     if (call.method == 'pickFile') {
       List<String> extensions =
-      call.arguments is List ? Lists.convertList<String>(call.arguments) : <String>[call.arguments];
+          call.arguments is List ? Lists.convertList<String>(call.arguments) : <String>[call.arguments];
 
       var file =
           (await FilePicker.platform.pickFiles(allowedExtensions: extensions, type: FileType.custom))?.files.single;
@@ -283,24 +300,6 @@ openScriptWindow() async {
     ..setFrame(const Offset(30, 0) & Size(800 * ratio, 690 * ratio))
     ..center()
     ..show();
-}
-
-///打开请求重写窗口
-openRequestRewriteWindow() async {
-  var ratio = 1.0;
-  if (Platform.isWindows) {
-    ratio = WindowManager.instance.getDevicePixelRatio();
-  }
-  registerMethodHandler();
-  final window = await DesktopMultiWindow.createWindow(jsonEncode(
-    {'name': 'RequestRewriteWidget'},
-  ));
-  // window.setTitle('请求重写');
-  window.setTitle('Request Rewrite');
-  window
-    ..setFrame(const Offset(50, 0) & Size(800 * ratio, 650 * ratio))
-    ..center();
-  window.show();
 }
 
 openScriptConsoleWindow() async {

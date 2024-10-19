@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Hongen Wang
+ * Copyright 2023 Hongen Wang All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,9 +66,12 @@ class _SearchState extends State<Search> {
         },
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.all(0),
-          border: InputBorder.none,
+          enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade400, width: 0.5), borderRadius: BorderRadius.circular(15)),
+          border: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade400, width: 0.5), borderRadius: BorderRadius.circular(15)),
           prefixIcon: InkWell(
-              child: Icon(Icons.search, color: searched ? Colors.green : Colors.blue),
+              child: Icon(Icons.search, color: searched ? Colors.green : Theme.of(context).primaryColor),
               onTapDown: (details) {
                 searchDialog(details);
               }),
