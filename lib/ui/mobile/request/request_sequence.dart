@@ -143,8 +143,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
                 Divider(thickness: 0.2, height: 0, color: Theme.of(context).dividerColor),
             itemCount: view.length,
             itemBuilder: (context, index) {
-              GlobalKey<RequestRowState> key = GlobalKey();
-              indexes[view.elementAt(index)] = key;
+              GlobalKey<RequestRowState> key = indexes[view.elementAt(index)] ??= GlobalKey();
               return RequestRow(
                   index: view.length - index,
                   key: key,

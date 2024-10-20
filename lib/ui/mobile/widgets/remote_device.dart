@@ -344,7 +344,7 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
                       Navigator.pop(context);
                     }
                   },
-                  child: Text(localizations.connected)),
+                  child: Text(localizations.connectRemote)),
             ],
           );
         });
@@ -380,7 +380,12 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
   }
 
   ///
+  bool doConnecting = false;
+
+  ///连接远程设备
   Future<bool> doConnect(String host, int port, {bool? ipProxy}) async {
+    if (doConnecting) return false;
+    doConnecting = true;
     try {
       var response = await HttpClients.get("http://$host:$port/ping", timeout: const Duration(milliseconds: 3000));
       if (response.bodyAsString == "pong") {
@@ -422,6 +427,8 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
             });
       }
       return false;
+    } finally {
+      doConnecting = false;
     }
   }
 

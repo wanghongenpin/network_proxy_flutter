@@ -27,6 +27,7 @@ class ShareWidget extends StatelessWidget {
       itemBuilder: (BuildContext context) {
         return [
           PopupMenuItem(
+            padding: const EdgeInsets.only(left: 10, right: 2),
             child: Text(localizations.shareUrl),
             onTap: () {
               if (request == null) {
@@ -37,7 +38,7 @@ class ShareWidget extends StatelessWidget {
             },
           ),
           PopupMenuItem(
-              padding: const EdgeInsets.only(left: 10),
+              padding: const EdgeInsets.only(left: 10, right: 2),
               child: Text(localizations.shareRequestResponse),
               onTap: () {
                 if (request == null) {
@@ -49,7 +50,7 @@ class ShareWidget extends StatelessWidget {
                 Share.shareXFiles([file], fileNameOverrides: ['request.txt'], text: localizations.proxyPinSoftware);
               }),
           PopupMenuItem(
-              padding: const EdgeInsets.only(left: 10),
+              padding: const EdgeInsets.only(left: 10, right: 2),
               child: Text(localizations.shareCurl),
               onTap: () {
                 if (request == null) {

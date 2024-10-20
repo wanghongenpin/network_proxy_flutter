@@ -181,7 +181,8 @@ class _MobileHistoryState extends State<MobileHistory> {
   Widget buildItem(HistoryStorage storage, int index, HistoryItem item) {
     return InkWell(
         onTapDown: (detail) async {
-          HapticFeedback.heavyImpact();
+          HapticFeedback.mediumImpact();
+
           showContextMenu(context, detail.globalPosition.translate(-50, index == 0 ? -100 : 100), items: [
             PopupMenuItem(child: Text(localizations.rename), onTap: () => renameHistory(storage, item)),
             PopupMenuItem(child: Text(localizations.share), onTap: () => export(storage, item)),
