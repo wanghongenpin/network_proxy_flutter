@@ -80,11 +80,6 @@ class _MobileSslState extends State<MobileSslWidget> {
           ListTile(
               title: Text(localizations.exportCA),
               onTap: () async {
-                if (Platform.isIOS) {
-                  _downloadCert();
-                  return;
-                }
-
                 var caFile = await CertificateManager.certificateFile();
                 _exportFile("ProxyPinCA.crt", file: caFile);
               }),
@@ -98,16 +93,15 @@ class _MobileSslState extends State<MobileSslWidget> {
           const Divider(indent: 0.2, height: 1),
           ListTile(title: Text(localizations.importCaP12), onTap: importPk12),
           const Divider(indent: 0.2, height: 1),
-          if (Platform.isAndroid)
-            ListTile(
-                title: Text(localizations.generateCA),
-                onTap: () async {
-                  showConfirmDialog(context, title: localizations.generateCA, content: localizations.generateCADescribe,
-                      onConfirm: () async {
-                    await CertificateManager.generateNewRootCA();
-                    if (context.mounted) FlutterToastr.show(localizations.success, context);
-                  });
-                }),
+          ListTile(
+              title: Text(localizations.generateCA),
+              onTap: () async {
+                showConfirmDialog(context, title: localizations.generateCA, content: localizations.generateCADescribe,
+                    onConfirm: () async {
+                  await CertificateManager.generateNewRootCA();
+                  if (context.mounted) FlutterToastr.show(localizations.success, context);
+                });
+              }),
           const Divider(indent: 0.2, height: 1),
           ListTile(
               title: Text(localizations.resetDefaultCA),
@@ -224,6 +218,7 @@ class _MobileSslState extends State<MobileSslWidget> {
 
   void _downloadCert() async {
     CertificateManager.cleanCache();
+    await widget.proxyServer.retryBind();
     launchUrl(Uri.parse("http://127.0.0.1:${widget.proxyServer.port}/ssl"), mode: LaunchMode.externalApplication);
   }
 

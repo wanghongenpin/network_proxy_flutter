@@ -327,6 +327,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
         headers.add(Row(children: [
           SelectableText(name, contextMenuBuilder: contextMenu, style: nameStyle),
           const Text(": ", style: nameStyle),
+          if (Platforms.isDesktop()) SizedBox(width: 5),
           Expanded(
               child: SelectableText(v, style: textStyle, contextMenuBuilder: contextMenu, maxLines: 8, minLines: 1)),
         ]));
