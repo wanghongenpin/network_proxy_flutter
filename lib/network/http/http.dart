@@ -99,7 +99,7 @@ abstract class HttpMessage {
       if (headers.contentEncoding == 'br') {
         rawBody = brDecode(body!);
       }
-      if (charset == 'utf-8') {
+      if (charset == 'utf-8' || charset == 'utf8') {
         return utf8.decode(rawBody);
       }
 

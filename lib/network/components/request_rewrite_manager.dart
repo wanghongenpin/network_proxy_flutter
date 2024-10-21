@@ -415,7 +415,7 @@ class RequestRewrites {
         }
         return item.value ?? '';
       });
-      message.body = message.charset == 'utf-8' ? utf8.encode(body) : body.codeUnits;
+      message.body = message.charset == 'utf-8' || message.charset == 'utf8' ? utf8.encode(body) : body.codeUnits;
 
       message.headers.remove(HttpHeaders.CONTENT_ENCODING);
       message.headers.contentLength = message.body!.length;
@@ -475,7 +475,8 @@ class RequestRewrites {
       }
 
       if (item.body != null) {
-        message.body = message.charset == 'utf-8' ? utf8.encode(item.body!) : item.body?.codeUnits;
+        message.body =
+            message.charset == 'utf-8' || message.charset == 'utf8' ? utf8.encode(item.body!) : item.body?.codeUnits;
         message.headers.contentLength = message.body!.length;
       }
       return;

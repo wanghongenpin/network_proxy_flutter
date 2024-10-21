@@ -378,7 +378,7 @@ async function onResponse(context, request, response) {
 
     request.body = map['body']?.toString().codeUnits;
 
-    if (request.body != null && request.charset == 'utf-8') {
+    if (request.body != null && (request.charset == 'utf-8' || request.charset == 'utf8')) {
       request.body = utf8.encode(map['body'].toString());
     }
     return request;
@@ -406,7 +406,7 @@ async function onResponse(context, request, response) {
     }
 
     response.body = map['body']?.toString().codeUnits;
-    if (response.body != null && response.charset == 'utf-8') {
+    if (response.body != null && (response.charset == 'utf-8' || response.charset == 'utf8')) {
       response.body = utf8.encode(map['body'].toString());
     }
 
