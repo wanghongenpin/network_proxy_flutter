@@ -78,7 +78,7 @@ class MobileSearchState extends State<MobileSearch> {
                 border: InputBorder.none,
                 prefixIcon: InkWell(
                     onTap: showSearch,
-                    child: Icon(Icons.search, color: _searched ? Colors.green : Theme.of(context).primaryColor)),
+                    child: Icon(Icons.search, color: _searched ? Colors.green : Theme.of(context).colorScheme.primary)),
                 hintText: 'Search')));
   }
 

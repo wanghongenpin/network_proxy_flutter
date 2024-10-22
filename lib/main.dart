@@ -64,6 +64,11 @@ void main(List<String> args) async {
       titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
 
   Offset? windowPosition = appConfiguration.windowPosition;
+
+  if (appConfiguration.themeMode != ThemeMode.system) {
+    windowManager.setBrightness(appConfiguration.themeMode == ThemeMode.dark ? Brightness.dark : Brightness.light);
+  }
+
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     if (windowPosition != null) {
       await windowManager.setPosition(windowPosition);

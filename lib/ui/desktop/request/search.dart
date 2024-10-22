@@ -71,7 +71,7 @@ class _SearchState extends State<Search> {
           border: OutlineInputBorder(
               borderSide: BorderSide(color: Colors.grey.shade400, width: 0.5), borderRadius: BorderRadius.circular(15)),
           prefixIcon: InkWell(
-              child: Icon(Icons.search, color: searched ? Colors.green : Theme.of(context).primaryColor),
+              child: Icon(Icons.search, color: searched ? Colors.green : Theme.of(context).colorScheme.primary),
               onTapDown: (details) {
                 searchDialog(details);
               }),

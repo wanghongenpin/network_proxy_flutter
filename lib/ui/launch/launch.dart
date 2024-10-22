@@ -116,7 +116,7 @@ class _SocketLaunchState extends State<SocketLaunch> with WindowListener, Widget
 
   @override
   Widget build(BuildContext context) {
-    Color primaryColor = Theme.of(context).primaryColor;
+    Color primaryColor = Theme.of(context).colorScheme.primary;
     return IconButton(
         tooltip: started ? localizations.stop : localizations.start,
         icon: Icon(started ? Icons.stop : Icons.play_arrow_sharp,
