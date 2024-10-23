@@ -15,6 +15,7 @@
  */
 
 import 'dart:collection';
+import 'dart:io';
 
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
@@ -167,15 +168,15 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
   ///右键菜单
   menu(details) {
-    setState(() {
-      selected = true;
-    });
+    // setState(() {
+    //   selected = true;
+    // });
 
     var globalPosition = details.globalPosition;
     MediaQueryData mediaQuery = MediaQuery.of(context);
     var position = RelativeRect.fromLTRB(globalPosition.dx, globalPosition.dy, globalPosition.dx, globalPosition.dy);
     // Trigger haptic feedback
-    HapticFeedback.mediumImpact();
+    if (Platform.isAndroid) HapticFeedback.mediumImpact();
 
     showMenu(
         context: context,
@@ -310,7 +311,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
           )),
         ]).then((value) {
       selected = false;
-      if (mounted) setState(() {});
+      // if (mounted) setState(() {});
     });
   }
 

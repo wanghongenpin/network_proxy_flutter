@@ -100,6 +100,7 @@ class _ExternalProxyDialogState extends State<ExternalProxyDialog> {
                         width: 68,
                         child: TextFormField(
                           initialValue: externalProxy.port?.toString() ?? '',
+                          keyboardType: TextInputType.datetime,
                           inputFormatters: <TextInputFormatter>[
                             LengthLimitingTextInputFormatter(5),
                             FilteringTextInputFormatter.allow(RegExp("[0-9]"))

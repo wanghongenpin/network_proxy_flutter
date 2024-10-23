@@ -23,7 +23,7 @@ import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/configuration.dart';
 import 'package:network_proxy/ui/mobile/menu/drawer.dart';
-import 'package:network_proxy/ui/mobile/menu/preference.dart';
+import 'package:network_proxy/ui/mobile/setting/preference.dart';
 import 'package:network_proxy/ui/mobile/mobile.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
 import 'package:network_proxy/ui/mobile/request/history.dart';
@@ -126,7 +126,7 @@ class _MePageState extends State<MePage> {
                     futureWidget(
                         AppConfiguration.instance,
                         (appConfiguration) =>
-                            SettingMenu(proxyServer: proxyServer, appConfiguration: appConfiguration)))),
+                            Preference(proxyServer: proxyServer, appConfiguration: appConfiguration)))),
             ListTile(
                 title: Text(localizations.about),
                 leading: Icon(Icons.info_outline, color: color),

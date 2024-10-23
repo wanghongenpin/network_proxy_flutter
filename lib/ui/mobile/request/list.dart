@@ -132,6 +132,19 @@ class RequestListState extends State<RequestListWidget> {
     });
   }
 
+  ///清理早期数据
+  cleanupEarlyData(int retain) {
+    var list = container.source;
+    if (list.length <= retain) {
+      return;
+    }
+
+    container.removeRange(0, list.length - retain);
+
+    domainListKey.currentState?.clean();
+    requestSequenceKey.currentState?.clean();
+  }
+
   //导出har
   export(String title) async {
     //文件名称

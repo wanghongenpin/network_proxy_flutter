@@ -15,6 +15,7 @@
  */
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:date_format/date_format.dart';
 import 'package:file_selector/file_selector.dart';
@@ -76,6 +77,7 @@ class _MobileHistoryState extends State<MobileHistory> {
   ///是否保存会话
   static bool _sessionSaved = false;
   late Configuration configuration;
+  var storageInstance = HistoryStorage.instance;
 
   @override
   void initState() {
@@ -87,7 +89,7 @@ class _MobileHistoryState extends State<MobileHistory> {
 
   @override
   Widget build(BuildContext context) {
-    return futureWidget(HistoryStorage.instance, (storage) {
+    return futureWidget(storageInstance, (storage) {
       List<Widget> children = [];
 
       if (widget.container.isNotEmpty == true && !_sessionSaved && widget.historyTask.history == null) {
@@ -179,10 +181,9 @@ class _MobileHistoryState extends State<MobileHistory> {
 
   //构建历史记录
   Widget buildItem(HistoryStorage storage, int index, HistoryItem item) {
-    return InkWell(
-        enableFeedback: false,
-        onTapDown: (detail) async {
-          HapticFeedback.mediumImpact();
+    return GestureDetector(
+        onLongPressStart: (detail) async {
+          if (Platform.isAndroid) HapticFeedback.mediumImpact();
           setState(() {
             selectIndex = index;
           });

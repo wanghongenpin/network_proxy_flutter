@@ -142,18 +142,12 @@ class _PreferenceState extends State<Preference> {
                         appConfiguration.flushConfig();
                       })),
               SizedBox(height: 5),
-              Row(children: [
-                Expanded(
-                    child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(localizations.memoryCleanup, style: titleStyle),
-                    Text(localizations.memoryCleanupSubtitle, style: subtitleStyle),
-                  ],
-                )),
-                SizedBox(width: 10),
-                memoryCleanup(context, localizations),
-              ]),
+              ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(localizations.memoryCleanup),
+                  subtitle: Text(localizations.memoryCleanupSubtitle, style: subtitleStyle),
+                  trailing: memoryCleanup(context, localizations)),
+
               SizedBox(height: 5),
             ])));
   }

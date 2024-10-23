@@ -31,6 +31,7 @@ import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/ui/component/memory_cleanup.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
@@ -85,6 +86,11 @@ class MobileHomeState extends State<MobileHomePage> implements EventListener, Li
   void onRequest(Channel channel, HttpRequest request) {
     MobileApp.requestStateKey.currentState!.add(channel, request);
     PictureInPicture.addData(request.requestUrl);
+
+    //监控内存 到达阈值清理
+    MemoryCleanupMonitor.onMonitor(onCleanup: () {
+      MobileApp.requestStateKey.currentState?.cleanupEarlyData(32);
+    });
   }
 
   @override
@@ -359,10 +365,13 @@ class RequestPageState extends State<RequestPage> {
         ));
   }
 
-  FloatingActionButton _launchActionButton() {
-    return FloatingActionButton(
-      onPressed: null,
-      child: Center(
+  Widget _launchActionButton() {
+    var theme = Theme.of(context);
+    return Theme(
+        data: ThemeData.from(colorScheme: theme.colorScheme, textTheme: theme.textTheme, useMaterial3: true),
+        child: FloatingActionButton(
+          onPressed: null,
+          backgroundColor: theme.colorScheme.primaryContainer,
           child: SocketLaunch(
               proxyServer: proxyServer,
               size: 36,
@@ -382,8 +391,8 @@ class RequestPageState extends State<RequestPage> {
 
                 Vpn.startVpn(host, port, proxyServer.configuration, ipProxy: remoteDevice.value.ipProxy);
               },
-              onStop: () => Vpn.stopVpn())),
-    );
+              onStop: () => Vpn.stopVpn()),
+        ));
   }
 
   /// 远程连接

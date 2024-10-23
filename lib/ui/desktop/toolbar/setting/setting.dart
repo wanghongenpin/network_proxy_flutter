@@ -296,6 +296,8 @@ class _PortState extends State<PortWidget> {
             focusNode: portFocus,
             controller: textController,
             textAlign: TextAlign.center,
+            onTapOutside: (event) => portFocus.unfocus(),
+            keyboardType: TextInputType.datetime,
             inputFormatters: <TextInputFormatter>[
               LengthLimitingTextInputFormatter(5),
               FilteringTextInputFormatter.allow(RegExp("[0-9]"))

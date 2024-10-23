@@ -91,6 +91,8 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
     setState(() {
       view.clear();
       indexes.clear();
+
+      view.addAll(widget.container.source.reversed);
     });
   }
 

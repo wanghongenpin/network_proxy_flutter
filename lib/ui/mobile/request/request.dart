@@ -94,6 +94,10 @@ class RequestRowState extends State<RequestRow> {
     return KeywordHighlight.getHighlightColor(url);
   }
 
+  BuildContext getContext() => mounted ? super.context : NavigatorHelper().context;
+
+  BuildContext get availableContext => getContext();
+
   @override
   Widget build(BuildContext context) {
     String url = widget.displayDomain ? request.requestUrl : request.path();
@@ -128,7 +132,7 @@ class RequestRowState extends State<RequestRow> {
           contentPadding:
               Platform.isIOS ? const EdgeInsets.symmetric(horizontal: 8) : const EdgeInsets.only(left: 3, right: 5),
           onTap: () {
-            Navigator.of(this.context).push(MaterialPageRoute(builder: (context) {
+            Navigator.of(getContext()).push(MaterialPageRoute(builder: (context) {
               return NetworkTabController(
                   proxyServer: widget.proxyServer,
                   httpRequest: request,
@@ -174,7 +178,7 @@ class RequestRowState extends State<RequestRow> {
     MediaQueryData mediaQuery = MediaQuery.of(context);
     var position = RelativeRect.fromLTRB(globalPosition.dx, globalPosition.dy, globalPosition.dx, globalPosition.dy);
     // Trigger haptic feedback
-    HapticFeedback.mediumImpact();
+    if (Platform.isAndroid) HapticFeedback.mediumImpact();
 
     showMenu(
         context: context,
@@ -196,10 +200,8 @@ class RequestRowState extends State<RequestRow> {
                 left: itemButton(
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: request.requestUrl)).then((value) {
-                        if (mounted) {
-                          FlutterToastr.show(localizations.copied, context);
-                          Navigator.maybePop(context);
-                        }
+                        FlutterToastr.show(localizations.copied, getContext());
+                        Navigator.maybePop(getContext());
                       });
                     },
                     label: localizations.copyUrl,
@@ -208,10 +210,8 @@ class RequestRowState extends State<RequestRow> {
                 right: itemButton(
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: curlRequest(request))).then((value) {
-                        if (mounted) {
-                          FlutterToastr.show(localizations.copied, context);
-                          Navigator.maybePop(context);
-                        }
+                        FlutterToastr.show(localizations.copied, getContext());
+                        Navigator.maybePop(getContext());
                       });
                     },
                     label: localizations.copyCurl,
@@ -222,7 +222,7 @@ class RequestRowState extends State<RequestRow> {
                 left: itemButton(
                     onPressed: () {
                       onRepeat(request);
-                      Navigator.maybePop(context);
+                      Navigator.maybePop(getContext());
                     },
                     label: localizations.repeat,
                     icon: Icons.repeat_one),
@@ -234,23 +234,19 @@ class RequestRowState extends State<RequestRow> {
                 left: itemButton(
                     onPressed: () {
                       FavoriteStorage.addFavorite(widget.request);
-                      FlutterToastr.show(localizations.addSuccess, context);
-                      Navigator.maybePop(context);
+                      FlutterToastr.show(localizations.addSuccess, availableContext);
+                      Navigator.maybePop(availableContext);
                     },
                     label: localizations.favorite,
                     icon: Icons.favorite_outline),
                 right: itemButton(
                     onPressed: () async {
-                      await Navigator.maybePop(context);
+                      await Navigator.maybePop(availableContext);
 
                       var pageRoute = MaterialPageRoute(
                           builder: (context) =>
                               MobileRequestEditor(request: widget.request, proxyServer: widget.proxyServer));
-                      if (mounted) {
-                        Navigator.push(context, pageRoute);
-                      } else {
-                        NavigatorHelper.push(pageRoute);
-                      }
+                      Navigator.push(getContext(), pageRoute);
                     },
                     label: localizations.editRequest,
                     icon: Icons.edit_outlined),
@@ -259,7 +255,7 @@ class RequestRowState extends State<RequestRow> {
               menuItem(
                 left: itemButton(
                     onPressed: () async {
-                      Navigator.maybePop(context);
+                      Navigator.maybePop(availableContext);
 
                       var scriptManager = await ScriptManager.instance;
                       var url = '${request.remoteDomain()}${request.path()}';
@@ -269,17 +265,14 @@ class RequestRowState extends State<RequestRow> {
                       var pageRoute = MaterialPageRoute(
                           builder: (context) =>
                               ScriptEdit(scriptItem: scriptItem, script: script, url: scriptItem?.url ?? url));
-                      if (mounted) {
-                        Navigator.push(context, pageRoute);
-                      } else {
-                        NavigatorHelper.push(pageRoute);
-                      }
+
+                      Navigator.push(getContext(), pageRoute);
                     },
                     label: localizations.script,
                     icon: Icons.javascript_outlined),
                 right: itemButton(
                     onPressed: () async {
-                      Navigator.maybePop(context);
+                      Navigator.maybePop(availableContext);
                       bool isRequest = response == null;
                       var requestRewrites = await RequestRewrites.instance;
 
@@ -297,12 +290,8 @@ class RequestRowState extends State<RequestRow> {
                       }
 
                       var pageRoute = MaterialPageRoute(builder: (_) => RewriteRule(rule: rule, items: rewriteItems));
-
-                      if (mounted) {
-                        Navigator.push(context, pageRoute);
-                      } else {
-                        NavigatorHelper.push(pageRoute);
-                      }
+                      var context = availableContext;
+                      if (context.mounted) Navigator.push(context, pageRoute);
                     },
                     label: localizations.requestRewrite,
                     icon: Icons.replay_outlined),
@@ -310,15 +299,15 @@ class RequestRowState extends State<RequestRow> {
               menuItem(
                 left: itemButton(
                     onPressed: () {
-                      highlightColor = Theme.of(context).colorScheme.primary;
-                      Navigator.maybePop(context);
+                      highlightColor = Theme.of(availableContext).colorScheme.primary;
+                      Navigator.maybePop(availableContext);
                     },
                     label: localizations.highlight,
                     icon: Icons.highlight_outlined),
                 right: itemButton(
                     onPressed: () {
                       highlightColor = Colors.grey;
-                      Navigator.maybePop(context);
+                      Navigator.maybePop(availableContext);
                     },
                     label: localizations.markRead,
                     icon: Icons.mark_chat_read_outlined),
@@ -328,8 +317,8 @@ class RequestRowState extends State<RequestRow> {
                 itemButton(
                     onPressed: () {
                       widget.onRemove?.call(request);
-                      FlutterToastr.show(localizations.deleteSuccess, context);
-                      Navigator.maybePop(context);
+                      FlutterToastr.show(localizations.deleteSuccess, availableContext);
+                      Navigator.maybePop(availableContext);
                     },
                     label: localizations.delete,
                     icon: Icons.delete_outline),
@@ -345,15 +334,12 @@ class RequestRowState extends State<RequestRow> {
 
   //显示高级重发
   showCustomRepeat(HttpRequest request) async {
-    await Navigator.maybePop(context);
+    await Navigator.maybePop(availableContext);
     var pageRoute = MaterialPageRoute(
         builder: (context) => futureWidget(SharedPreferences.getInstance(),
             (prefs) => MobileCustomRepeat(onRepeat: () => onRepeat(request), prefs: prefs)));
-    if (mounted) {
-      Navigator.push(context, pageRoute);
-    } else {
-      NavigatorHelper.push(pageRoute);
-    }
+
+    Navigator.push(getContext(), pageRoute);
   }
 
   onRepeat(HttpRequest request) {
@@ -361,9 +347,7 @@ class RequestRowState extends State<RequestRow> {
     var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
     HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo);
 
-    if (mounted) {
-      FlutterToastr.show(localizations.reSendRequest, context);
-    }
+    FlutterToastr.show(localizations.reSendRequest, availableContext);
   }
 
   Widget itemButton(

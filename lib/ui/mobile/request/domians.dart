@@ -71,7 +71,10 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   initState() {
     super.initState();
     configuration = widget.proxyServer.configuration;
+    initFromContainer();
+  }
 
+  initFromContainer() {
     for (var request in widget.list) {
       var hostAndPort = request.hostAndPort!;
       domainList.add(hostAndPort);
@@ -117,6 +120,8 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
       view.clear();
       domainList.clear();
       containerMap.clear();
+
+      initFromContainer();
     });
   }
 

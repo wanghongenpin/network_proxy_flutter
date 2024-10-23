@@ -26,7 +26,7 @@ import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/configuration.dart';
-import 'package:network_proxy/ui/mobile/menu/preference.dart';
+import 'package:network_proxy/ui/mobile/setting/preference.dart';
 import 'package:network_proxy/ui/mobile/request/favorite.dart';
 import 'package:network_proxy/ui/mobile/request/history.dart';
 import 'package:network_proxy/ui/mobile/setting/app_filter.dart';
@@ -120,7 +120,7 @@ class DrawerWidget extends StatelessWidget {
                     futureWidget(
                         AppConfiguration.instance,
                         (appConfiguration) =>
-                            SettingMenu(proxyServer: proxyServer, appConfiguration: appConfiguration)))),
+                            Preference(proxyServer: proxyServer, appConfiguration: appConfiguration)))),
             ListTile(
                 title: Text(localizations.about),
                 leading: const Icon(Icons.info_outline),
