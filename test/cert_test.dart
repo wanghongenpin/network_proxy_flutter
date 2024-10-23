@@ -12,7 +12,7 @@ void main() async {
   var caRoot = X509Utils.x509CertificateFromPem(caPem);
   var generateRSAKeyPair = CryptoUtils.generateRSAKeyPair();
   var serverPubKey = generateRSAKeyPair.publicKey as RSAPublicKey;
-  var serverPriKey = generateRSAKeyPair.privateKey as RSAPrivateKey;
+  // var serverPriKey = generateRSAKeyPair.privateKey as RSAPrivateKey;
 
   print(CryptoUtils.encodeRSAPublicKeyToPem(serverPubKey));
   //保存私钥

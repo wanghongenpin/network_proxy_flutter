@@ -156,6 +156,19 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
     });
   }
 
+  cleanupEarlyData(int retain) {
+    var list = container.source;
+    if (list.length <= retain) {
+      return;
+    }
+
+    container.removeRange(0, list.length - retain);
+
+    domainListKey.currentState?.clean();
+    requestSequenceKey.currentState?.clean();
+  }
+
+  ///导出
   export(String fileName) async {
     final FileSaveLocation? result = await getSaveLocation(suggestedName: fileName);
     if (result == null) {
@@ -395,6 +408,13 @@ class DomainWidgetState extends State<DomainList> with AutomaticKeepAliveClientM
   clean() {
     setState(() {
       containerMap.clear();
+      searchView.clear();
+
+      var container = widget.list;
+      for (var request in container.source) {
+        DomainRequests domainRequests = getDomainRequests(request);
+        domainRequests.addRequest(request.requestId, request);
+      }
     });
   }
 

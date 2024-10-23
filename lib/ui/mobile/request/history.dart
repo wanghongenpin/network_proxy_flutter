@@ -180,9 +180,12 @@ class _MobileHistoryState extends State<MobileHistory> {
   //构建历史记录
   Widget buildItem(HistoryStorage storage, int index, HistoryItem item) {
     return InkWell(
+        enableFeedback: false,
         onTapDown: (detail) async {
           HapticFeedback.mediumImpact();
-
+          setState(() {
+            selectIndex = index;
+          });
           showContextMenu(context, detail.globalPosition.translate(-50, index == 0 ? -100 : 100), items: [
             PopupMenuItem(child: Text(localizations.rename), onTap: () => renameHistory(storage, item)),
             PopupMenuItem(child: Text(localizations.share), onTap: () => export(storage, item)),
@@ -196,7 +199,11 @@ class _MobileHistoryState extends State<MobileHistory> {
                 }),
             const PopupMenuDivider(height: 0.3),
             PopupMenuItem(child: Text(localizations.delete), onTap: () => deleteHistory(storage, index))
-          ]);
+          ]).whenComplete(() {
+            setState(() {
+              selectIndex = -1;
+            });
+          });
         },
         child: ListTile(
           dense: true,

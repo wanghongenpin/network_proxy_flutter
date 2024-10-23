@@ -22,6 +22,7 @@ import 'package:network_proxy/network/channel.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http/websocket.dart';
+import 'package:network_proxy/ui/component/memory_cleanup.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/configuration.dart';
@@ -62,6 +63,11 @@ class _DesktopHomePagePageState extends State<DesktopHomePage> implements EventL
   @override
   void onRequest(Channel channel, HttpRequest request) {
     requestListStateKey.currentState!.add(channel, request);
+
+    //监控内存 到达阈值清理
+    MemoryCleanupMonitor.onMonitor(onCleanup: () {
+      requestListStateKey.currentState?.cleanupEarlyData(32);
+    });
   }
 
   @override

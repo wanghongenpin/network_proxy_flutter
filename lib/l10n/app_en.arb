@@ -254,6 +254,10 @@
   "headerExpandedSubtitle": "Details page Headers is expanded by default",
   "bottomNavigation": "Bottom Navigation",
   "bottomNavigationSubtitle": "Bottom navigation bar is displayed, effective after restart",
+  "memoryCleanup": "Memory Cleanup",
+  "memoryCleanupSubtitle": "Automatically clean up requests on memory limit reached and keep 32 most recent after cleaning",
+  "unlimited": "Unlimited",
+  "custom": "Custom",
 
   "externalProxyAuth": "Proxy Auth (Optional)",
   "externalProxyServer": "Proxy Server",

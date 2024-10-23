@@ -168,6 +168,7 @@ class _HistoryListWidget extends StatefulWidget {
 class _HistoryListState extends State<_HistoryListWidget> {
   ///是否保存会话
   static bool _sessionSaved = false;
+  int selectIndex = -1;
 
   // 存储
   late HistoryStorage storage;
@@ -278,40 +279,43 @@ class _HistoryListState extends State<_HistoryListWidget> {
   //构建历史记录
   Widget buildItem(BuildContext rootContext, int index, HistoryItem item) {
     return GestureDetector(
-        onSecondaryTapDown: (details) => {
-              showContextMenu(rootContext, details.globalPosition, items: [
-                CustomPopupMenuItem(
-                    height: 35,
-                    child: Text(localizations.rename, style: const TextStyle(fontSize: 13)),
-                    onTap: () => renameHistory(storage, item)),
-                CustomPopupMenuItem(
-                    height: 35,
-                    child: Text(localizations.export, style: const TextStyle(fontSize: 13)),
-                    onTap: () => export(item)),
-                const PopupMenuDivider(height: 3),
-                CustomPopupMenuItem(
-                    height: 35,
-                    child: Text(localizations.repeatAllRequests, style: const TextStyle(fontSize: 13)),
-                    onTap: () async {
-                      var requests = (await storage.getRequests(item)).reversed;
-                      //重发所有请求
-                      _repeatAllRequests(requests.toList(), proxyServer,
-                          context: rootContext.mounted ? rootContext : null);
-                    }),
-                const PopupMenuDivider(height: 3),
-                CustomPopupMenuItem(
-                    height: 35,
-                    child: Text(localizations.delete, style: const TextStyle(fontSize: 13)),
-                    onTap: () {
-                      if (item == widget.historyTask.history) {
-                        widget.historyTask.cancelTask();
-                      }
-                      storage.removeHistory(index);
-                      FlutterToastr.show(localizations.deleteSuccess, context);
-                    }),
-              ])
-            },
+        onSecondaryTapDown: (details) {
+          setState(() {
+            selectIndex = index;
+          });
+          showContextMenu(rootContext, details.globalPosition, items: [
+            CustomPopupMenuItem(
+                height: 35,
+                child: Text(localizations.rename, style: const TextStyle(fontSize: 13)),
+                onTap: () => renameHistory(storage, item)),
+            CustomPopupMenuItem(
+                height: 35,
+                child: Text(localizations.export, style: const TextStyle(fontSize: 13)),
+                onTap: () => export(item)),
+            const PopupMenuDivider(height: 3),
+            CustomPopupMenuItem(
+                height: 35,
+                child: Text(localizations.repeatAllRequests, style: const TextStyle(fontSize: 13)),
+                onTap: () async {
+                  var requests = (await storage.getRequests(item)).reversed;
+                  //重发所有请求
+                  _repeatAllRequests(requests.toList(), proxyServer, context: rootContext.mounted ? rootContext : null);
+                }),
+            const PopupMenuDivider(height: 3),
+            CustomPopupMenuItem(
+                height: 35,
+                child: Text(localizations.delete, style: const TextStyle(fontSize: 13)),
+                onTap: () {
+                  if (item == widget.historyTask.history) {
+                    widget.historyTask.cancelTask();
+                  }
+                  storage.removeHistory(index);
+                  FlutterToastr.show(localizations.deleteSuccess, context);
+                }),
+          ]).whenComplete(() => setState(() => selectIndex = -1));
+        },
         child: ListTile(
+            selected: selectIndex == index,
             dense: true,
             title: Text(item.name),
             subtitle: Text(localizations.historySubtitle(item.requestLength, item.size)),

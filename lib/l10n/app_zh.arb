@@ -254,6 +254,10 @@
   "headerExpandedSubtitle": "详情页Headers栏是否自动展开",
   "bottomNavigation": "底部导航",
   "bottomNavigationSubtitle": "底部导航栏是否显示，重启后生效",
+  "memoryCleanup": "内存清理",
+  "memoryCleanupSubtitle": "到内存限制自动清理请求，清理后保留最近32条请求",
+  "unlimited": "无限制",
+  "custom": "自定义",
 
   "externalProxyAuth": "代理认证 (可选)",
   "externalProxyServer": "代理服务器",

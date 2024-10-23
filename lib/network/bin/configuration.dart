@@ -113,7 +113,7 @@ class Configuration {
     HostFilter.whitelist.toJson();
     HostFilter.blacklist.toJson();
     var json = jsonEncode(toJson());
-    logger.i('刷新配置文件 $runtimeType ${toJson()}');
+    logger.d('Refresh configuration file $runtimeType ${toJson()}');
     file.writeAsString(json);
   }
 

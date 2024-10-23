@@ -57,10 +57,12 @@ class HttpParse {
       return false;
     }
 
-    if (data.length > defaultMaxLength) {
-      throw Exception("header too long");
-    }
+    int startIndex = data.readerIndex;
     for (int i = data.readerIndex; i < data.length; i++) {
+      if ((i - startIndex) > defaultMaxLength) {
+        throw Exception("header too long");
+      }
+
       if (_isLineEnd(data, i)) {
         Uint8List line = data.readBytes(i - data.readerIndex);
         data.skipBytes(2);

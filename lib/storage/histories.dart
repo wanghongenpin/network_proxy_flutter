@@ -243,6 +243,7 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
 
   resetList() async {
     locked = true;
+    await open?.lock().timeout(Duration(seconds: 3), onTimeout: () => open!.unlock());
     open = await open?.truncate(0);
     await open?.setPosition(0);
     history?.requestLength = 0;
@@ -250,6 +251,7 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
     writeList.clear();
     writeList.addAll(sourceList.source);
     locked = false;
+    open?.unlock();
   }
 
   cancelTask() {

@@ -74,6 +74,9 @@ class AppConfiguration {
   /// 底部导航栏
   bool bottomNavigation = true;
 
+  /// 内存清理
+  int? memoryCleanupThreshold;
+
   //桌面window大小
   Size? windowSize;
 
@@ -180,6 +183,7 @@ class AppConfiguration {
       pipIcon.value = config['pipIcon'] ?? false;
       headerExpanded = config['headerExpanded'] ?? true;
       bottomNavigation = config['bottomNavigation'] ?? true;
+      memoryCleanupThreshold = config['memoryCleanupThreshold'];
 
       windowSize =
           config['windowSize'] == null ? null : Size(config['windowSize']['width'], config['windowSize']['height']);
@@ -221,6 +225,8 @@ class AppConfiguration {
       'upgradeNoticeV14': upgradeNoticeV14,
       "language": _language?.languageCode,
       "headerExpanded": headerExpanded,
+
+      if (memoryCleanupThreshold != null) 'memoryCleanupThreshold': memoryCleanupThreshold,
 
       if (Platforms.isMobile()) 'pipEnabled': pipEnabled.value,
       if (Platforms.isMobile()) 'pipIcon': pipIcon.value ? true : null,
