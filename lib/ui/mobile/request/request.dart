@@ -101,7 +101,7 @@ class RequestRowState extends State<RequestRow> {
 
   @override
   Widget build(BuildContext context) {
-    String url = widget.displayDomain ? request.requestUrl : request.path();
+    String url = widget.displayDomain ? request.requestUrl : request.path;
 
     var title = Strings.autoLineString('${request.method.name} $url');
 
@@ -250,7 +250,7 @@ class RequestRowState extends State<RequestRow> {
                       Navigator.push(getContext(), pageRoute);
                     },
                     label: localizations.editRequest,
-                    icon: Icons.edit_outlined),
+                    icon: Icons.replay_outlined),
               ),
               //script and rewrite
               menuItem(
@@ -259,8 +259,8 @@ class RequestRowState extends State<RequestRow> {
                       Navigator.maybePop(availableContext);
 
                       var scriptManager = await ScriptManager.instance;
-                      var url = '${request.remoteDomain()}${request.path()}';
-                      var scriptItem = (scriptManager).list.firstWhereOrNull((it) => it.url == url);
+                      var url = request.domainPath;
+                      var scriptItem = scriptManager.list.firstWhereOrNull((it) => it.url == url);
                       String? script = scriptItem == null ? null : await scriptManager.getScript(scriptItem);
 
                       var pageRoute = MaterialPageRoute(
@@ -278,24 +278,17 @@ class RequestRowState extends State<RequestRow> {
                       var requestRewrites = await RequestRewriteManager.instance;
 
                       var ruleType = isRequest ? RuleType.requestReplace : RuleType.responseReplace;
-                      var url = '${request.remoteDomain()}${request.path()}';
-                      var rule = requestRewrites.rules.firstWhere((it) => it.matchUrl(url, ruleType),
-                          orElse: () => RequestRewriteRule(type: ruleType, url: url));
+                      var rule = requestRewrites.getRequestRewriteRule(request, ruleType);
 
                       var rewriteItems = await requestRewrites.getRewriteItems(rule);
-                      RewriteType rewriteType =
-                          isRequest ? RewriteType.replaceRequestBody : RewriteType.replaceResponseBody;
-                      // if (!rewriteItems?.any((element) => element.type == rewriteType)) {
-                      //   rewriteItems.add(RewriteItem(rewriteType, true,
-                      //       values: {'body': isRequest ? request.bodyAsString : response?.bodyAsString}));
-                      // }
 
-                      var pageRoute = MaterialPageRoute(builder: (_) => RewriteRule(rule: rule, items: rewriteItems));
+                      var pageRoute = MaterialPageRoute(
+                          builder: (_) => RewriteRule(rule: rule, items: rewriteItems, request: request));
                       var context = availableContext;
                       if (context.mounted) Navigator.push(context, pageRoute);
                     },
                     label: localizations.requestRewrite,
-                    icon: Icons.replay_outlined),
+                    icon: Icons.edit_outlined),
               ),
               menuItem(
                 left: itemButton(
@@ -353,9 +346,12 @@ class RequestRowState extends State<RequestRow> {
 
   Widget itemButton(
       {required String label, required IconData icon, required Function() onPressed, double iconSize = 20}) {
-    var style = Theme.of(context).textTheme.bodyMedium;
+    var theme = Theme.of(context);
+    var style = theme.textTheme.bodyMedium;
     return TextButton.icon(
-        onPressed: onPressed, label: Text(label, style: style), icon: Icon(icon, size: iconSize, color: style?.color));
+        onPressed: onPressed,
+        label: Text(label, style: style),
+        icon: Icon(icon, size: iconSize, color: theme.colorScheme.primary.withOpacity(0.65)));
   }
 
   Widget menuItem({required Widget left, required Widget right}) {

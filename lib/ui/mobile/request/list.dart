@@ -126,9 +126,9 @@ class RequestListState extends State<RequestListWidget> {
   ///清理
   clean() {
     setState(() {
+      container.clear();
       domainListKey.currentState?.clean();
       requestSequenceKey.currentState?.clean();
-      container.clear();
     });
   }
 

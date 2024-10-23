@@ -104,6 +104,9 @@
   "enableSelect": "启用选择",
   "disableSelect": "禁用选择",
   "deleteSelect": "删除选择",
+  "testData": "测试数据",
+  "noChangesDetected": "未检测到变更",
+  "enterMatchData": "输入待匹配的数据",
 
   "modifyRequestHeader": "修改请求头",
   "headerName": "请求头名称",

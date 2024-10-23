@@ -156,8 +156,8 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T> {
     initialLine(builder, message);
 
     List<int>? body = message.body;
-    if (message.headers.isGzip) {
-      body = gzipEncode(body!);
+    if (message.headers.isGzip && body != null) {
+      body = gzipEncode(body);
     }
 
     //请求头

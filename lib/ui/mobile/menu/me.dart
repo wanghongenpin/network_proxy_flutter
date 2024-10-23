@@ -94,7 +94,7 @@ class _MePageState extends State<MePage> {
                 onTap: () => navigator(context, FilterMenu(proxyServer: proxyServer))),
             ListTile(
                 title: Text(localizations.requestRewrite),
-                leading: Icon(Icons.replay_outlined, color: color),
+                leading: Icon(Icons.edit_outlined, color: color),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () async {
                   var requestRewrites = await RequestRewriteManager.instance;

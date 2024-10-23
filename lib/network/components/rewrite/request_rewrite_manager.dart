@@ -230,7 +230,7 @@ class RequestRewriteManager {
   }
 
   RequestRewriteRule getRequestRewriteRule(HttpRequest request, RuleType type) {
-    var url = '${request.remoteDomain()}${request.path()}';
+    var url = request.domainPath;
     for (var rule in rules) {
       if (rule.match(url) && rule.type == type) {
         return rule;

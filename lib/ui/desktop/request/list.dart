@@ -149,10 +149,10 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
   ///清理
   clean() {
     setState(() {
+      container.clear();
       domainListKey.currentState?.clean();
       requestSequenceKey.currentState?.clean();
       widget.panel.change(null, null);
-      container.clear();
     });
   }
 

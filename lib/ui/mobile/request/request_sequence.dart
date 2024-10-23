@@ -26,8 +26,8 @@ class RequestSequence extends StatefulWidget {
 }
 
 class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliveClientMixin {
-  ///请求和对应的row的映射
-  Map<HttpRequest, GlobalKey<RequestRowState>> indexes = HashMap();
+  ///请求id和对应的row的映射
+  Map<String, GlobalKey<RequestRowState>> indexes = HashMap();
 
   ///显示的请求列表 最新的在前面
   Queue<HttpRequest> view = Queue();
@@ -71,7 +71,7 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
   ///添加响应
   addResponse(HttpResponse response) {
-    var state = indexes.remove(response.request);
+    var state = indexes.remove(response.request?.requestId);
     state?.currentState?.change(response);
 
     if (searchModel == null || searchModel!.isEmpty || response.request == null) {
@@ -145,10 +145,9 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
                 Divider(thickness: 0.2, height: 0, color: Theme.of(context).dividerColor),
             itemCount: view.length,
             itemBuilder: (context, index) {
-              GlobalKey<RequestRowState> key = indexes[view.elementAt(index)] ??= GlobalKey();
               return RequestRow(
                   index: view.length - index,
-                  key: key,
+                  key: indexes[view.elementAt(index).requestId] ??= GlobalKey(),
                   request: view.elementAt(index),
                   proxyServer: widget.proxyServer,
                   displayDomain: widget.displayDomain,

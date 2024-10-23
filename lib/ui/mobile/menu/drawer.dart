@@ -92,7 +92,7 @@ class DrawerWidget extends StatelessWidget {
                 onTap: () => navigator(context, FilterMenu(proxyServer: proxyServer))),
             ListTile(
                 title: Text(localizations.requestRewrite),
-                leading: const Icon(Icons.replay_outlined),
+                leading: const Icon(Icons.edit_outlined),
                 onTap: () async {
                   var requestRewrites = await RequestRewriteManager.instance;
                   if (context.mounted) {

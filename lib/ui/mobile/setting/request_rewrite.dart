@@ -402,8 +402,9 @@ class _RequestRuleListState extends State<RequestRuleList> {
 class RewriteRule extends StatefulWidget {
   final RequestRewriteRule? rule;
   final List<RewriteItem>? items;
+  final HttpRequest? request;
 
-  const RewriteRule({super.key, this.rule, this.items});
+  const RewriteRule({super.key, this.rule, this.items, this.request});
 
   @override
   State<StatefulWidget> createState() {
@@ -423,6 +424,8 @@ class _RewriteRuleState extends State<RewriteRule> {
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
+  final ScrollController scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -432,12 +435,17 @@ class _RewriteRuleState extends State<RewriteRule> {
 
     nameInput = TextEditingController(text: rule.name);
     urlInput = TextEditingController(text: rule.url);
+
+    if (items == null && widget.request != null) {
+      items = fromRequestItems(widget.request!, ruleType);
+    }
   }
 
   @override
   void dispose() {
     urlInput.dispose();
     nameInput.dispose();
+    scrollController.dispose();
     super.dispose();
   }
 
@@ -491,50 +499,69 @@ class _RewriteRuleState extends State<RewriteRule> {
         ),
         body: Padding(
           padding: const EdgeInsets.all(15),
-          child: Form(
-              key: formKey,
-              child: ListView(children: <Widget>[
-                Row(children: [
-                  SizedBox(
-                      width: 60,
-                      child: Text('${localizations.enable}:',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
-                  SwitchWidget(value: rule.enabled, onChanged: (val) => rule.enabled = val, scale: 0.8)
-                ]),
-                textField('${localizations.name}:', nameInput, localizations.pleaseEnter),
-                textField('URL:', urlInput, 'https://www.example.com/api/*',
-                    required: true, keyboardType: TextInputType.url),
-                Row(children: [
-                  SizedBox(
-                      width: 60,
-                      child: Text('${localizations.action}:',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
-                  SizedBox(
-                      width: 165,
-                      height: 50,
-                      child: DropdownButtonFormField<RuleType>(
-                        onSaved: (val) => rule.type = val!,
-                        value: ruleType,
-                        decoration: const InputDecoration(
-                            errorStyle: TextStyle(height: 0, fontSize: 0), contentPadding: EdgeInsets.only()),
-                        items: RuleType.values
-                            .map((e) => DropdownMenuItem(value: e, child: Text(isCN ? e.label : e.name)))
-                            .toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            ruleType = val!;
-                            items = ruleType == widget.rule?.type ? widget.items : [];
-                            rewriteReplaceKey.currentState?.initItems(ruleType, items);
-                            rewriteUpdateKey.currentState?.initItems(ruleType, items);
-                          });
-                        },
-                      )),
-                  const SizedBox(width: 10),
-                ]),
-                const SizedBox(height: 10),
-                rewriteRule()
-              ])),
+          child: NestedScrollView(
+              controller: scrollController,
+              headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+                return <Widget>[
+                  SliverToBoxAdapter(
+                      child: Form(
+                    key: formKey,
+                    child: Column(children: <Widget>[
+                      Row(children: [
+                        SizedBox(
+                            width: 60,
+                            child: Text('${localizations.enable}:',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+                        SwitchWidget(value: rule.enabled, onChanged: (val) => rule.enabled = val, scale: 0.8)
+                      ]),
+                      textField('${localizations.name}:', nameInput, localizations.pleaseEnter),
+                      textField('URL:', urlInput, 'https://www.example.com/api/*',
+                          required: true, keyboardType: TextInputType.url),
+                      Row(children: [
+                        SizedBox(
+                            width: 60,
+                            child: Text('${localizations.action}:',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+                        SizedBox(
+                            width: 165,
+                            height: 50,
+                            child: DropdownButtonFormField<RuleType>(
+                              onSaved: (val) => rule.type = val!,
+                              value: ruleType,
+                              decoration: const InputDecoration(
+                                  errorStyle: TextStyle(height: 0, fontSize: 0), contentPadding: EdgeInsets.only()),
+                              items: RuleType.values
+                                  .map((e) => DropdownMenuItem(value: e, child: Text(isCN ? e.label : e.name)))
+                                  .toList(),
+                              onChanged: onChangeType,
+                            )),
+                        const SizedBox(width: 10),
+                      ]),
+                      const SizedBox(height: 10),
+                    ]),
+                  ))
+                ];
+              },
+              body: rewriteRule()),
         ));
+  }
+
+  void onChangeType(RuleType? val) async {
+    if (ruleType == val) return;
+
+    ruleType = val!;
+    items = [];
+
+    if (ruleType == widget.rule?.type) {
+      items = widget.items;
+    } else if (widget.request != null) {
+      items?.addAll(fromRequestItems(widget.request!, ruleType));
+    }
+
+    setState(() {
+      rewriteReplaceKey.currentState?.initItems(ruleType, items);
+      rewriteUpdateKey.currentState?.initItems(ruleType, items);
+    });
   }
 
   static List<RewriteItem> fromRequestItems(HttpRequest request, RuleType ruleType) {
@@ -550,10 +577,11 @@ class _RewriteRuleState extends State<RewriteRule> {
 
   Widget rewriteRule() {
     if (ruleType == RuleType.requestUpdate || ruleType == RuleType.responseUpdate) {
-      return MobileRewriteUpdate(key: rewriteUpdateKey, items: items, ruleType: ruleType);
+      return MobileRewriteUpdate(key: rewriteUpdateKey, items: items, ruleType: ruleType, request: widget.request);
     }
 
-    return MobileRewriteReplace(key: rewriteReplaceKey, items: items, ruleType: ruleType);
+    return MobileRewriteReplace(
+        scrollController: scrollController, key: rewriteReplaceKey, items: items, ruleType: ruleType);
   }
 
   Widget textField(String label, TextEditingController controller, String hint,

@@ -84,7 +84,7 @@ class _RequestWidgetState extends State<RequestWidget> {
   Widget build(BuildContext context) {
     var request = widget.request;
     var response = widget.response.get() ?? request.response;
-    String path = widget.displayDomain ? '${request.remoteDomain()}${request.path()}' : request.path();
+    String path = widget.displayDomain ? request.domainPath : request.path;
     String title = '${request.method.name} $path';
 
     var time = formatDate(request.requestTime, [HH, ':', nn, ':', ss]);
@@ -186,7 +186,7 @@ class _RequestWidgetState extends State<RequestWidget> {
           label: localizations.script,
           onClick: (_) async {
             var scriptManager = await ScriptManager.instance;
-            var url = '${widget.request.remoteDomain()}${widget.request.path()}';
+            var url = widget.request.domainPath;
             var scriptItem = (scriptManager).list.firstWhereOrNull((it) => it.url == url);
 
             String? script = scriptItem == null ? null : await scriptManager.getScript(scriptItem);

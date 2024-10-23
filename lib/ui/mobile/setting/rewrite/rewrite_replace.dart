@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/components/rewrite/rewrite_rule.dart';
 import 'package:network_proxy/ui/component/state_component.dart';
+import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/utils/lang.dart';
 
@@ -28,8 +29,9 @@ import 'package:network_proxy/utils/lang.dart';
 class MobileRewriteReplace extends StatefulWidget {
   final RuleType ruleType;
   final List<RewriteItem>? items;
+  final ScrollController? scrollController;
 
-  const MobileRewriteReplace({super.key, this.items, required this.ruleType});
+  const MobileRewriteReplace({super.key, this.items, required this.ruleType, this.scrollController});
 
   @override
   State<MobileRewriteReplace> createState() => RewriteReplaceState();
@@ -38,6 +40,7 @@ class MobileRewriteReplace extends StatefulWidget {
 class RewriteReplaceState extends State<MobileRewriteReplace> {
   final _headerKey = GlobalKey<HeadersState>();
   final bodyTextController = TextEditingController();
+  late ScrollController? bodyScrollController;
 
   late RuleType ruleType;
   List<RewriteItem> items = [];
@@ -48,11 +51,13 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
   initState() {
     super.initState();
     initItems(widget.ruleType, widget.items);
+    bodyScrollController = trackingScroll(widget.scrollController);
   }
 
   @override
   dispose() {
     bodyTextController.dispose();
+    bodyScrollController?.dispose();
     super.dispose();
   }
 
@@ -118,19 +123,17 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
           ? [localizations.requestLine, localizations.requestHeader, localizations.requestBody]
           : [localizations.statusCode, localizations.responseHeader, localizations.responseBody];
 
-      return Container(
-          constraints: BoxConstraints(maxHeight: 660, minHeight: 350),
-          child: DefaultTabController(
-            length: tabs.length,
-            initialIndex: tabs.length - 1,
-            child: Scaffold(
-                appBar: tabBar(tabs),
-                body: TabBarView(children: [
-                  KeepAliveWrapper(child: requestEdited ? requestLine() : statusCodeEdit()),
-                  KeepAliveWrapper(child: headers()),
-                  KeepAliveWrapper(child: body())
-                ])),
-          ));
+      return DefaultTabController(
+        length: tabs.length,
+        initialIndex: tabs.length - 1,
+        child: Scaffold(
+            appBar: tabBar(tabs),
+            body: TabBarView(children: [
+              KeepAliveWrapper(child: requestEdited ? requestLine() : statusCodeEdit()),
+              KeepAliveWrapper(child: headers()),
+              KeepAliveWrapper(child: body())
+            ])),
+      );
     }
 
     return Container();
@@ -157,7 +160,7 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
     var rewriteItem = items.firstWhere(
         (item) => item.type == RewriteType.replaceRequestBody || item.type == RewriteType.replaceResponseBody);
 
-    return Column(children: [
+    return ListView(physics: const ClampingScrollPhysics(), children: [
       Row(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.center, children: [
         const SizedBox(width: 5),
         Text("${localizations.type}: "),
@@ -196,8 +199,11 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
       else
         TextFormField(
             controller: bodyTextController,
+            scrollPhysics: const BouncingScrollPhysics(),
+            scrollController: bodyScrollController,
             style: const TextStyle(fontSize: 14),
-            maxLines: 25,
+            minLines: 20,
+            maxLines: 23,
             decoration: decoration(localizations.replaceBodyWith,
                 hintText: '${localizations.example} {"code":"200","data":{}}'),
             onChanged: (val) => rewriteItem.body = val)
@@ -242,7 +248,7 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
     var rewriteItem = items.firstWhere(
         (item) => item.type == RewriteType.replaceRequestHeader || item.type == RewriteType.replaceResponseHeader);
 
-    return Column(children: [
+    return ListView(physics: const ClampingScrollPhysics(), children: [
       Row(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.center, children: [
         const Text('Header'),
         const SizedBox(width: 10),
@@ -258,14 +264,15 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
                   }))
         ]))
       ]),
-      Headers(headers: rewriteItem.headers, key: _headerKey)
+      Headers(headers: rewriteItem.headers, key: _headerKey, scrollController: widget.scrollController)
     ]);
   }
 
   ///请求行
   Widget requestLine() {
     var rewriteItem = items.firstWhere((item) => item.type == RewriteType.replaceRequestLine);
-    return Column(
+    return ListView(
+      physics: const ClampingScrollPhysics(),
       children: [
         Row(children: [
           Text(localizations.requestMethod),
@@ -303,7 +310,7 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
         ]),
         const SizedBox(height: 15),
         textField("Path", rewriteItem.path, "${localizations.example} /api/v1/user",
-            onChanged: (val) => rewriteItem.values['path'] = val),
+            onChanged: (val) => rewriteItem.path = val),
         const SizedBox(height: 15),
         textField("URL${localizations.param}", rewriteItem.queryParam, "${localizations.example} id=1&name=2",
             onChanged: (val) => rewriteItem.queryParam = val),
@@ -347,42 +354,41 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
   Widget statusCodeEdit() {
     var rewriteItem = items.firstWhere((item) => item.type == RewriteType.replaceResponseStatus);
 
-    return Column(children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            Text(localizations.statusCode),
-            const SizedBox(width: 10),
-            SizedBox(
-                width: 100,
-                child: TextFormField(
-                  style: const TextStyle(fontSize: 14),
-                  initialValue: rewriteItem.statusCode?.toString(),
-                  onChanged: (val) => rewriteItem.statusCode = int.tryParse(val),
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.all(10),
-                      focusedBorder: focusedBorder(),
-                      isDense: true,
-                      border: const OutlineInputBorder()),
-                )),
-            Expanded(
-                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-              Text(localizations.enable),
-              const SizedBox(width: 10),
-              SwitchWidget(
-                  value: rewriteItem.enabled,
-                  scale: 0.65,
-                  onChanged: (val) => setState(() {
-                        rewriteItem.enabled = val;
-                      }))
-            ])),
-            const SizedBox(width: 10),
-          ])
-        ]);
+    return ListView(physics: const ClampingScrollPhysics(), children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        Text(localizations.statusCode),
+        const SizedBox(width: 10),
+        SizedBox(
+            width: 100,
+            child: TextFormField(
+              style: const TextStyle(fontSize: 14),
+              initialValue: rewriteItem.statusCode?.toString(),
+              onChanged: (val) => rewriteItem.statusCode = int.tryParse(val),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.all(10),
+                  focusedBorder: focusedBorder(),
+                  isDense: true,
+                  border: const OutlineInputBorder()),
+            )),
+        Expanded(
+            child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          Text(localizations.enable),
+          const SizedBox(width: 10),
+          SwitchWidget(
+              value: rewriteItem.enabled,
+              scale: 0.65,
+              onChanged: (val) => setState(() {
+                    rewriteItem.enabled = val;
+                  }))
+        ])),
+        const SizedBox(width: 10),
+      ])
+    ]);
   }
 
   InputDecoration decoration(String label, {String? hintText}) {
     Color color = Theme.of(context).colorScheme.primary;
-    // Color color = Colors.blueAccent;
     return InputDecoration(
         floatingLabelBehavior: FloatingLabelBehavior.always,
         labelText: label,
@@ -401,8 +407,9 @@ class RewriteReplaceState extends State<MobileRewriteReplace> {
 ///请求头
 class Headers extends StatefulWidget {
   final Map<String, String>? headers;
+  final ScrollController? scrollController;
 
-  const Headers({super.key, this.headers});
+  const Headers({super.key, this.headers, this.scrollController});
 
   @override
   State<StatefulWidget> createState() {
@@ -465,27 +472,25 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
 
-    var list = [
-      ..._buildRows(),
-    ];
-
-    list.add(TextButton(
-      child: Text("${localizations.add}Header", textAlign: TextAlign.center),
-      onPressed: () {
-        setState(() {
-          _headers[TextEditingController()] = TextEditingController();
-        });
-      },
-    ));
+    var list = _buildRows();
 
     return Padding(
         padding: const EdgeInsets.only(top: 10),
         child: ListView.separated(
             shrinkWrap: true,
+            physics: const ClampingScrollPhysics(),
             separatorBuilder: (context, index) =>
                 index == list.length ? const SizedBox() : const Divider(thickness: 0.2),
-            itemBuilder: (context, index) => list[index],
-            itemCount: list.length));
+            itemBuilder: (context, index) => index < list.length?list[index]
+                : TextButton(
+                    child: Text("${localizations.add}Header", textAlign: TextAlign.center),
+                    onPressed: () {
+                      setState(() {
+                        _headers[TextEditingController()] = TextEditingController();
+                      });
+                    },
+                  ),
+            itemCount: list.length + 1));
   }
 
   List<Widget> _buildRows() {
@@ -517,7 +522,11 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
             controller: val,
             minLines: 1,
             maxLines: 3,
-            decoration: InputDecoration(isDense: true, border: InputBorder.none, hintText: isKey ? "Key" : "Value")));
+            decoration: InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                hintStyle: TextStyle(fontSize: 12, color: Colors.grey),
+                hintText: isKey ? "Key" : "Value")));
   }
 
   Widget _row(Widget key, Widget val, Widget? op) {

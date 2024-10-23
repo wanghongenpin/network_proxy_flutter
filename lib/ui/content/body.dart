@@ -226,7 +226,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
     if (!mounted) return;
 
     if (Platforms.isMobile()) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule, items: rewriteItems)));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule, items: rewriteItems, request: request)));
     } else {
       showDialog(
               context: context,

@@ -15,6 +15,7 @@
  */
 
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -203,4 +204,28 @@ Future<T?> showConfirmDialog<T>(BuildContext context, {String? title, String? co
           ],
         );
       });
+}
+
+///滚动条
+ScrollController? trackingScroll(ScrollController? scrollController) {
+  if (scrollController == null) {
+    return null;
+  }
+
+  var trackingScroll = TrackingScrollController();
+  double offset = 0;
+  trackingScroll.addListener(() {
+    if (trackingScroll.offset < 30 && trackingScroll.offset < offset && scrollController.offset > 0) {
+      //往上滚动
+      scrollController.jumpTo(scrollController.offset - max(offset - trackingScroll.offset, 15));
+    } else if (trackingScroll.offset > 0 &&
+        trackingScroll.offset > offset &&
+        scrollController.offset < scrollController.position.maxScrollExtent) {
+      //往下滚动
+      scrollController.jumpTo(scrollController.offset + max(trackingScroll.offset - offset, 15));
+    }
+
+    offset = trackingScroll.offset;
+  });
+  return trackingScroll;
 }

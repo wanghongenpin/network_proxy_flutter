@@ -214,7 +214,6 @@ class _ScriptConsoleState extends State<ScriptConsoleWidget> {
     super.initState();
     DesktopMultiWindow.invokeMethod(0, "registerConsoleLog", widget.windowId);
     DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
-      // print("consoleLog  $scrollEnd $fromWindowId ${call.arguments}");
       if (call.method == 'consoleLog') {
         setState(() {
           var logInfo = LogInfo(call.arguments['level'], call.arguments['output']);
@@ -236,7 +235,6 @@ class _ScriptConsoleState extends State<ScriptConsoleWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // print("script build");
     return Scaffold(
         backgroundColor: Theme.of(context).dialogBackgroundColor,
         appBar: AppBar(

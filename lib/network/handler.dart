@@ -121,7 +121,7 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
         return;
       }
 
-      var uri = '${httpRequest.remoteDomain()}${httpRequest.path()}';
+      var uri = httpRequest.domainPath;
       //脚本替换
       var scriptManager = await ScriptManager.instance;
       HttpRequest? request = await scriptManager.runScript(httpRequest);
@@ -282,7 +282,7 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     listener?.onResponse(channelContext, msg);
 
     //屏蔽响应
-    var uri = '${request?.remoteDomain()}${request?.path()}';
+    var uri = request?.domainPath ?? '';
     var blockResponse = (await RequestBlockManager.instance).enableBlockResponse(uri);
     if (blockResponse) {
       channel.close();

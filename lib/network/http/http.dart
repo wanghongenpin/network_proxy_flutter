@@ -56,7 +56,7 @@ abstract class HttpMessage {
   String? remoteHost;
   int? remotePort;
 
-  String requestId = (DateTime.now().millisecondsSinceEpoch + Random().nextInt(99999)).toRadixString(36);
+  String requestId = (DateTime.now().millisecondsSinceEpoch + Random().nextInt(999999)).toRadixString(36);
   int? streamId; // http2 streamId
   HttpMessage(this.protocolVersion);
 
@@ -151,7 +151,11 @@ class HttpRequest extends HttpMessage {
     }
   }
 
-  String path() {
+  ///域名+路径
+  String get domainPath => '${remoteDomain()}$path';
+
+  /// 请求的path
+  String get path {
     try {
       var requestPath = Uri.parse(requestUrl).path;
       return requestPath.isEmpty ? "" : requestPath;

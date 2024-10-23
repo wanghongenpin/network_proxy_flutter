@@ -460,15 +460,15 @@ class RewriteRuleEdit extends StatefulWidget {
 }
 
 class _RewriteRuleEditState extends State<RewriteRuleEdit> {
+  final rewriteReplaceKey = GlobalKey<RewriteReplaceState>();
+  final rewriteUpdateKey = GlobalKey<RewriteUpdateState>();
+
   late RequestRewriteRule rule;
   List<RewriteItem>? items;
 
   late RuleType ruleType;
   late TextEditingController nameInput;
   late TextEditingController urlInput;
-
-  final rewriteReplaceKey = GlobalKey<RewriteReplaceState>();
-  final rewriteUpdateKey = GlobalKey<RewriteUpdateState>();
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
@@ -482,7 +482,6 @@ class _RewriteRuleEditState extends State<RewriteRuleEdit> {
     urlInput = TextEditingController(text: rule.url);
 
     if (items == null && widget.request != null) {
-      print('items == null && widget.request != null');
       items = fromRequestItems(widget.request!, ruleType);
     }
   }

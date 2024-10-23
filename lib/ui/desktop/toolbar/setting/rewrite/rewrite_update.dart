@@ -82,7 +82,7 @@ class RewriteUpdateState extends State<DesktopRewriteUpdate> {
             ))
           ],
         ),
-        UpdateList(items: items, ruleType: ruleType),
+        UpdateList(items: items, ruleType: ruleType, request: widget.request),
       ],
     );
   }
@@ -221,12 +221,15 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
                       controller: valueController),
                   const SizedBox(height: 10),
                   Row(children: [
-                    Align(alignment: Alignment.centerLeft, child: Text('测试数据', style: const TextStyle(fontSize: 14))),
+                    Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(localizations.testData, style: const TextStyle(fontSize: 14))),
                     const SizedBox(width: 10),
-                    if (!isMatch) Text('未检测到变更', style: TextStyle(color: Colors.red, fontSize: 14))
+                    if (!isMatch)
+                      Text(localizations.noChangesDetected, style: TextStyle(color: Colors.red, fontSize: 14))
                   ]),
                   const SizedBox(height: 5),
-                  formField('输入待匹配的数据', lines: 10, required: false, controller: dataController),
+                  formField(localizations.enterMatchData, lines: 10, required: false, controller: dataController),
                 ]))));
   }
 
@@ -294,7 +297,6 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
         }
 
         var match = dataController.highlight(key, caseSensitive: rewriteType != RewriteType.updateHeader);
-        print('onChangeMatch $match');
         isMatch = match;
       });
     });
@@ -333,8 +335,9 @@ class _RewriteUpdateAddState extends State<RewriteUpdateAddDialog> {
 class UpdateList extends StatefulWidget {
   final List<RewriteItem> items;
   final RuleType ruleType;
+  final HttpRequest? request;
 
-  const UpdateList({super.key, required this.items, required this.ruleType});
+  const UpdateList({super.key, required this.items, required this.ruleType, this.request});
 
   @override
   State<UpdateList> createState() => _UpdateListState();
@@ -383,7 +386,8 @@ class _UpdateListState extends State<UpdateList> {
           hoverColor: primaryColor.withOpacity(0.3),
           onDoubleTap: () => showDialog(
                       context: context,
-                      builder: (context) => RewriteUpdateAddDialog(item: list[index], ruleType: widget.ruleType))
+                      builder: (context) =>
+                          RewriteUpdateAddDialog(item: list[index], ruleType: widget.ruleType, request: widget.request))
                   .then((value) {
                 if (value != null) setState(() {});
               }),
@@ -439,8 +443,8 @@ class _UpdateListState extends State<UpdateList> {
             showDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (BuildContext context) =>
-                    RewriteUpdateAddDialog(item: widget.items[index], ruleType: widget.ruleType)).then((value) {
+                builder: (BuildContext context) => RewriteUpdateAddDialog(
+                    item: widget.items[index], ruleType: widget.ruleType, request: widget.request)).then((value) {
               if (value != null) {
                 setState(() {});
               }

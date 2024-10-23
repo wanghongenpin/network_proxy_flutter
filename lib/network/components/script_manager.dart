@@ -236,7 +236,7 @@ async function onResponse(context, request, response) {
     if (!enabled) {
       return request;
     }
-    var url = '${request.remoteDomain()}${request.path()}';
+    var url = request.domainPath;
     for (var item in list) {
       if (item.enabled && item.match(url)) {
         var context = jsonEncode(scriptContext(item));
@@ -265,7 +265,7 @@ async function onResponse(context, request, response) {
     }
 
     var request = response.request!;
-    var url = '${request.remoteDomain()}${request.path()}';
+    var url = request.domainPath;
     for (var item in list) {
       if (item.enabled && item.match(url)) {
         var context = jsonEncode(request.attributes['scriptContext'] ?? scriptContext(item));
@@ -297,7 +297,6 @@ async function onResponse(context, request, response) {
       if (jsResult.isPromise || jsResult.rawResult is Future) {
         jsResult = await flutterJs.handlePromise(jsResult);
       }
-
     } catch (e) {
       throw SignalException(jsResult.stringResult);
     }

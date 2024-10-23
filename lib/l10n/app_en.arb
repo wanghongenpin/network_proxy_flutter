@@ -104,6 +104,9 @@
   "enableSelect": "Enable Select",
   "disableSelect": "Disable Select",
   "deleteSelect": "Delete Select",
+  "testData": "Test Data",
+  "noChangesDetected": "No changes detected",
+  "enterMatchData": "Enter the data to be matched",
 
   "modifyRequestHeader": "Modify Header",
   "headerName": "Header Name",

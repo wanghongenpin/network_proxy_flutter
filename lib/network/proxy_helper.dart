@@ -34,7 +34,7 @@ class ProxyHelper {
   //请求本服务
   static localRequest(HttpRequest msg, Channel channel) async {
     //获取配置
-    if (msg.path() == '/config') {
+    if (msg.path == '/config') {
       final requestRewrites = await RequestRewriteManager.instance;
       var response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
       var body = {

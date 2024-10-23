@@ -24,6 +24,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/rewrite_rule.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
@@ -136,7 +137,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
                 style: TextStyle(fontSize: 14, color: Colors.blue),
               ),
               TextSpan(
-                text: request.path(),
+                text: request.path,
                 style: TextStyle(fontSize: 14, color: Colors.green),
               ),
               if (request.requestUri?.query.isNotEmpty == true)
@@ -249,7 +250,7 @@ class _FavoriteItemState extends State<_FavoriteItem> {
                       Navigator.push(context, pageRoute);
                     },
                     label: localizations.editRequest,
-                    icon: Icons.edit_outlined),
+                    icon: Icons.replay_outlined),
               ),
 
               //script and rewrite
@@ -257,9 +258,8 @@ class _FavoriteItemState extends State<_FavoriteItem> {
                 left: itemButton(
                     onPressed: () async {
                       Navigator.maybePop(context);
-
                       var scriptManager = await ScriptManager.instance;
-                      var url = '${request.remoteDomain()}${request.path()}';
+                      var url = request.domainPath;
                       var scriptItem = (scriptManager).list.firstWhereOrNull((it) => it.url == url);
                       String? script = scriptItem == null ? null : await scriptManager.getScript(scriptItem);
 
@@ -276,11 +276,17 @@ class _FavoriteItemState extends State<_FavoriteItem> {
                       bool isRequest = request.response == null;
                       var requestRewrites = await RequestRewriteManager.instance;
 
-                      var pageRoute = MaterialPageRoute(builder: (_) => RewriteRule());
+                      var ruleType = isRequest ? RuleType.requestReplace : RuleType.responseReplace;
+                      var rule = requestRewrites.getRequestRewriteRule(request, ruleType);
+
+                      var rewriteItems = await requestRewrites.getRewriteItems(rule);
+
+                      var pageRoute = MaterialPageRoute(
+                          builder: (_) => RewriteRule(rule: rule, items: rewriteItems, request: request));
                       if (mounted) Navigator.push(context, pageRoute);
                     },
                     label: localizations.requestRewrite,
-                    icon: Icons.replay_outlined),
+                    icon: Icons.edit_outlined),
               ),
               SizedBox(height: 2),
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -362,9 +368,12 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
   Widget itemButton(
       {required String label, required IconData icon, required Function() onPressed, double iconSize = 20}) {
-    var style = Theme.of(context).textTheme.bodyMedium;
+    var theme = Theme.of(context);
+    var style = theme.textTheme.bodyMedium;
     return TextButton.icon(
-        onPressed: onPressed, label: Text(label, style: style), icon: Icon(icon, size: iconSize, color: style?.color));
+        onPressed: onPressed,
+        label: Text(label, style: style),
+        icon: Icon(icon, size: iconSize, color: theme.colorScheme.primary.withOpacity(0.65)));
   }
 
   Widget menuItem({required Widget left, required Widget right}) {

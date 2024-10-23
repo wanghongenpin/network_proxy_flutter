@@ -285,7 +285,7 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     }
 
     var scrollController = ScrollController(); //处理body也有滚动条问题
-    var path = widget.request.get()?.path() ?? '';
+    var path = widget.request.get()?.path ?? '';
     try {
       path = Uri.decodeFull(path);
     } catch (_) {}
