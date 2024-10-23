@@ -21,7 +21,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/rewrite_rule.dart';
+import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
@@ -32,7 +34,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'rewrite/rewrite_replace.dart';
 
 class MobileRequestRewrite extends StatefulWidget {
-  final RequestRewrites requestRewrites;
+  final RequestRewriteManager requestRewrites;
 
   const MobileRequestRewrite({super.key, required this.requestRewrites});
 
@@ -133,7 +135,7 @@ class _MobileRequestRewriteState extends State<MobileRequestRewrite> {
 
 ///请求重写规则列表
 class RequestRuleList extends StatefulWidget {
-  final RequestRewrites requestRewrites;
+  final RequestRewriteManager requestRewrites;
 
   RequestRuleList(this.requestRewrites) : super(key: GlobalKey<_RequestRuleListState>());
 
@@ -471,7 +473,7 @@ class _RewriteRuleState extends State<RewriteRule> {
                   rule.url = urlInput.text;
                   items = rewriteReplaceKey.currentState?.getItems() ?? rewriteUpdateKey.currentState?.getItems();
 
-                  var requestRewrites = await RequestRewrites.instance;
+                  var requestRewrites = await RequestRewriteManager.instance;
                   var index = requestRewrites.rules.indexOf(rule);
 
                   if (index >= 0) {
@@ -533,6 +535,17 @@ class _RewriteRuleState extends State<RewriteRule> {
                 rewriteRule()
               ])),
         ));
+  }
+
+  static List<RewriteItem> fromRequestItems(HttpRequest request, RuleType ruleType) {
+    if (ruleType == RuleType.requestReplace) {
+      //请求替换
+      return RewriteItem.fromRequest(request);
+    } else if (ruleType == RuleType.responseReplace && request.response != null) {
+      //响应替换
+      return RewriteItem.fromResponse(request.response!);
+    }
+    return [];
   }
 
   Widget rewriteRule() {

@@ -398,7 +398,7 @@ class _ScriptEditState extends State<ScriptEdit> {
                 const SizedBox(height: 5),
                 SizedBox(
                     width: 850,
-                    height: 360,
+                    height: 380,
                     child: CodeTheme(
                         data: CodeThemeData(styles: monokaiSublimeTheme),
                         child: SingleChildScrollView(

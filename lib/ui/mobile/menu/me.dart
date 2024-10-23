@@ -18,7 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/components/request_block_manager.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
 import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/utils.dart';
 import 'package:network_proxy/ui/configuration.dart';
@@ -97,7 +97,7 @@ class _MePageState extends State<MePage> {
                 leading: Icon(Icons.replay_outlined, color: color),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () async {
-                  var requestRewrites = await RequestRewrites.instance;
+                  var requestRewrites = await RequestRewriteManager.instance;
                   if (context.mounted) {
                     navigator(context, MobileRequestRewrite(requestRewrites: requestRewrites));
                   }

@@ -18,7 +18,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:network_proxy/network/channel.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/handler.dart';
 import 'package:network_proxy/network/host_port.dart';
@@ -35,7 +35,7 @@ class ProxyHelper {
   static localRequest(HttpRequest msg, Channel channel) async {
     //获取配置
     if (msg.path() == '/config') {
-      final requestRewrites = await RequestRewrites.instance;
+      final requestRewrites = await RequestRewriteManager.instance;
       var response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
       var body = {
         "requestRewrites": await requestRewrites.toFullJson(),

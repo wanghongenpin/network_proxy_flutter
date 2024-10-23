@@ -18,7 +18,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/rewrite_rule.dart';
 import 'package:network_proxy/ui/component/state_component.dart';
 import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/utils/lang.dart';
@@ -113,9 +113,7 @@ class RewriteReplaceState extends State<DesktopRewriteReplace> {
   Widget build(BuildContext context) {
     if (ruleType == RuleType.redirect) {
       return SizedBox(
-          width: 500,
-          height: 120,
-          child: Padding(padding: EdgeInsets.symmetric(vertical: 15), child: redirectEdit(items.first)));
+          height: 120, child: Padding(padding: EdgeInsets.symmetric(vertical: 15), child: redirectEdit(items.first)));
     }
 
     if (ruleType == RuleType.responseReplace || ruleType == RuleType.requestReplace) {
@@ -125,8 +123,7 @@ class RewriteReplaceState extends State<DesktopRewriteReplace> {
           : [localizations.statusCode, localizations.responseHeader, localizations.responseBody];
 
       return Container(
-        width: 500,
-        constraints: const BoxConstraints(maxHeight: 340),
+        constraints: const BoxConstraints(maxHeight: 360),
         child: DefaultTabController(
             length: tabs.length,
             initialIndex: tabs.length - 1,
@@ -270,7 +267,7 @@ class RewriteReplaceState extends State<DesktopRewriteReplace> {
                   }))
         ]))
       ]),
-      Headers(headers: rewriteItem.headers, key: _headerKey)
+      Expanded(child: Headers(headers: rewriteItem.headers, key: _headerKey))
     ]);
   }
 
@@ -315,7 +312,7 @@ class RewriteReplaceState extends State<DesktopRewriteReplace> {
         ]),
         const SizedBox(height: 15),
         textField("Path", rewriteItem.path, "${localizations.example} /api/v1/user",
-            onChanged: (val) => rewriteItem.values['path'] = val),
+            onChanged: (val) => rewriteItem.path = val),
         const SizedBox(height: 15),
         textField("URL${localizations.param}", rewriteItem.queryParam, "${localizations.example} id=1&name=2",
             onChanged: (val) => rewriteItem.queryParam = val),
@@ -481,27 +478,27 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
 
-    var list = [
-      ..._buildRows(),
-    ];
+    var list = _buildRows();
 
-    list.add(TextButton(
-      child: Text("${localizations.add}Header", textAlign: TextAlign.center),
-      onPressed: () {
-        setState(() {
-          _headers[TextEditingController()] = TextEditingController();
-        });
-      },
-    ));
-
-    return Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: ListView.separated(
-            shrinkWrap: true,
-            separatorBuilder: (context, index) =>
-                index == list.length ? const SizedBox() : const Divider(thickness: 0.2),
-            itemBuilder: (context, index) => list[index],
-            itemCount: list.length));
+    return Column(children: [
+      Expanded(
+          child: Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              child: ListView.separated(
+                  shrinkWrap: true,
+                  separatorBuilder: (context, index) =>
+                      index == list.length ? const SizedBox() : const Divider(thickness: 0.2),
+                  itemBuilder: (context, index) => list[index],
+                  itemCount: list.length))),
+      TextButton(
+        child: Text("${localizations.add}Header", textAlign: TextAlign.center),
+        onPressed: () {
+          setState(() {
+            _headers[TextEditingController()] = TextEditingController();
+          });
+        },
+      ),
+    ]);
   }
 
   List<Widget> _buildRows() {
@@ -533,7 +530,11 @@ class HeadersState extends State<Headers> with AutomaticKeepAliveClientMixin {
             controller: val,
             minLines: 1,
             maxLines: 3,
-            decoration: InputDecoration(isDense: true, border: InputBorder.none, hintText: isKey ? "Key" : "Value")));
+            decoration: InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                hintStyle: TextStyle(fontSize: 12, color: Colors.grey),
+                hintText: isKey ? "Key" : "Value")));
   }
 
   Widget _row(Widget key, Widget val, Widget? op) {

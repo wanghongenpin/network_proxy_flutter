@@ -23,7 +23,8 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/server.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/rewrite_rule.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/lists.dart';
@@ -76,7 +77,7 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
   //请求重写
   if (argument['name'] == 'RequestRewriteWidget') {
     return futureWidget(
-        RequestRewrites.instance, (data) => RequestRewriteWidget(windowId: windowId, requestRewrites: data));
+        RequestRewriteManager.instance, (data) => RequestRewriteWidget(windowId: windowId, requestRewrites: data));
   }
 
   if (argument['name'] == 'QrCodePage') {
@@ -146,7 +147,7 @@ class MultiWindow {
   static bool _refreshRewrite = false;
 
   static Future<void> _handleRefreshRewrite(Operation operation, Map<dynamic, dynamic> arguments) async {
-    RequestRewrites requestRewrites = await RequestRewrites.instance;
+    RequestRewriteManager requestRewrites = await RequestRewriteManager.instance;
 
     switch (operation) {
       case Operation.add:
@@ -294,10 +295,9 @@ openScriptWindow() async {
     {'name': 'ScriptWidget'},
   ));
 
-  // window.setTitle('script');
   window.setTitle('Script');
   window
-    ..setFrame(const Offset(30, 0) & Size(800 * ratio, 690 * ratio))
+    ..setFrame(const Offset(30, 0) & Size(800 * ratio, 700 * ratio))
     ..center()
     ..show();
 }

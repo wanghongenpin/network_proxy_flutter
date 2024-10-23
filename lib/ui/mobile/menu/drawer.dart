@@ -20,7 +20,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/components/request_block_manager.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/storage/histories.dart';
 import 'package:network_proxy/ui/component/toolbox.dart';
@@ -94,7 +94,7 @@ class DrawerWidget extends StatelessWidget {
                 title: Text(localizations.requestRewrite),
                 leading: const Icon(Icons.replay_outlined),
                 onTap: () async {
-                  var requestRewrites = await RequestRewrites.instance;
+                  var requestRewrites = await RequestRewriteManager.instance;
                   if (context.mounted) {
                     navigator(context, MobileRequestRewrite(requestRewrites: requestRewrites));
                   }

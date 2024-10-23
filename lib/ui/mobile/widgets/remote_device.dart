@@ -24,7 +24,7 @@ import 'package:network_proxy/native/vpn.dart';
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/bin/server.dart';
 import 'package:network_proxy/network/components/host_filter.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/http_client.dart';
 import 'package:network_proxy/network/util/logger.dart';
@@ -573,7 +573,7 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
               widget.configuration.flushConfig();
 
               if (syncRewrite) {
-                var requestRewrites = await RequestRewrites.instance;
+                var requestRewrites = await RequestRewriteManager.instance;
                 await requestRewrites.syncConfig(widget.config['requestRewrites']);
               }
 

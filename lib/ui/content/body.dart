@@ -21,7 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/rewrite_rule.dart';
 import 'package:network_proxy/network/http/content_type.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
@@ -205,26 +206,22 @@ class HttpBodyState extends State<HttpBodyWidget> {
   //展示请求重写
   showRequestRewrite() async {
     HttpRequest? request;
+    if (widget.httpMessage == null) {
+      return;
+    }
+
     bool isRequest = widget.httpMessage is HttpRequest;
     if (widget.httpMessage is HttpRequest) {
       request = widget.httpMessage as HttpRequest;
     } else {
       request = (widget.httpMessage as HttpResponse).request;
     }
-    var requestRewrites = await RequestRewrites.instance;
+    var requestRewrites = await RequestRewriteManager.instance;
 
     var ruleType = isRequest ? RuleType.requestReplace : RuleType.responseReplace;
-    var url = '${request?.remoteDomain()}${request?.path()}';
-    var rule = requestRewrites.rules
-        .firstWhere((it) => it.matchUrl(url, ruleType), orElse: () => RequestRewriteRule(type: ruleType, url: url));
-
-    var body = bodyKey.currentState?.body;
+    var rule = requestRewrites.getRequestRewriteRule(request!, ruleType);
 
     var rewriteItems = await requestRewrites.getRewriteItems(rule);
-    RewriteType rewriteType = isRequest ? RewriteType.replaceRequestBody : RewriteType.replaceResponseBody;
-    if (!rewriteItems.any((element) => element.type == rewriteType)) {
-      rewriteItems.add(RewriteItem(rewriteType, true, values: {'body': body}));
-    }
 
     if (!mounted) return;
 
@@ -234,10 +231,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
       showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (BuildContext context) =>
-                  RuleAddDialog(rule: rule, items: rewriteItems, windowId: widget.windowController?.windowId))
+              builder: (BuildContext context) => RewriteRuleEdit(rule: rule, items: rewriteItems, request: request))
           .then((value) {
-        if (value is RequestRewriteRule) {
+        if (value is RequestRewriteRule && mounted) {
           FlutterToastr.show(localizations.saveSuccess, context);
         }
       });

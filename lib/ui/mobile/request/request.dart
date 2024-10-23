@@ -21,7 +21,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/bin/server.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/rewrite_rule.dart';
 import 'package:network_proxy/network/components/script_manager.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
@@ -274,7 +275,7 @@ class RequestRowState extends State<RequestRow> {
                     onPressed: () async {
                       Navigator.maybePop(availableContext);
                       bool isRequest = response == null;
-                      var requestRewrites = await RequestRewrites.instance;
+                      var requestRewrites = await RequestRewriteManager.instance;
 
                       var ruleType = isRequest ? RuleType.requestReplace : RuleType.responseReplace;
                       var url = '${request.remoteDomain()}${request.path()}';
@@ -284,10 +285,10 @@ class RequestRowState extends State<RequestRow> {
                       var rewriteItems = await requestRewrites.getRewriteItems(rule);
                       RewriteType rewriteType =
                           isRequest ? RewriteType.replaceRequestBody : RewriteType.replaceResponseBody;
-                      if (!rewriteItems.any((element) => element.type == rewriteType)) {
-                        rewriteItems.add(RewriteItem(rewriteType, true,
-                            values: {'body': isRequest ? request.bodyAsString : response?.bodyAsString}));
-                      }
+                      // if (!rewriteItems?.any((element) => element.type == rewriteType)) {
+                      //   rewriteItems.add(RewriteItem(rewriteType, true,
+                      //       values: {'body': isRequest ? request.bodyAsString : response?.bodyAsString}));
+                      // }
 
                       var pageRoute = MaterialPageRoute(builder: (_) => RewriteRule(rule: rule, items: rewriteItems));
                       var context = availableContext;

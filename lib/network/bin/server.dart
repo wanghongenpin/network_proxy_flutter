@@ -19,8 +19,8 @@ import 'dart:io';
 
 import 'package:network_proxy/network/bin/configuration.dart';
 import 'package:network_proxy/network/channel.dart';
+import 'package:network_proxy/network/components/request_rewrite_component.dart';
 import 'package:network_proxy/network/http/http.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
 import 'package:network_proxy/network/http/websocket.dart';
 import 'package:network_proxy/network/util/crts.dart';
 import 'package:network_proxy/utils/platform.dart';
@@ -73,11 +73,14 @@ class ProxyServer {
   /// 启动代理服务
   Future<Server> start() async {
     Server server = Server(configuration, listener: CombinedEventListener(listeners));
-    var requestRewrites = await RequestRewrites.instance;
+    var requestRewriteComponent = RequestRewriteComponent.instance;
 
     server.initChannel((channel) {
-      channel.pipeline.handle(HttpRequestCodec(), HttpResponseCodec(),
-          HttpProxyChannelHandler(listener: CombinedEventListener(listeners), requestRewrites: requestRewrites));
+      channel.pipeline.handle(
+          HttpRequestCodec(),
+          HttpResponseCodec(),
+          HttpProxyChannelHandler(
+              listener: CombinedEventListener(listeners), requestRewriteComponent: requestRewriteComponent));
     });
 
     return server.bind(port).then((serverSocket) {

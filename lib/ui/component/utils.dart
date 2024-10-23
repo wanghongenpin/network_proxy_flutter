@@ -115,7 +115,7 @@ Widget contextMenu(BuildContext context, EditableTextState editableTextState) {
       onPressed: () {
         unSelect(editableTextState);
         Clipboard.setData(ClipboardData(text: editableTextState.textEditingValue.text)).then((value) {
-          FlutterToastr.show(AppLocalizations.of(context)!.copied, context);
+          if (context.mounted) FlutterToastr.show(AppLocalizations.of(context)!.copied, context);
           editableTextState.hideToolbar();
         });
       },

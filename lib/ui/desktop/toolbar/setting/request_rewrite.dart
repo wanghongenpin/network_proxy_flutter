@@ -23,7 +23,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
-import 'package:network_proxy/network/components/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/request_rewrite_manager.dart';
+import 'package:network_proxy/network/components/rewrite/rewrite_rule.dart';
+import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/util/logger.dart';
 import 'package:network_proxy/ui/component/multi_window.dart';
 import 'package:network_proxy/ui/component/utils.dart';
@@ -35,7 +37,7 @@ import 'package:network_proxy/ui/desktop/toolbar/setting/rewrite/rewrite_update.
 /// 2023/10/8
 class RequestRewriteWidget extends StatefulWidget {
   final int windowId;
-  final RequestRewrites requestRewrites;
+  final RequestRewriteManager requestRewrites;
 
   const RequestRewriteWidget({super.key, required this.windowId, required this.requestRewrites});
 
@@ -183,7 +185,7 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
     showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (BuildContext context) => RuleAddDialog(windowId: widget.windowId)).then((value) {
+        builder: (BuildContext context) => RewriteRuleEdit(windowId: widget.windowId)).then((value) {
       if (value != null) setState(() {});
     });
   }
@@ -192,7 +194,7 @@ class RequestRewriteState extends State<RequestRewriteWidget> {
 ///请求重写规则列表
 class RequestRuleList extends StatefulWidget {
   final int windowId;
-  final RequestRewrites requestRewrites;
+  final RequestRewriteManager requestRewrites;
 
   const RequestRuleList(this.requestRewrites, {super.key, required this.windowId});
 
@@ -399,7 +401,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return RuleAddDialog(rule: rule, items: rewriteItems, windowId: widget.windowId);
+          return RewriteRuleEdit(rule: rule, items: rewriteItems, windowId: widget.windowId);
         }).then((value) {
       if (value != null) {
         setState(() {});
@@ -443,20 +445,21 @@ class _RequestRuleListState extends State<RequestRuleList> {
 }
 
 ///请求重写规则添加对话框
-class RuleAddDialog extends StatefulWidget {
+class RewriteRuleEdit extends StatefulWidget {
   final RequestRewriteRule? rule;
   final List<RewriteItem>? items;
+  final HttpRequest? request;
   final int? windowId;
 
-  const RuleAddDialog({super.key, this.rule, this.items, required this.windowId});
+  const RewriteRuleEdit({super.key, this.rule, this.items, this.windowId, this.request});
 
   @override
   State<StatefulWidget> createState() {
-    return _RuleAddDialogState();
+    return _RewriteRuleEditState();
   }
 }
 
-class _RuleAddDialogState extends State<RuleAddDialog> {
+class _RewriteRuleEditState extends State<RewriteRuleEdit> {
   late RequestRewriteRule rule;
   List<RewriteItem>? items;
 
@@ -477,6 +480,11 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
     ruleType = rule.type;
     nameInput = TextEditingController(text: rule.name);
     urlInput = TextEditingController(text: rule.url);
+
+    if (items == null && widget.request != null) {
+      print('items == null && widget.request != null');
+      items = fromRequestItems(widget.request!, ruleType);
+    }
   }
 
   @override
@@ -512,8 +520,8 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
         ]),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         content: Container(
-            width: 500,
-            constraints: const BoxConstraints(minHeight: 200),
+            width: 550,
+            constraints: const BoxConstraints(minHeight: 200,maxHeight: 550),
             child: Form(
                 key: formKey,
                 child: Column(
@@ -547,14 +555,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                                       value: e,
                                       child: Text(isCN ? e.label : e.name, style: const TextStyle(fontSize: 13))))
                                   .toList(),
-                              onChanged: (val) {
-                                setState(() {
-                                  ruleType = val!;
-                                  items = ruleType == widget.rule?.type ? widget.items : [];
-                                  rewriteReplaceKey.currentState?.initItems(ruleType, items);
-                                  rewriteUpdateKey.currentState?.initItems(ruleType, items);
-                                });
-                              },
+                              onChanged: onChangeType,
                             )),
                         const SizedBox(width: 10),
                       ]),
@@ -576,7 +577,7 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
                 rule.url = urlInput.text;
                 items = rewriteReplaceKey.currentState?.getItems() ?? rewriteUpdateKey.currentState?.getItems();
 
-                var requestRewrites = await RequestRewrites.instance;
+                var requestRewrites = await RequestRewriteManager.instance;
                 requestRewrites.rewriteItemsCache[rule] = items!;
                 var index = requestRewrites.rules.indexOf(rule);
 
@@ -598,9 +599,38 @@ class _RuleAddDialogState extends State<RuleAddDialog> {
         ]);
   }
 
+  void onChangeType(RuleType? val) async {
+    if (ruleType == val) return;
+
+    ruleType = val!;
+    items = [];
+
+    if (ruleType == widget.rule?.type) {
+      items = widget.items;
+    } else if (widget.request != null) {
+      items?.addAll(fromRequestItems(widget.request!, ruleType));
+    }
+
+    setState(() {
+      rewriteReplaceKey.currentState?.initItems(ruleType, items);
+      rewriteUpdateKey.currentState?.initItems(ruleType, items);
+    });
+  }
+
+  static List<RewriteItem> fromRequestItems(HttpRequest request, RuleType ruleType) {
+    if (ruleType == RuleType.requestReplace) {
+      //请求替换
+      return RewriteItem.fromRequest(request);
+    } else if (ruleType == RuleType.responseReplace && request.response != null) {
+      //响应替换
+      return RewriteItem.fromResponse(request.response!);
+    }
+    return [];
+  }
+
   Widget rewriteRule() {
     if (ruleType == RuleType.requestUpdate || ruleType == RuleType.responseUpdate) {
-      return DesktopRewriteUpdate(key: rewriteUpdateKey, items: items, ruleType: ruleType);
+      return DesktopRewriteUpdate(key: rewriteUpdateKey, items: items, ruleType: ruleType, request: widget.request);
     }
 
     return DesktopRewriteReplace(key: rewriteReplaceKey, items: items, ruleType: ruleType);

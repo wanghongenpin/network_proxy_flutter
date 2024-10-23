@@ -41,6 +41,8 @@ import 'package:network_proxy/utils/python.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../common.dart';
+
 /// 请求 URI
 /// @author wanghongen
 /// 2023/10/8
@@ -178,6 +180,8 @@ class _RequestWidgetState extends State<RequestWidget> {
               requestEdit();
             });
           }),
+      MenuItem.separator(),
+      MenuItem(label: localizations.requestRewrite, onClick: (_) => showRequestRewriteDialog(context, widget.request)),
       MenuItem(
           label: localizations.script,
           onClick: (_) async {
