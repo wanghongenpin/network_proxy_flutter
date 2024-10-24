@@ -679,6 +679,9 @@ class _ScriptListState extends State<ScriptList> {
             ],
           );
         }).then((value) {
+      if (multiple) {
+        return;
+      }
       setState(() {
         selected.remove(index);
       });

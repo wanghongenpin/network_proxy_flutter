@@ -30,7 +30,7 @@ dependencies:
   qr_flutter: ^4.1.0
   flutter_qr_reader: ^1.0.5
   flutter_toastr: ^1.0.3
-  share_plus: ^10.1.0
+  share_plus: ^10.1.1
   brotli: ^0.6.0
   flutter_js: ^0.8.1
   flutter_code_editor: ^0.3.2

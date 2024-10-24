@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 import 'package:network_proxy/network/util/cert/x509.dart';
+import 'package:network_proxy/ui/component/text_field.dart';
 
 ///证书哈希名称查看
 ///@author Hongen Wang
@@ -50,7 +51,7 @@ class _CertHashPageState extends State<CertHashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title:  Text(localizations.systemCertName, style: TextStyle(fontSize: 16)), centerTitle: true),
+        appBar: AppBar(title: Text(localizations.systemCertName, style: TextStyle(fontSize: 16)), centerTitle: true),
         resizeToAvoidBottomInset: false,
         body: ListView(children: [
           Wrap(alignment: WrapAlignment.end, children: [
@@ -93,7 +94,7 @@ class _CertHashPageState extends State<CertHashPage> {
                   controller: input,
                   onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
                   keyboardType: TextInputType.text,
-                  decoration: decoration(localizations.inputContent))),
+                  decoration: decoration(context, label: localizations.inputContent))),
           Align(
               alignment: Alignment.bottomLeft,
               child: TextButton(onPressed: () {}, child: const Text("Output:", style: TextStyle(fontSize: 16)))),
@@ -105,7 +106,7 @@ class _CertHashPageState extends State<CertHashPage> {
                   maxLines: 30,
                   readOnly: true,
                   controller: decodeData,
-                  decoration: decoration('Android ${localizations.systemCertName}'))),
+                  decoration: decoration(context, label: 'Android ${localizations.systemCertName}'))),
         ]));
   }
 
@@ -124,25 +125,9 @@ class _CertHashPageState extends State<CertHashPage> {
     }
   }
 
-  ButtonStyle get buttonStyle =>
-      ButtonStyle(
-          padding: WidgetStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
-          textStyle: WidgetStateProperty.all<TextStyle>(TextStyle(fontSize: 14)),
-          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))));
-
-  InputDecoration decoration(String label, {String? hintText}) {
-    Color color = Theme
-        .of(context)
-        .colorScheme
-        .primary;
-    return InputDecoration(
-        floatingLabelBehavior: FloatingLabelBehavior.always,
-        labelText: label,
-        hintText: hintText,
-        hintStyle: TextStyle(color: Colors.grey.shade500),
-        border: OutlineInputBorder(borderSide: BorderSide(width: 0.8, color: color)),
-        enabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.5, color: color)),
-        focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 2, color: color)));
-  }
+  ButtonStyle get buttonStyle => ButtonStyle(
+      padding: WidgetStateProperty.all<EdgeInsets>(EdgeInsets.symmetric(horizontal: 15, vertical: 8)),
+      textStyle: WidgetStateProperty.all<TextStyle>(TextStyle(fontSize: 14)),
+      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))));
 }

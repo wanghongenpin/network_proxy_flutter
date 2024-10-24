@@ -339,7 +339,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                   widget.requestRewrites.flushRequestRewriteConfig();
                   if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
                 }),
-            Container(color: Theme.of(context).hoverColor, height: 8),
+            Container(color: Theme.of(ctx).hoverColor, height: 8),
             TextButton(
                 child: Container(
                     height: 45,
@@ -347,7 +347,7 @@ class _RequestRuleListState extends State<RequestRuleList> {
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(localizations.cancel, textAlign: TextAlign.center)),
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(ctx).pop();
                 }),
           ]);
         }).then((value) {

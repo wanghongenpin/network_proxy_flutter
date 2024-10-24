@@ -296,6 +296,7 @@
 
   "other": "Other",
   "certHashName": "CA Hash Name",
+  "regExp": "RegExp",
   "systemCertName": "System Certificate Name",
   "qrCode": "QR Code",
   "scanQrCode": "Scan QR Code",

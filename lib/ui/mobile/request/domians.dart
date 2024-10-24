@@ -27,6 +27,7 @@ import 'package:network_proxy/network/components/host_filter.dart';
 import 'package:network_proxy/network/host_port.dart';
 import 'package:network_proxy/network/http/http.dart';
 import 'package:network_proxy/network/http_client.dart';
+import 'package:network_proxy/ui/component/widgets.dart';
 import 'package:network_proxy/ui/mobile/request/request_sequence.dart';
 import 'package:network_proxy/utils/listenable_list.dart';
 
@@ -226,6 +227,7 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   ///菜单
   menu(int index) {
     var hostAndPort = view.elementAt(index);
+
     showModalBottomSheet(
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
         context: context,
@@ -234,57 +236,45 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
           return Wrap(
             alignment: WrapAlignment.center,
             children: [
-              TextButton(
-                  child: SizedBox(
-                      width: double.infinity, child: Text(localizations.copyHost, textAlign: TextAlign.center)),
+              BottomSheetItem(
+                  text: localizations.copyHost,
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: hostAndPort.host));
                     FlutterToastr.show(localizations.copied, context);
-                    Navigator.of(context).pop();
                   }),
-              const Divider(thickness: 0.5),
-              TextButton(
-                  child: SizedBox(
-                      width: double.infinity, child: Text(localizations.addBlacklist, textAlign: TextAlign.center)),
+              const Divider(thickness: 0.5, height: 5),
+              BottomSheetItem(
+                  text: localizations.addBlacklist,
                   onPressed: () {
                     HostFilter.blacklist.add(hostAndPort.host);
                     configuration.flushConfig();
                     FlutterToastr.show(localizations.addSuccess, context);
-                    Navigator.of(context).pop();
                   }),
-              const Divider(thickness: 0.5),
-              TextButton(
-                  child: SizedBox(
-                      width: double.infinity, child: Text(localizations.addWhitelist, textAlign: TextAlign.center)),
+              const Divider(thickness: 0.5, height: 5),
+              BottomSheetItem(
+                  text: localizations.addWhitelist,
                   onPressed: () {
                     HostFilter.whitelist.add(hostAndPort.host);
                     configuration.flushConfig();
                     FlutterToastr.show(localizations.addSuccess, context);
-                    Navigator.of(context).pop();
                   }),
-              const Divider(thickness: 0.5),
-              TextButton(
-                  child: SizedBox(
-                      width: double.infinity, child: Text(localizations.deleteWhitelist, textAlign: TextAlign.center)),
+              const Divider(thickness: 0.5, height: 5),
+              BottomSheetItem(
+                  text: localizations.deleteWhitelist,
                   onPressed: () {
                     HostFilter.whitelist.remove(hostAndPort.host);
                     configuration.flushConfig();
                     FlutterToastr.show(localizations.deleteSuccess, context);
-                    Navigator.of(context).pop();
                   }),
-              const Divider(thickness: 0.5),
-              TextButton(
-                  child: SizedBox(
-                      width: double.infinity,
-                      child: Text(localizations.repeatDomainRequests, textAlign: TextAlign.center)),
+              const Divider(thickness: 0.5, height: 5),
+              BottomSheetItem(
+                  text: localizations.repeatDomainRequests,
                   onPressed: () {
-                    Navigator.of(context).pop();
                     repeatDomainRequests(hostAndPort);
                   }),
-              const Divider(thickness: 0.5),
-              TextButton(
-                  child:
-                      SizedBox(width: double.infinity, child: Text(localizations.delete, textAlign: TextAlign.center)),
+              const Divider(thickness: 0.5, height: 5),
+              BottomSheetItem(
+                  text: localizations.delete,
                   onPressed: () {
                     setState(() {
                       var requests = containerMap.remove(hostAndPort);
@@ -294,7 +284,6 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
                         widget.onRemove?.call(requests);
                       }
                       FlutterToastr.show(localizations.deleteSuccess, context);
-                      Navigator.of(context).pop();
                     });
                   }),
               Container(
@@ -303,12 +292,12 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
               ),
               TextButton(
                 child: Container(
-                    height: 50,
+                    height: 45,
                     width: double.infinity,
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(localizations.cancel, textAlign: TextAlign.center)),
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(ctx).pop();
                 },
               ),
             ],
